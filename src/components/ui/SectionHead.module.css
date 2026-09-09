@@ -1,0 +1,6 @@
+.head { max-width: 640px; margin-bottom: var(--sp-4); }
+.head h2 { font-size: clamp(30px, 3.8vw, 44px); margin-bottom: 14px; }
+.head p { font-size: 16.5px; line-height: 1.6; color: var(--ink-soft); }
+
+.tight { max-width: 440px; margin-bottom: var(--sp-3); }
+.tight h2 { font-size: clamp(26px, 3vw, 34px); }

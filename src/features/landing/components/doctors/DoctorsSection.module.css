@@ -1,0 +1,13 @@
+.section { padding: 84px 0; background: #f4f7f4; border-top: 1px solid var(--line); }
+.filters { display: grid; grid-template-columns: minmax(0, 1fr) 170px 230px 230px; gap: 18px; align-items: stretch; margin-top: 34px; }
+.searchBox { min-width: 0; display: flex; align-items: center; border: 1px solid #8ea59b; border-radius: 12px; background: #fff; }
+.searchBox span { padding-left: 13px; color: #778b83; font-size: 25px; line-height: 1; }
+.searchBox input { width: 100%; min-width: 0; padding: 16px 14px; border: 0; outline: 0; color: var(--ink); background: transparent; }
+.searchBox input::placeholder { color: #a4afab; }
+.filters select { appearance: none; padding: 0 16px; border: 1px solid #8ea59b; border-radius: 12px; background: #fff; color: #566a61; background-image: linear-gradient(45deg, transparent 50%, #7b8b85 50%), linear-gradient(135deg, #7b8b85 50%, transparent 50%); background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.searchButton { background: var(--navy); color: #fff; font-weight: 800; letter-spacing: .03em; }
+.searchButton:hover { background: var(--navy-2); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; margin-top: 40px; }
+@media (max-width: 1050px) { .filters { grid-template-columns: minmax(0, 1fr) 150px; } .filters select { min-height: 52px; } }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .section { padding: 64px 0; } .filters { grid-template-columns: 1fr; } .searchButton { min-height: 50px; } }

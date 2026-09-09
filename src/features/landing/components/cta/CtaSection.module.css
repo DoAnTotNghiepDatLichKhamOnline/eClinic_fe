@@ -1,0 +1,6 @@
+.section { background: var(--navy); padding: 54px 0; border-top: 5px solid var(--teal); }
+.row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.row h2 { color: #fff; font-size: clamp(24px, 3vw, 35px); max-width: 20ch; margin-bottom: 10px; }
+.row p { color: #c7d6cf; font-size: 14.5px; max-width: 54ch; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 760px) { .row { flex-direction: column; align-items: flex-start; } }

@@ -1,0 +1,4 @@
+.section { padding: 84px 0; background: #fff; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+@media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .section { padding: 64px 0; } .grid { grid-template-columns: 1fr; } }

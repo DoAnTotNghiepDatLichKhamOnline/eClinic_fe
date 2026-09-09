@@ -1,0 +1,15 @@
+.footer { background: #082e24; color: #b9cac2; }
+.grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: var(--sp-3); padding: 58px var(--sp-2) 38px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 18px; }
+.brand em { font-style: normal; color: #f0a04f; }
+.bookCol h3 { color: #fff; font-family: var(--font-body); font-weight: 800; font-size: 14px; margin-bottom: 10px; }
+.bookCol p { font-size: 13px; margin-bottom: var(--sp-1); }
+.bookCol a[class] { margin-bottom: var(--sp-1); }
+.hotline { font-size: 13px; } .hotline a { color: #f0a04f; font-weight: 800; }
+.col h4 { color: #fff; font-family: var(--font-body); font-weight: 800; font-size: 14px; margin-bottom: var(--sp-1); }
+.col ul { display: flex; flex-direction: column; gap: 9px; }
+.col a, .col li { font-size: 13px; }
+.col a:hover { color: #fff; }
+.bottom { display: flex; justify-content: space-between; padding: 18px var(--sp-2); border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+@media (max-width: 1080px) { .grid { grid-template-columns: 1fr 1fr; } .bookCol { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; padding: 44px var(--sp-2) 30px; } .bottom { flex-direction: column; gap: 7px; } }

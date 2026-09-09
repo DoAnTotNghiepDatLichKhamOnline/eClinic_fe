@@ -1,0 +1,15 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.opt { padding: 2px 4px; }
+.opt.isActive { color: #fff; }
+.divider { color: rgba(255, 255, 255, 0.35); }
