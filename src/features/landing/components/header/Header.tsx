@@ -44,10 +44,10 @@ export function Header() {
 
       <header className={cx(styles.header, scrolled && styles.scrolled)}>
         <Container className={styles.row}>
-          <a href="#top" className={styles.brand} aria-label="Meridian Health">
+          <a href="#top" className={styles.brand} aria-label="eClinic">
             <IconLogo className={styles.brandMark} />
             <span className={styles.brandName}>
-              Meridian<em>Health</em>
+              e<em>Clinic</em>
             </span>
           </a>
 
@@ -66,6 +66,17 @@ export function Header() {
           <div className={styles.actions}>
             <button type="button" className={styles.searchBtn} aria-label="Search">⌕</button>
             <LanguageToggle />
+
+            <Button
+              variant="ghostDark"
+              size="sm"
+              className={styles.loginBtn}
+              onClick={() => {
+                window.location.hash = '#login'
+              }}
+            >
+              {lang === 'vi' ? 'Đăng nhập' : 'Login'}
+            </Button>
 
             <Button
               variant="accent"

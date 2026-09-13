@@ -10,7 +10,7 @@ export function Hero() {
 
   return (
     <section className={styles.hero}>
-      <img className={styles.background} src={clinicInterior} alt="Phòng khám Meridian Health" />
+      <img className={styles.background} src={clinicInterior} alt="Phòng khám eClinic" />
       <div className={styles.overlay} />
 
       <Container className={styles.content}>

@@ -18,7 +18,7 @@ export function Footer() {
           <div className={styles.brand}>
             <IconLogo />
             <span>
-              Meridian<em>Health</em>
+              e<em>Clinic</em>
             </span>
           </div>
           <h3>{t(footerContent.bookTitle)}</h3>
@@ -77,7 +77,7 @@ export function Footer() {
       </Container>
 
       <Container className={styles.bottom}>
-        <span>© 2026 Meridian Health Group.</span>
+        <span>© 2026 eClinic Group.</span>
         <span>{t(footerContent.rights)}</span>
       </Container>
     </footer>
