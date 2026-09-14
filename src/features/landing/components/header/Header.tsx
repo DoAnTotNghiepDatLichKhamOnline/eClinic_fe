@@ -12,7 +12,7 @@ import styles from './Header.module.css'
 const utilityLinks = [
   { href: '#specialties', en: 'CHUYÊN KHOA CỦA CHÚNG TÔI', vi: 'CHUYÊN KHOA CỦA CHÚNG TÔI' },
   { href: '#doctors', en: 'TÌM BÁC SĨ', vi: 'TÌM BÁC SĨ' },
-  { href: '#portal', en: 'DỊCH VỤ HỖ TRỢ BỆNH NHÂN', vi: 'DỊCH VỤ HỖ TRỢ BỆNH NHÂN' },
+  { href: '#book', en: 'ĐẶT LỊCH KHÁM', vi: 'ĐẶT LỊCH KHÁM' },
   { href: '#centers', en: 'CHỌN ĐỊA ĐIỂM', vi: 'CHỌN ĐỊA ĐIỂM' },
 ]
 
@@ -99,22 +99,40 @@ export function Header() {
                   </div>
 
                   <div className={styles.dropdownList}>
-                    <a href="#appointments" className={styles.dropdownItem}>
-                      <span className={styles.dropdownIcon}>📅</span>
-                      <span>{lang === 'vi' ? 'Lịch khám' : 'Appointments'}</span>
-                    </a>
-                    <a href="#payment-history" className={styles.dropdownItem}>
-                      <span className={styles.dropdownIcon}>💳</span>
-                      <span>{lang === 'vi' ? 'Lịch sử thanh toán' : 'Payment History'}</span>
-                    </a>
-                    <a href="#records" className={styles.dropdownItem}>
-                      <span className={styles.dropdownIcon}>📁</span>
-                      <span>{lang === 'vi' ? 'Hồ sơ' : 'Medical Records'}</span>
-                    </a>
-                    <a href="#account" className={styles.dropdownItem}>
-                      <span className={styles.dropdownIcon}>👤</span>
-                      <span>{lang === 'vi' ? 'Tài khoản' : 'Account'}</span>
-                    </a>
+                    {user.role === 'doctor' && (
+                      <a href="#doctor" className={styles.dropdownItem}>
+                        <span className={styles.dropdownIcon}>🩺</span>
+                        <span>{lang === 'vi' ? 'Trang Bác sĩ' : 'Doctor Portal'}</span>
+                      </a>
+                    )}
+
+                    {user.role === 'admin' && (
+                      <a href="#admin" className={styles.dropdownItem}>
+                        <span className={styles.dropdownIcon}>🛡️</span>
+                        <span>{lang === 'vi' ? 'Trang Quản trị' : 'Admin Portal'}</span>
+                      </a>
+                    )}
+
+                    {user.role === 'patient' && (
+                      <>
+                        <a href="#appointments" className={styles.dropdownItem}>
+                          <span className={styles.dropdownIcon}>📅</span>
+                          <span>{lang === 'vi' ? 'Lịch khám' : 'Appointments'}</span>
+                        </a>
+                        <a href="#payment-history" className={styles.dropdownItem}>
+                          <span className={styles.dropdownIcon}>💳</span>
+                          <span>{lang === 'vi' ? 'Lịch sử thanh toán' : 'Payment History'}</span>
+                        </a>
+                        <a href="#records" className={styles.dropdownItem}>
+                          <span className={styles.dropdownIcon}>📁</span>
+                          <span>{lang === 'vi' ? 'Hồ sơ' : 'Medical Records'}</span>
+                        </a>
+                        <a href="#account" className={styles.dropdownItem}>
+                          <span className={styles.dropdownIcon}>👤</span>
+                          <span>{lang === 'vi' ? 'Tài khoản' : 'Account'}</span>
+                        </a>
+                      </>
+                    )}
 
                     <div className={styles.dropdownDivider} />
 

@@ -5,6 +5,8 @@ import { AuthProvider } from '@/context/AuthContext'
 import { LandingPage } from '@/features/landing'
 import { LoginPagePatient } from '@/features/auth/LoginPagePatient'
 import { LoginPageStaff } from '@/features/auth/LoginPageStaff'
+import { DoctorDashboardPage } from '@/features/doctor/DoctorDashboardPage'
+import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage'
 
 function App() {
   const [route, setRoute] = useState(window.location.hash)
@@ -21,8 +23,14 @@ function App() {
     if (route === '#login' || route === '#login-patient') {
       return <LoginPagePatient />
     }
-    if (route === '#login-staff' || route === '#login-admin' || route === '#login-doctor') {
+    if (route === '#login-staff') {
       return <LoginPageStaff />
+    }
+    if (route === '#doctor' || route === '#doctor-dashboard') {
+      return <DoctorDashboardPage />
+    }
+    if (route === '#admin' || route === '#admin-dashboard') {
+      return <AdminDashboardPage />
     }
     return <LandingPage />
   }

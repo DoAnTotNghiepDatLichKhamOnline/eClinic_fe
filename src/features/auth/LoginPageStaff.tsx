@@ -12,6 +12,9 @@ export function LoginPageStaff() {
   const { lang } = useLanguage()
   const { login } = useAuth()
 
+  // Selected role tab: Doctor or Admin
+  const [selectedRole, setSelectedRole] = useState<'doctor' | 'admin'>('doctor')
+
   // Form states - email & password only
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,20 +23,28 @@ export function LoginPageStaff() {
 
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    const isDoctor = selectedRole === 'doctor' || email.includes('doctor') || email.includes('baksi')
+    const role: 'doctor' | 'admin' = isDoctor ? 'doctor' : 'admin'
+
     login({
-      id: 'staff-' + Date.now(),
-      name: email.split('@')[0] || 'Dr. Alex Miller',
-      email: email,
-      role: email.includes('admin') ? 'admin' : 'doctor',
+      id: `${role}-${Date.now()}`,
+      name: email ? (email.split('@')[0]) : (role === 'doctor' ? 'BS. Mattias Larsson' : 'Admin Quản trị'),
+      email: email || `${role}@eclinic.vn`,
+      role: role,
     })
+
+    const targetHash = role === 'doctor' ? '#doctor' : '#admin'
+
     setMessage({
       type: 'success',
       text: lang === 'vi' 
-        ? 'Đăng nhập nhân viên (Admin/Bác sĩ) thành công! Đang chuyển về Trang chủ...' 
-        : 'Staff login successful! Redirecting to Home...',
+        ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'} thành công! Đang chuyển hướng...` 
+        : `${role === 'doctor' ? 'Doctor' : 'Admin'} login successful! Redirecting...`,
     })
+
     setTimeout(() => {
-      window.location.hash = ''
+      window.location.hash = targetHash
     }, 600)
   }
 
@@ -56,7 +67,7 @@ export function LoginPageStaff() {
           <div className={styles.leftSection}>
             <div className={styles.brandTag}>
               <span className={styles.brandDot} />
-              {lang === 'vi' ? 'Cổng Quản Quản lý & Y tế eClinic' : 'eClinic Management & Medical Portal'}
+              {lang === 'vi' ? 'Cổng Quản lý & Y tế eClinic' : 'eClinic Management & Medical Portal'}
             </div>
             
             <h1 className={styles.heroTitle}>
@@ -97,8 +108,48 @@ export function LoginPageStaff() {
                   {lang === 'vi' ? 'Đăng nhập Nhân viên' : 'Staff Sign In'}
                 </h2>
                 <p className={styles.cardSubtitle}>
-                  {lang === 'vi' ? 'Dành cho Quản trị viên & Bác sĩ' : 'For Admin & Doctors'}
+                  {lang === 'vi' ? 'Chọn vai trò Đăng nhập' : 'Select Login Role'}
                 </p>
+              </div>
+
+              {/* Role selector tabs */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <button
+                  type="button"
+                  style={{
+                    flex: 1,
+                    padding: '10px 0',
+                    borderRadius: '8px',
+                    border: '1.5px solid',
+                    borderColor: selectedRole === 'doctor' ? '#4f46e5' : '#e2e8f0',
+                    background: selectedRole === 'doctor' ? '#eef2ff' : '#fff',
+                    color: selectedRole === 'doctor' ? '#3730a3' : '#64748b',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setSelectedRole('doctor')}
+                >
+                  🩺 {lang === 'vi' ? 'Bác sĩ' : 'Doctor'}
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    flex: 1,
+                    padding: '10px 0',
+                    borderRadius: '8px',
+                    border: '1.5px solid',
+                    borderColor: selectedRole === 'admin' ? '#4f46e5' : '#e2e8f0',
+                    background: selectedRole === 'admin' ? '#eef2ff' : '#fff',
+                    color: selectedRole === 'admin' ? '#3730a3' : '#64748b',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setSelectedRole('admin')}
+                >
+                  🛡️ Admin
+                </button>
               </div>
 
               {message && (
@@ -123,7 +174,7 @@ export function LoginPageStaff() {
                     id="staff-email"
                     type="email"
                     className={styles.input}
-                    placeholder={lang === 'vi' ? 'nhanvien@eclinic.vn' : 'staff@eclinic.vn'}
+                    placeholder={selectedRole === 'doctor' ? 'baksi@eclinic.vn' : 'admin@eclinic.vn'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -155,7 +206,7 @@ export function LoginPageStaff() {
                 </div>
 
                 <Button type="submit" variant="accent" size="lg" className={styles.submitBtn}>
-                  {lang === 'vi' ? 'Đăng nhập' : 'Log In'}
+                  {lang === 'vi' ? `Đăng nhập ${selectedRole === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${selectedRole === 'doctor' ? 'Doctor' : 'Admin'}`}
                 </Button>
               </form>
 
