@@ -4,11 +4,13 @@ import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/components/ui/Button'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { cx } from '@/utils/cx'
 import styles from './LoginPagePatient.module.css'
 
 export function LoginPagePatient() {
   const { lang } = useLanguage()
+  const { login } = useAuth()
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
 
   // Form states
@@ -24,10 +26,21 @@ export function LoginPagePatient() {
 
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
+    login({
+      id: 'pat-' + Date.now(),
+      name: 'Nguyễn Văn A',
+      phone: loginPhone || '0912345678',
+      role: 'patient',
+    })
     setMessage({
       type: 'success',
-      text: lang === 'vi' ? 'Đăng nhập thành công!' : 'Login successful!',
+      text: lang === 'vi' 
+        ? 'Đăng nhập thành công! Đang chuyển về Trang chủ...' 
+        : 'Login successful! Redirecting to Home...',
     })
+    setTimeout(() => {
+      window.location.hash = ''
+    }, 600)
   }
 
   const handleRegisterSubmit = (e: FormEvent) => {
