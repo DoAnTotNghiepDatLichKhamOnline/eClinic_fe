@@ -7,7 +7,7 @@ export function TrustBar() {
   const { t } = useLanguage()
 
   return (
-    <section className={styles.section} aria-label="Why patients choose Meridian Health">
+    <section className={styles.section} aria-label="Why patients choose eClinic">
       <Container className={styles.row}>
         {trustMetrics.map((metric) => (
           <div className={styles.item} key={metric.value + t(metric.label)}>
