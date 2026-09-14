@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ActiveHubProvider } from '@/context/ActiveHubContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { AuthProvider } from '@/context/AuthContext'
 import { LandingPage } from '@/features/landing'
 import { LoginPagePatient } from '@/features/auth/LoginPagePatient'
 import { LoginPageStaff } from '@/features/auth/LoginPageStaff'
@@ -27,11 +28,13 @@ function App() {
   }
 
   return (
-    <LanguageProvider>
-      <ActiveHubProvider>
-        {renderPage()}
-      </ActiveHubProvider>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <ActiveHubProvider>
+          {renderPage()}
+        </ActiveHubProvider>
+      </LanguageProvider>
+    </AuthProvider>
   )
 }
 

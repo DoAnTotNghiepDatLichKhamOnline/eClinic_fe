@@ -4,11 +4,13 @@ import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/components/ui/Button'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { cx } from '@/utils/cx'
 import styles from './LoginPageStaff.module.css'
 
 export function LoginPageStaff() {
   const { lang } = useLanguage()
+  const { login } = useAuth()
 
   // Form states - email & password only
   const [email, setEmail] = useState('')
@@ -18,12 +20,21 @@ export function LoginPageStaff() {
 
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
+    login({
+      id: 'staff-' + Date.now(),
+      name: email.split('@')[0] || 'Dr. Alex Miller',
+      email: email,
+      role: email.includes('admin') ? 'admin' : 'doctor',
+    })
     setMessage({
       type: 'success',
       text: lang === 'vi' 
-        ? 'Đăng nhập nhân viên (Admin/Bác sĩ) thành công!' 
-        : 'Staff login successful!',
+        ? 'Đăng nhập nhân viên (Admin/Bác sĩ) thành công! Đang chuyển về Trang chủ...' 
+        : 'Staff login successful! Redirecting to Home...',
     })
+    setTimeout(() => {
+      window.location.hash = ''
+    }, 600)
   }
 
   const handleForgotPassword = () => {
