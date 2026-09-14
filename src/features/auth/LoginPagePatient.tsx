@@ -5,9 +5,9 @@ import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/components/ui/Button'
 import { useLanguage } from '@/context/LanguageContext'
 import { cx } from '@/utils/cx'
-import styles from './LoginPage.module.css'
+import styles from './LoginPagePatient.module.css'
 
-export function LoginPage() {
+export function LoginPagePatient() {
   const { lang } = useLanguage()
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
 
@@ -258,16 +258,18 @@ export function LoginPage() {
                 </form>
               )}
 
-              <div className={styles.backHomeWrapper}>
+              <div className={styles.staffLinkWrapper}>
                 <a
-                  href="#"
-                  className={styles.backHomeLink}
+                  href="#login-staff"
+                  className={styles.staffLink}
                   onClick={(e) => {
                     e.preventDefault()
-                    window.location.hash = ''
+                    window.location.hash = '#login-staff'
                   }}
                 >
-                  ← {lang === 'vi' ? 'Quay lại Trang chủ' : 'Back to Home'}
+                  {lang === 'vi'
+                    ? 'Đăng nhập dành cho Admin & Bác sĩ →'
+                    : 'Admin & Doctor Login →'}
                 </a>
               </div>
             </div>
