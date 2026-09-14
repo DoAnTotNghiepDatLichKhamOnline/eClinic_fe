@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { ActiveHubProvider } from '@/context/ActiveHubContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { LandingPage } from '@/features/landing'
-import { LoginPage } from '@/features/auth/LoginPage'
+import { LoginPagePatient } from '@/features/auth/LoginPagePatient'
+import { LoginPageStaff } from '@/features/auth/LoginPageStaff'
 
 function App() {
   const [route, setRoute] = useState(window.location.hash)
@@ -15,10 +16,20 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
+  const renderPage = () => {
+    if (route === '#login' || route === '#login-patient') {
+      return <LoginPagePatient />
+    }
+    if (route === '#login-staff' || route === '#login-admin' || route === '#login-doctor') {
+      return <LoginPageStaff />
+    }
+    return <LandingPage />
+  }
+
   return (
     <LanguageProvider>
       <ActiveHubProvider>
-        {route === '#login' ? <LoginPage /> : <LandingPage />}
+        {renderPage()}
       </ActiveHubProvider>
     </LanguageProvider>
   )
