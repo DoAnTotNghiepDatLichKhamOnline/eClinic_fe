@@ -60,7 +60,7 @@ export function Modal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/50">
           <div>
             {title && (
               <h3 className="text-xl font-bold text-[#0f4d3a] font-display">

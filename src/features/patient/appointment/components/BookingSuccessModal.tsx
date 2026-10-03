@@ -53,9 +53,6 @@ export function BookingSuccessModal({
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="lg"
-      closeOnOverlayClick={false}
-      closeOnEsc={false}
-      hideHeader={true}
       footer={
         <div className="flex flex-wrap items-center justify-between w-full gap-3">
           <Button
@@ -84,7 +81,7 @@ export function BookingSuccessModal({
       <div className="space-y-6">
         {/* Success Title Banner inside Body */}
         <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
             <CheckCircle2 size={24} />
           </div>
           <div>
@@ -117,7 +114,7 @@ export function BookingSuccessModal({
             </p>
           </div>
 
-          <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 flex-shrink-0">
+          <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 shrink-0">
             <QRCodeSVG value={bookingCode} size={92} level="M" />
           </div>
         </div>
