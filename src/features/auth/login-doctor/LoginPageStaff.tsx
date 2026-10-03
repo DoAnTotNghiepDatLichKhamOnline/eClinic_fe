@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/shared/components/ui/Button'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
@@ -181,8 +180,6 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }
