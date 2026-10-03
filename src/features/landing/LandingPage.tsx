@@ -3,7 +3,6 @@ import { Hero } from './components/hero/Hero'
 import { TrustBar } from './components/trust-bar/TrustBar'
 import { SpecialtiesSection } from './components/specialties/SpecialtiesSection'
 import { DoctorsSection } from './components/doctors/DoctorsSection'
-import { CentersSection } from './components/centers/CentersSection'
 import { CtaSection } from './components/cta/CtaSection'
 import { Footer } from './components/footer/Footer'
 import { EmergencyFab } from './components/emergency-fab/EmergencyFab'
@@ -20,7 +19,6 @@ export function LandingPage() {
         <TrustBar />
         <SpecialtiesSection />
         <DoctorsSection />
-        <CentersSection />
         <CtaSection />
       </main>
 
