@@ -1,5 +1,5 @@
-import { LoginPageStaff } from '../login-doctor/LoginPageStaff'
+import { LoginPageStaff } from "../login-staff/LoginPageStaff";
 
 export function LoginPageAdmin() {
-  return <LoginPageStaff role="admin" />
+  return <LoginPageStaff role="admin" />;
 }
