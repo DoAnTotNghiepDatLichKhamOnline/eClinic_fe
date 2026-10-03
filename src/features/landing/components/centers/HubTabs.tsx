@@ -1,6 +1,6 @@
-import { useActiveHub } from '@/context/ActiveHubContext'
-import { useLanguage } from '@/context/LanguageContext'
-import { cx } from '@/utils/cx'
+import { useActiveHub } from '@/shared/context/ActiveHubContext'
+import { useLanguage } from '@/shared/context/LanguageContext'
+import { cx } from '@/shared/utils/cx'
 import { hubs } from './centers.data'
 import styles from './HubTabs.module.css'
 

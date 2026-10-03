@@ -1,5 +1,5 @@
-import { IconPhone } from '@/components/icons'
-import { useLanguage } from '@/context/LanguageContext'
+import { IconPhone } from '@/shared/components/icons'
+import { useLanguage } from '@/shared/context/LanguageContext'
 import { heroContent } from './hero.data'
 import styles from './EmergencyHotkey.module.css'
 

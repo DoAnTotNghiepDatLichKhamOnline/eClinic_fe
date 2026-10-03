@@ -1,5 +1,5 @@
-import { IconCalendar } from '@/components/icons'
-import { useLanguage } from '@/context/LanguageContext'
+import { IconCalendar } from '@/shared/components/icons'
+import { useLanguage } from '@/shared/context/LanguageContext'
 import type { Bilingual } from '@/types/i18n'
 import styles from './EmergencyFab.module.css'
 

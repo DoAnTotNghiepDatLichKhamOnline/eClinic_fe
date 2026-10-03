@@ -1,4 +1,4 @@
-import { useLanguage } from '@/context/LanguageContext'
+import { useLanguage } from '@/shared/context/LanguageContext'
 import { centersContent } from './centers.data'
 import styles from './EmergencyBanner.module.css'
 

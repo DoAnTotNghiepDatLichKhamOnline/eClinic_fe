@@ -1,5 +1,5 @@
-import { useLanguage } from '@/context/LanguageContext'
-import { cx } from '@/utils/cx'
+import { useLanguage } from '@/shared/context/LanguageContext'
+import { cx } from '@/shared/utils/cx'
 import type { Specialty } from './specialties.data'
 import { specialtiesContent } from './specialties.data'
 import styles from './SpecialtyCard.module.css'

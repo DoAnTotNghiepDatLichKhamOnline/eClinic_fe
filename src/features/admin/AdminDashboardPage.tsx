@@ -1,5 +1,5 @@
-import { useLanguage } from '@/context/LanguageContext'
-import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/shared/context/LanguageContext'
+import { useAuth } from '@/shared/context/AuthContext'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import styles from './AdminDashboardPage.module.css'
 

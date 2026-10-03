@@ -27,5 +27,5 @@
 .ghostDark { background: transparent; border-color: rgba(255, 255, 255, 0.5); color: #fff; }
 .ghostDark:hover { border-color: #fff; }
 
-.sm { height: 44px; padding: 0 20px; font-size: 14px; }
-.lg { height: 56px; padding: 0 32px; font-size: 16px; }
+.sm { height: 44px; padding: 0 20px; font-size: 15px; }
+.lg { height: 56px; padding: 0 32px; font-size: 15px; }
