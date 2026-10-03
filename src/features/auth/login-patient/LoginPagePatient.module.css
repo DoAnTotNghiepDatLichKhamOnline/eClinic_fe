@@ -113,35 +113,39 @@
   padding: 36px 32px;
 }
 
-.tabHeader {
-  display: flex;
-  border-bottom: 2px solid var(--line);
+.cardHeader {
   margin-bottom: 24px;
 }
 
-.tabBtn {
-  flex: 1;
-  padding: 12px 0;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
+.cardTitle {
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.cardSubtitle {
+  margin: 8px 0 0;
   color: var(--ink-soft);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.tabBtn:hover {
-  color: var(--navy);
+.registerLinkWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  color: var(--ink-soft);
+  font-size: 14px;
 }
 
-.tabActive {
-  color: var(--navy);
-  border-bottom-color: var(--teal);
+.registerLinkWrapper a {
+  font-weight: 700;
 }
 
 .form {
@@ -173,7 +177,9 @@
   font-size: 15px;
   color: var(--ink);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input:focus {
@@ -195,7 +201,9 @@
   font-weight: 600;
   color: var(--teal);
   cursor: pointer;
-  transition: color 0.15s ease, text-decoration 0.15s ease;
+  transition:
+    color 0.15s ease,
+    text-decoration 0.15s ease;
 }
 
 .forgotBtn:hover {

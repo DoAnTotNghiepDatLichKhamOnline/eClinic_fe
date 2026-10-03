@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/shared/components/ui/Button'
@@ -11,6 +12,7 @@ import styles from './LoginPageStaff.module.css'
 export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
   const { lang } = useLanguage()
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   // Form states - email & password only
   const [email, setEmail] = useState('')
@@ -28,8 +30,6 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
       role: role,
     })
 
-    const targetHash = role === 'doctor' ? '#doctor' : '#admin'
-
     setMessage({
       type: 'success',
       text: lang === 'vi' 
@@ -38,7 +38,7 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
     })
 
     setTimeout(() => {
-      window.location.hash = targetHash
+      navigate(role === 'doctor' ? '/doctor' : '/admin')
     }, 600)
   }
 
@@ -165,31 +165,20 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
               </form>
 
               <div className={styles.patientLinkWrapper}>
-                <a
-                  href={role === 'doctor' ? '#login-admin' : '#login-doctor'}
+                <Link
+                  to={role === 'doctor' ? '/admin/login' : '/staff/login'}
                   className={styles.patientLink}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.location.hash = role === 'doctor' ? '#login-admin' : '#login-doctor'
-                  }}
                 >
                   {role === 'doctor'
                     ? (lang === 'vi' ? 'Đăng nhập Admin' : 'Admin Login')
                     : (lang === 'vi' ? 'Đăng nhập Bác sĩ' : 'Doctor Login')}
-                </a>
+                </Link>
               </div>
 
               <div className={styles.patientLinkWrapper}>
-                <a
-                  href="#login"
-                  className={styles.patientLink}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.location.hash = '#login'
-                  }}
-                >
+                <Link to="/login" className={styles.patientLink}>
                   ← {lang === 'vi' ? 'Bạn là bệnh nhân? Đăng nhập tại đây' : 'Are you a patient? Log in here'}
-                </a>
+                </Link>
               </div>
             </div>
           </div>

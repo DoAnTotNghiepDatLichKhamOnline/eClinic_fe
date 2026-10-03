@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Container } from '@/shared/components/layout/Container'
 import { IconLogo } from '@/shared/components/icons'
 import { Button } from '@/shared/components/ui/Button'
@@ -12,6 +13,7 @@ import styles from './Header.module.css'
 export function Header() {
   const { lang, t } = useLanguage()
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -38,12 +40,12 @@ export function Header() {
   return (
     <header className={cx(styles.header, scrolled && styles.scrolled)}>
       <Container className={styles.row}>
-        <a href="#top" className={styles.brand} aria-label="eClinic">
+        <Link to="/" className={styles.brand} aria-label="eClinic">
           <IconLogo className={styles.brandMark} />
           <span className={styles.brandName}>
             e<em>Clinic</em>
           </span>
-        </a>
+        </Link>
 
         <nav
           id="primary-nav"
@@ -78,17 +80,17 @@ export function Header() {
 
                 <div className={styles.dropdownList}>
                   {user.role === 'doctor' && (
-                    <a href="#doctor" className={styles.dropdownItem}>
+                    <Link to="/doctor" className={styles.dropdownItem}>
                       <span className={styles.dropdownIcon}>🩺</span>
                       <span>{lang === 'vi' ? 'Trang Bác sĩ' : 'Doctor Portal'}</span>
-                    </a>
+                    </Link>
                   )}
 
                   {user.role === 'admin' && (
-                    <a href="#admin" className={styles.dropdownItem}>
+                    <Link to="/admin" className={styles.dropdownItem}>
                       <span className={styles.dropdownIcon}>🛡️</span>
                       <span>{lang === 'vi' ? 'Trang Quản trị' : 'Admin Portal'}</span>
-                    </a>
+                    </Link>
                   )}
 
                   {user.role === 'patient' && (
@@ -119,7 +121,7 @@ export function Header() {
                     className={cx(styles.dropdownItem, styles.logoutItem)}
                     onClick={() => {
                       logout()
-                      window.location.hash = ''
+                      navigate('/')
                     }}
                   >
                     <span className={styles.dropdownIcon}>🚪</span>
@@ -133,9 +135,7 @@ export function Header() {
               variant="ghostDark"
               size="sm"
               className={styles.loginBtn}
-              onClick={() => {
-                window.location.hash = '#login'
-              }}
+              onClick={() => navigate('/login')}
             >
               {lang === 'vi' ? 'Đăng nhập' : 'Login'}
             </Button>

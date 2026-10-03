@@ -1,11 +1,13 @@
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import styles from './AdminDashboardPage.module.css'
 
 export function AdminDashboardPage() {
   const { lang } = useLanguage()
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const doctors = [
     { id: 'DOC-01', name: 'BS. Mattias Larsson', specialty: 'Tim mạch', status: 'Hoạt động', totalBookings: 142 },
@@ -29,7 +31,7 @@ export function AdminDashboardPage() {
               type="button"
               className={styles.backHomeBtn}
               onClick={() => {
-                window.location.hash = ''
+                navigate('/')
               }}
             >
               {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
@@ -39,7 +41,7 @@ export function AdminDashboardPage() {
               className={styles.backHomeBtn}
               onClick={() => {
                 logout()
-                window.location.hash = ''
+                navigate('/')
               }}
             >
               {lang === 'vi' ? 'Đăng xuất' : 'Logout'}

@@ -1,11 +1,13 @@
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import styles from './DoctorDashboardPage.module.css'
 
 export function DoctorDashboardPage() {
   const { lang } = useLanguage()
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const appointments = [
     {
@@ -57,7 +59,7 @@ export function DoctorDashboardPage() {
               type="button"
               className={styles.backHomeBtn}
               onClick={() => {
-                window.location.hash = ''
+                navigate('/')
               }}
             >
               {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
@@ -67,7 +69,7 @@ export function DoctorDashboardPage() {
               className={styles.backHomeBtn}
               onClick={() => {
                 logout()
-                window.location.hash = ''
+                navigate('/')
               }}
             >
               {lang === 'vi' ? 'Đăng xuất' : 'Logout'}
