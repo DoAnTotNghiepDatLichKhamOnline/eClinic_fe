@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
+import { LanguageToggle } from "@/features/landing/components/header/LanguageToggle";
 import styles from "./DoctorDashboardPage.module.css";
 import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
@@ -83,6 +84,7 @@ export function DoctorDashboardPage({
 
           <div className={styles.userInfo}>
             <DoctorNotificationCenter onNavigate={navigateToSection} />
+            <LanguageToggle />
             <button
               type="button"
               className={styles.backHomeBtn}

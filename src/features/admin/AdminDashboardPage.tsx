@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
+import { LanguageToggle } from "@/features/landing/components/header/LanguageToggle";
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminSection } from "./AdminSidebar";
 import styles from "./AdminDashboardPage.module.css";
@@ -87,6 +88,7 @@ export function AdminDashboardPage({
           </div>
 
           <div className={styles.userInfo}>
+            <LanguageToggle />
             <button
               type="button"
               className={styles.backHomeBtn}
