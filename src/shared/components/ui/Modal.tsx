@@ -1,15 +1,15 @@
-import { useEffect } from 'react'
-import type { ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { useEffect } from "react";
+import type { ReactNode } from "react";
+import { X } from "lucide-react";
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: ReactNode
-  description?: ReactNode
-  children: ReactNode
-  footer?: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  isOpen: boolean;
+  onClose: () => void;
+  title?: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  maxWidth?: "sm" | "md" | "lg" | "xl";
 }
 
 export function Modal({
@@ -19,34 +19,34 @@ export function Modal({
   description,
   children,
   footer,
-  maxWidth = 'md',
+  maxWidth = "md",
 }: ModalProps) {
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
+      if (e.key === "Escape") {
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleKeyDown)
-    document.body.style.overflow = 'hidden'
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose])
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const maxWidthClass = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-  }[maxWidth]
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
+  }[maxWidth];
 
   return (
     <div
@@ -92,5 +92,5 @@ export function Modal({
         )}
       </div>
     </div>
-  )
+  );
 }

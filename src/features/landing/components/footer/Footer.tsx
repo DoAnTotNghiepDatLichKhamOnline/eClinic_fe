@@ -1,15 +1,15 @@
-import { Container } from '@/shared/components/layout/Container'
-import { ButtonLink } from '@/shared/components/ui/Button'
-import { IconLogo } from '@/shared/components/icons'
-import { useActiveHub } from '@/shared/context/ActiveHubContext'
-import { useLanguage } from '@/shared/context/LanguageContext'
-import { hubs } from '@/features/landing/components/centers/centers.data'
-import { footerContent } from './footer.data'
-import styles from './Footer.module.css'
+import { Container } from "@/shared/components/layout/Container";
+import { ButtonLink } from "@/shared/components/ui/Button";
+import { IconLogo } from "@/shared/components/icons";
+import { useActiveHub } from "@/shared/context/ActiveHubContext";
+import { useLanguage } from "@/shared/context/LanguageContext";
+import { hubs } from "@/features/landing/components/centers/centers.data";
+import { footerContent } from "./footer.data";
+import styles from "./Footer.module.css";
 
 export function Footer() {
-  const { t } = useLanguage()
-  const { setActiveHub } = useActiveHub()
+  const { t } = useLanguage();
+  const { setActiveHub } = useActiveHub();
 
   return (
     <footer className={styles.footer}>
@@ -23,7 +23,7 @@ export function Footer() {
           </div>
           <h3>{t(footerContent.bookTitle)}</h3>
           <p>{t(footerContent.bookBody)}</p>
-          <ButtonLink href="#book" variant="accent" size="sm">
+          <ButtonLink href="/appointment" variant="accent" size="sm">
             {t(footerContent.bookOnline)}
           </ButtonLink>
           <p className={styles.hotline}>
@@ -35,7 +35,7 @@ export function Footer() {
           <h4>{t(footerContent.portalTitle)}</h4>
           <ul>
             {footerContent.portalLinks.map((link) => (
-              <li key={t(link)}>
+              <li key={link.id}>
                 <a href="#">{t(link)}</a>
               </li>
             ))}
@@ -50,9 +50,11 @@ export function Footer() {
                 <a
                   href="#centers"
                   onClick={(e) => {
-                    e.preventDefault()
-                    setActiveHub(hub.id)
-                    document.getElementById('centers')?.scrollIntoView({ behavior: 'smooth' })
+                    e.preventDefault();
+                    setActiveHub(hub.id);
+                    document
+                      .getElementById("centers")
+                      ?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
                   {hub.cityName} — {hub.phone}
@@ -81,5 +83,5 @@ export function Footer() {
         <span>{t(footerContent.rights)}</span>
       </Container>
     </footer>
-  )
+  );
 }

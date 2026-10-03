@@ -210,3 +210,48 @@ export function getUpcomingBookingDays(numDays = 7) {
 
   return days
 }
+
+/**
+ * Calculate human-readable age from a date of birth string (YYYY-MM-DD)
+ */
+export function calculateAge(dobString?: string, lang: 'vi' | 'en' = 'vi'): string {
+  if (!dobString) return ''
+  const dob = new Date(dobString)
+  if (isNaN(dob.getTime())) return ''
+  const today = new Date()
+
+  // Clear time components for comparison
+  dob.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+
+  if (dob > today) {
+    return lang === 'vi' ? 'Ngày sinh không thể ở tương lai' : 'Birth date cannot be in the future'
+  }
+
+  let years = today.getFullYear() - dob.getFullYear()
+  let months = today.getMonth() - dob.getMonth()
+  let days = today.getDate() - dob.getDate()
+
+  if (days < 0) {
+    months--
+  }
+  if (months < 0) {
+    years--
+    months += 12
+  }
+
+  if (years === 0) {
+    if (months === 0) {
+      const diffTime = Math.abs(today.getTime() - dob.getTime())
+      const diffDays = Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24)))
+      return lang === 'vi' ? `${diffDays} ngày tuổi` : `${diffDays} days old`
+    }
+    return lang === 'vi' ? `${months} tháng tuổi` : `${months} months old`
+  }
+
+  if (years < 3 && months > 0) {
+    return lang === 'vi' ? `${years} tuổi ${months} tháng` : `${years} yrs ${months} mos`
+  }
+
+  return lang === 'vi' ? `${years} tuổi` : `${years} years old`
+}

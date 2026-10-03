@@ -37,9 +37,13 @@ export interface AppointmentFormValues {
 
   // 2. Nhóm thông tin Cá nhân Bệnh nhân (Người đến khám)
   patientName: string // Bắt buộc
-  patientPhone: string // Bắt buộc
-  patientCccd: string // Bắt buộc
+  patientPhone: string // Bắt buộc đối với người lớn
+  patientCccd: string // Bắt buộc đối với người lớn
   reason: string // Bắt buộc
+
+  // Dành riêng cho Khoa Nhi (Bệnh nhi)
+  childDob?: string // Ngày sinh của trẻ
+  childGender?: 'male' | 'female' | '' // Giới tính của trẻ
 
   // 3. Thông tin người giám hộ (Bắt buộc nếu là Khoa Nhi)
   guardianName?: string
