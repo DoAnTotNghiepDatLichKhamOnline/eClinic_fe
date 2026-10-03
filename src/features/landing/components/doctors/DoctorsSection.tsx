@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 import { Container } from '@/shared/components/layout/Container'
 import { SectionHead } from '@/shared/components/ui/SectionHead'
 import { useLanguage } from '@/shared/context/LanguageContext'
@@ -33,7 +34,7 @@ export function DoctorsSection() {
 
         <div className={styles.filters}>
           <label className={styles.searchBox}>
-            <span aria-hidden="true">⌕</span>
+            <Search className={styles.searchIcon} aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}

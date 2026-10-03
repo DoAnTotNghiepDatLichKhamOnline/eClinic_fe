@@ -1,19 +1,19 @@
-import type { ComponentType, SVGProps } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
-  IconBaby,
-  IconBone,
-  IconBrain,
-  IconDrop,
-  IconEye,
-  IconHeart,
-  IconStethoscope,
-  IconVideo,
-} from "@/shared/components/icons";
+  Baby as IconBaby,
+  Bone as IconBone,
+  Brain as IconBrain,
+  Droplet as IconDrop,
+  Eye as IconEye,
+  HeartPulse as IconHeart,
+  Stethoscope as IconStethoscope,
+  Video as IconVideo,
+} from "lucide-react";
 import type { Bilingual } from "@/shared/types/i18n";
 
 export interface Specialty {
   id: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  icon: LucideIcon;
   name: Bilingual;
   tint: string;
   description?: Bilingual;

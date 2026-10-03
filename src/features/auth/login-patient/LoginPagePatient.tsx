@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { ArrowRight, Check } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
-import { cx } from '@/shared/utils/cx'
+import { notifyAuth } from '@/shared/utils/authNotification'
 import { LoginForm } from './LoginForm'
 import styles from './LoginPagePatient.module.css'
 
@@ -17,8 +18,6 @@ export function LoginPagePatient() {
   // Form states
   const [loginPhone, setLoginPhone] = useState('')
 
-  const [message, setMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null)
-
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
     login({
@@ -27,24 +26,22 @@ export function LoginPagePatient() {
       phone: loginPhone || '0912345678',
       role: 'patient',
     })
-    setMessage({
-      type: 'success',
-      text: lang === 'vi' 
-        ? 'Đăng nhập thành công! Đang chuyển về Trang chủ...' 
-        : 'Login successful! Redirecting to Home...',
-    })
+    notifyAuth(
+      'success',
+      lang === 'vi' ? 'Đăng nhập thành công' : 'Login successful',
+      lang === 'vi' ? 'Đang chuyển về Trang chủ...' : 'Redirecting to Home...',
+    )
     setTimeout(() => {
       navigate('/')
     }, 600)
   }
 
   const handleForgotPassword = () => {
-    setMessage({
-      type: 'info',
-      text: lang === 'vi' 
-        ? 'Hướng dẫn khôi phục mật khẩu đã được gửi đến số điện thoại của bạn.' 
-        : 'Password recovery instructions sent to your phone number.',
-    })
+    notifyAuth(
+      'info',
+      lang === 'vi' ? 'Đã gửi hướng dẫn khôi phục' : 'Recovery instructions sent',
+      lang === 'vi' ? 'Kiểm tra tin nhắn trên điện thoại của bạn.' : 'Check your phone messages.',
+    )
   }
 
   return (
@@ -76,15 +73,15 @@ export function LoginPagePatient() {
 
             <div className={styles.featuresList}>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Đặt lịch khám nhanh chóng với bác sĩ hàng đầu' : 'Quick appointment booking with top doctors'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Quản lý hồ sơ sức khỏe trực tuyến 24/7' : 'Manage health records online 24/7'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Bảo mật thông tin cá nhân tuyệt đối' : 'Absolute personal data security'}</span>
               </div>
             </div>
@@ -99,19 +96,6 @@ export function LoginPagePatient() {
                   {lang === 'vi' ? 'Chào mừng bạn quay lại eClinic' : 'Welcome back to eClinic'}
                 </p>
               </div>
-
-              {message && (
-                <div
-                  className={cx(
-                    styles.alertMessage,
-                    message.type === 'success' && styles.alertSuccess,
-                    message.type === 'info' && styles.alertInfo,
-                    message.type === 'error' && styles.alertError,
-                  )}
-                >
-                  {message.text}
-                </div>
-              )}
 
               <LoginForm
                 lang={lang}
@@ -130,9 +114,8 @@ export function LoginPagePatient() {
 
               <div className={styles.staffLinkWrapper}>
                 <Link to="/doctor/login" className={styles.staffLink}>
-                  {lang === 'vi'
-                    ? 'Đăng nhập dành cho Admin & Bác sĩ →'
-                    : 'Admin & Doctor Login →'}
+                  {lang === 'vi' ? 'Đăng nhập dành cho Admin & Bác sĩ' : 'Admin & Doctor Login'}
+                  <ArrowRight aria-hidden="true" size={16} />
                 </Link>
               </div>
             </div>

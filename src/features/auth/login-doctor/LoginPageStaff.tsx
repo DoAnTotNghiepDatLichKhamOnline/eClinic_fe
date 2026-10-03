@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/shared/components/ui/Button'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
-import { cx } from '@/shared/utils/cx'
+import { notifyAuth } from '@/shared/utils/authNotification'
 import styles from './LoginPageStaff.module.css'
 
 export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
@@ -16,8 +17,6 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const [message, setMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null)
-
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
 
@@ -28,12 +27,11 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
       role: role,
     })
 
-    setMessage({
-      type: 'success',
-      text: lang === 'vi' 
-        ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'} thành công! Đang chuyển hướng...` 
-        : `${role === 'doctor' ? 'Doctor' : 'Admin'} login successful! Redirecting...`,
-    })
+    notifyAuth(
+      'success',
+      lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'} thành công` : `${role === 'doctor' ? 'Doctor' : 'Admin'} login successful`,
+      lang === 'vi' ? 'Đang chuyển hướng...' : 'Redirecting...',
+    )
 
     setTimeout(() => {
       navigate(role === 'doctor' ? '/doctor' : '/admin')
@@ -41,12 +39,11 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
   }
 
   const handleForgotPassword = () => {
-    setMessage({
-      type: 'info',
-      text: lang === 'vi' 
-        ? 'Hướng dẫn khôi phục mật khẩu đã được gửi đến email nội bộ của bạn.' 
-        : 'Password recovery instructions sent to your staff email.',
-    })
+    notifyAuth(
+      'info',
+      lang === 'vi' ? 'Đã gửi hướng dẫn khôi phục' : 'Recovery instructions sent',
+      lang === 'vi' ? 'Kiểm tra email nội bộ của bạn.' : 'Check your staff email.',
+    )
   }
 
   return (
@@ -76,15 +73,15 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
 
             <div className={styles.featuresList}>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Quản lý lịch khám và hồ sơ bệnh án' : 'Manage schedules and medical records'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Điều hành hệ thống phòng khám và nhân sự' : 'Manage clinic operations and staff'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Bảo mật tiêu chuẩn y tế quốc tế' : 'International medical security standard'}</span>
               </div>
             </div>
@@ -101,19 +98,6 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
                   {lang === 'vi' ? 'Sử dụng email nội bộ của bạn' : 'Use your staff email address'}
                 </p>
               </div>
-
-              {message && (
-                <div
-                  className={cx(
-                    styles.alertMessage,
-                    message.type === 'success' && styles.alertSuccess,
-                    message.type === 'info' && styles.alertInfo,
-                    message.type === 'error' && styles.alertError,
-                  )}
-                >
-                  {message.text}
-                </div>
-              )}
 
               <form onSubmit={handleLoginSubmit} className={styles.form}>
                 <div className={styles.fieldGroup}>
@@ -173,7 +157,8 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
 
               <div className={styles.patientLinkWrapper}>
                 <Link to="/login" className={styles.patientLink}>
-                  ← {lang === 'vi' ? 'Bạn là bệnh nhân? Đăng nhập tại đây' : 'Are you a patient? Log in here'}
+                  <ArrowLeft aria-hidden="true" size={16} />
+                  {lang === 'vi' ? 'Bạn là bệnh nhân? Đăng nhập tại đây' : 'Are you a patient? Log in here'}
                 </Link>
               </div>
             </div>

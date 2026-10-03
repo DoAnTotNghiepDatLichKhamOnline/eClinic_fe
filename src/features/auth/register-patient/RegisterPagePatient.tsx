@@ -1,16 +1,13 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { useLanguage } from '@/shared/context/LanguageContext'
-import { cx } from '@/shared/utils/cx'
+import { notifyAuth } from '@/shared/utils/authNotification'
 import { RegisterForm } from './RegisterForm'
 import styles from '../login-patient/LoginPagePatient.module.css'
 
 export function RegisterPagePatient() {
   const { lang } = useLanguage()
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
   const handleRegisterSubmit = (
     _phone: string,
     _fullName: string,
@@ -18,18 +15,18 @@ export function RegisterPagePatient() {
     confirmPassword: string,
   ) => {
     if (password !== confirmPassword) {
-      setMessage({
-        type: 'error',
-        text: lang === 'vi' ? 'Mật khẩu xác nhận không khớp.' : 'Passwords do not match.',
-      })
+      notifyAuth(
+        'error',
+        lang === 'vi' ? 'Không thể tạo tài khoản' : 'Registration failed',
+        lang === 'vi' ? 'Mật khẩu xác nhận không khớp.' : 'Passwords do not match.',
+      )
       return
     }
-    setMessage({
-      type: 'success',
-      text: lang === 'vi'
-        ? 'Thông tin đăng ký hợp lệ. Vui lòng đăng nhập để tiếp tục.'
-        : 'Your registration details are valid. Log in to continue.',
-    })
+    notifyAuth(
+      'success',
+      lang === 'vi' ? 'Thông tin đăng ký hợp lệ' : 'Registration details are valid',
+      lang === 'vi' ? 'Đăng nhập để tiếp tục.' : 'Log in to continue.',
+    )
   }
 
   return (
@@ -64,16 +61,6 @@ export function RegisterPagePatient() {
                   {lang === 'vi' ? 'Điền thông tin của bạn để đăng ký' : 'Enter your details to register'}
                 </p>
               </div>
-
-              {message && (
-                <div className={cx(
-                  styles.alertMessage,
-                  message.type === 'success' && styles.alertSuccess,
-                  message.type === 'error' && styles.alertError,
-                )}>
-                  {message.text}
-                </div>
-              )}
 
               <RegisterForm lang={lang} onSubmit={handleRegisterSubmit} />
 

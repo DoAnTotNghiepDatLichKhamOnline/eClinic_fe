@@ -1,7 +1,8 @@
+import { useNavigate } from 'react-router-dom'
+import { CalendarDays, CircleCheck, Clock3, FolderOpen, House, LogOut, Star, Stethoscope } from 'lucide-react'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useAuth } from '@/shared/context/AuthContext'
-import { useNavigate } from 'react-router-dom'
-import { Footer } from '@/features/landing/components/footer/Footer'
+import { notifyAuth } from '@/shared/utils/authNotification'
 import styles from './DoctorDashboardPage.module.css'
 
 export function DoctorDashboardPage() {
@@ -54,7 +55,7 @@ export function DoctorDashboardPage() {
           </div>
 
           <div className={styles.userInfo}>
-            <span className={styles.userName}>👨‍⚕️ {user?.name || 'BS. Nguyễn Văn A'}</span>
+            <span className={styles.userName}><Stethoscope aria-hidden="true" size={16} /> {user?.name || 'BS. Nguyễn Văn A'}</span>
             <button
               type="button"
               className={styles.backHomeBtn}
@@ -62,17 +63,18 @@ export function DoctorDashboardPage() {
                 navigate('/')
               }}
             >
-              {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
+              <House aria-hidden="true" size={15} /> {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
             </button>
             <button
               type="button"
               className={styles.backHomeBtn}
               onClick={() => {
                 logout()
+                notifyAuth('info', lang === 'vi' ? 'Đã đăng xuất' : 'Signed out', lang === 'vi' ? 'Bạn đã đăng xuất khỏi eClinic.' : 'You have signed out of eClinic.')
                 navigate('/')
               }}
             >
-              {lang === 'vi' ? 'Đăng xuất' : 'Logout'}
+              <LogOut aria-hidden="true" size={15} /> {lang === 'vi' ? 'Đăng xuất' : 'Logout'}
             </button>
           </div>
         </div>
@@ -92,7 +94,7 @@ export function DoctorDashboardPage() {
 
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>📅</div>
+            <div className={styles.statIcon}><CalendarDays aria-hidden="true" /></div>
             <div className={styles.statInfo}>
               <span className={styles.statValue}>8</span>
               <span className={styles.statLabel}>{lang === 'vi' ? 'Lịch khám hôm nay' : "Today's Appointments"}</span>
@@ -100,7 +102,7 @@ export function DoctorDashboardPage() {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>⏳</div>
+            <div className={styles.statIcon}><Clock3 aria-hidden="true" /></div>
             <div className={styles.statInfo}>
               <span className={styles.statValue}>2</span>
               <span className={styles.statLabel}>{lang === 'vi' ? 'Bệnh nhân chờ khám' : 'Patients Waiting'}</span>
@@ -108,7 +110,7 @@ export function DoctorDashboardPage() {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>✅</div>
+            <div className={styles.statIcon}><CircleCheck aria-hidden="true" /></div>
             <div className={styles.statInfo}>
               <span className={styles.statValue}>5</span>
               <span className={styles.statLabel}>{lang === 'vi' ? 'Đã hoàn thành' : 'Completed Exams'}</span>
@@ -116,7 +118,7 @@ export function DoctorDashboardPage() {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>⭐</div>
+            <div className={styles.statIcon}><Star aria-hidden="true" /></div>
             <div className={styles.statInfo}>
               <span className={styles.statValue}>4.9</span>
               <span className={styles.statLabel}>{lang === 'vi' ? 'Đánh giá trung bình' : 'Average Rating'}</span>
@@ -152,12 +154,13 @@ export function DoctorDashboardPage() {
                   <td>{apt.age}</td>
                   <td>{apt.reason}</td>
                   <td>
-                    {apt.status === 'waiting' && <span className={`${styles.badge} ${styles.badgeWaiting}`}>⏳ Chờ khám</span>}
-                    {apt.status === 'progress' && <span className={`${styles.badge} ${styles.badgeProgress}`}>🩺 Đang khám</span>}
-                    {apt.status === 'done' && <span className={`${styles.badge} ${styles.badgeDone}`}>✅ Hoàn thành</span>}
+                    {apt.status === 'waiting' && <span className={`${styles.badge} ${styles.badgeWaiting}`}><Clock3 aria-hidden="true" size={14} /> Chờ khám</span>}
+                    {apt.status === 'progress' && <span className={`${styles.badge} ${styles.badgeProgress}`}><Stethoscope aria-hidden="true" size={14} /> Đang khám</span>}
+                    {apt.status === 'done' && <span className={`${styles.badge} ${styles.badgeDone}`}><CircleCheck aria-hidden="true" size={14} /> Hoàn thành</span>}
                   </td>
                   <td>
                     <button type="button" className={styles.actionBtn}>
+                      {apt.status === 'done' && <FolderOpen aria-hidden="true" size={14} />}
                       {apt.status === 'done' ? 'Xem hồ sơ' : 'Khám bệnh'}
                     </button>
                   </td>
@@ -167,8 +170,6 @@ export function DoctorDashboardPage() {
           </table>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }

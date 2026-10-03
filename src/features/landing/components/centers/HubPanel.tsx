@@ -1,4 +1,4 @@
-import { IconClock, IconMapPin, IconPhone } from '@/shared/components/icons'
+import { Clock3, Mail, MapPin, Phone, PhoneCall, Siren } from 'lucide-react'
 import { ButtonLink } from '@/shared/components/ui/Button'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import type { Hub } from './centers.data'
@@ -25,7 +25,7 @@ export function HubPanel({ hub }: { hub: Hub }) {
 
       <div className={styles.body}>
         <div className={styles.fact}>
-          <IconMapPin />
+          <MapPin aria-hidden="true" />
           <div>
             <strong>Địa chỉ</strong>
             <p>{primary.address}</p>
@@ -33,7 +33,7 @@ export function HubPanel({ hub }: { hub: Hub }) {
         </div>
 
         <div className={styles.fact}>
-          <IconClock />
+          <Clock3 aria-hidden="true" />
           <div>
             <strong>Giờ khám bệnh</strong>
             <p>{primary.hours}</p>
@@ -41,19 +41,19 @@ export function HubPanel({ hub }: { hub: Hub }) {
         </div>
 
         <div className={styles.fact}>
-          <IconPhone />
+          <Phone aria-hidden="true" />
           <div>
             <strong>Điện thoại</strong>
             <p>{primary.phone}</p>
             <div className={styles.contactChips}>
-              <a href={`tel:${primary.phone}`} aria-label="Gọi điện">◉</a>
+              <a href={`tel:${primary.phone}`} aria-label="Gọi điện"><PhoneCall aria-hidden="true" size={16} /></a>
               <span>Zalo</span>
             </div>
           </div>
         </div>
 
         <div className={styles.fact}>
-          <span className={styles.mailIcon}>✉</span>
+          <Mail className={styles.mailIcon} aria-hidden="true" />
           <div>
             <strong>Email:</strong>
             <p>{primary.email}</p>
@@ -62,7 +62,7 @@ export function HubPanel({ hub }: { hub: Hub }) {
 
         <div className={styles.emergencyBox}>
           <div className={styles.emergencyHeading}>
-            <strong>!&nbsp; {t(centersContent.emergencyBadge)}</strong>
+            <strong><Siren aria-hidden="true" size={16} /> {t(centersContent.emergencyBadge)}</strong>
             <span>24 GIỜ, 7 NGÀY MỘT TUẦN</span>
           </div>
           <div className={styles.emergencyNumbers}>

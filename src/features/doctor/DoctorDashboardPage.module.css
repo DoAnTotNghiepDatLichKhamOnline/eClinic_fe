@@ -50,6 +50,9 @@
 }
 
 .userName {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   font-size: 15px;
 }
@@ -119,10 +122,14 @@
   border-radius: 12px;
   background: #e6f4ef;
   color: var(--teal-dark);
-  font-size: 24px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+}
+
+.statIcon svg {
+  width: 23px;
+  height: 23px;
 }
 
 .statInfo {
@@ -207,6 +214,10 @@
   font-weight: 700;
 }
 
+.badge svg {
+  flex: 0 0 auto;
+}
+
 .badgeWaiting {
   background: #fef3c7;
   color: #b45309;
@@ -223,6 +234,10 @@
 }
 
 .actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   background: var(--navy);
   color: #fff;
   border: none;
@@ -236,4 +251,34 @@
 
 .actionBtn:hover {
   opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+  .topBar {
+    padding: 14px 16px;
+  }
+
+  .topBarRow {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .brand {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .brandTitle {
+    font-size: 16px;
+  }
+
+  .userInfo {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .backHomeBtn {
+    padding: 8px 12px;
+  }
 }
