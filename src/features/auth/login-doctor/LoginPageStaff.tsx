@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { Button } from '@/shared/components/ui/Button'
 import { useLanguage } from '@/shared/context/LanguageContext'
@@ -53,8 +52,6 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
 
   return (
     <div className={styles.pageWrapper}>
-      <Header />
-
       <main className={styles.mainContent}>
         <div className={styles.layoutGrid}>
           {/* Left section: Staff Branding & Highlights */}
@@ -166,7 +163,7 @@ export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
 
               <div className={styles.patientLinkWrapper}>
                 <Link
-                  to={role === 'doctor' ? '/admin/login' : '/staff/login'}
+                  to={role === 'doctor' ? '/admin/login' : '/doctor/login'}
                   className={styles.patientLink}
                 >
                   {role === 'doctor'

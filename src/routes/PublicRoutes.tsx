@@ -13,7 +13,7 @@ export const PublicRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPagePatient />} />
       <Route path="/register" element={<RegisterPagePatient />} />
-      <Route path="/staff/login" element={<LoginPageDoctor />} />
+      <Route path="/doctor/login" element={<LoginPageDoctor />} />
       <Route path="/admin/login" element={<LoginPageAdmin />} />
       <Route path="/doctor" element={<DoctorDashboardPage />} />
       <Route path="/admin" element={<AdminDashboardPage />} />

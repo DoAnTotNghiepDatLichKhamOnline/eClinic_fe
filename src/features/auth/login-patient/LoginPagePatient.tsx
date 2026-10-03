@@ -129,7 +129,7 @@ export function LoginPagePatient() {
               </div>
 
               <div className={styles.staffLinkWrapper}>
-                <Link to="/staff/login" className={styles.staffLink}>
+                <Link to="/doctor/login" className={styles.staffLink}>
                   {lang === 'vi'
                     ? 'Đăng nhập dành cho Admin & Bác sĩ →'
                     : 'Admin & Doctor Login →'}
