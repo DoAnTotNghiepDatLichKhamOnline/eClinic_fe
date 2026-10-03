@@ -16,14 +16,14 @@ export function LoginPagePatient() {
   const navigate = useNavigate()
 
   // Form states
-  const [loginPhone, setLoginPhone] = useState('')
+  const [loginEmail, setLoginEmail] = useState('')
 
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
     login({
       id: 'pat-' + Date.now(),
       name: 'Nguyễn Văn A',
-      phone: loginPhone || '0912345678',
+      phone: '0912345678',
       role: 'patient',
     })
     notifyAuth(
@@ -40,7 +40,7 @@ export function LoginPagePatient() {
     notifyAuth(
       'info',
       lang === 'vi' ? 'Đã gửi hướng dẫn khôi phục' : 'Recovery instructions sent',
-      lang === 'vi' ? 'Kiểm tra tin nhắn trên điện thoại của bạn.' : 'Check your phone messages.',
+      lang === 'vi' ? 'Kiểm tra hộp thư email của bạn để lấy lại mật khẩu.' : 'Check your email inbox for password reset instructions.',
     )
   }
 
@@ -99,8 +99,8 @@ export function LoginPagePatient() {
 
               <LoginForm
                 lang={lang}
-                phone={loginPhone}
-                onPhoneChange={setLoginPhone}
+                email={loginEmail}
+                onEmailChange={setLoginEmail}
                 onSubmit={handleLoginSubmit}
                 onForgotPassword={handleForgotPassword}
               />

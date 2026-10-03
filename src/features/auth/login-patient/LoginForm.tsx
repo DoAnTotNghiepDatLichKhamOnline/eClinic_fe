@@ -6,31 +6,30 @@ import styles from './LoginPagePatient.module.css'
 
 type LoginFormProps = {
   lang: Lang
-  phone: string
-  onPhoneChange: (phone: string) => void
+  email: string
+  onEmailChange: (email: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onForgotPassword: () => void
 }
 
-export function LoginForm({ lang, phone, onPhoneChange, onSubmit, onForgotPassword }: LoginFormProps) {
+export function LoginForm({ lang, email, onEmailChange, onSubmit, onForgotPassword }: LoginFormProps) {
   const [password, setPassword] = useState('')
 
   return (
     <form onSubmit={onSubmit} className={styles.form}>
       <div className={styles.fieldGroup}>
-        <label htmlFor="login-phone" className={styles.label}>
-          {lang === 'vi' ? 'Số điện thoại' : 'Phone Number'}
+        <label htmlFor="login-email" className={styles.label}>
+          {lang === 'vi' ? 'Địa chỉ Email' : 'Email Address'}
         </label>
         <input
-          id="login-phone"
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={11}
+          id="login-email"
+          type="email"
+          autoComplete="email"
+          maxLength={255}
           className={styles.input}
-          placeholder={lang === 'vi' ? 'Nhập số điện thoại' : 'Enter phone number'}
-          value={phone}
-          onChange={(event) => onPhoneChange(event.target.value.replace(/\D/g, ''))}
+          placeholder={lang === 'vi' ? 'Nhập địa chỉ email của bạn' : 'Enter your email address'}
+          value={email}
+          onChange={(event) => onEmailChange(event.target.value)}
           required
         />
       </div>

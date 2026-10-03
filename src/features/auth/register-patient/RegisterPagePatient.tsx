@@ -1,32 +1,27 @@
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Header } from '@/features/landing/components/header/Header'
 import { Footer } from '@/features/landing/components/footer/Footer'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { notifyAuth } from '@/shared/utils/authNotification'
 import { RegisterForm } from './RegisterForm'
+import type { PatientRegistrationData } from './RegisterForm'
 import styles from '../login-patient/LoginPagePatient.module.css'
 
 export function RegisterPagePatient() {
   const { lang } = useLanguage()
-  const handleRegisterSubmit = (
-    _phone: string,
-    _fullName: string,
-    password: string,
-    confirmPassword: string,
-  ) => {
-    if (password !== confirmPassword) {
-      notifyAuth(
-        'error',
-        lang === 'vi' ? 'Không thể tạo tài khoản' : 'Registration failed',
-        lang === 'vi' ? 'Mật khẩu xác nhận không khớp.' : 'Passwords do not match.',
-      )
-      return
-    }
+  const navigate = useNavigate()
+
+  const handleRegisterSubmit = (data: PatientRegistrationData) => {
     notifyAuth(
       'success',
-      lang === 'vi' ? 'Thông tin đăng ký hợp lệ' : 'Registration details are valid',
-      lang === 'vi' ? 'Đăng nhập để tiếp tục.' : 'Log in to continue.',
+      lang === 'vi' ? 'Đăng ký tài khoản thành công!' : 'Registration successful!',
+      lang === 'vi'
+        ? `Tài khoản ${data.hoTen} (${data.email}) đã được khởi tạo. Đang chuyển đến trang đăng nhập...`
+        : `Account ${data.hoTen} (${data.email}) created. Redirecting to login...`,
     )
+    setTimeout(() => {
+      navigate('/login')
+    }, 1200)
   }
 
   return (

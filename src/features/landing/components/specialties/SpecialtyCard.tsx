@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { cx } from '@/shared/utils/cx'
 import type { Specialty } from './specialties.data'
@@ -22,9 +23,13 @@ export function SpecialtyCard({ specialty }: { specialty: Specialty }) {
       </ul>
 
       {specialty.featured && (
-        <a className={styles.link} href="#book">
+        <Link
+          className={styles.link}
+          to="/appointment"
+          state={{ specialtyId: specialty.id }}
+        >
           {t(specialtiesContent.bookLink)}
-        </a>
+        </Link>
       )}
     </article>
   )
