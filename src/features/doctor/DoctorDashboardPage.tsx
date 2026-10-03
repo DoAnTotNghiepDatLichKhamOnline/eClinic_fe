@@ -1,14 +1,18 @@
+import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, CircleCheck, Clock3, FolderOpen, House, LogOut, Star, Stethoscope } from 'lucide-react'
+import { CalendarDays, CircleCheck, Clock3, FolderOpen, House, Star, Stethoscope } from 'lucide-react'
 import { useLanguage } from '@/shared/context/LanguageContext'
-import { useAuth } from '@/shared/context/AuthContext'
-import { notifyAuth } from '@/shared/utils/authNotification'
+import { UserProfile } from '@/shared/components/ui/UserProfile'
 import styles from './DoctorDashboardPage.module.css'
+import { DoctorNotificationCenter } from './DoctorNotificationCenter'
+import { DoctorSidebar, type DoctorSection } from './DoctorSidebar'
+
+const DoctorWorkspace = lazy(() => import('./DoctorWorkspace').then((module) => ({ default: module.DoctorWorkspace })))
 
 export function DoctorDashboardPage() {
   const { lang } = useLanguage()
-  const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [activeSection, setActiveSection] = useState<DoctorSection | null>(null)
 
   const appointments = [
     {
@@ -55,7 +59,7 @@ export function DoctorDashboardPage() {
           </div>
 
           <div className={styles.userInfo}>
-            <span className={styles.userName}><Stethoscope aria-hidden="true" size={16} /> {user?.name || 'BS. Nguyễn Văn A'}</span>
+            <DoctorNotificationCenter onNavigate={setActiveSection} />
             <button
               type="button"
               className={styles.backHomeBtn}
@@ -65,22 +69,15 @@ export function DoctorDashboardPage() {
             >
               <House aria-hidden="true" size={15} /> {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
             </button>
-            <button
-              type="button"
-              className={styles.backHomeBtn}
-              onClick={() => {
-                logout()
-                notifyAuth('info', lang === 'vi' ? 'Đã đăng xuất' : 'Signed out', lang === 'vi' ? 'Bạn đã đăng xuất khỏi eClinic.' : 'You have signed out of eClinic.')
-                navigate('/')
-              }}
-            >
-              <LogOut aria-hidden="true" size={15} /> {lang === 'vi' ? 'Đăng xuất' : 'Logout'}
-            </button>
+            <UserProfile />
           </div>
         </div>
       </header>
 
       <main className={styles.container}>
+        <DoctorSidebar activeSection={activeSection} onSelect={setActiveSection} />
+        <div className={styles.dashboardContent}>
+          {activeSection ? <Suspense fallback={<p role="status">{lang === 'vi' ? 'Đang tải không gian làm việc...' : 'Loading workspace...'}</p>}><DoctorWorkspace activeSection={activeSection} /></Suspense> : <>
         <div className={styles.welcomeHeader}>
           <h1 className={styles.welcomeTitle}>
             {lang === 'vi' ? 'Chào bác sĩ, chúc một ngày làm việc hiệu quả!' : 'Welcome Doctor, have a great day!'}
@@ -168,6 +165,8 @@ export function DoctorDashboardPage() {
               ))}
             </tbody>
           </table>
+        </div>
+          </>}
         </div>
       </main>
     </div>

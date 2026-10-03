@@ -7,7 +7,6 @@ export interface NavLink {
 
 export const navLinks: NavLink[] = [
   { href: "#specialties", label: { en: "Specialties", vi: "Chuyên khoa" } },
-  { href: "#centers", label: { en: "Our Centers", vi: "Cơ sở y tế" } },
   { href: "#doctors", label: { en: "Doctors", vi: "Bác sĩ" } },
   { href: "#portal", label: { en: "Patient Portal", vi: "Cổng bệnh nhân" } },
 ];

@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, CalendarDays, CircleCheck, FolderOpen, House, LogOut, Pencil, Plus, ShieldCheck, Stethoscope, UsersRound } from 'lucide-react'
+import { Activity, CalendarDays, CircleCheck, FolderOpen, House, Pencil, Plus, Stethoscope, UsersRound } from 'lucide-react'
 import { useLanguage } from '@/shared/context/LanguageContext'
-import { useAuth } from '@/shared/context/AuthContext'
-import { notifyAuth } from '@/shared/utils/authNotification'
+import { UserProfile } from '@/shared/components/ui/UserProfile'
 import { AdminSidebar } from './AdminSidebar'
 import type { AdminSection } from './AdminSidebar'
 import styles from './AdminDashboardPage.module.css'
@@ -18,7 +17,6 @@ const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
 
 export function AdminDashboardPage() {
   const { lang } = useLanguage()
-  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard')
 
@@ -39,7 +37,6 @@ export function AdminDashboardPage() {
           </div>
 
           <div className={styles.userInfo}>
-            <span className={styles.userName}><ShieldCheck aria-hidden="true" size={16} /> {user?.name || 'Admin eClinic'}</span>
             <button
               type="button"
               className={styles.backHomeBtn}
@@ -49,17 +46,7 @@ export function AdminDashboardPage() {
             >
               <House aria-hidden="true" size={15} /> {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
             </button>
-            <button
-              type="button"
-              className={styles.backHomeBtn}
-              onClick={() => {
-                logout()
-                notifyAuth('info', lang === 'vi' ? 'Đã đăng xuất' : 'Signed out', lang === 'vi' ? 'Bạn đã đăng xuất khỏi eClinic.' : 'You have signed out of eClinic.')
-                navigate('/')
-              }}
-            >
-              <LogOut aria-hidden="true" size={15} /> {lang === 'vi' ? 'Đăng xuất' : 'Logout'}
-            </button>
+            <UserProfile />
           </div>
         </div>
       </header>

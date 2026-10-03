@@ -74,11 +74,19 @@
 }
 
 .container {
-  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  max-width: 1380px;
   margin: 32px auto;
   padding: 0 20px;
   flex: 1;
   width: 100%;
+}
+
+.dashboardContent {
+  min-width: 0;
 }
 
 .welcomeHeader {
@@ -280,5 +288,13 @@
 
   .backHomeBtn {
     padding: 8px 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 20px;
   }
 }

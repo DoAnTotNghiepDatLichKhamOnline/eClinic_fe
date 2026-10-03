@@ -8,6 +8,9 @@ export interface User {
   email?: string
   role: 'patient' | 'doctor' | 'admin'
   avatarUrl?: string
+  specialty?: string
+  degree?: string
+  clinic?: string
 }
 
 interface AuthContextType {
