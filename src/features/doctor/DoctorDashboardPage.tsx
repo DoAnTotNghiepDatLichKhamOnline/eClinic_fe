@@ -67,7 +67,7 @@ export function DoctorDashboardPage() {
                 navigate('/')
               }}
             >
-              <House aria-hidden="true" size={15} /> {lang === 'vi' ? 'Về Trang chủ' : 'Home'}
+              <House aria-hidden="true" size={15} />
             </button>
             <UserProfile />
           </div>
