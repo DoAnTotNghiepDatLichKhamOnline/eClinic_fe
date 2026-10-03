@@ -9,7 +9,7 @@ import {
   IconStethoscope,
   IconVideo,
 } from "@/shared/components/icons";
-import type { Bilingual } from "@/types/i18n";
+import type { Bilingual } from "@/shared/types/i18n";
 
 export interface Specialty {
   id: string;

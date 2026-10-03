@@ -1,6 +1,6 @@
 import { IconCalendar } from '@/shared/components/icons'
 import { useLanguage } from '@/shared/context/LanguageContext'
-import type { Bilingual } from '@/types/i18n'
+import type { Bilingual } from '@/shared/types/i18n'
 import styles from './EmergencyFab.module.css'
 
 const label: Bilingual = { en: 'Book now', vi: 'Đặt lịch ngay' }

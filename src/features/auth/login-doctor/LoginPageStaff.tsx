@@ -8,12 +8,9 @@ import { useAuth } from '@/shared/context/AuthContext'
 import { cx } from '@/shared/utils/cx'
 import styles from './LoginPageStaff.module.css'
 
-export function LoginPageStaff() {
+export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
   const { lang } = useLanguage()
   const { login } = useAuth()
-
-  // Selected role tab: Doctor or Admin
-  const [selectedRole, setSelectedRole] = useState<'doctor' | 'admin'>('doctor')
 
   // Form states - email & password only
   const [email, setEmail] = useState('')
@@ -23,9 +20,6 @@ export function LoginPageStaff() {
 
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
-
-    const isDoctor = selectedRole === 'doctor' || email.includes('doctor') || email.includes('baksi')
-    const role: 'doctor' | 'admin' = isDoctor ? 'doctor' : 'admin'
 
     login({
       id: `${role}-${Date.now()}`,
@@ -72,9 +66,9 @@ export function LoginPageStaff() {
             
             <h1 className={styles.heroTitle}>
               {lang === 'vi' ? (
-                <>Cổng đăng nhập <span className={styles.heroTitleHighlight}>Admin & Bác sĩ</span></>
+                <>Cổng đăng nhập <span className={styles.heroTitleHighlight}>{role === 'doctor' ? 'Bác sĩ' : 'Admin'}</span></>
               ) : (
-                <>Portal for <span className={styles.heroTitleHighlight}>Admin & Doctors</span></>
+                <><span className={styles.heroTitleHighlight}>{role === 'doctor' ? 'Doctor' : 'Admin'}</span> Portal</>
               )}
             </h1>
 
@@ -105,51 +99,11 @@ export function LoginPageStaff() {
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <h2 className={styles.cardTitle}>
-                  {lang === 'vi' ? 'Đăng nhập Nhân viên' : 'Staff Sign In'}
+                  {lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${role === 'doctor' ? 'Doctor' : 'Admin'}`}
                 </h2>
                 <p className={styles.cardSubtitle}>
-                  {lang === 'vi' ? 'Chọn vai trò Đăng nhập' : 'Select Login Role'}
+                  {lang === 'vi' ? 'Sử dụng email nội bộ của bạn' : 'Use your staff email address'}
                 </p>
-              </div>
-
-              {/* Role selector tabs */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: '8px',
-                    border: '1.5px solid',
-                    borderColor: selectedRole === 'doctor' ? '#4f46e5' : '#e2e8f0',
-                    background: selectedRole === 'doctor' ? '#eef2ff' : '#fff',
-                    color: selectedRole === 'doctor' ? '#3730a3' : '#64748b',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedRole('doctor')}
-                >
-                  🩺 {lang === 'vi' ? 'Bác sĩ' : 'Doctor'}
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: '8px',
-                    border: '1.5px solid',
-                    borderColor: selectedRole === 'admin' ? '#4f46e5' : '#e2e8f0',
-                    background: selectedRole === 'admin' ? '#eef2ff' : '#fff',
-                    color: selectedRole === 'admin' ? '#3730a3' : '#64748b',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedRole('admin')}
-                >
-                  🛡️ Admin
-                </button>
               </div>
 
               {message && (
@@ -174,7 +128,7 @@ export function LoginPageStaff() {
                     id="staff-email"
                     type="email"
                     className={styles.input}
-                    placeholder={selectedRole === 'doctor' ? 'baksi@eclinic.vn' : 'admin@eclinic.vn'}
+                    placeholder={role === 'doctor' ? 'baksi@eclinic.vn' : 'admin@eclinic.vn'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -206,9 +160,24 @@ export function LoginPageStaff() {
                 </div>
 
                 <Button type="submit" variant="accent" size="lg" className={styles.submitBtn}>
-                  {lang === 'vi' ? `Đăng nhập ${selectedRole === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${selectedRole === 'doctor' ? 'Doctor' : 'Admin'}`}
+                  {lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${role === 'doctor' ? 'Doctor' : 'Admin'}`}
                 </Button>
               </form>
+
+              <div className={styles.patientLinkWrapper}>
+                <a
+                  href={role === 'doctor' ? '#login-admin' : '#login-doctor'}
+                  className={styles.patientLink}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.location.hash = role === 'doctor' ? '#login-admin' : '#login-doctor'
+                  }}
+                >
+                  {role === 'doctor'
+                    ? (lang === 'vi' ? 'Đăng nhập Admin' : 'Admin Login')
+                    : (lang === 'vi' ? 'Đăng nhập Bác sĩ' : 'Doctor Login')}
+                </a>
+              </div>
 
               <div className={styles.patientLinkWrapper}>
                 <a

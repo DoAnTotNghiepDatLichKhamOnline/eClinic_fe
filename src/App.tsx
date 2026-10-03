@@ -3,8 +3,9 @@ import { ActiveHubProvider } from '@/shared/context/ActiveHubContext'
 import { LanguageProvider } from '@/shared/context/LanguageContext'
 import { AuthProvider } from '@/shared/context/AuthContext'
 import { LandingPage } from '@/features/landing'
-import { LoginPagePatient } from '@/features/auth/LoginPagePatient'
-import { LoginPageStaff } from '@/features/auth/LoginPageStaff'
+import { LoginPagePatient } from '@/features/auth/login-patient/LoginPagePatient'
+import { LoginPageDoctor } from '@/features/auth/login-doctor/LoginPageDoctor'
+import { LoginPageAdmin } from '@/features/auth/login-admin/LoginPageAdmin'
 import { DoctorDashboardPage } from '@/features/doctor/DoctorDashboardPage'
 import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage'
 
@@ -23,8 +24,11 @@ function App() {
     if (route === '#login' || route === '#login-patient') {
       return <LoginPagePatient />
     }
-    if (route === '#login-staff') {
-      return <LoginPageStaff />
+    if (route === '#login-staff' || route === '#login-doctor') {
+      return <LoginPageDoctor />
+    }
+    if (route === '#login-admin') {
+      return <LoginPageAdmin />
     }
     if (route === '#doctor' || route === '#doctor-dashboard') {
       return <DoctorDashboardPage />
