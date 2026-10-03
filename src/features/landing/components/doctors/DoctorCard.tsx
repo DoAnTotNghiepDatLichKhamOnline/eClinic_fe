@@ -1,5 +1,5 @@
 import type { Doctor } from './doctors.data'
-import { useLanguage } from '@/context/LanguageContext'
+import { useLanguage } from '@/shared/context/LanguageContext'
 import styles from './DoctorCard.module.css'
 
 export function DoctorCard({ doctor }: { doctor: Doctor }) {

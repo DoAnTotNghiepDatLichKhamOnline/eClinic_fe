@@ -1,5 +1,5 @@
-import { Container } from '@/components/layout/Container'
-import { useLanguage } from '@/context/LanguageContext'
+import { Container } from '@/shared/components/layout/Container'
+import { useLanguage } from '@/shared/context/LanguageContext'
 import { trustMetrics } from './trust-bar.data'
 import styles from './TrustBar.module.css'
 

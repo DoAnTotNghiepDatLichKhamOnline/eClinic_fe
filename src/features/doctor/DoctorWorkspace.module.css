@@ -1,0 +1,597 @@
+.workspace {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+}
+
+.pageHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 2px;
+}
+
+.pageHeading h1 {
+  margin: 0 0 6px;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.pageHeading p,
+.panelHeading p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.segmented button {
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segmented .selected {
+  background: #e4f3ee;
+  color: #12634d;
+}
+
+.shiftList,
+.appointmentList {
+  display: grid;
+  gap: 10px;
+}
+
+.shiftCard {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(220px, 1.5fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.shiftDate,
+.shiftDetails {
+  display: grid;
+  gap: 5px;
+}
+
+.shiftDate strong {
+  color: var(--navy);
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.shiftDate span,
+.shiftDetails span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.shiftDetails span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.shiftDetails svg {
+  color: #247a62;
+}
+
+.shiftStatus,
+.pendingCount {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 12px;
+  background: #e8f5ef;
+  color: #19714f;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.panelHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panelHeading h2,
+.appointmentTop h2,
+.profileHeading h2,
+.recordHeading h2 {
+  margin: 0 0 4px;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.formGrid label,
+.rejectForm label,
+.lookupForm label {
+  display: grid;
+  gap: 6px;
+  color: #374740;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.formGrid input,
+.formGrid textarea,
+.rejectForm textarea,
+.lookupControls input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid #cdd7d2;
+  border-radius: 5px;
+  background: #fff;
+  color: #17231f;
+  font: inherit;
+  font-size: 13px;
+}
+
+.formGrid textarea,
+.rejectForm textarea {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.formGrid input:focus,
+.formGrid textarea:focus,
+.rejectForm textarea:focus,
+.lookupControls input:focus {
+  border-color: #228263;
+  outline: 2px solid rgba(34, 130, 99, 0.18);
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.textButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: fit-content;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: #176c54;
+  color: #fff;
+}
+
+.primaryButton:hover {
+  background: #105b45;
+}
+
+.secondaryButton {
+  border-color: #cfd9d4;
+  background: #fff;
+  color: #33443d;
+}
+
+.secondaryButton:hover {
+  background: #f4f8f6;
+}
+
+.dangerButton {
+  background: #b42318;
+  color: #fff;
+}
+
+.textButton {
+  padding-inline: 4px;
+  background: transparent;
+  color: #176c54;
+}
+
+.requestList {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.requestList h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.requestList p {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.requestList svg {
+  flex: 0 0 auto;
+}
+
+.emptyNote {
+  padding: 24px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.pendingCount {
+  background: #fff3d6;
+  color: #885a07;
+}
+
+.appointmentCard {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.appointmentTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.appointmentTop h2 {
+  margin-top: 5px;
+}
+
+.appointmentCode,
+.eyebrow {
+  color: #65716c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 12px;
+  background: #eef2f0;
+  color: #4a5952;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.status_pending {
+  background: #fff3d6;
+  color: #885a07;
+}
+
+.status_accepted {
+  background: #e7f1ff;
+  color: #27568e;
+}
+
+.status_declined {
+  background: #fff0ef;
+  color: #a12b23;
+}
+
+.status_completed {
+  background: #e8f5ef;
+  color: #19714f;
+}
+
+.patientFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: #65716c;
+  font-size: 11px;
+}
+
+.reason,
+.refusal {
+  margin: 12px 0;
+  color: #33443d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.refusal {
+  color: #9e2e25;
+}
+
+.appointmentActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.rejectForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.lookupForm {
+  display: grid;
+  gap: 7px;
+}
+
+.lookupControls {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) auto auto;
+  gap: 8px;
+}
+
+.scanner {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #101a17;
+}
+
+.scanner video {
+  width: min(100%, 460px);
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.scanner p {
+  margin: 0;
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+}
+
+.historyBox {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border-left: 3px solid #248367;
+  background: #f1f7f4;
+  color: #33443d;
+  font-size: 12px;
+}
+
+.historyBox p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.historyBox > span {
+  color: #58645f;
+}
+
+.recordHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.recordHeading p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.recordHeading svg {
+  flex: 0 0 auto;
+}
+
+.recordField {
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0ef;
+  color: #33443d;
+  font-size: 12px;
+}
+
+.recordField p {
+  margin: 5px 0 0;
+  white-space: pre-wrap;
+}
+
+.recordHeading + .recordField {
+  margin-top: 10px;
+}
+
+.profileHeading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profileAvatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e4f3ee;
+  color: #176c54;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.profileHeading h2 {
+  margin-bottom: 3px;
+}
+
+.profileHeading span:last-child {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  margin: 0;
+}
+
+.profileGrid > div {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf0ef;
+}
+
+.profileGrid dt {
+  margin-bottom: 5px;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.profileGrid dd {
+  margin: 0;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.readOnlyNote {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+@media print {
+  body:has(.printableRecord) * {
+    visibility: hidden;
+  }
+
+  body:has(.printableRecord) .printableRecord,
+  body:has(.printableRecord) .printableRecord * {
+    visibility: visible;
+  }
+
+  .printableRecord {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .printableRecord button {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .pageHeading {
+    flex-direction: column;
+  }
+
+  .pageHeading h1 {
+    font-size: 22px;
+  }
+
+  .shiftCard {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .shiftDetails {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .shiftStatus {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .formGrid,
+  .profileGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lookupControls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .lookupControls input {
+    grid-column: 1 / -1;
+  }
+
+  .rejectForm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel {
+    padding: 15px;
+  }
+
+  .recordHeading {
+    align-items: flex-start;
+  }
+
+  .recordHeading > svg {
+    width: 96px;
+    height: 96px;
+  }
+}

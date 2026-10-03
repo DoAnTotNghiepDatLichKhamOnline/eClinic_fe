@@ -1,31 +1,24 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Header } from '@/features/landing/components/header/Header'
-import { Footer } from '@/features/landing/components/footer/Footer'
-import { Button } from '@/components/ui/Button'
-import { useLanguage } from '@/context/LanguageContext'
-import { useAuth } from '@/context/AuthContext'
-import { cx } from '@/utils/cx'
+import { ArrowLeft, Check } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Button } from '@/shared/components/ui/Button'
+import { useLanguage } from '@/shared/context/LanguageContext'
+import { useAuth } from '@/shared/context/AuthContext'
+import { notifyAuth } from '@/shared/utils/authNotification'
 import styles from './LoginPageStaff.module.css'
 
-export function LoginPageStaff() {
+export function LoginPageStaff({ role }: { role: 'doctor' | 'admin' }) {
   const { lang } = useLanguage()
   const { login } = useAuth()
-
-  // Selected role tab: Doctor or Admin
-  const [selectedRole, setSelectedRole] = useState<'doctor' | 'admin'>('doctor')
+  const navigate = useNavigate()
 
   // Form states - email & password only
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const [message, setMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null)
-
   const handleLoginSubmit = (e: FormEvent) => {
     e.preventDefault()
-
-    const isDoctor = selectedRole === 'doctor' || email.includes('doctor') || email.includes('baksi')
-    const role: 'doctor' | 'admin' = isDoctor ? 'doctor' : 'admin'
 
     login({
       id: `${role}-${Date.now()}`,
@@ -34,33 +27,27 @@ export function LoginPageStaff() {
       role: role,
     })
 
-    const targetHash = role === 'doctor' ? '#doctor' : '#admin'
-
-    setMessage({
-      type: 'success',
-      text: lang === 'vi' 
-        ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'} thành công! Đang chuyển hướng...` 
-        : `${role === 'doctor' ? 'Doctor' : 'Admin'} login successful! Redirecting...`,
-    })
+    notifyAuth(
+      'success',
+      lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'} thành công` : `${role === 'doctor' ? 'Doctor' : 'Admin'} login successful`,
+      lang === 'vi' ? 'Đang chuyển hướng...' : 'Redirecting...',
+    )
 
     setTimeout(() => {
-      window.location.hash = targetHash
+      navigate(role === 'doctor' ? '/doctor' : '/admin')
     }, 600)
   }
 
   const handleForgotPassword = () => {
-    setMessage({
-      type: 'info',
-      text: lang === 'vi' 
-        ? 'Hướng dẫn khôi phục mật khẩu đã được gửi đến email nội bộ của bạn.' 
-        : 'Password recovery instructions sent to your staff email.',
-    })
+    notifyAuth(
+      'info',
+      lang === 'vi' ? 'Đã gửi hướng dẫn khôi phục' : 'Recovery instructions sent',
+      lang === 'vi' ? 'Kiểm tra email nội bộ của bạn.' : 'Check your staff email.',
+    )
   }
 
   return (
     <div className={styles.pageWrapper}>
-      <Header />
-
       <main className={styles.mainContent}>
         <div className={styles.layoutGrid}>
           {/* Left section: Staff Branding & Highlights */}
@@ -72,9 +59,9 @@ export function LoginPageStaff() {
             
             <h1 className={styles.heroTitle}>
               {lang === 'vi' ? (
-                <>Cổng đăng nhập <span className={styles.heroTitleHighlight}>Admin & Bác sĩ</span></>
+                <>Cổng đăng nhập <span className={styles.heroTitleHighlight}>{role === 'doctor' ? 'Bác sĩ' : 'Admin'}</span></>
               ) : (
-                <>Portal for <span className={styles.heroTitleHighlight}>Admin & Doctors</span></>
+                <><span className={styles.heroTitleHighlight}>{role === 'doctor' ? 'Doctor' : 'Admin'}</span> Portal</>
               )}
             </h1>
 
@@ -86,15 +73,15 @@ export function LoginPageStaff() {
 
             <div className={styles.featuresList}>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Quản lý lịch khám và hồ sơ bệnh án' : 'Manage schedules and medical records'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Điều hành hệ thống phòng khám và nhân sự' : 'Manage clinic operations and staff'}</span>
               </div>
               <div className={styles.featureItem}>
-                <span className={styles.featureIcon}>✓</span>
+                <span className={styles.featureIcon}><Check aria-hidden="true" size={14} /></span>
                 <span>{lang === 'vi' ? 'Bảo mật tiêu chuẩn y tế quốc tế' : 'International medical security standard'}</span>
               </div>
             </div>
@@ -105,65 +92,12 @@ export function LoginPageStaff() {
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <h2 className={styles.cardTitle}>
-                  {lang === 'vi' ? 'Đăng nhập Nhân viên' : 'Staff Sign In'}
+                  {lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${role === 'doctor' ? 'Doctor' : 'Admin'}`}
                 </h2>
                 <p className={styles.cardSubtitle}>
-                  {lang === 'vi' ? 'Chọn vai trò Đăng nhập' : 'Select Login Role'}
+                  {lang === 'vi' ? 'Sử dụng email nội bộ của bạn' : 'Use your staff email address'}
                 </p>
               </div>
-
-              {/* Role selector tabs */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: '8px',
-                    border: '1.5px solid',
-                    borderColor: selectedRole === 'doctor' ? '#4f46e5' : '#e2e8f0',
-                    background: selectedRole === 'doctor' ? '#eef2ff' : '#fff',
-                    color: selectedRole === 'doctor' ? '#3730a3' : '#64748b',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedRole('doctor')}
-                >
-                  🩺 {lang === 'vi' ? 'Bác sĩ' : 'Doctor'}
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    borderRadius: '8px',
-                    border: '1.5px solid',
-                    borderColor: selectedRole === 'admin' ? '#4f46e5' : '#e2e8f0',
-                    background: selectedRole === 'admin' ? '#eef2ff' : '#fff',
-                    color: selectedRole === 'admin' ? '#3730a3' : '#64748b',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedRole('admin')}
-                >
-                  🛡️ Admin
-                </button>
-              </div>
-
-              {message && (
-                <div
-                  className={cx(
-                    styles.alertMessage,
-                    message.type === 'success' && styles.alertSuccess,
-                    message.type === 'info' && styles.alertInfo,
-                    message.type === 'error' && styles.alertError,
-                  )}
-                >
-                  {message.text}
-                </div>
-              )}
 
               <form onSubmit={handleLoginSubmit} className={styles.form}>
                 <div className={styles.fieldGroup}>
@@ -174,7 +108,7 @@ export function LoginPageStaff() {
                     id="staff-email"
                     type="email"
                     className={styles.input}
-                    placeholder={selectedRole === 'doctor' ? 'baksi@eclinic.vn' : 'admin@eclinic.vn'}
+                    placeholder={role === 'doctor' ? 'baksi@eclinic.vn' : 'admin@eclinic.vn'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -206,28 +140,31 @@ export function LoginPageStaff() {
                 </div>
 
                 <Button type="submit" variant="accent" size="lg" className={styles.submitBtn}>
-                  {lang === 'vi' ? `Đăng nhập ${selectedRole === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${selectedRole === 'doctor' ? 'Doctor' : 'Admin'}`}
+                  {lang === 'vi' ? `Đăng nhập ${role === 'doctor' ? 'Bác sĩ' : 'Admin'}` : `Sign In as ${role === 'doctor' ? 'Doctor' : 'Admin'}`}
                 </Button>
               </form>
 
               <div className={styles.patientLinkWrapper}>
-                <a
-                  href="#login"
+                <Link
+                  to={role === 'doctor' ? '/admin/login' : '/doctor/login'}
                   className={styles.patientLink}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.location.hash = '#login'
-                  }}
                 >
-                  ← {lang === 'vi' ? 'Bạn là bệnh nhân? Đăng nhập tại đây' : 'Are you a patient? Log in here'}
-                </a>
+                  {role === 'doctor'
+                    ? (lang === 'vi' ? 'Đăng nhập Admin' : 'Admin Login')
+                    : (lang === 'vi' ? 'Đăng nhập Bác sĩ' : 'Doctor Login')}
+                </Link>
+              </div>
+
+              <div className={styles.patientLinkWrapper}>
+                <Link to="/login" className={styles.patientLink}>
+                  <ArrowLeft aria-hidden="true" size={16} />
+                  {lang === 'vi' ? 'Bạn là bệnh nhân? Đăng nhập tại đây' : 'Are you a patient? Log in here'}
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }

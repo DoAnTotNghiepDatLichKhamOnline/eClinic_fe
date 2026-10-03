@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { Bilingual, Lang } from '@/types/i18n'
+import type { Bilingual, Lang } from '@/shared/types/i18n'
 
 interface LanguageContextValue {
   lang: Lang

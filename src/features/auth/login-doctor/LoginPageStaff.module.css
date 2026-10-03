@@ -33,8 +33,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: #e6f4ef;
-  color: var(--navy);
+  background: #eef2ff;
+  color: #3730a3;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 700;
@@ -44,7 +44,7 @@
 .brandDot {
   width: 8px;
   height: 8px;
-  background: var(--teal);
+  background: #4f46e5;
   border-radius: 50%;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .heroTitleHighlight {
-  color: var(--teal);
+  color: #4f46e5;
 }
 
 .heroSubtitle {
@@ -88,13 +88,16 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--navy);
+  background: #4f46e5;
   color: #fff;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  font-weight: 800;
   flex-shrink: 0;
+}
+
+.featureIcon svg {
+  width: 14px;
+  height: 14px;
 }
 
 .rightSection {
@@ -113,35 +116,23 @@
   padding: 36px 32px;
 }
 
-.tabHeader {
-  display: flex;
-  border-bottom: 2px solid var(--line);
+.cardHeader {
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line);
 }
 
-.tabBtn {
-  flex: 1;
-  padding: 12px 0;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.cardSubtitle {
+  font-size: 14px;
   color: var(--ink-soft);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.tabBtn:hover {
-  color: var(--navy);
-}
-
-.tabActive {
-  color: var(--navy);
-  border-bottom-color: var(--teal);
 }
 
 .form {
@@ -173,12 +164,14 @@
   font-size: 15px;
   color: var(--ink);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input:focus {
-  border-color: var(--navy);
-  box-shadow: 0 0 0 3px rgba(15, 77, 58, 0.12);
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 .forgotWrapper {
@@ -193,13 +186,15 @@
   padding: 0;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--teal);
+  color: #4f46e5;
   cursor: pointer;
-  transition: color 0.15s ease, text-decoration 0.15s ease;
+  transition:
+    color 0.15s ease,
+    text-decoration 0.15s ease;
 }
 
 .forgotBtn:hover {
-  color: var(--teal-dark);
+  color: #3730a3;
   text-decoration: underline;
 }
 
@@ -208,27 +203,27 @@
   margin-top: 8px;
 }
 
-.staffLinkWrapper {
+.patientLinkWrapper {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px dashed var(--line);
   text-align: center;
 }
 
-.staffLink {
+.patientLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--navy);
+  color: var(--ink-soft);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
-.staffLink:hover {
-  color: var(--teal);
+.patientLink:hover {
+  color: var(--navy);
   text-decoration: underline;
 }
 

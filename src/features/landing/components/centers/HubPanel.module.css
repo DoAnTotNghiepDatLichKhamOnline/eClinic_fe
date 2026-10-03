@@ -102,6 +102,17 @@
   text-decoration: none;
 }
 
+.contactChips svg {
+  width: 16px;
+  height: 16px;
+}
+
+.emergencyHeading strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .emergencyBox {
   margin-top: 12px;
   padding: 16px;
@@ -165,8 +176,17 @@
 }
 
 @media (max-width: 520px) {
-  .panel h3 { font-size: 24px; }
-  .body { padding: 22px; }
-  .locationTabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .emergencyHeading { align-items: flex-start; flex-direction: column; }
+  .panel h3 {
+    font-size: 24px;
+  }
+  .body {
+    padding: 22px;
+  }
+  .locationTabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .emergencyHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
