@@ -1,5 +1,7 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Container } from '@/shared/components/layout/Container'
-import { ButtonLink } from '@/shared/components/ui/Button'
+import { Button } from '@/shared/components/ui/Button'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import clinicInterior from '@/features/landing/assets/images/clinic-interior.jpg'
 import { heroContent } from './hero.data'
@@ -7,6 +9,21 @@ import styles from './Hero.module.css'
 
 export function Hero() {
   const { t } = useLanguage()
+  const navigate = useNavigate()
+  const [specialtyId, setSpecialtyId] = useState('')
+  const [location, setLocation] = useState('')
+  const [bookingDate, setBookingDate] = useState('')
+
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    navigate('/appointment', {
+      state: {
+        specialtyId: specialtyId || undefined,
+        location: location || undefined,
+        date: bookingDate || undefined,
+      },
+    })
+  }
 
   return (
     <section className={styles.hero}>
@@ -26,16 +43,22 @@ export function Hero() {
           </h1>
           <p className={styles.sub}>{t(heroContent.sub)}</p>
           <div className={styles.actions}>
-            <ButtonLink href="#book" variant="accent" size="lg">
+            <Button
+              variant="accent"
+              size="lg"
+              onClick={() => navigate('/appointment')}
+            >
               {t(heroContent.primaryCta)}
-            </ButtonLink>
-            <ButtonLink href="#centers" variant="outline" size="lg" className={styles.lightOutline}>
-              {t(heroContent.secondaryCta)}
-            </ButtonLink>
+            </Button>
+            <a href="#centers" className={`btn btn-outline ${styles.lightOutline}`}>
+              <Button variant="outline" size="lg" className={styles.lightOutline}>
+                {t(heroContent.secondaryCta)}
+              </Button>
+            </a>
           </div>
         </div>
 
-        <form className={styles.booking} onSubmit={(e) => e.preventDefault()}>
+        <form className={styles.booking} onSubmit={handleBookingSubmit}>
           <div className={styles.bookingTitle}>
             <span className={styles.bookingBar} />
             <div>
@@ -46,28 +69,42 @@ export function Hero() {
 
           <label>
             <span>{t({ vi: 'Chuyên khoa', en: 'Specialty' })}</span>
-            <select defaultValue="">
-              <option value="" disabled>{t({ vi: 'Chọn chuyên khoa', en: 'Select specialty' })}</option>
-              <option>{t({ vi: 'Nội tổng quát', en: 'General medicine' })}</option>
-              <option>{t({ vi: 'Tim mạch', en: 'Cardiology' })}</option>
-              <option>{t({ vi: 'Nhi khoa', en: 'Pediatrics' })}</option>
-              <option>{t({ vi: 'Da liễu', en: 'Dermatology' })}</option>
+            <select
+              value={specialtyId}
+              onChange={(e) => setSpecialtyId(e.target.value)}
+            >
+              <option value="">{t({ vi: 'Chọn chuyên khoa', en: 'Select specialty' })}</option>
+              <option value="pediatrics">{t({ vi: 'Nhi khoa', en: 'Pediatrics' })}</option>
+              <option value="general-medicine">{t({ vi: 'Nội tổng quát', en: 'General medicine' })}</option>
+              <option value="cardiology">{t({ vi: 'Tim mạch', en: 'Cardiology' })}</option>
+              <option value="dermatology">{t({ vi: 'Da liễu', en: 'Dermatology' })}</option>
+              <option value="ophthalmology">{t({ vi: 'Mắt', en: 'Ophthalmology' })}</option>
+              <option value="orthopedics">{t({ vi: 'Cơ xương khớp', en: 'Orthopedics' })}</option>
+              <option value="neurology">{t({ vi: 'Thần kinh', en: 'Neurology' })}</option>
             </select>
           </label>
 
           <label>
             <span>{t({ vi: 'Địa điểm', en: 'Location' })}</span>
-            <select defaultValue="">
-              <option value="" disabled>{t({ vi: 'Chọn cơ sở', en: 'Select center' })}</option>
-              <option>Hồ Chí Minh</option>
-              <option>Hà Nội</option>
-              <option>Đà Nẵng</option>
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            >
+              <option value="">{t({ vi: 'Chọn cơ sở', en: 'Select center' })}</option>
+              <option value="hcm">Hồ Chí Minh</option>
+              <option value="hn">Hà Nội</option>
+              <option value="dn">Đà Nẵng</option>
             </select>
           </label>
 
           <label>
             <span>{t({ vi: 'Thời gian', en: 'Date & time' })}</span>
-            <input type="date" />
+            <input
+              type="date"
+              value={bookingDate}
+              onChange={(e) => setBookingDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
           </label>
 
           <button type="submit" className={styles.bookingSubmit}>

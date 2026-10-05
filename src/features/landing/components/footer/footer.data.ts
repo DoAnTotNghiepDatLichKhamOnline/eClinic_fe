@@ -1,5 +1,9 @@
 import type { Bilingual } from "@/shared/types/i18n";
 
+export interface PortalLink extends Bilingual {
+  id: string;
+}
+
 export const footerContent = {
   bookTitle: {
     en: "Book an Appointment",
@@ -20,11 +24,15 @@ export const footerContent = {
     vi: "Cổng bệnh nhân",
   } satisfies Bilingual,
   portalLinks: [
-    { en: "Sign in", vi: "Đăng nhập" },
-    { en: "View lab results", vi: "Xem kết quả xét nghiệm" },
-    { en: "Manage appointments", vi: "Quản lý lịch hẹn" },
-    { en: "Insurance & direct billing", vi: "Bảo hiểm & bảo lãnh viện phí" },
-  ] satisfies Bilingual[],
+    { id: "signin", en: "Sign in", vi: "Đăng nhập" },
+    { id: "lab", en: "View lab results", vi: "Xem kết quả xét nghiệm" },
+    { id: "appointments", en: "Manage appointments", vi: "Quản lý lịch hẹn" },
+    {
+      id: "insurance",
+      en: "Insurance & direct billing",
+      vi: "Bảo hiểm & bảo lãnh viện phí",
+    },
+  ] as PortalLink[],
 
   centersTitle: { en: "Our Centers", vi: "Cơ sở y tế" } satisfies Bilingual,
 

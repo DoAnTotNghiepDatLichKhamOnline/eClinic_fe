@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom'
 import type { Doctor } from './doctors.data'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import styles from './DoctorCard.module.css'
 
 export function DoctorCard({ doctor }: { doctor: Doctor }) {
   const { t } = useLanguage()
+  const navigate = useNavigate()
 
   return (
     <article className={styles.card}>
@@ -21,7 +23,13 @@ export function DoctorCard({ doctor }: { doctor: Doctor }) {
           <p><strong>{t({ en: 'Nationality', vi: 'Quốc tịch' })}:</strong> {t(doctor.nationality)}</p>
           <p><strong>{t({ en: 'Languages', vi: 'Ngôn ngữ' })}:</strong> {t(doctor.languages)}</p>
         </div>
-        <button className={styles.profileButton} type="button">{t({ en: 'View profile', vi: 'Xem hồ sơ' })}</button>
+        <button
+          className={styles.profileButton}
+          type="button"
+          onClick={() => navigate('/appointment', { state: { doctorId: doctor.id } })}
+        >
+          {t({ en: 'Book with doctor', vi: 'Đặt lịch với bác sĩ' })}
+        </button>
       </div>
     </article>
   )
