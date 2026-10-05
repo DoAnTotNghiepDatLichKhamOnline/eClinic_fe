@@ -1,20 +1,22 @@
-import { Link } from 'react-router-dom'
-import { useLanguage } from '@/shared/context/LanguageContext'
-import { cx } from '@/shared/utils/cx'
-import type { Specialty } from './specialties.data'
-import { specialtiesContent } from './specialties.data'
-import styles from './SpecialtyCard.module.css'
+import { Link } from "react-router-dom";
+import { useLanguage } from "@/shared/context/LanguageContext";
+import { cx } from "@/utils/cx";
+import type { Specialty } from "./specialties.data";
+import { specialtiesContent } from "./specialties.data";
+import styles from "./SpecialtyCard.module.css";
 
 export function SpecialtyCard({ specialty }: { specialty: Specialty }) {
-  const { t } = useLanguage()
-  const Icon = specialty.icon
+  const { t } = useLanguage();
+  const Icon = specialty.icon;
 
   return (
     <article className={cx(styles.card, specialty.featured && styles.featured)}>
       <Icon className={styles.icon} />
       <h3>{t(specialty.name)}</h3>
 
-      {specialty.description && <p className={styles.desc}>{t(specialty.description)}</p>}
+      {specialty.description && (
+        <p className={styles.desc}>{t(specialty.description)}</p>
+      )}
 
       <ul className={styles.list}>
         {specialty.items.map((item) => (
@@ -32,5 +34,5 @@ export function SpecialtyCard({ specialty }: { specialty: Specialty }) {
         </Link>
       )}
     </article>
-  )
+  );
 }

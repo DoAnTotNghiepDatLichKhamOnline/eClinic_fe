@@ -9,7 +9,7 @@ import {
   Calendar,
   Sparkles,
 } from "lucide-react";
-import type { Lang } from "@/shared/types/i18n";
+import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
 import { calculateAge } from "../appointment.data";
 

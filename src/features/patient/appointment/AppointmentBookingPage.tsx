@@ -11,7 +11,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { notifyAuth } from "@/shared/utils/authNotification";
+import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
 import { getUpcomingBookingDays } from "./appointment.data";
 import { ServiceTimeStep } from "./components/ServiceTimeStep";

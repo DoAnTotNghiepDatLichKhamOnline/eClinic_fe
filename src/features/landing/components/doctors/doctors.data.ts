@@ -1,4 +1,4 @@
-import type { Bilingual } from "@/shared/types/i18n";
+import type { Bilingual } from "@/types/i18n";
 import rafiKotImage from "@/features/landing/assets/images/doctors/doctor-rafi-kot.jpg";
 import mattiasLarssonImage from "@/features/landing/assets/images/doctors/doctor-mattias-larsson.jpg";
 
