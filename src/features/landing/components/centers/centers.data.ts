@@ -1,4 +1,4 @@
-import type { Bilingual } from "@/shared/types/i18n";
+import type { Bilingual } from "@/types/i18n";
 import type { HubId } from "@/shared/context/ActiveHubContext";
 
 export interface CenterLocation {

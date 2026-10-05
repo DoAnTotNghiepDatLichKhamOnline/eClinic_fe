@@ -1,33 +1,29 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import {
-  Menu,
-  Search,
-  X,
-} from 'lucide-react'
-import { Container } from '@/shared/components/layout/Container'
-import { IconLogo } from '@/shared/components/icons'
-import { Button } from '@/shared/components/ui/Button'
-import { useLanguage } from '@/shared/context/LanguageContext'
-import { useAuth } from '@/shared/context/AuthContext'
-import { UserProfile } from '@/shared/components/ui/UserProfile'
-import { cx } from '@/shared/utils/cx'
-import { navLinks } from './header.data'
-import { LanguageToggle } from './LanguageToggle'
-import styles from './Header.module.css'
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, Search, X } from "lucide-react";
+import { Container } from "@/shared/components/layout/Container";
+import { IconLogo } from "@/shared/components/icons";
+import { Button } from "@/shared/components/ui/Button";
+import { useLanguage } from "@/shared/context/LanguageContext";
+import { useAuth } from "@/shared/context/AuthContext";
+import { UserProfile } from "@/shared/components/ui/UserProfile";
+import { cx } from "@/utils/cx";
+import { navLinks } from "./header.data";
+import { LanguageToggle } from "./LanguageToggle";
+import styles from "./Header.module.css";
 
 export function Header() {
-  const { lang, t } = useLanguage()
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const { lang, t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <header className={cx(styles.header, scrolled && styles.scrolled)}>
@@ -45,14 +41,24 @@ export function Header() {
           aria-label="Primary"
         >
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+            >
               {t(link.label)}
             </a>
           ))}
         </nav>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.searchBtn} aria-label="Search"><Search aria-hidden="true" size={18} /></button>
+          <button
+            type="button"
+            className={styles.searchBtn}
+            aria-label="Search"
+          >
+            <Search aria-hidden="true" size={18} />
+          </button>
           <LanguageToggle />
 
           {user ? (
@@ -62,9 +68,9 @@ export function Header() {
               variant="ghostDark"
               size="sm"
               className={styles.loginBtn}
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
             >
-              {lang === 'vi' ? 'Đăng nhập' : 'Login'}
+              {lang === "vi" ? "Đăng nhập" : "Login"}
             </Button>
           )}
 
@@ -81,5 +87,5 @@ export function Header() {
         </div>
       </Container>
     </header>
-  )
+  );
 }

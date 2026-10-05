@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { notifyAuth } from "@/shared/utils/authNotification";
+import { notifyAuth } from "@/utils/authNotification";
 import type { DoctorSection } from "./DoctorSidebar";
 import styles from "./DoctorWorkspace.module.css";
 

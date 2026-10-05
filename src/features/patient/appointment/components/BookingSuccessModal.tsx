@@ -13,7 +13,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
-import type { Lang } from "@/shared/types/i18n";
+import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
 import {
   APPOINTMENT_SPECIALTIES,

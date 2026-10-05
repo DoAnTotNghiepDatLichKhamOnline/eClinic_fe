@@ -9,7 +9,7 @@ import {
   Stethoscope as IconStethoscope,
   Video as IconVideo,
 } from "lucide-react";
-import type { Bilingual } from "@/shared/types/i18n";
+import type { Bilingual } from "@/types/i18n";
 
 export interface Specialty {
   id: string;
