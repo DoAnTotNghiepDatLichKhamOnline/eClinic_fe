@@ -16,6 +16,7 @@ import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
 
 const sectionPaths: Record<DoctorSection, string> = {
+  dashboard: "dashboard",
   schedule: "work-schedule",
   appointments: "appointment-requests",
   consultation: "consultation",
@@ -101,7 +102,7 @@ export function DoctorDashboardPage({
 
       <main className={styles.container}>
         <DoctorSidebar
-          activeSection={activeSection}
+          activeSection={activeSection ?? "dashboard"}
           onSelect={navigateToSection}
         />
         <div className={styles.dashboardContent}>
