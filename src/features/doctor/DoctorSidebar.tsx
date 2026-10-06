@@ -9,6 +9,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import styles from "./DoctorSidebar.module.css";
 
 export type DoctorSection =
+  | "dashboard"
   | "schedule"
   | "appointments"
   | "consultation"
@@ -16,6 +17,12 @@ export type DoctorSection =
 
 const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
   [
+    {
+      id: "dashboard",
+      en: "Dashboard",
+      vi: "Bảng điều khiển",
+      icon: CalendarClock,
+    },
     {
       id: "schedule",
       en: "Work Schedule",

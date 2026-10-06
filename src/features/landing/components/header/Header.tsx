@@ -41,13 +41,13 @@ export function Header() {
           aria-label="Primary"
         >
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
-              href={link.href}
+              to={link.href}
               onClick={() => setMenuOpen(false)}
             >
               {t(link.label)}
-            </a>
+            </Link>
           ))}
         </nav>
 

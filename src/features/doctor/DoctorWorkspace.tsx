@@ -3,12 +3,12 @@ import type { FormEvent } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import type QrScanner from "qr-scanner";
 import {
-  CalendarDays,
   Camera,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   FileHeart,
-  MapPin,
   Search,
   X,
 } from "lucide-react";
@@ -96,6 +96,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     useState<CompletedRecord | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
+  const [scheduleDate, setScheduleDate] = useState(() => new Date());
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -251,21 +252,34 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   };
 
   if (activeSection === "schedule") {
-    const shifts = Array.from(
-      { length: scheduleView === "day" ? 1 : 5 },
+    const weekStart = new Date(scheduleDate);
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+    const calendarDays = Array.from(
+      { length: scheduleView === "day" ? 1 : 7 },
       (_, index) => {
-        const date = new Date();
-        date.setDate(date.getDate() + index);
-        return {
-          date: new Intl.DateTimeFormat(lang, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          }).format(date),
-          time: index % 2 === 0 ? "08:00 - 12:00" : "13:00 - 17:00",
-        };
+        const date = new Date(
+          scheduleView === "day" ? scheduleDate : weekStart,
+        );
+        if (scheduleView === "week") date.setDate(date.getDate() + index);
+        return date;
       },
     );
+    const calendarTitle = new Intl.DateTimeFormat(lang, {
+      ...(scheduleView === "day"
+        ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
+        : { month: "long", year: "numeric" }),
+    }).format(scheduleDate);
+    const moveCalendar = (direction: number) => {
+      setScheduleDate((current) => {
+        const next = new Date(current);
+        next.setDate(
+          next.getDate() + direction * (scheduleView === "day" ? 1 : 7),
+        );
+        return next;
+      });
+    };
+    const isToday = (date: Date) =>
+      date.toDateString() === new Date().toDateString();
     const minimumNotice = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const minimumRequestTime = new Date(
       minimumNotice.getTime() - minimumNotice.getTimezoneOffset() * 60_000,
@@ -333,32 +347,81 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
             </button>
           </div>
         </div>
-        <div className={styles.shiftList}>
-          {shifts.map((shift, index) => (
-            <article className={styles.shiftCard} key={shift.date}>
-              <div className={styles.shiftDate}>
-                <strong>{shift.date}</strong>
-                <span>
-                  {lang === "vi" ? `Ca ${index + 1}` : `Shift ${index + 1}`}
-                </span>
-              </div>
-              <div className={styles.shiftDetails}>
-                <span>
-                  <Clock3 size={15} aria-hidden="true" />
-                  {shift.time}
-                </span>
-                <span>
-                  <MapPin size={15} aria-hidden="true" />
-                  {lang === "vi" ? "Phòng khám eClinic" : "eClinic Clinic"}
-                </span>
-              </div>
-              <span className={styles.shiftStatus}>
-                <CalendarDays size={14} aria-hidden="true" />
-                {lang === "vi" ? "Đã phân công" : "Assigned"}
-              </span>
-            </article>
-          ))}
-        </div>
+        <section
+          className={styles.calendar}
+          aria-label={lang === "vi" ? "Lịch làm việc" : "Work calendar"}
+        >
+          <div className={styles.calendarToolbar}>
+            <div className={styles.calendarNavigation}>
+              <button
+                type="button"
+                onClick={() => moveCalendar(-1)}
+                aria-label={
+                  lang === "vi" ? "Khoảng thời gian trước" : "Previous period"
+                }
+              >
+                <ChevronLeft size={17} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => setScheduleDate(new Date())}>
+                {lang === "vi" ? "Hôm nay" : "Today"}
+              </button>
+              <button
+                type="button"
+                onClick={() => moveCalendar(1)}
+                aria-label={
+                  lang === "vi" ? "Khoảng thời gian tiếp theo" : "Next period"
+                }
+              >
+                <ChevronRight size={17} aria-hidden="true" />
+              </button>
+            </div>
+            <h2>{calendarTitle}</h2>
+          </div>
+          <div
+            className={`${styles.calendarGrid} ${scheduleView === "day" ? styles.calendarDay : ""}`}
+          >
+            {calendarDays.map((date, index) => {
+              const hasShift = date.getDay() !== 0 && date.getDay() !== 6;
+              const dayLabel = new Intl.DateTimeFormat(lang, {
+                weekday: "short",
+              }).format(date);
+              const dateLabel = new Intl.DateTimeFormat(lang, {
+                day: "numeric",
+                month: "short",
+              }).format(date);
+              return (
+                <button
+                  type="button"
+                  className={`${styles.calendarDayCell} ${isToday(date) ? styles.calendarToday : ""}`}
+                  key={date.toISOString()}
+                  onClick={() => {
+                    setScheduleDate(date);
+                    setScheduleView("day");
+                  }}
+                  aria-label={`${dayLabel} ${dateLabel}`}
+                >
+                  <span className={styles.calendarDayName}>{dayLabel}</span>
+                  <strong className={styles.calendarDate}>
+                    {date.getDate()}
+                  </strong>
+                  {hasShift ? (
+                    <span className={styles.calendarShift}>
+                      <Clock3 size={13} aria-hidden="true" />
+                      {index % 2 === 0 ? "08:00 - 12:00" : "13:00 - 17:00"}
+                      <small>
+                        {lang === "vi" ? "Đã phân công" : "Assigned"}
+                      </small>
+                    </span>
+                  ) : (
+                    <span className={styles.calendarOff}>
+                      {lang === "vi" ? "Không có ca" : "No shift"}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
         <form className={styles.panel} onSubmit={submitShiftRequest}>
           <div className={styles.panelHeading}>
             <div>

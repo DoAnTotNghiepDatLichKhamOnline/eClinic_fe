@@ -70,6 +70,15 @@
   gap: 34px;
   margin-top: 40px;
 }
+.viewAll {
+  display: inline-flex;
+  margin-top: 24px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 @media (max-width: 1050px) {
   .filters {
     grid-template-columns: minmax(0, 1fr) 150px;
