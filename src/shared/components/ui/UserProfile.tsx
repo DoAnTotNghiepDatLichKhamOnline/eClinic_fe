@@ -16,6 +16,7 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { cx } from "@/utils/cx";
 import styles from "./UserProfile.module.css";
 
@@ -28,6 +29,7 @@ export function UserProfile({ className }: UserProfileProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,6 +71,12 @@ export function UserProfile({ className }: UserProfileProps) {
   const closeMenu = () => setOpen(false);
 
   const handleLogout = () => {
+    setLogoutConfirmOpen(true);
+    setOpen(false);
+  };
+
+  const confirmLogout = () => {
+    setLogoutConfirmOpen(false);
     logout();
     notifyAuth(
       "info",
@@ -255,6 +263,19 @@ export function UserProfile({ className }: UserProfileProps) {
           </button>
         </section>
       )}
+      <ConfirmDialog
+        isOpen={logoutConfirmOpen}
+        title={lang === "vi" ? "Xác nhận đăng xuất" : "Confirm sign out"}
+        message={
+          lang === "vi"
+            ? "Bạn có chắc chắn muốn đăng xuất khỏi eClinic không?"
+            : "Are you sure you want to sign out of eClinic?"
+        }
+        confirmLabel={lang === "vi" ? "Đăng xuất" : "Sign out"}
+        cancelLabel={lang === "vi" ? "Ở lại" : "Stay signed in"}
+        onConfirm={confirmLogout}
+        onCancel={() => setLogoutConfirmOpen(false)}
+      />
     </div>
   );
 }

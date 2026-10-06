@@ -1,0 +1,14 @@
+.message {
+  margin: 0;
+  color: #53635b;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.confirm {
+  background: #b42318;
+  border-color: #b42318;
+}
+.confirm:hover {
+  background: #912018;
+  border-color: #912018;
+}
