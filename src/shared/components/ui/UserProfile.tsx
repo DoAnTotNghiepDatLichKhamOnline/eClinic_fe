@@ -83,7 +83,7 @@ export function UserProfile({ className }: UserProfileProps) {
         ? "Bạn đã đăng xuất khỏi eClinic."
         : "You have signed out of eClinic.",
     );
-    navigate("/");
+    navigate("/home");
   };
 
   return (

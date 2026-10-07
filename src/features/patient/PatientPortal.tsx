@@ -12,13 +12,13 @@ export function PatientPortal({ children }: { children: ReactNode }) {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link to="/" className={styles.brand}>
+        <Link to="/home" className={styles.brand}>
           <span>eClinic</span>
           <small>{lang === "vi" ? "Cổng bệnh nhân" : "Patient portal"}</small>
         </Link>
         <div className={styles.headerActions}>
           <Link
-            to="/"
+            to="/home"
             className={styles.homeLink}
             aria-label={lang === "vi" ? "Trang chủ" : "Home"}
           >

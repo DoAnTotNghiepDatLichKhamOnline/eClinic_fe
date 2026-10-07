@@ -8,11 +8,13 @@ import { AppointmentBookingPage } from "@/features/patient/appointment/Appointme
 import { DoctorPage } from "@/features/patient/doctors/DoctorPage";
 import { DoctorDetailPage } from "@/features/patient/doctors/DoctorDetailPage";
 import { SpecialtyDirectoryPage } from "@/features/patient/doctors/SpecialtyDirectoryPage";
+import { RoleSelectionPage } from "@/features/entry/RoleSelectionPage";
 
 export const PublicRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<RoleSelectionPage />} />
+      <Route path="/home" element={<LandingPage />} />
       <Route path="/appointment" element={<AppointmentBookingPage />} />
       <Route path="/doctors" element={<DoctorPage />} />
       <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />

@@ -1,0 +1,253 @@
+.page {
+  height: 100vh;
+  color: #18372b;
+  background-color: #f4f7f4;
+  background-image:
+    linear-gradient(#dfe9e3 1px, transparent 1px),
+    linear-gradient(90deg, #dfe9e3 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center -20px;
+  overflow: hidden;
+}
+
+.header {
+  min-height: 76px;
+  padding: 0 clamp(20px, 5vw, 76px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #dce6e0;
+}
+
+.wordmark {
+  color: #15553e;
+  font: 800 23px var(--font-display, sans-serif);
+}
+
+.wordmark span {
+  color: #d66e2b;
+}
+
+.headerMeta {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.headerMeta > span {
+  color: #7a8981;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.main {
+  width: min(1180px, 100%);
+  min-height: calc(100vh - 76px);
+  margin: 0 auto;
+  padding: clamp(40px, 7vh, 78px) 28px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.intro {
+  max-width: 700px;
+  margin: 0 auto 38px;
+  text-align: center;
+  animation: rise-in 500ms ease-out both;
+}
+
+.eyebrow {
+  color: #c76528;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.intro h1 {
+  margin: 12px 0 10px;
+  color: #143d2d;
+  font: 800 clamp(38px, 5vw, 58px)/0.98 var(--font-display, sans-serif);
+}
+
+.intro h1 em {
+  color: #2b8065;
+  font-style: normal;
+}
+
+.intro p {
+  color: #64766c;
+  font-size: 14px;
+}
+
+.roleList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.role {
+  min-height: 242px;
+  padding: 22px 22px 20px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: 38px minmax(0, 1fr);
+  gap: 14px 12px;
+  color: #203d31;
+  background: #fff;
+  border: 1px solid #dce6e0;
+  border-top: 3px solid var(--role-accent);
+  border-radius: 7px;
+  box-shadow: 0 8px 22px #173c2c0a;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+  animation: rise-in 500ms ease-out both;
+}
+
+.role:nth-child(2) {
+  animation-delay: 90ms;
+}
+.role:nth-child(3) {
+  animation-delay: 180ms;
+}
+.patient {
+  --role-accent: #24704d;
+  --role-tint: #e8f3ec;
+}
+.doctor {
+  --role-accent: #287982;
+  --role-tint: #e7f3f3;
+}
+.admin {
+  --role-accent: #bd642d;
+  --role-tint: #fbefe7;
+}
+
+.role:hover {
+  transform: translateY(-3px);
+  border-color: var(--role-accent);
+  box-shadow: 0 14px 28px #173c2c16;
+}
+
+.role:focus-visible {
+  outline: 3px solid var(--role-accent);
+  outline-offset: 3px;
+}
+
+.roleNumber {
+  color: #84928a;
+  font: 700 12px var(--font-display, sans-serif);
+}
+
+.roleIcon {
+  width: 38px;
+  height: 38px;
+  grid-column: 2;
+  display: grid;
+  place-items: center;
+  color: var(--role-accent);
+  background: var(--role-tint);
+  border-radius: 7px;
+}
+
+.roleCopy {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.roleCopy strong {
+  color: #193b2c;
+  font: 750 23px var(--font-display, sans-serif);
+}
+
+.roleCopy > span:not(.roleAction) {
+  max-width: 30ch;
+  margin-top: 7px;
+  color: #63766b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.roleAction {
+  margin-top: auto;
+  padding-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--role-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 38px;
+  display: flex;
+  justify-content: space-between;
+  color: #89968f;
+  font-size: 10px;
+}
+
+.footer span:first-child {
+  color: #577263;
+  font-weight: 800;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 800px) {
+  .main {
+    padding: 48px 20px 22px;
+  }
+
+  .roleList {
+    grid-template-columns: 1fr;
+  }
+
+  .role {
+    min-height: 178px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    min-height: 64px;
+  }
+
+  .headerMeta > span {
+    display: none;
+  }
+
+  .main {
+    min-height: calc(100vh - 64px);
+    padding: 42px 16px 18px;
+  }
+
+  .intro {
+    margin-bottom: 26px;
+  }
+
+  .intro h1 {
+    font-size: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .role {
+    animation: none;
+  }
+}

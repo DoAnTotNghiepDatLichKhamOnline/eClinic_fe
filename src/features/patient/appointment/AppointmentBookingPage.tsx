@@ -324,7 +324,7 @@ export function AppointmentBookingPage() {
 
   const handleGoHome = () => {
     setIsSuccessModalOpen(false);
-    navigate(user?.role === "patient" ? "/patient/appointments" : "/");
+    navigate(user?.role === "patient" ? "/patient/appointments" : "/home");
   };
 
   return (
@@ -335,7 +335,7 @@ export function AppointmentBookingPage() {
         <Container>
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-slate-500 mb-6">
-            <Link to="/" className="hover:text-[#0f4d3a] transition-colors">
+            <Link to="/home" className="hover:text-[#0f4d3a] transition-colors">
               {lang === "vi" ? "Trang chủ" : "Home"}
             </Link>
             <ChevronRight size={13} className="text-slate-400" />

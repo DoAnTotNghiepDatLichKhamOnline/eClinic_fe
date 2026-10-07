@@ -20,7 +20,7 @@ export function LoginPagePatient() {
     typeof requestedPath === "string" &&
     (requestedPath === "/patient" || requestedPath.startsWith("/patient/"))
       ? requestedPath
-      : "/";
+      : "/home";
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");

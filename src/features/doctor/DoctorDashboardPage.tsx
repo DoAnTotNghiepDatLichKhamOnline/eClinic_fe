@@ -90,7 +90,7 @@ export function DoctorDashboardPage({
               type="button"
               className={styles.backHomeBtn}
               onClick={() => {
-                navigate("/");
+                navigate("/home");
               }}
             >
               <House aria-hidden="true" size={15} />
