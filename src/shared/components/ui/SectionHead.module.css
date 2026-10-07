@@ -2,12 +2,17 @@
   max-width: 640px;
   margin-bottom: var(--sp-4);
 }
-.head h2 {
+
+.head h4 {
+  margin: 0 0 14px;
   font-size: clamp(30px, 3.8vw, 44px);
-  margin-bottom: 14px;
+  font-weight: 700;
+  line-height: 1.1;
 }
+
 .head p {
-  font-size: clamp(30px, 3.8vw, 44px);
+  margin: 0;
+  font-size: clamp(14px, 1.2vw, 16px);
   line-height: 1.6;
   color: var(--ink-soft);
 }
@@ -16,6 +21,7 @@
   max-width: 440px;
   margin-bottom: var(--sp-3);
 }
-.tight h2 {
-  font-size: clamp(30px, 3.8vw, 44px);
+
+.tight h4 {
+  font-size: clamp(26px, 3vw, 36px);
 }

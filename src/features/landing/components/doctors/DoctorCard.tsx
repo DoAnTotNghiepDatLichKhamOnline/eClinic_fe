@@ -1,14 +1,13 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import type { Doctor } from "./doctors.data";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import styles from "./DoctorCard.module.css";
 
 export function DoctorCard({ doctor }: { doctor: Doctor }) {
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   return (
-    <article className={styles.card}>
+    <Link to={`/doctors/${doctor.id}`} className={styles.card}>
       <div className={styles.photoWrap}>
         <img className={styles.photo} src={doctor.image} alt={t(doctor.name)} />
       </div>
@@ -32,14 +31,7 @@ export function DoctorCard({ doctor }: { doctor: Doctor }) {
             {t(doctor.languages)}
           </p>
         </div>
-        <button
-          className={styles.profileButton}
-          type="button"
-          onClick={() => navigate(`/doctors/${doctor.id}`)}
-        >
-          {t({ en: "View profile", vi: "Xem hồ sơ" })}
-        </button>
       </div>
-    </article>
+    </Link>
   );
 }

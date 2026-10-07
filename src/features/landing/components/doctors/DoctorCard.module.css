@@ -7,6 +7,14 @@
   border-radius: 12px;
   overflow: hidden;
 }
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 24px 48px rgba(15, 30, 25, 0.12),
+    0 8px 16px rgba(15, 30, 25, 0.08);
+}
+
 .photoWrap {
   background: #eef3ef;
   min-height: 290px;

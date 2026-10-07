@@ -7,7 +7,7 @@ import styles from "./RoleSelectionPage.module.css";
 const roles = [
   {
     key: "patient",
-    path: "/home",
+    path: "/login",
     number: "01",
     Icon: UserRound,
     tone: "patient",
