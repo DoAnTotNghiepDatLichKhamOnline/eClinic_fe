@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   Calendar,
+  CalendarDays,
   Clock,
   User,
   ShieldCheck,
@@ -25,7 +26,8 @@ interface BookingSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onBookAnother: () => void;
-  onGoHome: () => void;
+  onFinish: () => void;
+  isPatientBooking: boolean;
   bookingCode: string;
   formValues: AppointmentFormValues;
   lang: Lang;
@@ -35,7 +37,8 @@ export function BookingSuccessModal({
   isOpen,
   onClose,
   onBookAnother,
-  onGoHome,
+  onFinish,
+  isPatientBooking,
   bookingCode,
   formValues,
   lang,
@@ -69,11 +72,17 @@ export function BookingSuccessModal({
             type="button"
             variant="accent"
             size="md"
-            onClick={onGoHome}
+            onClick={onFinish}
             className="flex items-center gap-1.5"
           >
-            <Home size={16} />
-            {lang === "vi" ? "Về Trang chủ" : "Return to Home"}
+            {isPatientBooking ? <CalendarDays size={16} /> : <Home size={16} />}
+            {isPatientBooking
+              ? lang === "vi"
+                ? "Xem lịch khám"
+                : "View appointments"
+              : lang === "vi"
+                ? "Về Trang chủ"
+                : "Return to Home"}
           </Button>
         </div>
       }

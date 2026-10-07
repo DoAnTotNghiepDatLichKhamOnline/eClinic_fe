@@ -28,7 +28,7 @@ export function Header() {
   return (
     <header className={cx(styles.header, scrolled && styles.scrolled)}>
       <Container className={styles.row}>
-        <Link to="/" className={styles.brand} aria-label="eClinic">
+        <Link to="/home" className={styles.brand} aria-label="eClinic">
           <IconLogo className={styles.brandMark} />
           <span className={styles.brandName}>
             e<em>Clinic</em>
@@ -68,7 +68,7 @@ export function Header() {
               variant="ghostDark"
               size="sm"
               className={styles.loginBtn}
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/entry")}
             >
               {lang === "vi" ? "Đăng nhập" : "Login"}
             </Button>

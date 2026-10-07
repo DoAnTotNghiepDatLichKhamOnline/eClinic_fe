@@ -11,6 +11,8 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { useAuth } from "@/shared/context/AuthContext";
+import { createAppointment } from "@/services/appointmentService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
 import { getUpcomingBookingDays } from "./appointment.data";
@@ -21,6 +23,7 @@ import { BookingSuccessModal } from "./components/BookingSuccessModal";
 
 export function AppointmentBookingPage() {
   const { lang } = useLanguage();
+  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,6 +59,28 @@ export function AppointmentBookingPage() {
     guardianPhone: "",
     guardianRelationship: "Cha/Mẹ",
   });
+
+  useEffect(() => {
+    if (user?.role !== "patient") return;
+    setFormValues((previous) => {
+      const isPediatric = previous.specialtyId === "pediatrics";
+      return {
+        ...previous,
+        patientName: isPediatric
+          ? previous.patientName
+          : previous.patientName || user.name,
+        patientPhone: isPediatric
+          ? previous.patientPhone
+          : previous.patientPhone || user.phone || "",
+        guardianName: isPediatric
+          ? previous.guardianName || user.name
+          : previous.guardianName,
+        guardianPhone: isPediatric
+          ? previous.guardianPhone || user.phone || ""
+          : previous.guardianPhone,
+      };
+    });
+  }, [user, formValues.specialtyId]);
 
   // Synchronize state if routerState changes
   useEffect(() => {
@@ -249,15 +274,22 @@ export function AppointmentBookingPage() {
 
     setIsSubmitting(true);
 
-    // Simulate booking creation
     setTimeout(() => {
-      const randomCode =
-        "ECL-" +
-        new Date().toISOString().slice(0, 10).replace(/-/g, "") +
-        "-" +
-        Math.floor(1000 + Math.random() * 9000);
+      const isPediatric = formValues.specialtyId === "pediatrics";
+      const appointment = createAppointment({
+        patientId: user?.role === "patient" ? user.id : undefined,
+        patientName: formValues.patientName,
+        patientPhone: isPediatric
+          ? formValues.guardianPhone || ""
+          : formValues.patientPhone,
+        specialtyId: formValues.specialtyId,
+        doctorId: formValues.doctorId,
+        date: formValues.date,
+        slotTime: formValues.slotTime,
+        reason: formValues.reason,
+      });
 
-      setBookingCode(randomCode);
+      setBookingCode(appointment.bookingCode);
       setIsSubmitting(false);
       setIsSuccessModalOpen(true);
 
@@ -265,8 +297,8 @@ export function AppointmentBookingPage() {
         "success",
         lang === "vi" ? "Đặt lịch thành công!" : "Appointment Booked!",
         lang === "vi"
-          ? `Mã lịch hẹn: ${randomCode}. eClinic đã ghi nhận lịch khám của bạn.`
-          : `Booking reference: ${randomCode}.`,
+          ? `Mã lịch hẹn: ${appointment.bookingCode}. eClinic đã ghi nhận lịch khám của bạn.`
+          : `Booking reference: ${appointment.bookingCode}.`,
       );
     }, 600);
   };
@@ -292,7 +324,7 @@ export function AppointmentBookingPage() {
 
   const handleGoHome = () => {
     setIsSuccessModalOpen(false);
-    navigate("/");
+    navigate(user?.role === "patient" ? "/patient/appointments" : "/home");
   };
 
   return (
@@ -303,7 +335,7 @@ export function AppointmentBookingPage() {
         <Container>
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-slate-500 mb-6">
-            <Link to="/" className="hover:text-[#0f4d3a] transition-colors">
+            <Link to="/home" className="hover:text-[#0f4d3a] transition-colors">
               {lang === "vi" ? "Trang chủ" : "Home"}
             </Link>
             <ChevronRight size={13} className="text-slate-400" />
@@ -402,10 +434,11 @@ export function AppointmentBookingPage() {
 
       {/* Confirmation Modal */}
       <BookingSuccessModal
+        onFinish={handleGoHome}
+        isPatientBooking={user?.role === "patient"}
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         onBookAnother={handleBookAnother}
-        onGoHome={handleGoHome}
         bookingCode={bookingCode}
         formValues={formValues}
         lang={lang}
