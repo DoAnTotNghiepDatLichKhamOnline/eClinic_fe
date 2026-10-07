@@ -1,7 +1,7 @@
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowRight, Check } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -14,6 +14,13 @@ export function LoginPagePatient() {
   const { lang } = useLanguage();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedPath = (location.state as { from?: unknown } | null)?.from;
+  const redirectTo =
+    typeof requestedPath === "string" &&
+    (requestedPath === "/patient" || requestedPath.startsWith("/patient/"))
+      ? requestedPath
+      : "/";
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
@@ -29,10 +36,10 @@ export function LoginPagePatient() {
     notifyAuth(
       "success",
       lang === "vi" ? "Đăng nhập thành công" : "Login successful",
-      lang === "vi" ? "Đang chuyển về Trang chủ..." : "Redirecting to Home...",
+      lang === "vi" ? "Đang chuyển tới trang của bạn..." : "Redirecting...",
     );
     setTimeout(() => {
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     }, 600);
   };
 

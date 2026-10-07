@@ -3,8 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ChevronDown,
-  CreditCard,
-  FolderOpen,
   KeyRound,
   LogOut,
   Mail,
@@ -138,30 +136,14 @@ export function UserProfile({ className }: UserProfileProps) {
                 lang === "vi" ? "Liên kết bệnh nhân" : "Patient links"
               }
             >
-              <a
-                href="#appointments"
+              <Link
+                to="/patient/appointments"
                 className={styles.item}
                 onClick={closeMenu}
               >
                 <CalendarDays aria-hidden="true" />
                 {lang === "vi" ? "Lịch khám" : "Appointments"}
-              </a>
-              <a
-                href="#payment-history"
-                className={styles.item}
-                onClick={closeMenu}
-              >
-                <CreditCard aria-hidden="true" />
-                {lang === "vi" ? "Lịch sử thanh toán" : "Payment History"}
-              </a>
-              <a href="#records" className={styles.item} onClick={closeMenu}>
-                <FolderOpen aria-hidden="true" />
-                {lang === "vi" ? "Hồ sơ" : "Medical Records"}
-              </a>
-              <a href="#account" className={styles.item} onClick={closeMenu}>
-                <UserRound aria-hidden="true" />
-                {lang === "vi" ? "Tài khoản" : "Account"}
-              </a>
+              </Link>
             </nav>
           ) : (
             <div className={styles.profileDetails}>

@@ -27,6 +27,26 @@ export interface TimeSlotItem {
   available: boolean;
 }
 
+export type AppointmentStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "completed";
+
+export interface AppointmentRecord {
+  bookingCode: string;
+  patientId?: string;
+  patientName: string;
+  patientPhone: string;
+  specialtyId: string;
+  doctorId: string;
+  date: string;
+  slotTime: string;
+  reason: string;
+  status: AppointmentStatus;
+  createdAt: string;
+}
+
 export interface AppointmentFormValues {
   // 1. Nhóm thông tin Đăng ký Dịch vụ & Thời gian khám
   specialtyId: string; // Bắt buộc
