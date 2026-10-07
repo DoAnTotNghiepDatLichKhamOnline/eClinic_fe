@@ -13,8 +13,9 @@ import { RoleSelectionPage } from "@/features/entry/RoleSelectionPage";
 export const PublicRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<RoleSelectionPage />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<LandingPage />} />
+      <Route path="/entry" element={<RoleSelectionPage />} />
       <Route path="/appointment" element={<AppointmentBookingPage />} />
       <Route path="/doctors" element={<DoctorPage />} />
       <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />

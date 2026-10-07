@@ -68,7 +68,7 @@ export function Header() {
               variant="ghostDark"
               size="sm"
               className={styles.loginBtn}
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/entry")}
             >
               {lang === "vi" ? "Đăng nhập" : "Login"}
             </Button>

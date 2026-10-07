@@ -13,7 +13,7 @@ export function SectionHead({
 }) {
   return (
     <div className={cx(styles.head, tight && styles.tight)}>
-      <h2>{title}</h2>
+      <h3>{title}</h3>
       <p>{description}</p>
     </div>
   );
