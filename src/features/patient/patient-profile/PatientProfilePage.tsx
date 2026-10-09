@@ -10,21 +10,10 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import type { HoSoCuaToiResponse } from "@/types/booking.type";
+import type { GioiTinh } from "@/types/common.type";
+import { MOCK_PROFILE } from "./patientProfile.data";
 import styles from "./PatientProfilePage.module.css";
-
-/* ─── Mock Data ─── */
-const MOCK_PROFILE = {
-  cccd: "079203012345",
-  hoTen: "Nguyễn Văn An",
-  ngaySinh: "1990-05-20",
-  gioiTinh: "Nam" as "Nam" | "Nữ" | "Khác",
-  soDienThoai: "0912 345 678",
-  diaChi: "123 Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh",
-  soBaoHiemYTe: "SV4010027483901",
-  tienSuBenhLy: "Tăng huyết áp độ 1 (phát hiện 2021). Dị ứng với Penicillin.",
-};
-
-type GioiTinh = "Nam" | "Nữ" | "Khác";
 
 export function PatientProfilePage() {
   const { lang } = useLanguage();
@@ -33,8 +22,8 @@ export function PatientProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [form, setForm] = useState({ ...MOCK_PROFILE });
-  const [draft, setDraft] = useState({ ...MOCK_PROFILE });
+  const [form, setForm] = useState<HoSoCuaToiResponse>({ ...MOCK_PROFILE });
+  const [draft, setDraft] = useState<HoSoCuaToiResponse>({ ...MOCK_PROFILE });
 
   const handleEdit = () => { setDraft({ ...form }); setEditing(true); };
   const handleCancel = () => { setEditing(false); setDraft({ ...form }); };
@@ -47,7 +36,7 @@ export function PatientProfilePage() {
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const setDraftField = (key: keyof typeof draft, value: string) =>
+  const setDraftField = (key: keyof HoSoCuaToiResponse, value: any) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
   const completionFields = [form.cccd, form.ngaySinh, form.soBaoHiemYTe, form.tienSuBenhLy];
@@ -116,35 +105,35 @@ export function PatientProfilePage() {
                 <label className={styles.fieldLabel} htmlFor="pp-cccd">
                   {vi ? "Số CCCD / CMND" : "National ID"}
                 </label>
-                <input id="pp-cccd" className={styles.input} value={draft.cccd} onChange={(e) => setDraftField("cccd", e.target.value)} placeholder="012345678912" />
+                <input id="pp-cccd" className={styles.input} value={draft.cccd || ""} onChange={(e) => setDraftField("cccd", e.target.value)} placeholder="012345678912" />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="pp-dob">
                   {vi ? "Ngày sinh" : "Date of birth"}
                 </label>
-                <input id="pp-dob" className={styles.input} type="date" value={draft.ngaySinh} onChange={(e) => setDraftField("ngaySinh", e.target.value)} />
+                <input id="pp-dob" className={styles.input} type="date" value={draft.ngaySinh || ""} onChange={(e) => setDraftField("ngaySinh", e.target.value)} />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="pp-gender">
                   {vi ? "Giới tính" : "Gender"}
                 </label>
-                <select id="pp-gender" className={styles.select} value={draft.gioiTinh} onChange={(e) => setDraftField("gioiTinh", e.target.value as GioiTinh)}>
-                  <option value="Nam">{vi ? "Nam" : "Male"}</option>
-                  <option value="Nữ">{vi ? "Nữ" : "Female"}</option>
-                  <option value="Khác">{vi ? "Khác" : "Other"}</option>
+                <select id="pp-gender" className={styles.select} value={draft.gioiTinh || "NAM"} onChange={(e) => setDraftField("gioiTinh", e.target.value as GioiTinh)}>
+                  <option value="NAM">{vi ? "Nam" : "Male"}</option>
+                  <option value="NU">{vi ? "Nữ" : "Female"}</option>
+                  <option value="KHAC">{vi ? "Khác" : "Other"}</option>
                 </select>
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="pp-phone">
                   {vi ? "Số điện thoại" : "Phone number"}
                 </label>
-                <input id="pp-phone" className={styles.input} value={draft.soDienThoai} onChange={(e) => setDraftField("soDienThoai", e.target.value)} />
+                <input id="pp-phone" className={styles.input} value={draft.soDienThoai || ""} onChange={(e) => setDraftField("soDienThoai", e.target.value)} />
               </div>
               <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
                 <label className={styles.fieldLabel} htmlFor="pp-address">
                   {vi ? "Địa chỉ" : "Address"}
                 </label>
-                <input id="pp-address" className={styles.input} value={draft.diaChi} onChange={(e) => setDraftField("diaChi", e.target.value)} />
+                <input id="pp-address" className={styles.input} value={draft.diaChi || ""} onChange={(e) => setDraftField("diaChi", e.target.value)} />
               </div>
             </div>
             <div className={styles.actionBar}>
@@ -163,7 +152,7 @@ export function PatientProfilePage() {
             {[
               { label: vi ? "Số CCCD / CMND" : "National ID", value: form.cccd },
               { label: vi ? "Ngày sinh" : "Date of birth", value: form.ngaySinh ? new Date(form.ngaySinh).toLocaleDateString(vi ? "vi-VN" : "en-US") : "" },
-              { label: vi ? "Giới tính" : "Gender", value: form.gioiTinh },
+              { label: vi ? "Giới tính" : "Gender", value: form.gioiTinh === "NAM" ? (vi ? "Nam" : "Male") : form.gioiTinh === "NU" ? (vi ? "Nữ" : "Female") : form.gioiTinh === "KHAC" ? (vi ? "Khác" : "Other") : "" },
               { label: vi ? "Số điện thoại" : "Phone", value: form.soDienThoai },
             ].map((item) => (
               <div className={styles.viewItem} key={item.label}>
@@ -237,7 +226,7 @@ export function PatientProfilePage() {
             <textarea
               id="pp-history"
               className={styles.textarea}
-              value={draft.tienSuBenhLy}
+              value={draft.tienSuBenhLy || ""}
               onChange={(e) => setDraftField("tienSuBenhLy", e.target.value)}
               placeholder={vi ? "Mô tả các bệnh lý nền, dị ứng thuốc..." : "Describe chronic conditions, drug allergies..."}
             />

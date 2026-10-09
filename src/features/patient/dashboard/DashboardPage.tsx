@@ -13,37 +13,15 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import type { TrangCaNhanResponse } from "@/types/booking.type";
+import { MOCK_DASHBOARD } from "./dashboard.data";
 import styles from "./DashboardPage.module.css";
 
-/* ─── Mock Data ─── */
-const MOCK = {
-  upcomingAppointments: [
-    { id: 1, date: "2026-10-18", time: "09:30", doctorName: "BS. Trần Thị Lan", specialty: "Nội tổng quát" },
-    { id: 2, date: "2026-10-22", time: "14:00", doctorName: "BS.CK2 Lê Hoàng Nam", specialty: "Tim mạch" },
-  ],
-  recentVisits: [
-    { id: 3, date: "2026-09-10", doctorName: "BS. Phạm Anh Tuấn", specialty: "Da liễu" },
-    { id: 4, date: "2026-08-25", doctorName: "BS. Đỗ Minh Châu", specialty: "Nhi khoa" },
-    { id: 5, date: "2026-08-01", doctorName: "BS. Ngô Thành Đạt", specialty: "Tai - Mũi - Họng" },
-  ],
-  family: [
-    { id: 1, name: "Nguyễn Thị Bình", relation: { vi: "Mẹ", en: "Mother" } },
-    { id: 2, name: "Nguyễn Bảo Long", relation: { vi: "Con trai", en: "Son" } },
-    { id: 3, name: "Nguyễn Thị Mai", relation: { vi: "Vợ", en: "Wife" } },
-  ],
-  stats: {
-    totalAppointments: 12,
-    upcoming: 2,
-    completed: 9,
-    familyCount: 3,
-  },
-};
-
-const STAT_CARDS = (vi: boolean) => [
-  { label: vi ? "Tổng lịch hẹn" : "Total appointments", value: MOCK.stats.totalAppointments, color: "#8b5cf6", bg: "#f5f3ff", icon: <CalendarDays size={18} /> },
-  { label: vi ? "Sắp tới" : "Upcoming", value: MOCK.stats.upcoming, color: "#d97706", bg: "#fef3c7", icon: <Clock size={18} /> },
-  { label: vi ? "Đã khám" : "Completed", value: MOCK.stats.completed, color: "#1a9c6e", bg: "#e8f5ef", icon: <CheckCircle size={18} /> },
-  { label: vi ? "Người thân" : "Family members", value: MOCK.stats.familyCount, color: "#3b82f6", bg: "#eff6ff", icon: <Users size={18} /> },
+const STAT_CARDS = (data: TrangCaNhanResponse, vi: boolean) => [
+  { label: vi ? "Tổng lịch hẹn" : "Total appointments", value: data.soLich.lichSu, color: "#8b5cf6", bg: "#f5f3ff", icon: <CalendarDays size={18} /> },
+  { label: vi ? "Sắp tới" : "Upcoming", value: data.soLich.sapToiCuaToi, color: "#d97706", bg: "#fef3c7", icon: <Clock size={18} /> },
+  { label: vi ? "Đã khám" : "Completed", value: data.soLich.daKham, color: "#1a9c6e", bg: "#e8f5ef", icon: <CheckCircle size={18} /> },
+  { label: vi ? "Người thân" : "Family members", value: data.nguoiThan.length, color: "#3b82f6", bg: "#eff6ff", icon: <Users size={18} /> },
 ];
 
 export function DashboardPage() {
@@ -74,7 +52,7 @@ export function DashboardPage() {
 
       {/* ─── Stats Row ─── */}
       <div className={styles.statsRow}>
-        {STAT_CARDS(vi).map((s) => (
+        {STAT_CARDS(MOCK_DASHBOARD, vi).map((s) => (
           <div className={styles.statCard} key={s.label}>
             <div className={styles.statCardIcon} style={{ background: s.bg, color: s.color }}>
               {s.icon}
@@ -130,14 +108,14 @@ export function DashboardPage() {
             {vi ? "Xem tất cả" : "View all"} <ChevronRight size={13} />
           </Link>
         </div>
-        {MOCK.upcomingAppointments.length === 0 ? (
+        {MOCK_DASHBOARD.lichSapToi.cuaToi.length === 0 ? (
           <p className={styles.emptyMini}>{vi ? "Không có lịch hẹn sắp tới." : "No upcoming appointments."}</p>
         ) : (
           <div className={styles.upcomingList}>
-            {MOCK.upcomingAppointments.map((a) => {
-              const d = new Date(a.date);
+            {MOCK_DASHBOARD.lichSapToi.cuaToi.map((a) => {
+              const d = new Date(a.ngay);
               return (
-                <div className={styles.upcomingItem} key={a.id}>
+                <div className={styles.upcomingItem} key={a.maPhieuKham}>
                   <div className={styles.upcomingDate}>
                     <span className={styles.upcomingDay}>
                       {d.toLocaleDateString(vi ? "vi-VN" : "en-US", { day: "2-digit" })}
@@ -147,10 +125,10 @@ export function DashboardPage() {
                     </span>
                   </div>
                   <div className={styles.upcomingInfo}>
-                    <div className={styles.upcomingDoctor}>{a.doctorName}</div>
-                    <div className={styles.upcomingSpecialty}>{a.specialty}</div>
+                    <div className={styles.upcomingDoctor}>{a.bacSi.hoTen}</div>
+                    <div className={styles.upcomingSpecialty}>{a.tenChuyenKhoa}</div>
                   </div>
-                  <div className={styles.upcomingTime}>{a.time}</div>
+                  <div className={styles.upcomingTime}>{a.gioKhamDuKien}</div>
                 </div>
               );
             })}
@@ -170,14 +148,14 @@ export function DashboardPage() {
           </Link>
         </div>
         <div className={styles.upcomingList}>
-          {MOCK.recentVisits.map((v) => (
-            <div className={styles.recentItem} key={v.id}>
+          {MOCK_DASHBOARD.lanKhamGanDay.map((v) => (
+            <div className={styles.recentItem} key={v.lichHen.maPhieuKham}>
               <div className={styles.recentDot} />
               <div className={styles.recentInfo}>
-                <div className={styles.recentDoctor}>{v.doctorName}</div>
+                <div className={styles.recentDoctor}>{v.lichHen.bacSi.hoTen}</div>
                 <div className={styles.recentDate}>
-                  {new Date(v.date).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
-                  {" · "}{v.specialty}
+                  {new Date(v.lichHen.ngay).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  {" · "}{v.lichHen.tenChuyenKhoa}
                 </div>
               </div>
               <span className={styles.recentBadge}>{vi ? "Đã khám" : "Done"}</span>
@@ -195,14 +173,16 @@ export function DashboardPage() {
           </h2>
         </div>
         <div className={styles.familyList}>
-          {MOCK.family.map((f) => {
-            const fi = f.name.trim().split(/\s+/).slice(-2).map((p) => p[0]).join("").toUpperCase();
+          {MOCK_DASHBOARD.nguoiThan.map((f) => {
+            const fi = f.hoTen.trim().split(/\s+/).slice(-2).map((p) => p[0]).join("").toUpperCase();
             return (
               <div className={styles.familyPill} key={f.id}>
                 <div className={styles.familyAvatar}>{fi}</div>
                 <div>
-                  <div>{f.name}</div>
-                  <div className={styles.familyRelation}>{f.relation[lang]}</div>
+                  <div>{f.hoTen}</div>
+                  <div className={styles.familyRelation}>
+                    {f.nguoiGiamHo ? (vi ? "Con" : "Child") : f.gioiTinh === "NU" ? (vi ? "Mẹ / Vợ" : "Mother / Wife") : (vi ? "Người thân" : "Family")}
+                  </div>
                 </div>
               </div>
             );

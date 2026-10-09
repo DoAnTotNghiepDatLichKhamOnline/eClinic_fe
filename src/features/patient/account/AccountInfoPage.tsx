@@ -16,18 +16,8 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import { MOCK_USER } from "./account.data";
 import styles from "./AccountInfoPage.module.css";
-
-/* ─── Mock Data ─── */
-const MOCK_USER = {
-  hoTen: "Nguyễn Văn An",
-  email: "nguyenvanan@gmail.com",
-  soDienThoai: "0912 345 678",
-  anhDaiDien: null as string | null,
-  coMatKhau: true,
-  lienKetGoogle: false,
-  ngayTao: "2024-01-15T08:30:00Z",
-};
 
 export function AccountInfoPage() {
   const { lang } = useLanguage();

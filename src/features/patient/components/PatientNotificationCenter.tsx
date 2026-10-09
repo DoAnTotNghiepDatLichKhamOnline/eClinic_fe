@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, Calendar, Check, CheckCheck, FileText, HeartPulse } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import type { LoaiThongBao } from "@/types/common.type";
 import styles from "./PatientNotificationCenter.module.css";
 
 interface PatientNotice {
   id: string;
-  kind: "appointment" | "result" | "reminder";
+  loai: LoaiThongBao;
   path: string;
   time: string;
   read: boolean;
@@ -17,7 +18,7 @@ interface PatientNotice {
 const initialNotices: PatientNotice[] = [
   {
     id: "pat-notice-01",
-    kind: "appointment",
+    loai: "NHAC_LICH_KHAM",
     path: "/patient/my-appointments",
     time: "09:30",
     read: false,
@@ -32,7 +33,7 @@ const initialNotices: PatientNotice[] = [
   },
   {
     id: "pat-notice-02",
-    kind: "result",
+    loai: "HE_THONG",
     path: "/patient/patient-profile",
     time: "08:15",
     read: false,
@@ -47,7 +48,7 @@ const initialNotices: PatientNotice[] = [
   },
   {
     id: "pat-notice-03",
-    kind: "reminder",
+    loai: "NHAC_LICH_KHAM",
     path: "/appointment",
     time: "Hôm qua",
     read: true,
@@ -105,8 +106,8 @@ export function PatientNotificationCenter() {
 
   const renderIcon = (notice: PatientNotice) => {
     if (notice.read) return <Check size={13} aria-hidden="true" />;
-    if (notice.kind === "appointment") return <Calendar size={12} aria-hidden="true" />;
-    if (notice.kind === "result") return <FileText size={12} aria-hidden="true" />;
+    if (notice.loai === "NHAC_LICH_KHAM") return <Calendar size={12} aria-hidden="true" />;
+    if (notice.loai === "HE_THONG") return <FileText size={12} aria-hidden="true" />;
     return <HeartPulse size={12} aria-hidden="true" />;
   };
 

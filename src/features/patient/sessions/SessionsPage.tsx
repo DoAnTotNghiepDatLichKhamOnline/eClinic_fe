@@ -11,62 +11,8 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import { MOCK_SESSIONS, type SessionItem } from "./sessions.data";
 import styles from "./SessionsPage.module.css";
-
-/* ─── Mock Data ─── */
-interface Session {
-  id: string;
-  thietBi: string;
-  loai: "desktop" | "mobile";
-  ip: string;
-  viTri: string;
-  dangNhapLuc: string;
-  hoatDongLuc: string;
-  hienTai: boolean;
-}
-
-const MOCK_SESSIONS: Session[] = [
-  {
-    id: "current-1",
-    thietBi: "Chrome 128 · Windows 11",
-    loai: "desktop",
-    ip: "118.70.125.44",
-    viTri: "TP. Hồ Chí Minh, Việt Nam",
-    dangNhapLuc: "2026-10-09T08:15:00Z",
-    hoatDongLuc: "2026-10-10T00:10:00Z",
-    hienTai: true,
-  },
-  {
-    id: "sess-2",
-    thietBi: "Safari · iPhone 15 Pro",
-    loai: "mobile",
-    ip: "14.241.85.12",
-    viTri: "Hà Nội, Việt Nam",
-    dangNhapLuc: "2026-10-07T14:30:00Z",
-    hoatDongLuc: "2026-10-07T19:45:00Z",
-    hienTai: false,
-  },
-  {
-    id: "sess-3",
-    thietBi: "Firefox 130 · macOS Sonoma",
-    loai: "desktop",
-    ip: "203.162.4.190",
-    viTri: "Đà Nẵng, Việt Nam",
-    dangNhapLuc: "2026-10-05T09:00:00Z",
-    hoatDongLuc: "2026-10-05T11:20:00Z",
-    hienTai: false,
-  },
-  {
-    id: "sess-4",
-    thietBi: "Chrome · Android 14",
-    loai: "mobile",
-    ip: "27.72.98.66",
-    viTri: "Cần Thơ, Việt Nam",
-    dangNhapLuc: "2026-10-01T20:00:00Z",
-    hoatDongLuc: "2026-10-01T20:30:00Z",
-    hienTai: false,
-  },
-];
 
 function formatRelative(isoStr: string, vi: boolean): string {
   const diff = Date.now() - new Date(isoStr).getTime();
@@ -83,7 +29,7 @@ export function SessionsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
 
-  const [sessions, setSessions] = useState(MOCK_SESSIONS);
+  const [sessions, setSessions] = useState<SessionItem[]>(MOCK_SESSIONS);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [revokedAll, setRevokedAll] = useState(false);
 

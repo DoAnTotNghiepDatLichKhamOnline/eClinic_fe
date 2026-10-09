@@ -13,52 +13,18 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import type { LichHenCuaToiResponse } from "@/types/booking.type";
+import type { TrangThaiLichHen } from "@/types/common.type";
+import { MOCK_APPOINTMENTS } from "./myAppointments.data";
 import styles from "./MyAppointmentsPage.module.css";
 
-/* ─── Mock Data ─── */
-type Status = "upcoming" | "done" | "cancelled";
+type TabStatus = "upcoming" | "done" | "cancelled";
 
-interface Appointment {
-  id: number;
-  date: string; // ISO
-  time: string;
-  doctorName: string;
-  specialty: string;
-  clinic: string;
-  patientName: string;
-  isSelf: boolean;
-  status: Status;
-  note?: string;
-}
-
-const MOCK_APPOINTMENTS: Appointment[] = [
-  {
-    id: 1, date: "2026-10-18", time: "09:30", doctorName: "BS. Trần Thị Lan",
-    specialty: "Nội tổng quát", clinic: "Phòng khám Đa khoa Gia Định",
-    patientName: "Nguyễn Văn An", isSelf: true, status: "upcoming",
-  },
-  {
-    id: 2, date: "2026-10-22", time: "14:00", doctorName: "BS.CK2 Lê Hoàng Nam",
-    specialty: "Tim mạch", clinic: "Bệnh viện Chợ Rẫy",
-    patientName: "Nguyễn Thị Bình (Mẹ)", isSelf: false, status: "upcoming",
-  },
-  {
-    id: 3, date: "2026-09-10", time: "10:00", doctorName: "BS. Phạm Anh Tuấn",
-    specialty: "Da liễu", clinic: "Phòng khám Thẩm mỹ Thu Cúc",
-    patientName: "Nguyễn Văn An", isSelf: true, status: "done",
-    note: "Đã khám, kê đơn thuốc. Tái khám sau 4 tuần.",
-  },
-  {
-    id: 4, date: "2026-08-25", time: "08:00", doctorName: "BS. Đỗ Minh Châu",
-    specialty: "Nhi khoa", clinic: "Bệnh viện Nhi Đồng 1",
-    patientName: "Nguyễn Bảo Long (Con)", isSelf: false, status: "done",
-  },
-  {
-    id: 5, date: "2026-09-05", time: "15:30", doctorName: "BS. Vũ Quang Huy",
-    specialty: "Xương khớp", clinic: "Phòng khám CTCH",
-    patientName: "Nguyễn Văn An", isSelf: true, status: "cancelled",
-  },
-];
+const getApptCategory = (status: TrangThaiLichHen): TabStatus => {
+  if (status === "DA_HOAN_THANH") return "done";
+  if (status === "DA_HUY" || status === "BI_TU_CHOI" || status === "DA_HUY_DO_DOI_LICH") return "cancelled";
+  return "upcoming";
+};
 
 const STATUS_CONFIG = {
   upcoming: { label: { vi: "Sắp tới", en: "Upcoming" }, cls: styles.badgeUpcoming, cardCls: styles.appointmentCardUpcoming, icon: <Clock3 size={11} /> },
@@ -70,29 +36,31 @@ export function MyAppointmentsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
 
-  const [activeTab, setActiveTab] = useState<Status | "all">("upcoming");
+  const [activeTab, setActiveTab] = useState<TabStatus | "all">("upcoming");
   const [search, setSearch] = useState("");
 
-  const filtered = MOCK_APPOINTMENTS.filter((a) => {
-    const matchTab = activeTab === "all" || a.status === activeTab;
+  const filtered: LichHenCuaToiResponse[] = MOCK_APPOINTMENTS.filter((a) => {
+    const category = getApptCategory(a.trangThai);
+    const matchTab = activeTab === "all" || category === activeTab;
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
-      a.doctorName.toLowerCase().includes(q) ||
-      a.specialty.toLowerCase().includes(q) ||
-      a.patientName.toLowerCase().includes(q) ||
-      a.clinic.toLowerCase().includes(q);
+      a.bacSi.hoTen.toLowerCase().includes(q) ||
+      a.tenChuyenKhoa.toLowerCase().includes(q) ||
+      a.hoTenBenhNhan.toLowerCase().includes(q) ||
+      a.phongKham.tenPhong.toLowerCase().includes(q) ||
+      a.maPhieuKham.toLowerCase().includes(q);
     return matchTab && matchSearch;
   });
 
   const counts = {
     all: MOCK_APPOINTMENTS.length,
-    upcoming: MOCK_APPOINTMENTS.filter((a) => a.status === "upcoming").length,
-    done: MOCK_APPOINTMENTS.filter((a) => a.status === "done").length,
-    cancelled: MOCK_APPOINTMENTS.filter((a) => a.status === "cancelled").length,
+    upcoming: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "upcoming").length,
+    done: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "done").length,
+    cancelled: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "cancelled").length,
   };
 
-  const tabs: { key: Status | "all"; label: { vi: string; en: string } }[] = [
+  const tabs: { key: TabStatus | "all"; label: { vi: string; en: string } }[] = [
     { key: "upcoming", label: { vi: "Sắp tới", en: "Upcoming" } },
     { key: "done", label: { vi: "Đã khám", en: "Completed" } },
     { key: "cancelled", label: { vi: "Đã hủy", en: "Cancelled" } },
@@ -163,16 +131,17 @@ export function MyAppointmentsPage() {
       ) : (
         <div className={styles.appointmentList} role="list">
           {filtered.map((appt) => {
-            const d = new Date(appt.date);
-            const cfg = STATUS_CONFIG[appt.status];
+            const d = new Date(appt.ngay);
+            const category = getApptCategory(appt.trangThai);
+            const cfg = STATUS_CONFIG[category];
             return (
               <div
-                key={appt.id}
+                key={appt.maPhieuKham}
                 role="listitem"
                 className={`${styles.appointmentCard} ${cfg.cardCls}`}
               >
                 {/* Date block */}
-                <div className={`${styles.dateBlock} ${appt.status === "done" ? styles.dateBlockDone : appt.status === "cancelled" ? styles.dateBlockCancelled : ""}`}>
+                <div className={`${styles.dateBlock} ${category === "done" ? styles.dateBlockDone : category === "cancelled" ? styles.dateBlockCancelled : ""}`}>
                   <span className={styles.dateDay}>
                     {d.toLocaleDateString(vi ? "vi-VN" : "en-US", { day: "2-digit" })}
                   </span>
@@ -183,29 +152,29 @@ export function MyAppointmentsPage() {
 
                 {/* Info */}
                 <div className={styles.appointmentInfo}>
-                  <div className={styles.appointmentDoctor}>{appt.doctorName}</div>
+                  <div className={styles.appointmentDoctor}>{appt.bacSi.hoTen}</div>
                   <div className={styles.appointmentMeta}>
                     <span className={styles.appointmentMetaItem}>
                       <Stethoscope size={12} />
-                      {appt.specialty}
+                      {appt.tenChuyenKhoa}
                     </span>
                     <span className={styles.appointmentMetaItem}>
                       <Clock size={12} />
-                      {appt.time}
+                      {appt.gioKhamDuKien}
                     </span>
                     <span className={styles.appointmentMetaItem}>
                       <MapPin size={12} />
-                      {appt.clinic}
+                      {appt.phongKham.tenPhong}
                     </span>
                   </div>
                   <div className={styles.patientTag}>
                     <User size={10} />
-                    {appt.patientName}
-                    {appt.isSelf ? (vi ? " (Bản thân)" : " (Self)") : ""}
+                    {appt.hoTenBenhNhan}
+                    {appt.laBanThan ? (vi ? " (Bản thân)" : " (Self)") : ""}
                   </div>
-                  {appt.note && (
+                  {appt.lyDoKham && (
                     <p style={{ margin: "4px 0 0", fontSize: 12, color: "#667068", fontStyle: "italic" }}>
-                      {appt.note}
+                      {appt.lyDoKham}
                     </p>
                   )}
                 </div>
@@ -216,7 +185,7 @@ export function MyAppointmentsPage() {
                     {cfg.icon}
                     {cfg.label[lang]}
                   </span>
-                  {appt.status === "upcoming" && (
+                  {category === "upcoming" && (
                     <>
                       <button className={`${styles.btnSmall} ${styles.btnSmallOutline}`}>
                         {vi ? "Chi tiết" : "Details"}
@@ -227,7 +196,7 @@ export function MyAppointmentsPage() {
                       </button>
                     </>
                   )}
-                  {appt.status === "done" && (
+                  {category === "done" && (
                     <button className={`${styles.btnSmall} ${styles.btnSmallPrimary}`}>
                       {vi ? "Xem kết quả" : "View result"}
                     </button>
