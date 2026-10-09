@@ -5,8 +5,6 @@ import { SpecialtiesSection } from "./components/specialties/SpecialtiesSection"
 import { DoctorsSection } from "./components/doctors/DoctorsSection";
 import { CtaSection } from "./components/cta/CtaSection";
 import { Footer } from "./components/footer/Footer";
-import { EmergencyFab } from "./components/emergency-fab/EmergencyFab";
-import { SymptomChatWidget } from "./components/chat/SymptomChatWidget";
 
 /** Landing page composition. Page-specific UI stays inside the landing feature. */
 export function LandingPage() {
@@ -24,8 +22,6 @@ export function LandingPage() {
       </main>
 
       <Footer />
-      <EmergencyFab />
-      <SymptomChatWidget />
     </>
   );
 }

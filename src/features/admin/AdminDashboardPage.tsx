@@ -15,6 +15,7 @@ import { UserProfile } from "@/shared/components/ui/UserProfile";
 import { LanguageToggle } from "@/features/landing/components/header/LanguageToggle";
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminSection } from "./AdminSidebar";
+import { AdminNotificationCenter } from "./AdminNotificationCenter";
 import styles from "./AdminDashboardPage.module.css";
 
 const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
@@ -88,6 +89,7 @@ export function AdminDashboardPage({
           </div>
 
           <div className={styles.userInfo}>
+            <AdminNotificationCenter onNavigate={navigateToSection} />
             <LanguageToggle />
             <button
               type="button"
