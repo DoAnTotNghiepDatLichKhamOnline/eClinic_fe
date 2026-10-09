@@ -3,10 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ChevronDown,
+  ClipboardList,
   KeyRound,
+  LayoutDashboard,
   LogOut,
   Mail,
   Phone,
+  ShieldAlert,
   ShieldCheck,
   Stethoscope,
   UserRound,
@@ -136,13 +139,40 @@ export function UserProfile({ className }: UserProfileProps) {
                 lang === "vi" ? "Liên kết bệnh nhân" : "Patient links"
               }
             >
-              <Link
-                to="/patient/appointments"
-                className={styles.item}
-                onClick={closeMenu}
-              >
+              <Link to="/patient/dashboard" className={styles.item} onClick={closeMenu}>
+                <LayoutDashboard aria-hidden="true" />
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>{lang === "vi" ? "Trang cá nhân" : "Dashboard"}</span>
+                  <span className={styles.itemDesc}>{lang === "vi" ? "Tổng quan hồ sơ & lịch sắp tới" : "Profile overview & upcoming schedule"}</span>
+                </span>
+              </Link>
+              <Link to="/patient/account-info" className={styles.item} onClick={closeMenu}>
+                <UserRound aria-hidden="true" />
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>{lang === "vi" ? "Thông tin tài khoản" : "Account Information"}</span>
+                  <span className={styles.itemDesc}>{lang === "vi" ? "Họ tên, điện thoại, mật khẩu, ảnh đại diện" : "Name, phone, password, avatar"}</span>
+                </span>
+              </Link>
+              <Link to="/patient/patient-profile" className={styles.item} onClick={closeMenu}>
+                <ClipboardList aria-hidden="true" />
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>{lang === "vi" ? "Hồ sơ bệnh nhân" : "Patient Profile"}</span>
+                  <span className={styles.itemDesc}>{lang === "vi" ? "CCCD, bảo hiểm y tế, tiền sử bệnh lý" : "ID, health insurance, medical history"}</span>
+                </span>
+              </Link>
+              <Link to="/patient/my-appointments" className={styles.item} onClick={closeMenu}>
                 <CalendarDays aria-hidden="true" />
-                {lang === "vi" ? "Lịch khám" : "Appointments"}
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>{lang === "vi" ? "Lịch hẹn của tôi" : "My Appointments"}</span>
+                  <span className={styles.itemDesc}>{lang === "vi" ? "Lịch sắp tới & lịch sử đã khám" : "Upcoming & past appointments"}</span>
+                </span>
+              </Link>
+              <Link to="/patient/sessions" className={styles.item} onClick={closeMenu}>
+                <ShieldAlert aria-hidden="true" />
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>{lang === "vi" ? "Thiết bị đăng nhập" : "Login Devices"}</span>
+                  <span className={styles.itemDesc}>{lang === "vi" ? "Xem & đăng xuất các phiên khác" : "View & sign out other sessions"}</span>
+                </span>
               </Link>
             </nav>
           ) : (

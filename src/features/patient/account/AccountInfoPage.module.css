@@ -1,0 +1,426 @@
+/* ─── Page Layout ─── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 680px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.pageHeaderIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a9c6e 0%, #0d7a55 100%);
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #17231f;
+}
+
+.pageSubtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #667068;
+}
+
+/* ─── Card ─── */
+.card {
+  border: 1px solid #e8ecea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #17231f;
+  letter-spacing: 0.01em;
+}
+
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ─── Avatar ─── */
+.avatarSection {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatarLarge {
+  position: relative;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a9c6e, #0d7a55);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  overflow: visible;
+}
+
+.avatarLarge img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarEditBtn {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #1a9c6e;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.avatarEditBtn:hover {
+  background: #0d7a55;
+}
+
+.avatarInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatarHint {
+  margin: 0;
+  font-size: 12px;
+  color: #8a948f;
+}
+
+/* ─── Fields ─── */
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #667068;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fieldLabel svg {
+  color: #1a9c6e;
+}
+
+.fieldValueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e8ecea;
+  border-radius: 8px;
+  background: #f8faf9;
+}
+
+.fieldValue {
+  font-size: 14px;
+  color: #17231f;
+  font-weight: 500;
+}
+
+.fieldEditRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldLabelSmall {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667068;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ─── Input ─── */
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid #d0d8d4;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  color: #17231f;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1a9c6e;
+  box-shadow: 0 0 0 3px rgba(26, 156, 110, 0.12);
+}
+
+/* ─── Buttons ─── */
+.btnIconEdit {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #667068;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.12s, color 0.12s;
+}
+.btnIconEdit:hover { background: #e8f5ef; color: #1a9c6e; }
+
+.btnIconSuccess {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: #e8f5ef;
+  color: #1a9c6e;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.12s;
+}
+.btnIconSuccess:hover { background: #c7ebda; }
+
+.btnIconCancel {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: #fee8e7;
+  color: #b42318;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.12s;
+}
+.btnIconCancel:hover { background: #fecfcd; }
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid #d0d8d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #374945;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btnOutline:hover { border-color: #1a9c6e; background: #f0fbf6; color: #1a9c6e; }
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1a9c6e;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btnPrimary:hover { background: #0d7a55; }
+.btnPrimary:active { transform: scale(0.97); }
+
+.btnTextLink {
+  border: none;
+  background: transparent;
+  color: #1a9c6e;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  white-space: nowrap;
+}
+.btnTextLink:hover { color: #0d7a55; }
+
+/* ─── Sub-card (inline form) ─── */
+.subCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #d5efe5;
+  border-radius: 10px;
+  background: #f4fbf8;
+}
+
+.subCardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0d7a55;
+}
+
+.subCardDesc {
+  margin: 0;
+  font-size: 12px;
+  color: #667068;
+}
+
+.formRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.formRow .input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+/* ─── Password field ─── */
+.passwordField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.passwordInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInputWrap .input {
+  padding-right: 40px;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: #8a948f;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.eyeBtn:hover { color: #374945; }
+
+/* ─── Security ─── */
+.securityBadges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.securityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid #e8ecea;
+  border-radius: 8px;
+  background: #f8faf9;
+  font-size: 13px;
+  color: #374945;
+}
+
+.badgeActive {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a9c6e;
+  background: #e4f5ed;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.badgeInactive {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a948f;
+  background: #f0f2f1;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ─── Account meta ─── */
+.accountMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #8a948f;
+  padding-top: 4px;
+  border-top: 1px solid #edf0ef;
+}
+
+.accountMeta strong {
+  color: #374945;
+  font-weight: 600;
+}

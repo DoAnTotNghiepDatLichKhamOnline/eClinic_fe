@@ -1,0 +1,273 @@
+/* ─── Layout ─── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 680px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pageHeaderIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #17231f;
+}
+
+.pageSubtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #667068;
+}
+
+/* ─── Security notice ─── */
+.securityNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.securityNotice svg { flex: 0 0 auto; margin-top: 1px; }
+
+/* ─── Current session card ─── */
+.currentCard {
+  border: 2px solid #1a9c6e;
+  border-radius: 12px;
+  background: #f4fbf8;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.deviceIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #1a9c6e;
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.deviceIconOther {
+  background: #f0f2f1;
+  color: #8a948f;
+}
+
+.sessionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessionDevice {
+  font-size: 14px;
+  font-weight: 700;
+  color: #17231f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.currentBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #1a9c6e;
+  color: #fff;
+}
+
+.sessionMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.sessionMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #667068;
+}
+
+.sessionMetaItem svg { color: #1a9c6e; }
+
+/* ─── Other sessions list ─── */
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374945;
+  margin: 4px 0 0;
+}
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sessionCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid #e8ecea;
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sessionCard:hover {
+  border-color: #c5d3cf;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+.sessionCardRevoking {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sessionActions {
+  flex: 0 0 auto;
+}
+
+/* ─── Danger zone ─── */
+.dangerZone {
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.dangerZoneHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #fecdd3;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b42318;
+}
+
+.dangerZoneBody {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dangerZoneDesc {
+  font-size: 13px;
+  color: #374945;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+/* ─── Buttons ─── */
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  background: #b42318;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btnDanger:hover { background: #991b18; }
+
+.btnDangerOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1.5px solid #fecdd3;
+  border-radius: 8px;
+  background: #fff;
+  color: #b42318;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.13s;
+  white-space: nowrap;
+}
+.btnDangerOutline:hover { background: #fff1f0; }
+
+.btnDangerOutline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Status dot ─── */
+.onlineDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1a9c6e;
+  box-shadow: 0 0 0 2px rgba(26, 156, 110, 0.25);
+  flex: 0 0 auto;
+}
+
+.offlineDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d0d8d4;
+  flex: 0 0 auto;
+}
+
+/* ─── Success toast banner ─── */
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #14532d;
+  font-size: 13px;
+  font-weight: 500;
+}
