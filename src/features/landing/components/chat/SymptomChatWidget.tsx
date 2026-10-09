@@ -134,7 +134,7 @@ export function SymptomChatWidget() {
         ) : (
           <MessageCircle size={19} aria-hidden="true" />
         )}
-        <span>{t({ en: "Ask for guidance", vi: "Hỏi trợ lý" })}</span>
+        <span>{t({ en: "Ask for guidance", vi: "Bạn cần hỗ trợ?" })}</span>
       </button>
     </div>
   );

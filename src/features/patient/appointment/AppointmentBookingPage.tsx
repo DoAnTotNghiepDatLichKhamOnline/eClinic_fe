@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   ShieldCheck,
-  ChevronRight,
   Clock,
   Sparkles,
 } from "lucide-react";
@@ -333,16 +332,6 @@ export function AppointmentBookingPage() {
 
       <main className="flex-1 py-8 sm:py-12">
         <Container>
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-slate-500 mb-6">
-            <Link to="/home" className="hover:text-[#0f4d3a] transition-colors">
-              {lang === "vi" ? "Trang chủ" : "Home"}
-            </Link>
-            <ChevronRight size={13} className="text-slate-400" />
-            <span className="font-semibold text-slate-800">
-              {lang === "vi" ? "Đặt lịch khám" : "Book Appointment"}
-            </span>
-          </nav>
 
           {/* Page Banner Header */}
           <div className="bg-linear-to-r from-[#0f4d3a] to-[#173127] rounded-3xl p-6 sm:p-10 text-white shadow-xl mb-8 relative overflow-hidden">

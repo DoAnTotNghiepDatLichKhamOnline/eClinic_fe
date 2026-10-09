@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Container } from "@/shared/components/layout/Container";
 import { IconLogo } from "@/shared/components/icons";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
+import { PatientNotificationCenter } from "@/features/patient/components/PatientNotificationCenter";
 import { cx } from "@/utils/cx";
 import { navLinks } from "./header.data";
 import { LanguageToggle } from "./LanguageToggle";
+import { HeaderSearchBar } from "./HeaderSearchBar";
 import styles from "./Header.module.css";
 
 export function Header() {
@@ -52,14 +54,10 @@ export function Header() {
         </nav>
 
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.searchBtn}
-            aria-label="Search"
-          >
-            <Search aria-hidden="true" size={18} />
-          </button>
+          <HeaderSearchBar />
           <LanguageToggle />
+
+          {user?.role === "patient" && <PatientNotificationCenter />}
 
           {user ? (
             <UserProfile className={styles.profile} />

@@ -14,6 +14,7 @@ import { LanguageToggle } from "@/features/landing/components/header/LanguageTog
 import styles from "./DoctorDashboardPage.module.css";
 import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
+import { DoctorSearchBar } from "./DoctorSearchBar";
 
 const sectionPaths: Record<DoctorSection, string> = {
   dashboard: "dashboard",
@@ -82,6 +83,8 @@ export function DoctorDashboardPage({
               {lang === "vi" ? "Bác sĩ chuyên khoa" : "Specialist Doctor"}
             </span>
           </div>
+
+          <DoctorSearchBar />
 
           <div className={styles.userInfo}>
             <DoctorNotificationCenter onNavigate={navigateToSection} />

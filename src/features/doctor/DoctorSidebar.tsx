@@ -1,6 +1,7 @@
 import {
   CalendarClock,
   ClipboardList,
+  LayoutDashboard,
   Stethoscope,
   UserRound,
 } from "lucide-react";
@@ -21,7 +22,7 @@ const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
       id: "dashboard",
       en: "Dashboard",
       vi: "Bảng điều khiển",
-      icon: CalendarClock,
+      icon: LayoutDashboard,
     },
     {
       id: "schedule",
@@ -29,6 +30,7 @@ const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
       vi: "Lịch làm việc cá nhân",
       icon: CalendarClock,
     },
+    
     {
       id: "appointments",
       en: "Appointment Requests",

@@ -58,6 +58,15 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
 
   return (
     <div className={styles.pageWrapper}>
+      <Link
+        to="/entry"
+        className={styles.backEntryBtn}
+        aria-label={lang === "vi" ? "Quay lại trang chọn vai trò" : "Back to role selection"}
+      >
+        <ArrowLeft size={16} aria-hidden="true" />
+        <span>{lang === "vi" ? "Chọn vai trò" : "Role selection"}</span>
+      </Link>
+
       <main className={styles.mainContent}>
         <div className={styles.layoutGrid}>
           {/* Left section: Staff Branding & Highlights */}

@@ -1,6 +1,5 @@
 import { ArrowUpRight, Settings2, Stethoscope, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
-import { LanguageToggle } from "@/features/landing/components/header/LanguageToggle";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import styles from "./RoleSelectionPage.module.css";
 
