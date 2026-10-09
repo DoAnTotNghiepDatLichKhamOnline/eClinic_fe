@@ -29,7 +29,7 @@
   font-family: var(--font-body, inherit);
   font-size: 13px;
   outline: none;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none;
 }
 
 .searchInput::placeholder {
@@ -38,15 +38,16 @@
 
 .searchInput:focus,
 .searchContainer:focus-within .searchInput {
-  width: 270px;
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #f0a04f;
-  box-shadow: 0 0 0 3px rgba(240, 160, 79, 0.25);
+  width: 220px;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: none;
+  outline: none;
 }
 
 .searchInput:focus + .searchIcon,
 .searchContainer:focus-within .searchIcon {
-  color: #f0a04f;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .clearBtn {
@@ -202,7 +203,7 @@
   }
   .searchInput:focus,
   .searchContainer:focus-within .searchInput {
-    width: 200px;
+    width: 160px;
   }
   .resultsDropdown {
     width: min(300px, calc(100vw - 24px));

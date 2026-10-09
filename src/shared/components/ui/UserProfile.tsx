@@ -5,13 +5,10 @@ import {
   ChevronDown,
   ClipboardList,
   KeyRound,
-  LayoutDashboard,
   LogOut,
   Mail,
   Phone,
   ShieldAlert,
-  ShieldCheck,
-  Stethoscope,
   UserRound,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -153,13 +150,6 @@ export function UserProfile({ className }: UserProfileProps) {
                   <span className={styles.itemDesc}>{lang === "vi" ? "CCCD, bảo hiểm y tế, tiền sử bệnh lý" : "ID, health insurance, medical history"}</span>
                 </span>
               </Link>
-              <Link to="/patient/dashboard" className={styles.item} onClick={closeMenu}>
-                <LayoutDashboard aria-hidden="true" />
-                <span className={styles.itemTextBlock}>
-                  <span className={styles.itemTitle}>{lang === "vi" ? "Trang cá nhân" : "Dashboard"}</span>
-                  <span className={styles.itemDesc}>{lang === "vi" ? "Tổng quan hồ sơ & lịch sắp tới" : "Profile overview & upcoming schedule"}</span>
-                </span>
-              </Link>
               <div className={styles.divider} />
               <Link to="/patient/account-info" className={styles.item} onClick={closeMenu}>
                 <UserRound aria-hidden="true" />
@@ -248,21 +238,6 @@ export function UserProfile({ className }: UserProfileProps) {
                 </button>
               )}
             </div>
-          )}
-
-          {user.role !== "patient" && (
-            <Link
-              to={user.role === "doctor" ? "/doctor" : "/admin"}
-              className={styles.item}
-              onClick={closeMenu}
-            >
-              {user.role === "doctor" ? (
-                <Stethoscope aria-hidden="true" />
-              ) : (
-                <ShieldCheck aria-hidden="true" />
-              )}
-              {lang === "vi" ? "Mở trang làm việc" : "Open workspace"}
-            </Link>
           )}
 
           <div className={styles.divider} />

@@ -2,8 +2,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  flex: 1;
-  max-width: 360px;
+  width: 320px;
+  max-width: 320px;
   margin: 0 16px;
 }
 
@@ -32,7 +32,7 @@
   font-family: var(--font-body, inherit);
   font-size: 13px;
   outline: none;
-  transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .searchInput::placeholder {
@@ -41,14 +41,15 @@
 
 .searchInput:focus,
 .searchWrapper:focus-within .searchInput {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #f0a04f;
-  box-shadow: 0 0 0 3px rgba(240, 160, 79, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: none;
+  outline: none;
 }
 
 .searchInput:focus + .searchIcon,
 .searchWrapper:focus-within .searchIcon {
-  color: #f0a04f;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .clearBtn {

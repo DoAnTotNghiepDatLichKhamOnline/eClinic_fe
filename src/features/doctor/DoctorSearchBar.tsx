@@ -76,7 +76,7 @@ export function DoctorSearchBar() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(inputValue.trim());
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [inputValue]);
 

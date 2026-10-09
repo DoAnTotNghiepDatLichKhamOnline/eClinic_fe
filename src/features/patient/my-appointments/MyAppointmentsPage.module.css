@@ -7,8 +7,16 @@
 .pageHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   margin: 0 0 24px;
+  flex-wrap: wrap;
+}
+
+.pageHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .pageHeaderIcon {
@@ -349,4 +357,263 @@
 .emptyStateDesc {
   font-size: 13px;
   margin: 0;
+}
+
+/* ─── Segmented Controller (like Doctor Workspace) ─── */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #dce4e0;
+  border-radius: 6px;
+  background: #f4f8f6;
+}
+
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #51655b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.segmented button.selected,
+.segmented button[aria-pressed="true"] {
+  background: #fff;
+  color: #12382c;
+  box-shadow: 0 1px 3px rgba(10, 40, 30, 0.08);
+}
+
+/* ─── Calendar Container (like Doctor Workspace) ─── */
+.calendar {
+  overflow: hidden;
+  border: 1px solid #dce4e0;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 24px;
+}
+
+.calendarToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dce4e0;
+  flex-wrap: wrap;
+}
+
+.calendarToolbar h2 {
+  margin: 0;
+  color: #12382c;
+  font-size: 14px;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+
+.calendarNavigation {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.calendarNavigation button {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #dce4e0;
+  border-radius: 5px;
+  background: #fff;
+  color: #3e5048;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.calendarNavigation button:hover {
+  background: #f0f7f5;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  overflow-x: auto;
+}
+
+.calendarDay {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.calendarDayCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 175px;
+  padding: 12px 9px;
+  border: 0;
+  border-right: 1px solid #e8eeea;
+  border-bottom: 1px solid #e8eeea;
+  background: #fff;
+  color: #1e2e27;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.calendarDayCell:hover {
+  background: #f8fbf9;
+}
+
+.calendarDayCellSelected {
+  background: #f0f9f5 !important;
+  box-shadow: inset 0 0 0 1.5px #176c54;
+}
+
+.calendarDayName {
+  color: #5a6e64;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.calendarDate {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #12382c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendarToday .calendarDate {
+  background: #176c54;
+  color: #fff;
+}
+
+.calendarApptList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.calendarApptItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 7px 8px;
+  border-left: 3px solid #247a62;
+  border-radius: 4px;
+  background: #e8f5ef;
+  color: #176c54;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: left;
+  transition: transform 0.1s;
+}
+
+.calendarApptItem:hover {
+  transform: translateY(-1px);
+}
+
+.calendarApptUpcoming {
+  border-left-color: #176c54;
+  background: #e8f5ef;
+  color: #176c54;
+}
+
+.calendarApptDone {
+  border-left-color: #1a9c6e;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.calendarApptCancelled {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.calendarApptTime {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.calendarApptDoctor {
+  font-weight: 700;
+  color: #12382c;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendarApptSpecialty {
+  font-size: 9.5px;
+  color: #4b6357;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendarApptPatient {
+  font-size: 9px;
+  color: #63776d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendarOff {
+  color: #8a9690;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.selectedDaySection {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid #dce4e0;
+  border-radius: 8px;
+  background: #fafdfb;
+}
+
+.selectedDayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selectedDayTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #12382c;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
