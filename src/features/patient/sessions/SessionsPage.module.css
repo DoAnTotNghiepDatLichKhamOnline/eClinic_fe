@@ -1,15 +1,14 @@
 /* ─── Layout ─── */
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: 680px;
+  width: 100%;
+  max-width: 700px;
 }
 
 .pageHeader {
   display: flex;
   align-items: center;
   gap: 14px;
+  margin: 0 0 24px;
 }
 
 .pageHeaderIcon {
@@ -17,23 +16,22 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border-radius: 10px;
+  background: #15553e;
   color: #fff;
   flex: 0 0 auto;
 }
 
 .pageTitle {
   margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  color: #17231f;
+  font: 800 22px var(--font-display, sans-serif);
+  color: #18372b;
 }
 
 .pageSubtitle {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   font-size: 13px;
-  color: #667068;
+  color: #697b72;
 }
 
 /* ─── Security notice ─── */
@@ -41,26 +39,28 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #92400e;
+  padding: 11px 16px;
+  border-radius: 7px;
+  background: #fef9ed;
+  border: 1px solid #f6d98a;
+  color: #7a5a14;
   font-size: 13px;
   line-height: 1.5;
+  margin-bottom: 16px;
 }
 
-.securityNotice svg { flex: 0 0 auto; margin-top: 1px; }
+.securityNotice svg { flex: 0 0 auto; margin-top: 1px; color: #9a7218; }
 
 /* ─── Current session card ─── */
 .currentCard {
-  border: 2px solid #1a9c6e;
-  border-radius: 12px;
-  background: #f4fbf8;
-  padding: 18px 20px;
+  border: 1.5px solid #15553e;
+  border-radius: 8px;
+  background: #f0f9f4;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
+  margin-bottom: 16px;
 }
 
 .deviceIcon {
@@ -68,26 +68,23 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 10px;
-  background: #1a9c6e;
+  border-radius: 8px;
+  background: #15553e;
   color: #fff;
   flex: 0 0 auto;
 }
 
 .deviceIconOther {
-  background: #f0f2f1;
-  color: #8a948f;
+  background: #e9efeb;
+  color: #75847d;
 }
 
-.sessionInfo {
-  flex: 1;
-  min-width: 0;
-}
+.sessionInfo { flex: 1; min-width: 0; }
 
 .sessionDevice {
   font-size: 14px;
   font-weight: 700;
-  color: #17231f;
+  color: #18372b;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -99,7 +96,7 @@
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
-  background: #1a9c6e;
+  background: #15553e;
   color: #fff;
 }
 
@@ -115,17 +112,19 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #667068;
+  color: #697b72;
 }
 
-.sessionMetaItem svg { color: #1a9c6e; }
+.sessionMetaItem svg { color: #447260; }
 
-/* ─── Other sessions list ─── */
+/* ─── Other sessions ─── */
 .sectionTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #374945;
-  margin: 4px 0 0;
+  color: #29473a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 4px 0 10px;
 }
 
 .sessionList {
@@ -138,16 +137,16 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
-  border: 1px solid #e8ecea;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #dfe8e3;
+  border-radius: 8px;
   background: #fff;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .sessionCard:hover {
-  border-color: #c5d3cf;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+  border-color: #c0d9cc;
+  box-shadow: 0 2px 8px rgba(20, 59, 45, 0.05);
 }
 
 .sessionCardRevoking {
@@ -155,31 +154,32 @@
   pointer-events: none;
 }
 
-.sessionActions {
-  flex: 0 0 auto;
-}
+.sessionActions { flex: 0 0 auto; }
 
 /* ─── Danger zone ─── */
 .dangerZone {
-  border: 1px solid #fecdd3;
-  border-radius: 12px;
+  border: 1px solid #f5c6c3;
+  border-radius: 8px;
   background: #fff;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 .dangerZoneHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 20px;
-  border-bottom: 1px solid #fecdd3;
-  font-size: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f5c6c3;
+  font-size: 13px;
   font-weight: 700;
   color: #b42318;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .dangerZoneBody {
-  padding: 16px 20px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -189,7 +189,7 @@
 
 .dangerZoneDesc {
   font-size: 13px;
-  color: #374945;
+  color: #375041;
   max-width: 380px;
   line-height: 1.5;
 }
@@ -202,7 +202,7 @@
   height: 38px;
   padding: 0 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #b42318;
   color: #fff;
   font: inherit;
@@ -213,15 +213,16 @@
   white-space: nowrap;
 }
 .btnDanger:hover { background: #991b18; }
+.btnDanger:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .btnDangerOutline {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
+  height: 32px;
   padding: 0 14px;
-  border: 1.5px solid #fecdd3;
-  border-radius: 8px;
+  border: 1.5px solid #f5c6c3;
+  border-radius: 6px;
   background: #fff;
   color: #b42318;
   font: inherit;
@@ -231,21 +232,17 @@
   transition: background 0.13s;
   white-space: nowrap;
 }
-.btnDangerOutline:hover { background: #fff1f0; }
+.btnDangerOutline:hover { background: #fef2f2; }
+.btnDangerOutline:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.btnDangerOutline:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* ─── Status dot ─── */
+/* ─── Status dots ─── */
 .onlineDot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #1a9c6e;
-  box-shadow: 0 0 0 2px rgba(26, 156, 110, 0.25);
+  background: #15553e;
+  box-shadow: 0 0 0 2px rgba(21, 85, 62, 0.2);
   flex: 0 0 auto;
 }
 
@@ -254,20 +251,21 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d0d8d4;
+  background: #d1ddd6;
   flex: 0 0 auto;
 }
 
-/* ─── Success toast banner ─── */
+/* ─── Success banner ─── */
 .successBanner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #14532d;
+  padding: 11px 16px;
+  border-radius: 7px;
+  background: #f0f9f4;
+  border: 1px solid #c5e0d0;
+  color: #14533d;
   font-size: 13px;
   font-weight: 500;
+  margin-bottom: 10px;
 }
