@@ -1,6 +1,7 @@
 import {
   CalendarClock,
   ClipboardList,
+  LayoutDashboard,
   Stethoscope,
   UserRound,
 } from "lucide-react";
@@ -17,11 +18,16 @@ export type DoctorSection =
 
 const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
   [
-    
     {
       id: "dashboard",
       en: "Dashboard",
       vi: "Bảng điều khiển",
+      icon: LayoutDashboard,
+    },
+    {
+      id: "schedule",
+      en: "Work Schedule",
+      vi: "Lịch làm việc cá nhân",
       icon: CalendarClock,
     },
     
