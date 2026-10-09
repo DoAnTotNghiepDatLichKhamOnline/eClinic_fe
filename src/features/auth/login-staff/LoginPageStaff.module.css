@@ -1,6 +1,52 @@
 .pageWrapper {
-  height: 100vh;
-  overflow: hidden;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  background: var(--paper, #f4f7f4);
+}
+
+.backEntryBtn {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(203, 213, 225, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: #334155;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.backEntryBtn:hover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f4d3a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transform: translateX(-3px);
+}
+
+.backEntryBtn:active {
+  transform: translateX(0);
+}
+
+@media (max-width: 640px) {
+  .backEntryBtn {
+    top: 16px;
+    left: 16px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
 }
 
 .mainContent {
