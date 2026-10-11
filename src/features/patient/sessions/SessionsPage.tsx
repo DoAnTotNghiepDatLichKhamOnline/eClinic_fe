@@ -3,18 +3,19 @@ import {
   AlertTriangle,
   Check,
   Clock,
-  Globe,
   LogOut,
   Monitor,
   ShieldAlert,
   Smartphone,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
-import { MOCK_SESSIONS, type SessionItem } from "./sessions.data";
+import { useDanhSachPhienDangNhap, useIdentityActions } from "@/hooks/useIdentity";
 import styles from "./SessionsPage.module.css";
 
-function formatRelative(isoStr: string, vi: boolean): string {
+function formatRelative(isoStr?: string, vi?: boolean): string {
+  if (!isoStr) return "";
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(mins / 60);
@@ -25,31 +26,44 @@ function formatRelative(isoStr: string, vi: boolean): string {
   return vi ? `${days} ngày trước` : `${days}d ago`;
 }
 
+function isMobileDevice(ua?: string | null): boolean {
+  if (!ua) return false;
+  const s = ua.toLowerCase();
+  return s.includes("mobile") || s.includes("iphone") || s.includes("android") || s.includes("ipad");
+}
+
 export function SessionsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
 
-  const [sessions, setSessions] = useState<SessionItem[]>(MOCK_SESSIONS);
-  const [revoking, setRevoking] = useState<string | null>(null);
+  const { danhSach: sessions, isLoading } = useDanhSachPhienDangNhap();
+  const { xoaPhien, xoaTatCaPhienKhac, isRevokingAllSessions } = useIdentityActions();
+
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [revokedAll, setRevokedAll] = useState(false);
 
   const currentSession = sessions.find((s) => s.hienTai);
   const otherSessions = sessions.filter((s) => !s.hienTai);
 
-  const handleRevoke = (id: string) => {
-    setRevoking(id);
-    setTimeout(() => {
-      setSessions((prev) => prev.filter((s) => s.id !== id));
-      setRevoking(null);
-    }, 900);
+  const handleRevoke = async (id: string) => {
+    try {
+      setRevokingId(id);
+      await xoaPhien(id);
+    } catch (err: any) {
+      alert(err?.response?.data?.thongDiep || (vi ? "Không thể đăng xuất thiết bị." : "Failed to sign out session."));
+    } finally {
+      setRevokingId(null);
+    }
   };
 
-  const handleRevokeAll = () => {
-    setRevokedAll(true);
-    setTimeout(() => {
-      setSessions((prev) => prev.filter((s) => s.hienTai));
-      setRevokedAll(false);
-    }, 1200);
+  const handleRevokeAll = async () => {
+    try {
+      await xoaTatCaPhienKhac();
+      setRevokedAll(true);
+      setTimeout(() => setRevokedAll(false), 3000);
+    } catch (err: any) {
+      alert(err?.response?.data?.thongDiep || (vi ? "Không thể đăng xuất các thiết bị khác." : "Failed to sign out other sessions."));
+    }
   };
 
   return (
@@ -82,25 +96,29 @@ export function SessionsPage() {
         </span>
       </div>
 
+      {/* ─── Loading State ─── */}
+      {isLoading && (
+        <div style={{ display: "flex", justifyContent: "center", padding: "32px 0", gap: "8px", alignItems: "center", color: "#64748b" }}>
+          <Loader2 size={18} className="animate-spin" />
+          <span>{vi ? "Đang tải danh sách thiết bị..." : "Loading devices..."}</span>
+        </div>
+      )}
+
       {/* ─── Current Session ─── */}
-      {currentSession && (
+      {!isLoading && currentSession && (
         <div className={styles.currentCard}>
           <div className={styles.deviceIcon}>
-            {currentSession.loai === "mobile" ? <Smartphone size={20} /> : <Monitor size={20} />}
+            {isMobileDevice(currentSession.thietBi) ? <Smartphone size={20} /> : <Monitor size={20} />}
           </div>
           <div className={styles.sessionInfo}>
             <div className={styles.sessionDevice}>
-              {currentSession.thietBi}
+              {currentSession.thietBi || (vi ? "Thiết bị không xác định" : "Unknown device")}
               <span className={styles.currentBadge}>
                 {vi ? "Thiết bị này" : "This device"}
               </span>
               <span className={styles.onlineDot} title={vi ? "Đang trực tuyến" : "Online"} />
             </div>
             <div className={styles.sessionMeta}>
-              <span className={styles.sessionMetaItem}>
-                <Globe size={12} />
-                {currentSession.ip} · {currentSession.viTri}
-              </span>
               <span className={styles.sessionMetaItem}>
                 <Clock size={12} />
                 {vi ? "Hoạt động" : "Active"} {formatRelative(currentSession.hoatDongLuc, vi)}
@@ -111,7 +129,7 @@ export function SessionsPage() {
       )}
 
       {/* ─── Other Sessions ─── */}
-      {otherSessions.length > 0 && (
+      {!isLoading && otherSessions.length > 0 && (
         <>
           <div className={styles.sectionTitle}>
             {vi
@@ -130,21 +148,17 @@ export function SessionsPage() {
             {otherSessions.map((s) => (
               <div
                 key={s.id}
-                className={`${styles.sessionCard} ${revoking === s.id ? styles.sessionCardRevoking : ""}`}
+                className={`${styles.sessionCard} ${revokingId === s.id ? styles.sessionCardRevoking : ""}`}
               >
                 <div className={`${styles.deviceIcon} ${styles.deviceIconOther}`}>
-                  {s.loai === "mobile" ? <Smartphone size={18} /> : <Monitor size={18} />}
+                  {isMobileDevice(s.thietBi) ? <Smartphone size={18} /> : <Monitor size={18} />}
                 </div>
                 <div className={styles.sessionInfo}>
                   <div className={styles.sessionDevice}>
                     <span className={styles.offlineDot} />
-                    {s.thietBi}
+                    {s.thietBi || (vi ? "Thiết bị khác" : "Other device")}
                   </div>
                   <div className={styles.sessionMeta}>
-                    <span className={styles.sessionMetaItem}>
-                      <Globe size={12} />
-                      {s.ip} · {s.viTri}
-                    </span>
                     <span className={styles.sessionMetaItem}>
                       <Clock size={12} />
                       {vi ? "Lần cuối hoạt động" : "Last active"} {formatRelative(s.hoatDongLuc, vi)}
@@ -156,10 +170,10 @@ export function SessionsPage() {
                     className={styles.btnDangerOutline}
                     type="button"
                     onClick={() => handleRevoke(s.id)}
-                    disabled={revoking === s.id}
+                    disabled={revokingId === s.id}
                     aria-label={vi ? `Đăng xuất ${s.thietBi}` : `Sign out ${s.thietBi}`}
                   >
-                    {revoking === s.id ? (
+                    {revokingId === s.id ? (
                       <>{vi ? "Đang xử lý..." : "Revoking..."}</>
                     ) : (
                       <><LogOut size={13} /> {vi ? "Đăng xuất" : "Sign out"}</>
@@ -172,7 +186,7 @@ export function SessionsPage() {
         </>
       )}
 
-      {otherSessions.length === 0 && !revokedAll && (
+      {!isLoading && otherSessions.length === 0 && !revokedAll && (
         <div style={{ fontSize: 13, color: "#8a948f", textAlign: "center", padding: "16px 0" }}>
           {vi ? "Không có thiết bị nào khác đang đăng nhập." : "No other devices are currently signed in."}
         </div>
@@ -194,10 +208,10 @@ export function SessionsPage() {
             className={styles.btnDanger}
             type="button"
             onClick={handleRevokeAll}
-            disabled={otherSessions.length === 0}
+            disabled={isRevokingAllSessions || otherSessions.length === 0}
           >
-            <LogOut size={15} />
-            {vi ? "Đăng xuất tất cả thiết bị khác" : "Sign out all other devices"}
+            {isRevokingAllSessions ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+            {vi ? (isRevokingAllSessions ? "Đang đăng xuất..." : "Đăng xuất tất cả thiết bị khác") : (isRevokingAllSessions ? "Signing out..." : "Sign out all other devices")}
           </button>
         </div>
       </div>

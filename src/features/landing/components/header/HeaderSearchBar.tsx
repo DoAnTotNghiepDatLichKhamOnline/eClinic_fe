@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Search, Stethoscope, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { doctors } from "@/features/landing/components/doctors/doctors.data";
+import { useDanhSachBacSi, useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
+import defaultDoctorAvatar from "@/features/landing/assets/images/doctors/doctor-rafi-kot.jpg";
 import styles from "./HeaderSearchBar.module.css";
 
 export function HeaderSearchBar() {
-  const { lang, t } = useLanguage();
+  const { lang } = useLanguage();
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -40,31 +41,16 @@ export function HeaderSearchBar() {
     };
   }, []);
 
-  // Filter matching doctors & specialties based on debounced query
-  const { matchedDoctors, matchedSpecialties } = useMemo(() => {
-    if (!debouncedQuery) return { matchedDoctors: [], matchedSpecialties: [] };
-    const q = debouncedQuery.toLowerCase();
+  // Fetch search results from catalog API
+  const { danhSach: matchedDoctors } = useDanhSachBacSi({
+    tuKhoa: debouncedQuery || undefined,
+    kichThuoc: 4,
+  });
 
-    const docs = doctors.filter((doc) => {
-      const name = t(doc.name).toLowerCase();
-      const spec = t(doc.specialty).toLowerCase();
-      const loc = t(doc.location).toLowerCase();
-      return name.includes(q) || spec.includes(q) || loc.includes(q);
-    });
-
-    const specsSet = new Set<string>();
-    doctors.forEach((doc) => {
-      const spec = t(doc.specialty);
-      if (spec.toLowerCase().includes(q)) {
-        specsSet.add(spec);
-      }
-    });
-
-    return {
-      matchedDoctors: docs.slice(0, 4),
-      matchedSpecialties: Array.from(specsSet).slice(0, 3),
-    };
-  }, [debouncedQuery, t]);
+  const { danhSach: matchedSpecialties } = useDanhSachChuyenKhoa({
+    tuKhoa: debouncedQuery || undefined,
+    kichThuoc: 3,
+  });
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -73,14 +59,14 @@ export function HeaderSearchBar() {
     navigate(`/doctors?query=${encodeURIComponent(inputValue.trim())}`);
   };
 
-  const handleSelectDoctor = (doctorId: string) => {
+  const handleSelectDoctor = (doctorId: number) => {
     setOpen(false);
     navigate(`/doctors/${doctorId}`);
   };
 
-  const handleSelectSpecialty = (specialty: string) => {
+  const handleSelectSpecialty = (chuyenKhoaId: number) => {
     setOpen(false);
-    navigate(`/doctors?specialty=${encodeURIComponent(specialty)}`);
+    navigate(`/doctors?chuyenKhoa=${chuyenKhoaId}`);
   };
 
   const handleClear = () => {
@@ -88,7 +74,9 @@ export function HeaderSearchBar() {
     setDebouncedQuery("");
   };
 
-  const hasResults = matchedDoctors.length > 0 || matchedSpecialties.length > 0;
+  const hasResults =
+    debouncedQuery.length > 0 &&
+    (matchedDoctors.length > 0 || matchedSpecialties.length > 0);
   const isTyping = inputValue.trim().length > 0;
 
   return (
@@ -134,29 +122,33 @@ export function HeaderSearchBar() {
                   <div className={styles.sectionHeader}>
                     {lang === "vi" ? "Bác sĩ" : "Doctors"}
                   </div>
-                  {matchedDoctors.map((doc) => (
-                    <button
-                      key={doc.id}
-                      type="button"
-                      className={styles.resultItem}
-                      onClick={() => handleSelectDoctor(doc.id)}
-                    >
-                      <img
-                        src={doc.image}
-                        alt=""
-                        className={styles.doctorAvatar}
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
-                      />
-                      <div className={styles.resultText}>
-                        <span className={styles.resultTitle}>{t(doc.name)}</span>
-                        <span className={styles.resultSub}>
-                          {t(doc.specialty)} • {t(doc.location)}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                  {matchedDoctors.map((doc) => {
+                    const docName = doc.hocVi ? `${doc.hocVi} ${doc.hoTen}` : doc.hoTen;
+                    return (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        className={styles.resultItem}
+                        onClick={() => handleSelectDoctor(doc.id)}
+                      >
+                        <img
+                          src={doc.anhDaiDien || defaultDoctorAvatar}
+                          alt=""
+                          className={styles.doctorAvatar}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = defaultDoctorAvatar;
+                          }}
+                        />
+                        <div className={styles.resultText}>
+                          <span className={styles.resultTitle}>{docName}</span>
+                          <span className={styles.resultSub}>
+                            {doc.tenChuyenKhoa}
+                            {doc.chucVu ? ` • ${doc.chucVu}` : ""}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -167,16 +159,16 @@ export function HeaderSearchBar() {
                   </div>
                   {matchedSpecialties.map((spec) => (
                     <button
-                      key={spec}
+                      key={spec.id}
                       type="button"
                       className={styles.resultItem}
-                      onClick={() => handleSelectSpecialty(spec)}
+                      onClick={() => handleSelectSpecialty(spec.id)}
                     >
                       <div className={styles.specialtyBadge}>
                         <Stethoscope size={16} aria-hidden="true" />
                       </div>
                       <div className={styles.resultText}>
-                        <span className={styles.resultTitle}>{spec}</span>
+                        <span className={styles.resultTitle}>{spec.tenChuyenKhoa}</span>
                         <span className={styles.resultSub}>
                           {lang === "vi" ? "Xem bác sĩ chuyên khoa" : "View specialist doctors"}
                         </span>

@@ -239,14 +239,311 @@
   font-weight: 700;
   text-decoration: none;
 }
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #c8d8cf;
+  border-radius: 6px;
+  background: #fff;
+  color: #34473e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--teal, #1a7a67);
+  color: var(--teal, #1a7a67);
+  background: #f7faf8;
+}
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+.pageInfo {
+  font-size: 13px;
+  color: #556c61;
+  font-weight: 500;
+}
+.errorBox {
+  padding: 32px 20px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #9a3412;
+  text-align: center;
+  font-size: 14px;
+}
+.retryBtn {
+  margin-top: 12px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #ea580c;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.ratingStarBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #fff8e6;
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ratingCount {
+  color: #6a7c73;
+  font-size: 12px;
+}
+.sectionHeading {
+  margin: 28px 0 12px;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tagGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tagItem {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #e9f3ef;
+  color: #215443;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #d3e5dc;
+}
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.timelineItem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+}
+.timelineIcon {
+  margin-top: 2px;
+  color: var(--teal, #1a7a67);
+  flex-shrink: 0;
+}
+.timelineText {
+  color: #384d43;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+.galleryCard {
+  background: #fff;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.galleryImg {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+.galleryCaption {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #556c61;
+  background: #fbfdfc;
+  line-height: 1.4;
+  border-top: 1px solid #edf2ef;
+}
+.galleryTypeBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--teal, #1a7a67);
+  margin-bottom: 2px;
+}
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.skeletonCard {
+  height: 260px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eef2ef 25%, #f5f8f5 50%, #eef2ef 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Enhancements for Doctor Detail Page */
+.profileSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 90px;
+}
+.sidebarCard {
+  background: #ffffff;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.sidebarCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--teal, #1a7a67);
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eef2ef;
+}
+.sidebarTable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sidebarTableRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+}
+.sidebarTableLabel {
+  color: #69776f;
+  font-weight: 500;
+}
+.sidebarTableValue {
+  color: #24332c;
+  font-weight: 650;
+  text-align: right;
+}
+.contentCard {
+  background: #ffffff;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+.emptyNote {
+  color: #7b8c83;
+  font-size: 13px;
+  font-style: italic;
+  margin: 6px 0 0;
+}
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 25, 20, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.lightboxContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+.lightboxImg {
+  max-width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  display: block;
+  background: #111;
+}
+.lightboxFooter {
+  padding: 12px 18px;
+  background: #fff;
+  font-size: 13px;
+  color: #334;
+}
+.lightboxCloseBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.lightboxCloseBtn:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
 @media (max-width: 760px) {
   .filters {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   .filters > :first-child {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
   .grid {
+    grid-template-columns: 1fr;
+  }
+  .skeletonGrid {
     grid-template-columns: 1fr;
   }
   .specialtyGrid {
@@ -267,9 +564,6 @@
   }
   .filters {
     grid-template-columns: 1fr;
-  }
-  .filters > :first-child {
-    grid-column: auto;
   }
   .specialtyGrid {
     grid-template-columns: 1fr;

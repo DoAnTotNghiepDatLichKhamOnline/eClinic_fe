@@ -1,5 +1,7 @@
 import type { LoaiThongBao } from './common.type';
 
+export type { LoaiThongBao };
+
 export interface ThongBaoResponse {
   id: number;
   loai: LoaiThongBao;
@@ -17,4 +19,10 @@ export interface SoChuaDocResponse {
 
 export interface DanhDauDaDocResponse {
   soDaDanhDau: number;
+}
+
+export interface GetThongBaoParams {
+  daDoc?: boolean;
+  trang?: number;
+  kichThuoc?: number;
 }

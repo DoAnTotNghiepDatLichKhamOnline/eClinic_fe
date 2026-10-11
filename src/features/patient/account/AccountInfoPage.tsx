@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   User,
   Phone,
@@ -12,26 +12,40 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
-import { MOCK_USER } from "./account.data";
+import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
 import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
   const { lang } = useLanguage();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { hoSo, isLoading: isLoadingHoSo } = useHoSoCaNhan();
+  const {
+    capNhatHoSo,
+    isUpdatingHoSo,
+    doiMatKhau,
+    isChangingPassword,
+    yeuCauDoiEmail,
+    isRequestingEmailChange,
+    taiLenAnh,
+    isUploadingAvatar,
+  } = useIdentityActions();
 
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [showEmailRequest, setShowEmailRequest] = useState(false);
 
-  const [name, setName] = useState(user?.name ?? MOCK_USER.hoTen);
-  const [phone, setPhone] = useState(user?.phone ?? MOCK_USER.soDienThoai);
-  const [tempName, setTempName] = useState(name);
-  const [tempPhone, setTempPhone] = useState(phone);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [tempName, setTempName] = useState("");
+  const [tempPhone, setTempPhone] = useState("");
 
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -41,10 +55,22 @@ export function AccountInfoPage() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [newEmail, setNewEmail] = useState("");
+  const [emailPw, setEmailPw] = useState("");
   const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
-  const initials = name
+  useEffect(() => {
+    const currentName = hoSo?.hoTen || user?.name || "";
+    const currentPhone = hoSo?.soDienThoai || user?.phone || "";
+    setName(currentName);
+    setTempName(currentName);
+    setPhone(currentPhone);
+    setTempPhone(currentPhone);
+  }, [hoSo, user]);
+
+  const initials = (name || "U")
     .trim()
     .split(/\s+/)
     .slice(-2)
@@ -52,27 +78,73 @@ export function AccountInfoPage() {
     .join("")
     .toUpperCase();
 
-  const handleSaveName = () => { setName(tempName); setEditingName(false); };
-  const handleSavePhone = () => { setPhone(tempPhone); setEditingPhone(false); };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwSuccess(true);
-    setTimeout(() => {
-      setPwSuccess(false);
-      setShowPasswordSection(false);
-      setOldPw(""); setNewPw(""); setConfirmPw("");
-    }, 2000);
+  const handleSaveName = async () => {
+    try {
+      await capNhatHoSo({ hoTen: tempName, soDienThoai: phone || undefined });
+      setName(tempName);
+      setEditingName(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.thongDiep || "Có lỗi xảy ra khi lưu họ tên.");
+    }
   };
 
-  const handleEmailRequest = (e: React.FormEvent) => {
+  const handleSavePhone = async () => {
+    try {
+      await capNhatHoSo({ hoTen: name || tempName, soDienThoai: tempPhone || undefined });
+      setPhone(tempPhone);
+      setEditingPhone(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.thongDiep || "Có lỗi xảy ra khi lưu số điện thoại.");
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await taiLenAnh(file);
+    } catch (err: any) {
+      alert(err?.response?.data?.thongDiep || "Không thể tải lên ảnh đại diện.");
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEmailSuccess(true);
-    setTimeout(() => {
-      setEmailSuccess(false);
-      setShowEmailRequest(false);
-      setNewEmail("");
-    }, 2500);
+    setPwError(null);
+    if (newPw !== confirmPw) {
+      setPwError(lang === "vi" ? "Mật khẩu xác nhận không khớp" : "Passwords do not match");
+      return;
+    }
+    try {
+      await doiMatKhau({ matKhauHienTai: oldPw, matKhauMoi: newPw });
+      setPwSuccess(true);
+      setTimeout(() => {
+        setPwSuccess(false);
+        setShowPasswordSection(false);
+        setOldPw("");
+        setNewPw("");
+        setConfirmPw("");
+      }, 2000);
+    } catch (err: any) {
+      setPwError(err?.response?.data?.thongDiep || (lang === "vi" ? "Đổi mật khẩu thất bại" : "Failed to change password"));
+    }
+  };
+
+  const handleEmailRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError(null);
+    try {
+      await yeuCauDoiEmail({ emailMoi: newEmail, matKhauHienTai: emailPw });
+      setEmailSuccess(true);
+      setTimeout(() => {
+        setEmailSuccess(false);
+        setShowEmailRequest(false);
+        setNewEmail("");
+        setEmailPw("");
+      }, 2500);
+    } catch (err: any) {
+      setEmailError(err?.response?.data?.thongDiep || (lang === "vi" ? "Gửi yêu cầu thất bại" : "Failed to request email change"));
+    }
   };
 
   const vi = lang === "vi";
@@ -104,17 +176,26 @@ export function AccountInfoPage() {
         </h2>
         <div className={styles.avatarSection}>
           <div className={styles.avatarLarge}>
-            {MOCK_USER.anhDaiDien ? (
-              <img src={MOCK_USER.anhDaiDien} alt="" />
+            {hoSo?.anhDaiDien ? (
+              <img src={hoSo.anhDaiDien} alt="" />
             ) : (
               <span>{initials || <User size={32} />}</span>
             )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              accept="image/png,image/jpeg,image/gif"
+              onChange={handleFileChange}
+            />
             <button
               className={styles.avatarEditBtn}
               type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
               aria-label={vi ? "Đổi ảnh" : "Change photo"}
             >
-              <Camera size={13} />
+              {isUploadingAvatar ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
             </button>
           </div>
           <div className={styles.avatarInfo}>
@@ -123,9 +204,14 @@ export function AccountInfoPage() {
                 ? "Ảnh JPG, PNG hoặc GIF. Kích thước tối đa 5MB."
                 : "JPG, PNG or GIF. Max size 5MB."}
             </p>
-            <button className={styles.btnOutline} type="button">
-              <Camera size={15} />
-              {vi ? "Tải ảnh mới" : "Upload photo"}
+            <button
+              className={styles.btnOutline}
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploadingAvatar ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
+              {vi ? (isUploadingAvatar ? "Đang tải..." : "Tải ảnh mới") : (isUploadingAvatar ? "Uploading..." : "Upload photo")}
             </button>
           </div>
         </div>
@@ -152,8 +238,8 @@ export function AccountInfoPage() {
                 onChange={(e) => setTempName(e.target.value)}
                 autoFocus
               />
-              <button className={styles.btnIconSuccess} type="button" onClick={handleSaveName} aria-label={vi ? "Lưu" : "Save"}>
-                <Save size={15} />
+              <button className={styles.btnIconSuccess} type="button" onClick={handleSaveName} disabled={isUpdatingHoSo} aria-label={vi ? "Lưu" : "Save"}>
+                {isUpdatingHoSo ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               </button>
               <button className={styles.btnIconCancel} type="button" onClick={() => { setEditingName(false); setTempName(name); }} aria-label={vi ? "Hủy" : "Cancel"}>
                 <X size={15} />
@@ -161,7 +247,7 @@ export function AccountInfoPage() {
             </div>
           ) : (
             <div className={styles.fieldValueRow}>
-              <span className={styles.fieldValue}>{name}</span>
+              <span className={styles.fieldValue}>{name || (isLoadingHoSo ? "..." : (vi ? "Chưa cập nhật" : "Not provided"))}</span>
               <button className={styles.btnIconEdit} type="button" onClick={() => { setEditingName(true); setTempName(name); }} aria-label={vi ? "Sửa tên" : "Edit name"}>
                 <Edit3 size={14} />
               </button>
@@ -184,8 +270,8 @@ export function AccountInfoPage() {
                 onChange={(e) => setTempPhone(e.target.value)}
                 autoFocus
               />
-              <button className={styles.btnIconSuccess} type="button" onClick={handleSavePhone} aria-label={vi ? "Lưu" : "Save"}>
-                <Save size={15} />
+              <button className={styles.btnIconSuccess} type="button" onClick={handleSavePhone} disabled={isUpdatingHoSo} aria-label={vi ? "Lưu" : "Save"}>
+                {isUpdatingHoSo ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               </button>
               <button className={styles.btnIconCancel} type="button" onClick={() => { setEditingPhone(false); setTempPhone(phone); }} aria-label={vi ? "Hủy" : "Cancel"}>
                 <X size={15} />
@@ -193,7 +279,7 @@ export function AccountInfoPage() {
             </div>
           ) : (
             <div className={styles.fieldValueRow}>
-              <span className={styles.fieldValue}>{phone || (vi ? "Chưa cập nhật" : "Not provided")}</span>
+              <span className={styles.fieldValue}>{phone || (isLoadingHoSo ? "..." : (vi ? "Chưa cập nhật" : "Not provided"))}</span>
               <button className={styles.btnIconEdit} type="button" onClick={() => { setEditingPhone(true); setTempPhone(phone); }} aria-label={vi ? "Sửa điện thoại" : "Edit phone"}>
                 <Edit3 size={14} />
               </button>
@@ -208,7 +294,7 @@ export function AccountInfoPage() {
             {vi ? "Email" : "Email"}
           </label>
           <div className={styles.fieldValueRow}>
-            <span className={styles.fieldValue}>{user?.email ?? MOCK_USER.email}</span>
+            <span className={styles.fieldValue}>{hoSo?.email || user?.email || (isLoadingHoSo ? "..." : "")}</span>
             <button className={styles.btnTextLink} type="button" onClick={() => setShowEmailRequest((v) => !v)}>
               {vi ? "Yêu cầu đổi" : "Request change"}
             </button>
@@ -226,6 +312,11 @@ export function AccountInfoPage() {
                 ? "Email mới sẽ cần xác minh trước khi có hiệu lực."
                 : "The new email must be verified before taking effect."}
             </p>
+            {emailError && (
+              <p style={{ color: "#e11d48", fontSize: "13px", marginBottom: "8px" }}>
+                {emailError}
+              </p>
+            )}
             <div className={styles.formRow}>
               <input
                 id="input-new-email"
@@ -236,8 +327,17 @@ export function AccountInfoPage() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
               />
-              <button className={styles.btnPrimary} type="submit">
-                {emailSuccess ? <><Check size={14} /> {vi ? "Đã gửi!" : "Sent!"}</> : (vi ? "Gửi yêu cầu" : "Send request")}
+              <input
+                id="input-email-pw"
+                className={styles.input}
+                type="password"
+                placeholder={vi ? "Mật khẩu hiện tại..." : "Current password..."}
+                value={emailPw}
+                onChange={(e) => setEmailPw(e.target.value)}
+                required
+              />
+              <button className={styles.btnPrimary} type="submit" disabled={isRequestingEmailChange}>
+                {emailSuccess ? <><Check size={14} /> {vi ? "Đã gửi!" : "Sent!"}</> : (isRequestingEmailChange ? <><Loader2 size={14} className="animate-spin" /> {vi ? "Đang gửi..." : "Sending..."}</> : (vi ? "Gửi yêu cầu" : "Send request"))}
               </button>
             </div>
           </form>
@@ -258,8 +358,8 @@ export function AccountInfoPage() {
           <div className={styles.securityBadge}>
             <Lock size={15} />
             <span>{vi ? "Mật khẩu" : "Password"}</span>
-            <span className={MOCK_USER.coMatKhau ? styles.badgeActive : styles.badgeInactive}>
-              {MOCK_USER.coMatKhau ? (vi ? "Đã thiết lập" : "Set") : (vi ? "Chưa thiết lập" : "Not set")}
+            <span className={hoSo?.coMatKhau ? styles.badgeActive : styles.badgeInactive}>
+              {hoSo?.coMatKhau ? (vi ? "Đã thiết lập" : "Set") : (vi ? "Chưa thiết lập" : "Not set")}
             </span>
           </div>
           <div className={styles.securityBadge}>
@@ -270,8 +370,8 @@ export function AccountInfoPage() {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
             <span>Google</span>
-            <span className={MOCK_USER.lienKetGoogle ? styles.badgeActive : styles.badgeInactive}>
-              {MOCK_USER.lienKetGoogle ? (vi ? "Đã liên kết" : "Connected") : (vi ? "Chưa liên kết" : "Not linked")}
+            <span className={hoSo?.lienKetGoogle ? styles.badgeActive : styles.badgeInactive}>
+              {hoSo?.lienKetGoogle ? (vi ? "Đã liên kết" : "Connected") : (vi ? "Chưa liên kết" : "Not linked")}
             </span>
           </div>
         </div>
@@ -282,6 +382,11 @@ export function AccountInfoPage() {
               <Lock size={14} />
               {vi ? "Đổi mật khẩu" : "Change password"}
             </div>
+            {pwError && (
+              <p style={{ color: "#e11d48", fontSize: "13px", marginBottom: "8px" }}>
+                {pwError}
+              </p>
+            )}
             {[
               { id: "input-old-pw", label: vi ? "Mật khẩu hiện tại" : "Current password", value: oldPw, setter: setOldPw, show: showOld, toggle: () => setShowOld((v) => !v) },
               { id: "input-new-pw", label: vi ? "Mật khẩu mới" : "New password", value: newPw, setter: setNewPw, show: showNew, toggle: () => setShowNew((v) => !v) },
@@ -299,21 +404,24 @@ export function AccountInfoPage() {
             ))}
             <div className={styles.formActions}>
               <button className={styles.btnOutline} type="button" onClick={() => setShowPasswordSection(false)}>{vi ? "Hủy" : "Cancel"}</button>
-              <button className={styles.btnPrimary} type="submit">
-                {pwSuccess ? <><Check size={14} /> {vi ? "Đã cập nhật!" : "Updated!"}</> : (vi ? "Cập nhật mật khẩu" : "Update password")}
+              <button className={styles.btnPrimary} type="submit" disabled={isChangingPassword}>
+                {pwSuccess ? <><Check size={14} /> {vi ? "Đã cập nhật!" : "Updated!"}</> : (isChangingPassword ? <><Loader2 size={14} className="animate-spin" /> {vi ? "Đang xử lý..." : "Processing..."}</> : (vi ? "Cập nhật mật khẩu" : "Update password"))}
               </button>
             </div>
           </form>
         )}
 
-        <div className={styles.accountMeta}>
-          <span>{vi ? "Ngày tạo tài khoản:" : "Account created:"}</span>
-          <strong>
-            {new Date(MOCK_USER.ngayTao).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
-          </strong>
-        </div>
+        {hoSo?.ngayTao && (
+          <div className={styles.accountMeta}>
+            <span>{vi ? "Ngày tạo tài khoản:" : "Account created:"}</span>
+            <strong>
+              {new Date(hoSo.ngayTao).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
+            </strong>
+          </div>
+        )}
       </div>
       </div>
+      
     </PatientPortal>
   );
 }

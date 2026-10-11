@@ -1,65 +1,147 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import type { ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { identityService } from '@/services/identityService';
+import { setAccessToken } from '@/utils/axiosClient';
+import type { DangNhapRequest, DangNhapResponse, VaiTro } from '@/types/auth.type';
 
 export interface User {
-  id: string
-  name: string
-  phone?: string
-  email?: string
-  role: 'patient' | 'doctor' | 'admin'
-  avatarUrl?: string
-  specialty?: string
-  degree?: string
-  clinic?: string
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  role: 'patient' | 'doctor' | 'admin';
+  avatarUrl?: string;
+  specialty?: string;
+  degree?: string;
+  clinic?: string;
 }
 
 interface AuthContextType {
-  user: User | null
-  login: (userData: User) => void
-  logout: () => void
+  user: User | null;
+  login: (userData: User) => void;
+  loginWithCredentials: (data: DangNhapRequest) => Promise<DangNhapResponse>;
+  logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'eclinic_user_session'
+const STORAGE_KEY = 'eclinic_user_session';
+
+function mapVaiTroToRole(vaiTro: VaiTro): 'patient' | 'doctor' | 'admin' {
+  switch (vaiTro) {
+    case 'BAC_SI':
+      return 'doctor';
+    case 'QUAN_TRI_VIEN':
+      return 'admin';
+    case 'BENH_NHAN':
+    default:
+      return 'patient';
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? JSON.parse(saved) : null
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
     } catch {
-      return null
+      return null;
     }
-  })
+  });
+
+  // Tự động khôi phục access token khi ứng dụng khởi động lại nếu có cookie refresh token
+  useEffect(() => {
+    let isMounted = true;
+    const restoreSession = async () => {
+      try {
+        const response = await identityService.lamMoiToken();
+        if (response.thanhCong && response.duLieu && isMounted) {
+          setAccessToken(response.duLieu.accessToken);
+          const tk = response.duLieu.taiKhoan;
+          setUser({
+            id: String(tk.id),
+            name: tk.hoTen,
+            email: tk.email,
+            phone: tk.soDienThoai || undefined,
+            role: mapVaiTroToRole(tk.vaiTro),
+          });
+        }
+      } catch {
+        // Nếu không có cookie hoặc cookie hết hạn, giữ user hiện tại hoặc xóa nếu cần
+      }
+    };
+
+    restoreSession();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } else {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY);
     }
-  }, [user])
+  }, [user]);
 
   const login = (userData: User) => {
-    setUser(userData)
-  }
+    setUser(userData);
+  };
 
-  const logout = () => {
-    setUser(null)
-  }
+  const loginWithCredentials = async (data: DangNhapRequest): Promise<DangNhapResponse> => {
+    const response = await identityService.dangNhap(data);
+    if (!response.thanhCong || !response.duLieu) {
+      throw new Error(response.thongDiep || 'Đăng nhập không thành công');
+    }
+
+    const { accessToken, taiKhoan } = response.duLieu;
+    setAccessToken(accessToken);
+
+    const mappedUser: User = {
+      id: String(taiKhoan.id),
+      name: taiKhoan.hoTen,
+      email: taiKhoan.email,
+      phone: taiKhoan.soDienThoai || undefined,
+      role: mapVaiTroToRole(taiKhoan.vaiTro),
+    };
+
+    setUser(mappedUser);
+    return response.duLieu;
+  };
+
+  const logout = async () => {
+    try {
+      await identityService.dangXuat();
+    } catch {
+      // Bỏ qua lỗi mạng khi logout
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        loginWithCredentials,
+        logout,
+        setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
+  const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return ctx
+  return ctx;
 }

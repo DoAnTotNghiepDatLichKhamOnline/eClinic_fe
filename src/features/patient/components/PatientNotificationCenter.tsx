@@ -1,76 +1,57 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Calendar, Check, CheckCheck, FileText, HeartPulse } from "lucide-react";
+import { Bell, Calendar, Check, CheckCheck, FileText, HeartPulse, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { LoaiThongBao } from "@/types/common.type";
+import { useDanhSachThongBao, useSoThongBaoChuaDoc, useNotificationActions } from "@/hooks/useNotification";
+import type { LoaiThongBao, ThongBaoResponse } from "@/types/notification.type";
 import styles from "./PatientNotificationCenter.module.css";
 
-interface PatientNotice {
-  id: string;
-  loai: LoaiThongBao;
-  path: string;
-  time: string;
-  read: boolean;
-  title: { vi: string; en: string };
-  desc: { vi: string; en: string };
+function formatNoticeTime(isoDate?: string, vi?: boolean): string {
+  if (!isoDate) return "";
+  const d = new Date(isoDate);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (mins < 5) return vi ? "Vừa xong" : "Just now";
+  if (mins < 60) return vi ? `${mins} phút trước` : `${mins}m ago`;
+  if (hours < 24) return vi ? `${hours} giờ trước` : `${hours}h ago`;
+  if (days < 7) return vi ? `${days} ngày trước` : `${days}d ago`;
+  return d.toLocaleDateString(vi ? "vi-VN" : "en-US", { month: "short", day: "numeric" });
 }
 
-const initialNotices: PatientNotice[] = [
-  {
-    id: "pat-notice-01",
-    loai: "NHAC_LICH_KHAM",
-    path: "/patient/my-appointments",
-    time: "09:30",
-    read: false,
-    title: {
-      vi: "Nhắc nhở lịch khám sắp tới",
-      en: "Upcoming appointment reminder",
-    },
-    desc: {
-      vi: "Lịch hẹn lúc 09:30 ngày 18/10 với BS. Trần Thị Lan.",
-      en: "Appointment at 09:30 on Oct 18 with Dr. Tran Thi Lan.",
-    },
-  },
-  {
-    id: "pat-notice-02",
-    loai: "HE_THONG",
-    path: "/patient/patient-profile",
-    time: "08:15",
-    read: false,
-    title: {
-      vi: "Hồ sơ y tế được cập nhật",
-      en: "Medical records updated",
-    },
-    desc: {
-      vi: "Thông tin thẻ BHYT và tiền sử bệnh đã được lưu thành công.",
-      en: "Health insurance and medical history updated successfully.",
-    },
-  },
-  {
-    id: "pat-notice-03",
-    loai: "NHAC_LICH_KHAM",
-    path: "/appointment",
-    time: "Hôm qua",
-    read: true,
-    title: {
-      vi: "Tái khám theo hẹn bác sĩ",
-      en: "Follow-up visit reminder",
-    },
-    desc: {
-      vi: "Đã đến kỳ tái khám chuyên khoa Tim mạch theo chỉ định.",
-      en: "It is time for your scheduled Cardiology follow-up visit.",
-    },
-  },
-];
+function getNoticeTitle(loai: LoaiThongBao, vi: boolean): string {
+  switch (loai) {
+    case "NHAC_LICH_KHAM":
+      return vi ? "Nhắc nhở lịch khám" : "Appointment reminder";
+    case "LICH_HEN_MOI":
+    case "LICH_HEN_DA_XAC_NHAN":
+      return vi ? "Đặt lịch thành công" : "Booking confirmed";
+    case "LICH_HEN_DA_DOI":
+    case "LICH_HEN_CAN_DOI":
+    case "LICH_HEN_DOI_PHONG":
+      return vi ? "Thay đổi lịch hẹn" : "Appointment rescheduled";
+    case "LICH_HEN_DA_HUY":
+    case "LICH_HEN_BI_TU_CHOI":
+      return vi ? "Hủy lịch khám" : "Appointment cancelled";
+    case "CA_LAM_VIEC_THAY_DOI":
+      return vi ? "Thay đổi lịch khám" : "Schedule updated";
+    default:
+      return vi ? "Thông báo hệ thống" : "System notification";
+  }
+}
 
 export function PatientNotificationCenter() {
   const { lang } = useLanguage();
+  const vi = lang === "vi";
   const navigate = useNavigate();
-  const [notices, setNotices] = useState(initialNotices);
+
+  const { danhSach: notices, isLoading } = useDanhSachThongBao({ kichThuoc: 10 });
+  const { soChuaDoc } = useSoThongBaoChuaDoc();
+  const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions();
+
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const unreadCount = notices.filter((n) => !n.read).length;
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -92,21 +73,33 @@ export function PatientNotificationCenter() {
     };
   }, [open]);
 
-  const markAllRead = () => {
-    setNotices((current) => current.map((n) => ({ ...n, read: true })));
+  const handleMarkAllRead = async () => {
+    try {
+      await danhDauTatCaDaDoc();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleOpenNotice = (notice: PatientNotice) => {
-    setNotices((current) =>
-      current.map((item) => (item.id === notice.id ? { ...item, read: true } : item))
-    );
+  const handleOpenNotice = async (notice: ThongBaoResponse) => {
+    if (!notice.daDoc) {
+      try {
+        await danhDauDaDoc(notice.id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
     setOpen(false);
-    navigate(notice.path);
+    if (notice.maPhieuKham || notice.loai === "NHAC_LICH_KHAM" || notice.loai === "LICH_HEN_MOI" || notice.loai === "LICH_HEN_DA_XAC_NHAN") {
+      navigate("/patient/my-appointments");
+    } else {
+      navigate("/patient/dashboard");
+    }
   };
 
-  const renderIcon = (notice: PatientNotice) => {
-    if (notice.read) return <Check size={13} aria-hidden="true" />;
-    if (notice.loai === "NHAC_LICH_KHAM") return <Calendar size={12} aria-hidden="true" />;
+  const renderIcon = (notice: ThongBaoResponse) => {
+    if (notice.daDoc) return <Check size={13} aria-hidden="true" />;
+    if (notice.loai === "NHAC_LICH_KHAM" || notice.loai === "LICH_HEN_MOI" || notice.loai === "LICH_HEN_DA_XAC_NHAN") return <Calendar size={12} aria-hidden="true" />;
     if (notice.loai === "HE_THONG") return <FileText size={12} aria-hidden="true" />;
     return <HeartPulse size={12} aria-hidden="true" />;
   };
@@ -117,52 +110,56 @@ export function PatientNotificationCenter() {
         type="button"
         className={styles.trigger}
         aria-label={
-          lang === "vi"
-            ? `Thông báo, ${unreadCount} chưa đọc`
-            : `Notifications, ${unreadCount} unread`
+          vi
+            ? `Thông báo, ${soChuaDoc} chưa đọc`
+            : `Notifications, ${soChuaDoc} unread`
         }
         aria-expanded={open}
         onClick={() => setOpen((val) => !val)}
       >
         <Bell aria-hidden="true" size={18} />
-        {unreadCount > 0 && <span className={styles.count}>{unreadCount}</span>}
+        {soChuaDoc > 0 && <span className={styles.count}>{soChuaDoc}</span>}
       </button>
 
       {open && (
         <section
           className={styles.panel}
-          aria-label={lang === "vi" ? "Trung tâm thông báo" : "Notification center"}
+          aria-label={vi ? "Trung tâm thông báo" : "Notification center"}
         >
           <header className={styles.panelHeader}>
             <span className={styles.panelTitle}>
-              {lang === "vi" ? "Thông báo bệnh nhân" : "Patient Notifications"}
+              {vi ? "Thông báo bệnh nhân" : "Patient Notifications"}
             </span>
-            {unreadCount > 0 && (
-              <button type="button" className={styles.markAll} onClick={markAllRead}>
+            {soChuaDoc > 0 && (
+              <button type="button" className={styles.markAll} onClick={handleMarkAllRead}>
                 <CheckCheck size={14} aria-hidden="true" />
-                {lang === "vi" ? "Đã đọc hết" : "Mark all read"}
+                {vi ? "Đã đọc hết" : "Mark all read"}
               </button>
             )}
           </header>
 
           <div className={styles.list}>
-            {notices.length === 0 ? (
+            {isLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "24px 0", color: "#64748b" }}>
+                <Loader2 size={16} className="animate-spin" />
+              </div>
+            ) : notices.length === 0 ? (
               <div className={styles.empty}>
-                {lang === "vi" ? "Không có thông báo mới" : "No new notifications"}
+                {vi ? "Không có thông báo mới" : "No new notifications"}
               </div>
             ) : (
               notices.map((notice) => (
                 <button
                   key={notice.id}
                   type="button"
-                  className={`${styles.notice} ${notice.read ? "" : styles.unread}`}
+                  className={`${styles.notice} ${notice.daDoc ? "" : styles.unread}`}
                   onClick={() => handleOpenNotice(notice)}
                 >
                   <span className={styles.noticeDot}>{renderIcon(notice)}</span>
                   <span className={styles.noticeCopy}>
-                    <strong>{lang === "vi" ? notice.title.vi : notice.title.en}</strong>
-                    <span>{lang === "vi" ? notice.desc.vi : notice.desc.en}</span>
-                    <time>{notice.time}</time>
+                    <strong>{getNoticeTitle(notice.loai, vi)}</strong>
+                    <span>{notice.noiDung}</span>
+                    <time>{formatNoticeTime(notice.ngayTao, vi)}</time>
                   </span>
                 </button>
               ))
@@ -170,7 +167,7 @@ export function PatientNotificationCenter() {
           </div>
 
           <p className={styles.footer}>
-            {lang === "vi"
+            {vi
               ? "Cập nhật thời gian thực về lịch hẹn và kết quả khám"
               : "Real-time updates on appointments & medical records"}
           </p>

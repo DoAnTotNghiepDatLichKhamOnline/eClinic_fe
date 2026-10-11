@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
+import { identityService } from "@/services/identityService";
 import { RegisterForm } from "./RegisterForm";
 import type { PatientRegistrationData } from "./RegisterForm";
 import styles from "../login-patient/LoginPagePatient.module.css";
@@ -10,20 +12,49 @@ import styles from "../login-patient/LoginPagePatient.module.css";
 export function RegisterPagePatient() {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegisterSubmit = (data: PatientRegistrationData) => {
-    notifyAuth(
-      "success",
-      lang === "vi"
-        ? "Đăng ký tài khoản thành công!"
-        : "Registration successful!",
-      lang === "vi"
-        ? `Tài khoản ${data.hoTen} (${data.email}) đã được khởi tạo. Đang chuyển đến trang đăng nhập...`
-        : `Account ${data.hoTen} (${data.email}) created. Redirecting to login...`,
-    );
-    setTimeout(() => {
-      navigate("/login");
-    }, 1200);
+  const handleRegisterSubmit = async (data: PatientRegistrationData) => {
+    setIsSubmitting(true);
+    try {
+      const response = await identityService.dangKy({
+        hoTen: data.hoTen,
+        email: data.email,
+        matKhau: data.matKhau,
+        soDienThoai: data.soDienThoai,
+      });
+
+      if (response.thanhCong) {
+        notifyAuth(
+          "success",
+          lang === "vi"
+            ? "Đăng ký tài khoản thành công!"
+            : "Registration successful!",
+          lang === "vi"
+            ? `Tài khoản ${data.hoTen} (${data.email}) đã được khởi tạo. Vui lòng kiểm tra hộp thư email để kích hoạt tài khoản.`
+            : `Account ${data.hoTen} created. Please check your email to activate your account.`,
+        );
+        setTimeout(() => {
+          navigate("/login");
+        }, 1200);
+      } else {
+        throw new Error(response.thongDiep || "Đăng ký không thành công");
+      }
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.thongDiep ||
+        err?.message ||
+        (lang === "vi"
+          ? "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin."
+          : "Registration failed. Please check your details.");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Đăng ký không thành công" : "Registration Failed",
+        msg,
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -54,8 +85,8 @@ export function RegisterPagePatient() {
             </h1>
             <p className={styles.heroSubtitle}>
               {lang === "vi"
-                ? "Tạo tài khoản để quản lý thông tin cá nhân và kết nối thuận tiện hơn với dịch vụ y tế."
-                : "Create an account to manage your details and connect with care more easily."}
+                ? "Tạo tài khoản để quản lý thông tin cá nhân, hồ sơ sức khỏe và kết nối thuận tiện hơn với dịch vụ y tế eClinic."
+                : "Create an account to manage your details, medical records, and connect with eClinic care teams."}
             </p>
           </section>
 
@@ -74,7 +105,11 @@ export function RegisterPagePatient() {
                 </p>
               </div>
 
-              <RegisterForm lang={lang} onSubmit={handleRegisterSubmit} />
+              <RegisterForm
+                lang={lang}
+                onSubmit={handleRegisterSubmit}
+                isLoading={isSubmitting}
+              />
 
               <div className={styles.registerLinkWrapper}>
                 <span>
@@ -83,7 +118,7 @@ export function RegisterPagePatient() {
                     : "Already have an account?"}
                 </span>
                 <Link to="/login" className={styles.staffLink}>
-                  {lang === "vi" ? "Đăng nhập" : "Log in"}
+                  {lang === "vi" ? "Đăng nhập ngay" : "Log in"}
                 </Link>
               </div>
             </div>

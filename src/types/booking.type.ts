@@ -1,9 +1,38 @@
-import type { TrangThaiLienKet, GioiTinh, TrangThaiLichHen, NguoiDatLich, QuanHeGiamHo } from './common.type';
+import type {
+  TrangThaiLienKet,
+  GioiTinh,
+  TrangThaiLichHen,
+  TrangThaiLichLamViec,
+  TrangThaiYeuCau,
+  LoaiYeuCauDoiLich,
+  LocLichHen,
+  PhamViLichHen,
+  NguoiDatLich,
+  QuanHeGiamHo,
+} from './common.type';
+
+// Re-export common types
+export type {
+  TrangThaiLienKet,
+  GioiTinh,
+  TrangThaiLichHen,
+  TrangThaiLichLamViec,
+  TrangThaiYeuCau,
+  LoaiYeuCauDoiLich,
+  LocLichHen,
+  PhamViLichHen,
+  NguoiDatLich,
+  QuanHeGiamHo,
+};
+
+// ==========================================
+// 1. TÓM TẮT & KHUNG GIỜ (SLOTS & SUMMARIES)
+// ==========================================
 
 export interface BacSiTomTatResponse {
   id: number;
   hoTen: string;
-  hocVi: string;
+  hocVi: string | null;
   anhDaiDien: string | null;
 }
 
@@ -53,6 +82,24 @@ export interface NgaySomNhatResponse {
   soChoConLai: number;
 }
 
+// ==========================================
+// 2. PHIẾU KHÁM & ĐẶT LỊCH (BOOKING & APPOINTMENT)
+// ==========================================
+
+export interface BenhNhanPhieuKhamResponse {
+  hoTen: string;
+  namSinh: number;
+  gioiTinh: GioiTinh;
+  cccd: string | null;
+  soDienThoai: string | null;
+}
+
+export interface NguoiGiamHoPhieuKhamResponse {
+  hoTen: string;
+  quanHe: QuanHeGiamHo;
+  soDienThoai: string;
+}
+
 export interface DatLichResponse {
   maPhieuKham: string;
   maTraCuu: string;
@@ -69,20 +116,6 @@ export interface DatLichResponse {
   hoTenNguoiGiamHo: string | null;
   luuVaoTaiKhoan: boolean;
   bacSiDoPhongKhamXep: boolean;
-}
-
-export interface BenhNhanPhieuKhamResponse {
-  hoTen: string;
-  namSinh: number;
-  gioiTinh: GioiTinh;
-  cccd: string | null;
-  soDienThoai: string | null;
-}
-
-export interface NguoiGiamHoPhieuKhamResponse {
-  hoTen: string;
-  quanHe: QuanHeGiamHo;
-  soDienThoai: string;
 }
 
 export interface PhieuKhamResponse {
@@ -174,6 +207,10 @@ export interface LanKhamCuaToiResponse {
   ketQua: KetQuaKhamResponse;
 }
 
+// ==========================================
+// 3. HỒ SƠ BỆNH NHÂN & NGƯỜI THÂN (PATIENT RECORDS)
+// ==========================================
+
 export interface HoSoCuaToiResponse {
   trangThaiLienKet: TrangThaiLienKet;
   cccd: string | null;
@@ -190,8 +227,8 @@ export interface NguoiGiamHo {
   hoTen: string;
   quanHe: QuanHeGiamHo;
   soDienThoai: string;
-  cccd: string;
-  ngaySinh: string | null;
+  cccd?: string | null;
+  ngaySinh?: string | null;
 }
 
 export interface NguoiThanDaLuuResponse {
@@ -241,4 +278,274 @@ export interface TrangCaNhanResponse {
   lichSapToi: LichSapToi;
   lanKhamGanDay: LanKhamCuaToiResponse[];
   soLich: SoLich;
+}
+
+// ==========================================
+// 4. BÁC SĨ & LỊCH LÀM VIỆC (DOCTOR SHIFTS & REQUESTS)
+// ==========================================
+
+export interface CaLamViecResponse {
+  id: number;
+  ngay: string;
+  gioBatDau: string;
+  gioKetThuc: string;
+  soLuotToiDaMoiGio: number;
+  thoiLuongLuotPhut: number;
+  idBacSi: number;
+  hoTenBacSi: string;
+  idPhongKham: number;
+  tenPhongKham: string;
+  trangThai: TrangThaiLichLamViec;
+  tongSoCho: number;
+  soChoDaDat: number;
+  soChoConLai: number;
+}
+
+export interface LichHenTrongCaResponse {
+  id: number;
+  maPhieuKham: string;
+  soThuTu: number;
+  gioKhamDuKien: string;
+  gioBatDauKhung: string;
+  gioKetThucKhung: string;
+  trangThai: TrangThaiLichHen;
+  hoTenBenhNhan: string;
+  namSinhBenhNhan: number;
+  gioiTinhBenhNhan: GioiTinh;
+  soDienThoaiBenhNhan: string | null;
+  lyDoKham: string;
+  ketQuaKham: KetQuaKhamResponse | null;
+}
+
+export interface ChiTietCaLamViecResponse {
+  caLamViec: CaLamViecResponse;
+  danhSachLichHen: LichHenTrongCaResponse[];
+}
+
+export interface DanhGiaCuaBacSiResponse {
+  id: number;
+  soSao: number;
+  nhanXet: string | null;
+  ngayTao: string;
+  hoTenBenhNhan: string;
+  maPhieuKham: string;
+}
+
+export interface YeuCauDoiLichResponse {
+  id: number;
+  idCaLamViec: number;
+  ngay: string;
+  gioBatDau: string;
+  gioKetThuc: string;
+  tenPhongHienTai: string;
+  tenPhongMongMuon: string;
+  lyDo: string;
+  trangThai: TrangThaiYeuCau;
+  ngayTao: string;
+  nguoiDuyet?: string | null;
+  phanHoi?: string | null;
+}
+
+export interface TongQuanBacSiResponse {
+  caHomNay: number;
+  lichHenHomNay: number;
+  soCaTuanNay: number;
+  danhGiaTrungBinh: number | null;
+  tongSoDanhGia: number;
+}
+
+// ==========================================
+// 5. QUẢN TRỊ VIÊN (ADMIN RESPONSES)
+// ==========================================
+
+export interface TongQuanQuanTriResponse {
+  tongLichHenHomNay: number;
+  tongCaLamViecHomNay: number;
+  yeuCauDoiLichChoDuyet: number;
+  hoSoChoXacMinh: number;
+}
+
+export interface HoSoBenhNhanQuanTriResponse {
+  id: number;
+  hoTen: string | null;
+  ngaySinh: string | null;
+  gioiTinh: GioiTinh | null;
+  cccd: string | null;
+  soDienThoai: string | null;
+  diaChi: string | null;
+  soBaoHiemYTe: string | null;
+  trangThaiLienKet: TrangThaiLienKet;
+  ngayTao: string;
+}
+
+export interface ChiTietHoSoBenhNhanResponse {
+  hoSo: HoSoBenhNhanQuanTriResponse;
+  lichSuKham: LanKhamCuaToiResponse[];
+}
+
+export interface DanhGiaQuanTriResponse {
+  id: number;
+  soSao: number;
+  nhanXet: string | null;
+  anHien: boolean;
+  ngayTao: string;
+  hoTenBacSi: string;
+  tenChuyenKhoa: string;
+  hoTenBenhNhan: string;
+  maPhieuKham: string;
+}
+
+// ==========================================
+// 6. REQUEST DTOs (CÁC DTO YÊU CẦU)
+// ==========================================
+
+export interface BenhNhanRequest {
+  hoTen: string;
+  ngaySinh: string; // ISO date 'YYYY-MM-DD'
+  gioiTinh: GioiTinh;
+  soDienThoai: string;
+  cccd?: string | null;
+  email?: string | null;
+  soBaoHiemYTe?: string | null;
+  diaChi?: string | null;
+  namSinh?: number;
+  tienSuBenhLy?: string | null;
+}
+
+export interface NguoiGiamHoRequest {
+  hoTen: string;
+  quanHe: QuanHeGiamHo;
+  soDienThoai: string;
+  cccd: string;
+  ngaySinh?: string | null;
+  namSinh?: number | null;
+}
+
+export interface DatLichRequest {
+  idLichLamViec?: number | null;
+  idChuyenKhoa?: number | null;
+  gioBatDauKhung: string; // ISO LocalDateTime 'YYYY-MM-DDTHH:mm:ss'
+  lyDoKham: string;
+  benhNhan: BenhNhanRequest;
+  nguoiGiamHo?: NguoiGiamHoRequest | null;
+  datChoBanThan?: boolean | null;
+  luuNguoiThan?: boolean | null;
+  // Các trường tương thích cũ (nếu có)
+  idCaKham?: number | null;
+  nguoiDat?: NguoiDatLich | null;
+  luuVaoTaiKhoan?: boolean | null;
+}
+
+export interface DoiLichRequest {
+  idCaKhamMoi: number;
+  gioBatDauKhungMoi: string;
+  lyDoDoi?: string | null;
+}
+
+export interface HuyLichRequest {
+  lyDoHuy: string;
+}
+
+export interface DanhGiaRequest {
+  soSao: number;
+  nhanXet?: string | null;
+}
+
+export interface HoSoCuaToiRequest {
+  cccd?: string | null;
+  hoTen?: string | null;
+  ngaySinh?: string | null;
+  gioiTinh?: GioiTinh | null;
+  soDienThoai?: string | null;
+  diaChi?: string | null;
+  soBaoHiemYTe?: string | null;
+  tienSuBenhLy?: string | null;
+}
+
+export interface TaoCaRequest {
+  ngay: string;
+  idBacSi: number;
+  idPhongKham: number;
+  gioBatDau: string;
+  gioKetThuc: string;
+  soLuotToiDaMoiGio: number;
+  thoiLuongLuotPhut: number;
+}
+
+export interface SuaCaRequest {
+  idPhongKham?: number;
+  soLuotToiDaMoiGio?: number;
+}
+
+export interface HuyCaRequest {
+  lyDoHuy: string;
+}
+
+export interface GuiYeuCauDoiLichRequest {
+  idCaHienTai: number;
+  idPhongKhamMongMuon: number;
+  lyDo: string;
+}
+
+export interface XuLyYeuCauRequest {
+  chapNhan: boolean;
+  lyDoTuChoi?: string | null;
+}
+
+export interface GhiKetQuaKhamRequest {
+  chanDoan: string;
+  ghiChu?: string | null;
+  ngayTaiKhamDeXuat?: string | null;
+  donThuoc?: DonThuoc[];
+}
+
+export interface SuaHoSoBenhNhanRequest {
+  hoTen?: string | null;
+  ngaySinh?: string | null;
+  gioiTinh?: GioiTinh | null;
+  soDienThoai?: string | null;
+  diaChi?: string | null;
+  soBaoHiemYTe?: string | null;
+  tienSuBenhLy?: string | null;
+}
+
+export interface TuChoiLienKetRequest {
+  lyDoTuChoi: string;
+}
+
+// ==========================================
+// 7. PARAMS DTOs (QUERY PARAMS)
+// ==========================================
+
+export interface GetNgayConChoParams {
+  idChuyenKhoa?: number;
+  idBacSi?: number;
+  tuNgay: string;
+  denNgay: string;
+}
+
+export interface GetLichHenParams {
+  loc?: LocLichHen;
+  phamVi?: PhamViLichHen;
+  tuKhoa?: string;
+  trang?: number;
+  kichThuoc?: number;
+}
+
+export interface GetLichHenQuanTriParams {
+  tuKhoa?: string;
+  idBacSi?: number;
+  ngay?: string;
+  trangThai?: TrangThaiLichHen;
+  trang?: number;
+  kichThuoc?: number;
+}
+
+export interface GetDanhGiaQuanTriParams {
+  tuKhoa?: string;
+  idBacSi?: number;
+  soSao?: number;
+  anHien?: boolean;
+  trang?: number;
+  kichThuoc?: number;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -11,14 +11,20 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import { createAppointment } from "@/services/appointmentService";
+import { bookingService } from "@/services/bookingService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
-import { getUpcomingBookingDays } from "./appointment.data";
+import type { DatLichRequest, DatLichResponse } from "@/types/booking.type";
+import {
+  getUpcomingBookingDays,
+  calculateAgeInYears,
+  isSpecialtyPediatric,
+} from "./appointment.utils";
 import { ServiceTimeStep } from "./components/ServiceTimeStep";
 import { PatientInfoStep } from "./components/PatientInfoStep";
 import { BookingSummaryCard } from "./components/BookingSummaryCard";
 import { BookingSuccessModal } from "./components/BookingSuccessModal";
+import { useDanhSachChuyenKhoa, useDanhSachBacSi } from "@/hooks/useCatalog";
 
 export function AppointmentBookingPage() {
   const { lang } = useLanguage();
@@ -26,28 +32,32 @@ export function AppointmentBookingPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Default initial date to tomorrow or today
+  // Mặc định chọn ngày mai hoặc hôm nay
   const defaultDates = getUpcomingBookingDays(2);
   const defaultDate =
     defaultDates[1]?.dateStr || defaultDates[0]?.dateStr || "";
 
-  // Router navigation state (if patient came from Hero or landing cards)
+  // Router navigation state (khi bệnh nhân bấm "Đặt khám" từ trang Bác sĩ hoặc Chuyên khoa)
   const routerState = location.state as
     | {
-        specialtyId?: string;
-        doctorId?: string;
+        specialtyId?: string | number;
+        doctorId?: string | number;
         date?: string;
         location?: string;
       }
     | undefined;
 
   const [formValues, setFormValues] = useState<AppointmentFormValues>({
-    specialtyId: routerState?.specialtyId || "general-medicine",
-    doctorId: routerState?.doctorId || "",
+    specialtyId: routerState?.specialtyId ? String(routerState.specialtyId) : "",
+    doctorId: routerState?.doctorId ? String(routerState.doctorId) : "",
     date: routerState?.date || defaultDate,
     slotId: "",
     slotTime: "",
+    gioBatDauKhung: "",
+    idLichLamViec: undefined,
     patientName: "",
+    patientDob: "",
+    patientGender: "NAM",
     patientPhone: "",
     patientCccd: "",
     reason: "",
@@ -56,39 +66,72 @@ export function AppointmentBookingPage() {
     guardianName: "",
     guardianCccd: "",
     guardianPhone: "",
-    guardianRelationship: "Cha/Mẹ",
+    guardianRelationship: "CHA",
   });
 
+  // Fetch danh sách chuyên khoa để resolve tên & kiểm tra chuyên khoa Nhi
+  const { danhSach: danhSachChuyenKhoa } = useDanhSachChuyenKhoa({ kichThuoc: 50 });
+
+  // Tự động chọn chuyên khoa đầu tiên nếu chưa có
+  useEffect(() => {
+    if (!formValues.specialtyId && danhSachChuyenKhoa.length > 0) {
+      setFormValues((prev) => ({
+        ...prev,
+        specialtyId: String(danhSachChuyenKhoa[0].id),
+      }));
+    }
+  }, [danhSachChuyenKhoa, formValues.specialtyId]);
+
+  // Fetch danh sách bác sĩ của chuyên khoa
+  const idChuyenKhoaNum = formValues.specialtyId
+    ? Number(formValues.specialtyId)
+    : undefined;
+  const { danhSach: danhSachBacSi } = useDanhSachBacSi(
+    idChuyenKhoaNum && !isNaN(idChuyenKhoaNum)
+      ? { idChuyenKhoa: idChuyenKhoaNum, kichThuoc: 50 }
+      : { kichThuoc: 50 },
+  );
+
+  const selectedSpecialty = useMemo(
+    () => danhSachChuyenKhoa.find((s) => String(s.id) === formValues.specialtyId),
+    [danhSachChuyenKhoa, formValues.specialtyId],
+  );
+
+  const selectedDoctor = useMemo(
+    () => danhSachBacSi.find((d) => String(d.id) === formValues.doctorId),
+    [danhSachBacSi, formValues.doctorId],
+  );
+
+  const isPediatric = isSpecialtyPediatric(selectedSpecialty?.tenChuyenKhoa);
+
+  // Điền sẵn thông tin khi bệnh nhân đã đăng nhập
   useEffect(() => {
     if (user?.role !== "patient") return;
-    setFormValues((previous) => {
-      const isPediatric = previous.specialtyId === "pediatrics";
-      return {
-        ...previous,
-        patientName: isPediatric
-          ? previous.patientName
-          : previous.patientName || user.name,
-        patientPhone: isPediatric
-          ? previous.patientPhone
-          : previous.patientPhone || user.phone || "",
-        guardianName: isPediatric
-          ? previous.guardianName || user.name
-          : previous.guardianName,
-        guardianPhone: isPediatric
-          ? previous.guardianPhone || user.phone || ""
-          : previous.guardianPhone,
-      };
-    });
-  }, [user, formValues.specialtyId]);
+    setFormValues((previous) => ({
+      ...previous,
+      patientName: isPediatric
+        ? previous.patientName
+        : previous.patientName || user.name,
+      patientPhone: isPediatric
+        ? previous.patientPhone
+        : previous.patientPhone || user.phone || "",
+      guardianName: isPediatric
+        ? previous.guardianName || user.name
+        : previous.guardianName,
+      guardianPhone: isPediatric
+        ? previous.guardianPhone || user.phone || ""
+        : previous.guardianPhone,
+    }));
+  }, [user, isPediatric]);
 
-  // Synchronize state if routerState changes
+  // Đồng bộ routerState khi chuyển trang
   useEffect(() => {
     if (routerState?.specialtyId) {
       setFormValues((prev) => ({
         ...prev,
-        specialtyId: routerState.specialtyId || prev.specialtyId,
+        specialtyId: String(routerState.specialtyId),
         date: routerState.date || prev.date,
-        doctorId: routerState.doctorId || prev.doctorId,
+        doctorId: routerState.doctorId ? String(routerState.doctorId) : prev.doctorId,
       }));
     }
   }, [routerState]);
@@ -99,13 +142,13 @@ export function AppointmentBookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [bookingCode, setBookingCode] = useState("");
+  const [bookingResult, setBookingResult] = useState<DatLichResponse | null>(null);
 
   const handleFieldChange = (
     field: keyof AppointmentFormValues,
-    value: string,
+    value: any,
   ) => {
     setFormValues((prev) => ({ ...prev, [field]: value }));
-    // Clear error for that field
     if (formErrors[field]) {
       setFormErrors((prev) => {
         const next = { ...prev };
@@ -117,10 +160,9 @@ export function AppointmentBookingPage() {
 
   const validateForm = (): boolean => {
     const errors: Partial<Record<keyof AppointmentFormValues, string>> = {};
-    const isPediatric = formValues.specialtyId === "pediatrics";
     const phoneRegex = /^0\d{9}$/;
 
-    // Group 1 Validation (Dịch vụ & Thời gian khám)
+    // 1. Chuyên khoa, Ngày, Khung giờ
     if (!formValues.specialtyId) {
       errors.specialtyId =
         lang === "vi"
@@ -135,14 +177,14 @@ export function AppointmentBookingPage() {
           : "Please select an appointment date.";
     }
 
-    if (!formValues.slotId) {
+    if (!formValues.slotId || !formValues.gioBatDauKhung) {
       errors.slotId =
         lang === "vi"
-          ? "Vui lòng chọn khung giờ khám còn trống."
+          ? "Vui lòng chọn khung giờ khám còn chỗ."
           : "Please select an available time slot.";
     }
 
-    // Common: Tên bệnh nhân / bệnh nhi & Lý do khám
+    // 2. Họ tên bệnh nhân
     if (!formValues.patientName.trim()) {
       errors.patientName = isPediatric
         ? lang === "vi"
@@ -158,59 +200,72 @@ export function AppointmentBookingPage() {
           : "Full name cannot exceed 150 characters.";
     }
 
+    // 3. Ngày sinh bệnh nhân
+    const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
+    if (!effectiveDob) {
+      const errDob =
+        lang === "vi"
+          ? "Vui lòng chọn ngày sinh để xác định hồ sơ và độ tuổi."
+          : "Date of birth is required.";
+      if (isPediatric) errors.childDob = errDob;
+      else errors.patientDob = errDob;
+    } else {
+      const dob = new Date(effectiveDob);
+      const today = new Date();
+      dob.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      if (dob > today) {
+        const errFuture =
+          lang === "vi"
+            ? "Ngày sinh không thể ở tương lai."
+            : "Birth date cannot be in the future.";
+        if (isPediatric) errors.childDob = errFuture;
+        else errors.patientDob = errFuture;
+      }
+    }
+
+    // 4. Giới tính
+    if (!formValues.patientGender) {
+      errors.patientGender =
+        lang === "vi" ? "Vui lòng chọn giới tính." : "Please select gender.";
+    }
+
+    // 5. Lý do khám
     if (!formValues.reason.trim()) {
       errors.reason =
         lang === "vi"
-          ? "Vui lòng mô tả sơ bộ lý do khám hoặc triệu chứng bệnh lý."
+          ? "Vui lòng mô tả sơ bộ lý do khám hoặc triệu chứng."
           : "Please describe symptoms or reason for visit.";
+    } else if (formValues.reason.trim().length > 500) {
+      errors.reason =
+        lang === "vi"
+          ? "Lý do khám tối đa 500 ký tự."
+          : "Reason for visit cannot exceed 500 characters.";
     }
 
-    // Group 2 & 3: Xử lý riêng giữa Khoa Nhi và Người lớn
-    if (isPediatric) {
-      // Bệnh nhi: Bắt buộc Ngày sinh & Giới tính (Xóa Phone & CCCD của trẻ)
-      if (!formValues.childDob) {
-        errors.childDob =
-          lang === "vi"
-            ? "Vui lòng chọn ngày sinh của bé."
-            : "Please select child date of birth.";
-      } else {
-        const dob = new Date(formValues.childDob);
-        const today = new Date();
-        dob.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-        if (dob > today) {
-          errors.childDob =
-            lang === "vi"
-              ? "Ngày sinh của bé không thể ở tương lai."
-              : "Birth date cannot be in the future.";
-        }
-      }
+    // 6. Quy tắc tuổi: dưới 18 tuổi hoặc chuyên khoa Nhi bắt buộc có Người giám hộ
+    const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
+    const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
-      if (!formValues.childGender) {
-        errors.childGender =
-          lang === "vi"
-            ? "Vui lòng chọn giới tính của bé."
-            : "Please select child gender.";
-      }
-
-      // Thông tin Người giám hộ (Bắt buộc cho Khoa Nhi)
+    if (isMinor) {
+      // Người giám hộ bắt buộc
       if (!formValues.guardianName?.trim()) {
         errors.guardianName =
           lang === "vi"
-            ? "Khám Khoa Nhi bắt buộc điền họ tên người giám hộ."
-            : "Guardian name is required for pediatric appointments.";
+            ? "Người khám dưới 18 tuổi bắt buộc điền họ tên người giám hộ."
+            : "Guardian name is required for minors.";
       }
 
       if (!formValues.guardianCccd?.trim()) {
         errors.guardianCccd =
           lang === "vi"
-            ? "Vui lòng nhập số CCCD của người giám hộ."
-            : "Guardian Citizen ID is required.";
-      } else if (!/^\d{9,12}$/.test(formValues.guardianCccd.trim())) {
+            ? "Vui lòng nhập số CCCD của người giám hộ (12 chữ số)."
+            : "Guardian Citizen ID (12 digits) is required.";
+      } else if (!/^\d{12}$/.test(formValues.guardianCccd.trim())) {
         errors.guardianCccd =
           lang === "vi"
-            ? "Số CCCD người giám hộ phải gồm 9 đến 12 chữ số."
-            : "Guardian ID must be 9-12 digits.";
+            ? "Số CCCD người giám hộ phải gồm đúng 12 chữ số."
+            : "Guardian ID must be exactly 12 digits.";
       }
 
       if (!formValues.guardianPhone?.trim()) {
@@ -225,7 +280,7 @@ export function AppointmentBookingPage() {
             : "Guardian phone must be 10 digits starting with 0.";
       }
     } else {
-      // Người lớn: Bắt buộc Số điện thoại & CCCD
+      // Người lớn (>= 18 tuổi): Bắt buộc Số điện thoại & CCCD 12 số
       if (!formValues.patientPhone.trim()) {
         errors.patientPhone =
           lang === "vi"
@@ -241,13 +296,13 @@ export function AppointmentBookingPage() {
       if (!formValues.patientCccd.trim()) {
         errors.patientCccd =
           lang === "vi"
-            ? "Số CCCD là khóa định danh bắt buộc để liên kết hồ sơ bệnh nhân."
-            : "Citizen ID (CCCD) is required to link medical records.";
-      } else if (!/^\d{9,12}$/.test(formValues.patientCccd.trim())) {
+            ? "Số CCCD là định danh bắt buộc đối với người khám từ đủ 18 tuổi."
+            : "Citizen ID (CCCD) is required for adult patients.";
+      } else if (!/^\d{12}$/.test(formValues.patientCccd.trim())) {
         errors.patientCccd =
           lang === "vi"
-            ? "Số CCCD phải gồm 9 đến 12 chữ số hợp lệ."
-            : "Citizen ID must be 9-12 digits.";
+            ? "Số CCCD phải gồm đúng 12 chữ số hợp lệ."
+            : "Citizen ID must be exactly 12 digits.";
       }
     }
 
@@ -256,10 +311,10 @@ export function AppointmentBookingPage() {
     if (Object.keys(errors).length > 0) {
       notifyAuth(
         "error",
-        lang === "vi" ? "Thông tin chưa đầy đủ" : "Incomplete Information",
+        lang === "vi" ? "Thông tin chưa hợp lệ" : "Incomplete Information",
         lang === "vi"
-          ? "Vui lòng điền đủ các mục bắt buộc được đánh dấu đỏ."
-          : "Please complete all required fields.",
+          ? "Vui lòng kiểm tra và điền đầy đủ các mục được đánh dấu đỏ."
+          : "Please complete all required fields highlighted in red.",
       );
       window.scrollTo({ top: 120, behavior: "smooth" });
       return false;
@@ -268,48 +323,110 @@ export function AppointmentBookingPage() {
     return true;
   };
 
-  const handleBookingSubmit = () => {
+  const handleBookingSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const isPediatric = formValues.specialtyId === "pediatrics";
-      const appointment = createAppointment({
-        patientId: user?.role === "patient" ? user.id : undefined,
-        patientName: formValues.patientName,
-        patientPhone: isPediatric
-          ? formValues.guardianPhone || ""
-          : formValues.patientPhone,
-        specialtyId: formValues.specialtyId,
-        doctorId: formValues.doctorId,
-        date: formValues.date,
-        slotTime: formValues.slotTime,
-        reason: formValues.reason,
-      });
+    try {
+      const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
+      const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
+      const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
-      setBookingCode(appointment.bookingCode);
-      setIsSubmitting(false);
-      setIsSuccessModalOpen(true);
+      // Quy tắc backend DatLichRequest:
+      // Gửi idLichLamViec (chọn bác sĩ) hoặc idChuyenKhoa (bác sĩ bất kỳ), KHÔNG gửi cả hai
+      const idLichLamViecNum =
+        formValues.doctorId && formValues.idLichLamViec
+          ? Number(formValues.idLichLamViec)
+          : undefined;
+      const idChuyenKhoaNum = !formValues.doctorId && formValues.specialtyId
+        ? Number(formValues.specialtyId)
+        : undefined;
 
+      // Chuẩn hóa giờ bắt đầu khung sang ISO LocalDateTime: "YYYY-MM-DDTHH:mm:ss"
+      let gioBatDauKhung = formValues.gioBatDauKhung;
+      if (!gioBatDauKhung.includes("T")) {
+        const timePart = formValues.slotTime.slice(0, 5) || "08:00";
+        gioBatDauKhung = `${formValues.date}T${timePart}:00`;
+      }
+
+      const requestPayload: DatLichRequest = {
+        idLichLamViec: idLichLamViecNum,
+        idChuyenKhoa: idChuyenKhoaNum,
+        gioBatDauKhung,
+        lyDoKham: formValues.reason.trim(),
+        datChoBanThan: Boolean(user && user.role === "patient"),
+        luuNguoiThan: Boolean(user && user.role === "patient"),
+        benhNhan: {
+          hoTen: formValues.patientName.trim(),
+          ngaySinh: effectiveDob!,
+          gioiTinh: formValues.patientGender,
+          soDienThoai:
+            formValues.patientPhone.trim() ||
+            (formValues.guardianPhone?.trim() ?? ""),
+          cccd: formValues.patientCccd?.trim() || undefined,
+          email: user?.email || undefined,
+        },
+        nguoiGiamHo: isMinor
+          ? {
+              hoTen: formValues.guardianName!.trim(),
+              quanHe: (formValues.guardianRelationship as any) || "CHA",
+              soDienThoai: formValues.guardianPhone!.trim(),
+              cccd: formValues.guardianCccd!.trim(),
+            }
+          : undefined,
+      };
+
+      const response = await bookingService.datLich(requestPayload);
+
+      if (response.thanhCong && response.duLieu) {
+        const result = response.duLieu;
+        setBookingResult(result);
+        const code = result.maTraCuu || result.maPhieuKham;
+        setBookingCode(code);
+        setIsSuccessModalOpen(true);
+        notifyAuth(
+          "success",
+          lang === "vi" ? "Đặt lịch thành công!" : "Appointment Booked!",
+          lang === "vi"
+            ? `Mã phiếu khám: ${code}. eClinic đã ghi nhận lịch hẹn của bạn.`
+            : `Booking code: ${code}. eClinic has confirmed your booking.`,
+        );
+      } else {
+        throw new Error(response.thongDiep || "Đặt lịch không thành công");
+      }
+    } catch (err: any) {
+      // TUYỆT ĐỐI KHÔNG FALLBACK VÀO LOCAL STORAGE
+      const errorMessage =
+        err?.response?.data?.thongDiep ||
+        err?.response?.data?.maLoi ||
+        err?.message ||
+        (lang === "vi"
+          ? "Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại sau."
+          : "An error occurred while communicating with the server.");
       notifyAuth(
-        "success",
-        lang === "vi" ? "Đặt lịch thành công!" : "Appointment Booked!",
-        lang === "vi"
-          ? `Mã lịch hẹn: ${appointment.bookingCode}. eClinic đã ghi nhận lịch khám của bạn.`
-          : `Booking reference: ${appointment.bookingCode}.`,
+        "error",
+        lang === "vi" ? "Đặt lịch thất bại" : "Booking Failed",
+        errorMessage,
       );
-    }, 600);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBookAnother = () => {
     setIsSuccessModalOpen(false);
+    setBookingResult(null);
     setFormValues((prev) => ({
       ...prev,
       slotId: "",
       slotTime: "",
+      gioBatDauKhung: "",
+      idLichLamViec: undefined,
       reason: "",
       patientName: "",
+      patientDob: "",
+      patientGender: "NAM",
       patientPhone: "",
       patientCccd: "",
       childDob: "",
@@ -326,13 +443,20 @@ export function AppointmentBookingPage() {
     navigate(user?.role === "patient" ? "/patient/appointments" : "/home");
   };
 
+  const specialtyDisplayName = selectedSpecialty
+    ? selectedSpecialty.tenChuyenKhoa
+    : undefined;
+
+  const doctorDisplayName = selectedDoctor
+    ? `${selectedDoctor.hocVi ? selectedDoctor.hocVi + " " : ""}${selectedDoctor.hoTen}`
+    : undefined;
+
   return (
     <div className="min-h-screen bg-[#f4f7f4] flex flex-col font-body">
       {!isSuccessModalOpen && <Header />}
 
       <main className="flex-1 py-8 sm:py-12">
         <Container>
-
           {/* Page Banner Header */}
           <div className="bg-linear-to-r from-[#0f4d3a] to-[#173127] rounded-3xl p-6 sm:p-10 text-white shadow-xl mb-8 relative overflow-hidden">
             <div className="relative z-10 max-w-2xl">
@@ -397,12 +521,13 @@ export function AppointmentBookingPage() {
                 errors={formErrors}
               />
 
-              {/* Step 2: Nhóm Thông tin Cá nhân Bệnh nhân (+ Người giám hộ nếu Nhi khoa) */}
+              {/* Step 2: Nhóm Thông tin Cá nhân Bệnh nhân (+ Người giám hộ nếu < 18 tuổi) */}
               <PatientInfoStep
                 lang={lang}
                 formValues={formValues}
                 onChange={handleFieldChange}
                 errors={formErrors}
+                isPediatric={isPediatric}
               />
             </div>
 
@@ -411,6 +536,9 @@ export function AppointmentBookingPage() {
               <BookingSummaryCard
                 lang={lang}
                 formValues={formValues}
+                specialtyName={specialtyDisplayName}
+                doctorName={doctorDisplayName}
+                isPediatric={isPediatric}
                 onConfirm={handleBookingSubmit}
                 isSubmitting={isSubmitting}
               />
@@ -429,8 +557,12 @@ export function AppointmentBookingPage() {
         onClose={() => setIsSuccessModalOpen(false)}
         onBookAnother={handleBookAnother}
         bookingCode={bookingCode}
+        bookingResult={bookingResult}
+        specialtyName={specialtyDisplayName}
+        doctorName={doctorDisplayName}
         formValues={formValues}
         lang={lang}
+        isPediatric={isPediatric}
       />
     </div>
   );

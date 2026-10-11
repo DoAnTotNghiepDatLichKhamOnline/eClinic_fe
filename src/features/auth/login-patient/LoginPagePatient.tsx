@@ -12,7 +12,7 @@ import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
   const { lang } = useLanguage();
-  const { login } = useAuth();
+  const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const requestedPath = (location.state as { from?: unknown } | null)?.from;
@@ -24,23 +24,43 @@ export function LoginPagePatient() {
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLoginSubmit = (e: FormEvent) => {
+  const handleLoginSubmit = async (e: FormEvent, password: string) => {
     e.preventDefault();
-    login({
-      id: "pat-" + Date.now(),
-      name: "Nguyễn Văn A",
-      phone: "0912345678",
-      role: "patient",
-    });
-    notifyAuth(
-      "success",
-      lang === "vi" ? "Đăng nhập thành công" : "Login successful",
-      lang === "vi" ? "Đang chuyển tới trang của bạn..." : "Redirecting...",
-    );
-    setTimeout(() => {
-      navigate(redirectTo, { replace: true });
-    }, 600);
+    if (!loginEmail.trim() || !password) return;
+
+    setIsLoading(true);
+    try {
+      await loginWithCredentials({
+        email: loginEmail.trim(),
+        matKhau: password,
+      });
+
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đăng nhập thành công" : "Login successful",
+        lang === "vi" ? "Chào mừng bạn quay trở lại eClinic." : "Welcome back to eClinic.",
+      );
+
+      setTimeout(() => {
+        navigate(redirectTo, { replace: true });
+      }, 400);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.thongDiep ||
+        err?.message ||
+        (lang === "vi"
+          ? "Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu."
+          : "Login failed. Please check your credentials.");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Đăng nhập không thành công" : "Login Failed",
+        msg,
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -101,8 +121,8 @@ export function LoginPagePatient() {
                 </span>
                 <span>
                   {lang === "vi"
-                    ? "Quản lý hồ sơ sức khỏe trực tuyến 24/7"
-                    : "Manage health records online 24/7"}
+                    ? "Quản lý hồ sơ y tế bảo mật, liên kết tự động qua CCCD"
+                    : "Secure medical records linked via Citizen ID"}
                 </span>
               </div>
               <div className={styles.featureItem}>
@@ -111,8 +131,8 @@ export function LoginPagePatient() {
                 </span>
                 <span>
                   {lang === "vi"
-                    ? "Bảo mật thông tin cá nhân tuyệt đối"
-                    : "Absolute personal data security"}
+                    ? "Tra cứu phiếu khám và kết quả xét nghiệm 24/7"
+                    : "Look up exam vouchers and medical results 24/7"}
                 </span>
               </div>
             </div>
@@ -138,6 +158,7 @@ export function LoginPagePatient() {
                 onEmailChange={setLoginEmail}
                 onSubmit={handleLoginSubmit}
                 onForgotPassword={handleForgotPassword}
+                isLoading={isLoading}
               />
 
               <div className={styles.registerLinkWrapper}>

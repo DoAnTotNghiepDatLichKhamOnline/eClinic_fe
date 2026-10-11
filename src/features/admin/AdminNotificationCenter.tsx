@@ -1,78 +1,39 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Bell, CalendarClock, Check, CheckCheck, UserPlus } from "lucide-react";
+import { AlertCircle, Bell, CalendarClock, Check, CheckCheck, UserPlus, Loader2 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { useDanhSachThongBao, useSoThongBaoChuaDoc, useNotificationActions } from "@/hooks/useNotification";
+import type { ThongBaoResponse } from "@/types/notification.type";
 import type { AdminSection } from "./AdminSidebar";
 import styles from "./AdminNotificationCenter.module.css";
-
-interface AdminNotice {
-  id: string;
-  kind: "booking" | "doctor" | "shift";
-  section: AdminSection;
-  time: string;
-  read: boolean;
-  title: { vi: string; en: string };
-  desc: { vi: string; en: string };
-}
 
 interface AdminNotificationCenterProps {
   onNavigate: (section: AdminSection) => void;
 }
 
-const initialNotices: AdminNotice[] = [
-  {
-    id: "admin-notice-01",
-    kind: "booking",
-    section: "schedule",
-    time: "10:12",
-    read: false,
-    title: {
-      vi: "Yêu cầu đặt lịch mới",
-      en: "New appointment request",
-    },
-    desc: {
-      vi: "Bệnh nhân Nguyễn Văn An vừa đặt khám chuyên khoa Tim mạch.",
-      en: "Patient Nguyen Van An booked a Cardiology appointment.",
-    },
-  },
-  {
-    id: "admin-notice-02",
-    kind: "doctor",
-    section: "doctors",
-    time: "09:05",
-    read: false,
-    title: {
-      vi: "Hồ sơ bác sĩ chờ phê duyệt",
-      en: "Doctor profile pending review",
-    },
-    desc: {
-      vi: "BS. Trần Thị Bình đã gửi cập nhật chứng chỉ chuyên khoa Sản.",
-      en: "Dr. Tran Thi Binh submitted updated obstetrics credentials.",
-    },
-  },
-  {
-    id: "admin-notice-03",
-    kind: "shift",
-    section: "schedule",
-    time: "Hôm qua",
-    read: true,
-    title: {
-      vi: "Cảnh báo phân ca trực",
-      en: "Shift scheduling alert",
-    },
-    desc: {
-      vi: "Khoa Nhi cần bổ sung bác sĩ phụ trách ca trực chiều mai.",
-      en: "Pediatrics requires an additional doctor for tomorrow afternoon shift.",
-    },
-  },
-];
+function formatNoticeTime(isoDate?: string, vi?: boolean): string {
+  if (!isoDate) return "";
+  const d = new Date(isoDate);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (mins < 5) return vi ? "Vừa xong" : "Just now";
+  if (mins < 60) return vi ? `${mins} phút trước` : `${mins}m ago`;
+  if (hours < 24) return vi ? `${hours} giờ trước` : `${hours}h ago`;
+  if (days < 7) return vi ? `${days} ngày trước` : `${days}d ago`;
+  return d.toLocaleDateString(vi ? "vi-VN" : "en-US", { month: "short", day: "numeric" });
+}
 
 export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterProps) {
   const { lang } = useLanguage();
-  const [notices, setNotices] = useState(initialNotices);
+  const vi = lang === "vi";
+
+  const { danhSach: notices, isLoading } = useDanhSachThongBao({ kichThuoc: 10 });
+  const { soChuaDoc } = useSoThongBaoChuaDoc();
+  const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions();
+
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const unreadCount = notices.filter((n) => !n.read).length;
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -94,22 +55,36 @@ export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterP
     };
   }, [open]);
 
-  const markAllRead = () => {
-    setNotices((current) => current.map((n) => ({ ...n, read: true })));
+  const handleMarkAllRead = async () => {
+    try {
+      await danhDauTatCaDaDoc();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleOpenNotice = (notice: AdminNotice) => {
-    setNotices((current) =>
-      current.map((item) => (item.id === notice.id ? { ...item, read: true } : item))
-    );
+  const handleOpenNotice = async (notice: ThongBaoResponse) => {
+    if (!notice.daDoc) {
+      try {
+        await danhDauDaDoc(notice.id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
     setOpen(false);
-    onNavigate(notice.section);
+    if (notice.idLichHen) {
+      onNavigate("schedule");
+    } else if (notice.idYeuCau) {
+      onNavigate("schedule");
+    } else {
+      onNavigate("dashboard");
+    }
   };
 
-  const renderIcon = (notice: AdminNotice) => {
-    if (notice.read) return <Check size={13} aria-hidden="true" />;
-    if (notice.kind === "booking") return <CalendarClock size={13} aria-hidden="true" />;
-    if (notice.kind === "doctor") return <UserPlus size={13} aria-hidden="true" />;
+  const renderIcon = (notice: ThongBaoResponse) => {
+    if (notice.daDoc) return <Check size={13} aria-hidden="true" />;
+    if (notice.idLichHen) return <CalendarClock size={13} aria-hidden="true" />;
+    if (notice.idYeuCau) return <UserPlus size={13} aria-hidden="true" />;
     return <AlertCircle size={13} aria-hidden="true" />;
   };
 
@@ -119,52 +94,56 @@ export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterP
         type="button"
         className={styles.trigger}
         aria-label={
-          lang === "vi"
-            ? `Thông báo quản trị, ${unreadCount} chưa đọc`
-            : `Admin notifications, ${unreadCount} unread`
+          vi
+            ? `Thông báo quản trị, ${soChuaDoc} chưa đọc`
+            : `Admin notifications, ${soChuaDoc} unread`
         }
         aria-expanded={open}
         onClick={() => setOpen((val) => !val)}
       >
         <Bell aria-hidden="true" size={18} />
-        {unreadCount > 0 && <span className={styles.count}>{unreadCount}</span>}
+        {soChuaDoc > 0 && <span className={styles.count}>{soChuaDoc}</span>}
       </button>
 
       {open && (
         <section
           className={styles.panel}
-          aria-label={lang === "vi" ? "Trung tâm thông báo quản trị" : "Admin notification center"}
+          aria-label={vi ? "Trung tâm thông báo quản trị" : "Admin notification center"}
         >
           <header className={styles.panelHeader}>
             <span className={styles.panelTitle}>
-              {lang === "vi" ? "Thông báo hệ thống" : "System Notifications"}
+              {vi ? "Thông báo hệ thống" : "System Notifications"}
             </span>
-            {unreadCount > 0 && (
-              <button type="button" className={styles.markAll} onClick={markAllRead}>
+            {soChuaDoc > 0 && (
+              <button type="button" className={styles.markAll} onClick={handleMarkAllRead}>
                 <CheckCheck size={14} aria-hidden="true" />
-                {lang === "vi" ? "Đã đọc hết" : "Mark all read"}
+                {vi ? "Đã đọc hết" : "Mark all read"}
               </button>
             )}
           </header>
 
           <div className={styles.list}>
-            {notices.length === 0 ? (
+            {isLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "24px 0", color: "#64748b" }}>
+                <Loader2 size={16} className="animate-spin" />
+              </div>
+            ) : notices.length === 0 ? (
               <div className={styles.empty}>
-                {lang === "vi" ? "Không có thông báo mới" : "No new notifications"}
+                {vi ? "Không có thông báo mới" : "No new notifications"}
               </div>
             ) : (
               notices.map((notice) => (
                 <button
                   key={notice.id}
                   type="button"
-                  className={`${styles.notice} ${notice.read ? "" : styles.unread}`}
+                  className={`${styles.notice} ${notice.daDoc ? "" : styles.unread}`}
                   onClick={() => handleOpenNotice(notice)}
                 >
                   <span className={styles.noticeDot}>{renderIcon(notice)}</span>
                   <span className={styles.noticeCopy}>
-                    <strong>{lang === "vi" ? notice.title.vi : notice.title.en}</strong>
-                    <span>{lang === "vi" ? notice.desc.vi : notice.desc.en}</span>
-                    <time>{notice.time}</time>
+                    <strong>{vi ? "Thông báo" : "Notification"}</strong>
+                    <span>{notice.noiDung}</span>
+                    <time>{formatNoticeTime(notice.ngayTao, vi)}</time>
                   </span>
                 </button>
               ))
@@ -172,7 +151,7 @@ export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterP
           </div>
 
           <p className={styles.footer}>
-            {lang === "vi"
+            {vi
               ? "Hệ thống thông báo thời gian thực dành cho Quản trị viên"
               : "Real-time system notification stream for Administrators"}
           </p>
