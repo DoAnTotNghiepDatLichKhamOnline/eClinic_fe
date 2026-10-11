@@ -1,43 +1,28 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Container } from "@/shared/components/layout/Container";
 import { SectionHead } from "@/shared/components/ui/SectionHead";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { doctors, doctorsContent } from "./doctors.data";
+import { useDanhSachBacSi, useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
+import { doctorsContent } from "./doctors.data";
 import { DoctorCard } from "./DoctorCard";
 import styles from "./DoctorsSection.module.css";
 
 export function DoctorsSection({ featured = false }: { featured?: boolean }) {
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
-  const [specialty, setSpecialty] = useState("all");
-  const [location, setLocation] = useState("all");
+  const [specialtyId, setSpecialtyId] = useState<number | undefined>(undefined);
 
-  const filteredDoctors = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return doctors.filter((doctor) => {
-      const matchesQuery =
-        !q ||
-        [
-          t(doctor.name),
-          t(doctor.role),
-          t(doctor.specialty),
-          t(doctor.location),
-        ].some((value) => value.toLowerCase().includes(q));
-      const matchesSpecialty =
-        specialty === "all" || t(doctor.specialty) === specialty;
-      const matchesLocation =
-        location === "all" || t(doctor.location) === location;
-      return matchesQuery && matchesSpecialty && matchesLocation;
-    });
-  }, [location, query, specialty, t]);
+  // Lấy danh mục chuyên khoa cho bộ lọc
+  const { danhSach: specialties } = useDanhSachChuyenKhoa({ kichThuoc: 100 });
 
-  const specialties = Array.from(
-    new Set(doctors.map((doctor) => t(doctor.specialty))),
-  );
-  const locations = Array.from(
-    new Set(doctors.map((doctor) => t(doctor.location))),
-  );
+  // Lấy danh sách bác sĩ từ API
+  const { danhSach: doctors, isLoading } = useDanhSachBacSi({
+    idChuyenKhoa: specialtyId,
+    tuKhoa: query.trim() || undefined,
+    kichThuoc: featured ? 4 : 8,
+  });
 
   return (
     <section className={styles.section} id="doctors">
@@ -58,45 +43,50 @@ export function DoctorsSection({ featured = false }: { featured?: boolean }) {
                 aria-label={t(doctorsContent.searchPlaceholder)}
               />
             </label>
-            <button className={styles.searchButton} type="button">
-              {t(doctorsContent.search)}
-            </button>
             <select
-              value={specialty}
-              onChange={(event) => setSpecialty(event.target.value)}
+              value={specialtyId ?? "all"}
+              onChange={(event) => {
+                const val = event.target.value;
+                setSpecialtyId(val === "all" ? undefined : Number(val));
+              }}
               aria-label={t(doctorsContent.allSpecialties)}
             >
               <option value="all">{t(doctorsContent.allSpecialties)}</option>
               {specialties.map((item) => (
-                <option value={item} key={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-            <select
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              aria-label={t(doctorsContent.allLocations)}
-            >
-              <option value="all">{t(doctorsContent.allLocations)}</option>
-              {locations.map((item) => (
-                <option value={item} key={item}>
-                  {item}
+                <option value={item.id} key={item.id}>
+                  {item.tenChuyenKhoa}
                 </option>
               ))}
             </select>
           </div>
         )}
 
-        <div className={styles.grid}>
-          {(featured ? doctors.slice(0, 3) : filteredDoctors).map((doctor) => (
-            <DoctorCard doctor={doctor} key={doctor.id} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className={styles.grid}>
+            {Array.from({ length: featured ? 4 : 6 }).map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  height: "260px",
+                  borderRadius: "12px",
+                  background: "linear-gradient(90deg, #eef2ef 25%, #f5f8f5 50%, #eef2ef 75%)",
+                  backgroundSize: "200% 100%",
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.grid}>
+            {doctors.map((doctor) => (
+              <DoctorCard doctor={doctor} key={doctor.id} />
+            ))}
+          </div>
+        )}
+
         {featured && (
-          <a className={styles.viewAll} href="/doctors">
+          <Link className={styles.viewAll} to="/doctors">
             {t({ en: "View all doctors", vi: "Xem tất cả bác sĩ" })}
-          </a>
+          </Link>
         )}
       </Container>
     </section>

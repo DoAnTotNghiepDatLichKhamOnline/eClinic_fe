@@ -22,6 +22,7 @@ export type TrangThaiTaiKhoan = 'CHO_XAC_NHAN' | 'DA_KICH_HOAT' | 'VO_HIEU_HOA';
 export type TrangThaiLienKet = 'CHUA_LIEN_KET' | 'CHO_XAC_MINH' | 'DA_LIEN_KET';
 export type GioiTinh = 'NAM' | 'NU' | 'KHAC';
 export type TrangThaiBacSi = 'DANG_CONG_TAC' | 'NGUNG_CONG_TAC';
+export type TrangThaiPhongKham = 'HOAT_DONG' | 'NGUNG_HOAT_DONG';
 export type TrangThaiLichHen = 'CHO_XAC_NHAN' | 'DA_XAC_NHAN' | 'BI_TU_CHOI' | 'DA_HOAN_THANH' | 'DA_HUY' | 'DA_HUY_DO_DOI_LICH';
 export type LocLichHen = 'TAT_CA' | 'SAP_TOI' | 'LICH_SU';
 export type PhamViLichHen = 'TAT_CA' | 'BAN_THAN' | 'NGUOI_KHAC';

@@ -1,77 +1,103 @@
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, RotateCcw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { DoctorCard } from "@/features/landing/components/doctors/DoctorCard";
-import { doctors } from "@/features/landing/components/doctors/doctors.data";
+import { useDanhSachBacSi, useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
 import styles from "./DoctorPages.module.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 export function DoctorPage() {
   const { t } = useLanguage();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // State quản lý giá trị hiển thị ngay lập tức trên input (giúp UI gõ mượt không bị giật)
+  // Search input state with debounce
   const [inputValue, setInputValue] = useState("");
-  // State quản lý giá trị thực tế dùng để lọc sau khi đã debounce (độ trễ 300ms)
-  const [query, setQuery] = useState("");
+  const [tuKhoa, setTuKhoa] = useState("");
 
-  const [specialty, setSpecialty] = useState(
-    () => searchParams.get("specialty") ?? "all",
-  );
-  const [location, setLocation] = useState("all");
-
-  // State quản lý trang hiện tại
+  // Current page (1-based for UI display)
   const [currentPage, setCurrentPage] = useState(1);
 
-  const specialties = Array.from(
-    new Set(doctors.map((doctor) => t(doctor.specialty))),
-  );
-  const locations = Array.from(
-    new Set(doctors.map((doctor) => t(doctor.location))),
-  );
+  // Fetch specialties for filter dropdown
+  const { danhSach: danhSachChuyenKhoa } = useDanhSachChuyenKhoa({ kichThuoc: 100 });
 
-  // Xử lý debounce cho ô tìm kiếm (300ms)
+  // Read URL query params
+  const paramChuyenKhoa =
+    searchParams.get("chuyenKhoa") ||
+    searchParams.get("idChuyenKhoa") ||
+    searchParams.get("specialty");
+
+  // Determine selected specialty ID
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | undefined>(() => {
+    if (!paramChuyenKhoa) return undefined;
+    const asNum = Number(paramChuyenKhoa);
+    return Number.isInteger(asNum) && asNum > 0 ? asNum : undefined;
+  });
+
+  // Sync with searchParams if specialtyParam is name instead of id
+  useEffect(() => {
+    if (paramChuyenKhoa && danhSachChuyenKhoa.length > 0) {
+      const asNum = Number(paramChuyenKhoa);
+      if (Number.isInteger(asNum) && asNum > 0) {
+        setSelectedSpecialtyId(asNum);
+      } else {
+        const found = danhSachChuyenKhoa.find(
+          (ck) => ck.tenChuyenKhoa.toLowerCase() === paramChuyenKhoa.toLowerCase()
+        );
+        if (found) {
+          setSelectedSpecialtyId(found.id);
+        }
+      }
+    }
+  }, [paramChuyenKhoa, danhSachChuyenKhoa]);
+
+  // Debounce search input (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setQuery(inputValue);
-      setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+      setTuKhoa(inputValue.trim());
+      setCurrentPage(1);
     }, 300);
 
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  // Reset về trang 1 khi thay đổi chuyên khoa hoặc địa điểm
-  useEffect(() => {
+  // Handle specialty change
+  const handleSpecialtyChange = (value: string) => {
+    const newId = value === "all" ? undefined : Number(value);
+    setSelectedSpecialtyId(newId);
     setCurrentPage(1);
-  }, [specialty, location]);
 
-  const filteredDoctors = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-    return doctors.filter((doctor) => {
-      const matchesQuery =
-        !normalizedQuery ||
-        [doctor.name, doctor.role, doctor.specialty, doctor.location].some(
-          (value) => t(value).toLocaleLowerCase().includes(normalizedQuery),
-        );
-      const matchesSpecialty =
-        specialty === "all" || t(doctor.specialty) === specialty;
-      const matchesLocation =
-        location === "all" || t(doctor.location) === location;
-      return matchesQuery && matchesSpecialty && matchesLocation;
-    });
-  }, [location, query, specialty, t]);
+    const newParams = new URLSearchParams(searchParams);
+    if (newId) {
+      newParams.set("chuyenKhoa", String(newId));
+    } else {
+      newParams.delete("chuyenKhoa");
+      newParams.delete("idChuyenKhoa");
+      newParams.delete("specialty");
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
-  // Tính toán danh sách bác sĩ hiển thị trên trang hiện tại (10 bác sĩ mỗi trang)
-  const totalPages = Math.ceil(filteredDoctors.length / PAGE_SIZE);
-  const paginatedDoctors = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredDoctors.slice(start, start + PAGE_SIZE);
-  }, [filteredDoctors, currentPage]);
+  // Fetch doctors from catalog API
+  const {
+    danhSach: doctors,
+    tongSoPhanTu,
+    tongSoTrang,
+    isLoading,
+    isError,
+    refetch,
+  } = useDanhSachBacSi({
+    idChuyenKhoa: selectedSpecialtyId,
+    tuKhoa: tuKhoa || undefined,
+    trang: currentPage - 1,
+    kichThuoc: PAGE_SIZE,
+  });
+
+  const totalPages = Math.max(tongSoTrang, 1);
 
   return (
     <>
@@ -83,107 +109,101 @@ export function DoctorPage() {
               {t({ en: "Care team", vi: "Đội ngũ y tế" })}
             </p>
             <h1 className={styles.title}>
-              {t({ en: "Find a doctor", vi: "Tìm bác sĩ" })}
+              {t({ en: "Find a doctor", vi: "Tìm kiếm bác sĩ" })}
             </h1>
             <p className={styles.description}>
               {t({
-                en: "Search by name, specialty, or location to find the right care team.",
-                vi: "Tìm theo tên, chuyên khoa hoặc địa điểm để chọn bác sĩ phù hợp.",
+                en: "Explore highly qualified specialists, view professional background and book your appointment directly.",
+                vi: "Tìm kiếm bác sĩ chuyên khoa giàu kinh nghiệm, xem hồ sơ chuyên môn và đặt lịch khám nhanh chóng.",
               })}
             </p>
           </div>
+
           <div className={styles.filters}>
             <label className={styles.field}>
               <Search aria-hidden="true" />
               <input
                 value={inputValue}
-                onChange={(event) => setInputValue(event.target.value)}
+                onChange={(e) => setInputValue(e.target.value)}
                 placeholder={t({
-                  en: "Doctor name or keyword",
-                  vi: "Tên bác sĩ hoặc từ khóa",
+                  en: "Search doctor name, title or keyword...",
+                  vi: "Tìm theo tên bác sĩ, học vị hoặc từ khóa...",
                 })}
                 aria-label={t({ en: "Search doctors", vi: "Tìm bác sĩ" })}
               />
             </label>
+
             <label className={styles.field}>
               <select
-                value={specialty}
-                onChange={(event) => setSpecialty(event.target.value)}
-                aria-label={t({ en: "Specialty", vi: "Chuyên khoa" })}
+                value={selectedSpecialtyId ?? "all"}
+                onChange={(e) => handleSpecialtyChange(e.target.value)}
+                aria-label={t({ en: "Filter by specialty", vi: "Lọc theo chuyên khoa" })}
               >
                 <option value="all">
                   {t({ en: "All specialties", vi: "Tất cả chuyên khoa" })}
                 </option>
-                {specialties.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.field}>
-              <select
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                aria-label={t({ en: "Location", vi: "Địa điểm" })}
-              >
-                <option value="all">
-                  {t({ en: "All locations", vi: "Tất cả địa điểm" })}
-                </option>
-                {locations.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                {danhSachChuyenKhoa.map((ck) => (
+                  <option key={ck.id} value={ck.id}>
+                    {ck.tenChuyenKhoa}
                   </option>
                 ))}
               </select>
             </label>
           </div>
+
           <p className={styles.count} aria-live="polite">
-            {filteredDoctors.length} {t({ en: "doctors", vi: "bác sĩ" })}
+            {isLoading
+              ? t({ en: "Loading doctors...", vi: "Đang tải danh sách bác sĩ..." })
+              : `${tongSoPhanTu} ${t({ en: "doctors found", vi: "bác sĩ được tìm thấy" })}`}
           </p>
-          {paginatedDoctors.length ? (
+
+          {isLoading ? (
+            <div className={styles.skeletonGrid}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className={styles.skeletonCard} />
+              ))}
+            </div>
+          ) : isError ? (
+            <div className={styles.errorBox}>
+              <p>
+                {t({
+                  en: "Failed to load doctors list. Please check connection and try again.",
+                  vi: "Không thể tải danh sách bác sĩ từ hệ thống. Vui lòng thử lại.",
+                })}
+              </p>
+              <button
+                type="button"
+                className={styles.retryBtn}
+                onClick={() => refetch()}
+              >
+                <RotateCcw size={14} style={{ display: "inline", marginRight: "6px" }} />
+                {t({ en: "Retry", vi: "Thử lại" })}
+              </button>
+            </div>
+          ) : doctors.length > 0 ? (
             <>
               <div className={styles.grid}>
-                {paginatedDoctors.map((doctor) => (
+                {doctors.map((doctor) => (
                   <DoctorCard doctor={doctor} key={doctor.id} />
                 ))}
               </div>
 
-              {/* Thanh điều hướng phân trang */}
               {totalPages > 1 && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "8px",
-                    marginTop: "24px",
-                  }}
-                >
+                <div className={styles.pagination}>
                   <button
                     type="button"
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className={styles.secondaryButton}
                   >
                     {t({ en: "Previous", vi: "Trang trước" })}
                   </button>
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 12px",
-                      fontSize: "14px",
-                    }}
-                  >
+                  <span className={styles.pageInfo}>
                     {currentPage} / {totalPages}
                   </span>
                   <button
                     type="button"
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className={styles.secondaryButton}
                   >
@@ -195,8 +215,8 @@ export function DoctorPage() {
           ) : (
             <div className={styles.empty} role="status">
               {t({
-                en: "No related information found.",
-                vi: "Không tìm thấy thông tin liên quan.",
+                en: "No doctors found matching your criteria.",
+                vi: "Không tìm thấy bác sĩ nào phù hợp với điều kiện tìm kiếm.",
               })}
             </div>
           )}

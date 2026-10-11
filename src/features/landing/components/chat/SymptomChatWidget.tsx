@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Bot, MessageCircle, Send, X } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { doctors } from "../doctors/doctors.data";
+import { useDanhSachBacSi } from "@/hooks/useCatalog";
 import styles from "./SymptomChatWidget.module.css";
 
 interface ChatMessage {
@@ -17,6 +17,7 @@ export function SymptomChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { danhSach: doctorsList } = useDanhSachBacSi({ kichThuoc: 50 });
 
   const sendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -24,11 +25,12 @@ export function SymptomChatWidget() {
     if (!symptom) return;
     const pediatricConcern = /child|baby|kid|trẻ|bé|nhi/i.test(symptom);
     const doctor =
-      doctors.find((item) =>
+      doctorsList.find((item) =>
         pediatricConcern
-          ? item.specialty.en === "Pediatrics"
-          : item.specialty.en === "Family Medicine",
-      ) ?? doctors[0];
+          ? /nhi/i.test(item.tenChuyenKhoa)
+          : true
+      ) ?? doctorsList[0];
+
     setMessages((current) => [
       ...current,
       { id: Date.now(), text: symptom },
@@ -38,8 +40,8 @@ export function SymptomChatWidget() {
           en: "For a first consultation, this doctor may be a useful place to start. This is general guidance, not a diagnosis.",
           vi: "Bạn có thể bắt đầu trao đổi với bác sĩ này. Đây là gợi ý tham khảo, không thay thế chẩn đoán y khoa.",
         }),
-        doctorId: doctor.id,
-        specialty: t(doctor.specialty),
+        doctorId: doctor ? String(doctor.id) : undefined,
+        specialty: doctor ? doctor.tenChuyenKhoa : undefined,
       },
     ]);
     setInput("");
