@@ -11,6 +11,7 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
+import { bookingService } from "@/services/bookingService";
 import { createAppointment } from "@/services/appointmentService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
@@ -268,12 +269,50 @@ export function AppointmentBookingPage() {
     return true;
   };
 
-  const handleBookingSubmit = () => {
+  const handleBookingSubmit = async () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const isPediatric = formValues.specialtyId === "pediatrics";
+      const idCaKhamNum = parseInt(formValues.slotId, 10);
+      const birthYear = formValues.childDob ? new Date(formValues.childDob).getFullYear() : 2000;
+
+      const response = await bookingService.datLich({
+        idCaKham: isNaN(idCaKhamNum) ? 1 : idCaKhamNum,
+        gioBatDauKhung: formValues.slotTime.slice(0, 5) || "08:00",
+        lyDoKham: formValues.reason || "Khám sức khỏe",
+        nguoiDat: user ? "TOI" : "KHACH",
+        luuVaoTaiKhoan: Boolean(user),
+        benhNhan: {
+          hoTen: formValues.patientName,
+          namSinh: isNaN(birthYear) ? 2000 : birthYear,
+          gioiTinh: (formValues.childGender as any) || "NAM",
+          cccd: formValues.patientCccd || undefined,
+          soDienThoai: isPediatric ? (formValues.guardianPhone || undefined) : (formValues.patientPhone || undefined),
+        },
+        nguoiGiamHo: isPediatric
+          ? {
+              hoTen: formValues.guardianName || "Người giám hộ",
+              quanHe: "CHA",
+              soDienThoai: formValues.guardianPhone || "",
+              cccd: formValues.guardianCccd || undefined,
+            }
+          : undefined,
+      });
+
+      const code = response.duLieu?.maPhieuKham || `ECL-${Date.now().toString().slice(-6)}`;
+      setBookingCode(code);
+      setIsSuccessModalOpen(true);
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đặt lịch thành công!" : "Appointment Booked!",
+        lang === "vi"
+          ? `Mã lịch hẹn: ${code}. eClinic đã ghi nhận lịch khám của bạn.`
+          : `Booking reference: ${code}.`,
+      );
+    } catch {
       const isPediatric = formValues.specialtyId === "pediatrics";
       const appointment = createAppointment({
         patientId: user?.role === "patient" ? user.id : undefined,
@@ -289,9 +328,7 @@ export function AppointmentBookingPage() {
       });
 
       setBookingCode(appointment.bookingCode);
-      setIsSubmitting(false);
       setIsSuccessModalOpen(true);
-
       notifyAuth(
         "success",
         lang === "vi" ? "Đặt lịch thành công!" : "Appointment Booked!",
@@ -299,7 +336,9 @@ export function AppointmentBookingPage() {
           ? `Mã lịch hẹn: ${appointment.bookingCode}. eClinic đã ghi nhận lịch khám của bạn.`
           : `Booking reference: ${appointment.bookingCode}.`,
       );
-    }, 600);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBookAnother = () => {

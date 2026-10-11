@@ -1,49 +1,61 @@
 import { useState } from 'react'
-import { Bell, Check, CheckCheck } from 'lucide-react'
+import { Bell, Check, CheckCheck, Loader2 } from 'lucide-react'
 import { useLanguage } from '@/shared/context/LanguageContext'
+import { useDanhSachThongBao, useSoThongBaoChuaDoc, useNotificationActions } from '@/hooks/useNotification'
+import type { ThongBaoResponse } from '@/types/notification.type'
 import type { DoctorSection } from './DoctorSidebar'
 import styles from './DoctorNotificationCenter.module.css'
-
-interface Notice {
-  id: string
-  kind: 'booking' | 'shift' | 'appointment'
-  section: DoctorSection
-  time: string
-  read: boolean
-}
 
 interface DoctorNotificationCenterProps {
   onNavigate: (section: DoctorSection) => void
 }
 
-const initialNotices: Notice[] = [
-  { id: 'notice-booking-01', kind: 'booking', section: 'appointments', time: '09:42', read: false },
-  { id: 'notice-shift-01', kind: 'shift', section: 'schedule', time: '09:18', read: false },
-  { id: 'notice-move-01', kind: 'appointment', section: 'appointments', time: '08:55', read: false },
-]
+function formatNoticeTime(isoDate?: string, vi?: boolean): string {
+  if (!isoDate) return ''
+  const d = new Date(isoDate)
+  const diff = Date.now() - d.getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (mins < 5) return vi ? 'Vừa xong' : 'Just now'
+  if (mins < 60) return vi ? `${mins} phút trước` : `${mins}m ago`
+  if (hours < 24) return vi ? `${hours} giờ trước` : `${hours}h ago`
+  if (days < 7) return vi ? `${days} ngày trước` : `${days}d ago`
+  return d.toLocaleDateString(vi ? 'vi-VN' : 'en-US', { month: 'short', day: 'numeric' })
+}
 
 export function DoctorNotificationCenter({ onNavigate }: DoctorNotificationCenterProps) {
   const { lang } = useLanguage()
-  const [notices, setNotices] = useState(initialNotices)
-  const [open, setOpen] = useState(false)
-  const unreadCount = notices.filter((notice) => !notice.read).length
+  const vi = lang === 'vi'
 
-  const copy = (notice: Notice) => {
-    if (notice.kind === 'booking') return lang === 'vi'
-      ? ['Yêu cầu đặt lịch mới', 'Nguyễn Thị Mai vừa đăng ký khám tim mạch.']
-      : ['New appointment request', 'Nguyen Thi Mai requested a cardiology visit.']
-    if (notice.kind === 'shift') return lang === 'vi'
-      ? ['Yêu cầu đổi ca đã được duyệt', 'Quản trị viên đã cập nhật lịch trực của bạn.']
-      : ['Shift change approved', 'Your administrator updated your work schedule.']
-    return lang === 'vi'
-      ? ['Lịch hẹn được cập nhật', 'Một bệnh nhân đã dời hoặc hủy lịch khám.']
-      : ['Appointment updated', 'A patient rescheduled or cancelled a visit.']
+  const { danhSach: notices, isLoading } = useDanhSachThongBao({ kichThuoc: 10 })
+  const { soChuaDoc } = useSoThongBaoChuaDoc()
+  const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions()
+
+  const [open, setOpen] = useState(false)
+
+  const openNotice = async (notice: ThongBaoResponse) => {
+    if (!notice.daDoc) {
+      try {
+        await danhDauDaDoc(notice.id)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    setOpen(false)
+    if (notice.idYeuCau) {
+      onNavigate('schedule')
+    } else {
+      onNavigate('appointments')
+    }
   }
 
-  const openNotice = (notice: Notice) => {
-    setNotices((current) => current.map((item) => item.id === notice.id ? { ...item, read: true } : item))
-    setOpen(false)
-    onNavigate(notice.section)
+  const handleMarkAllRead = async () => {
+    try {
+      await danhDauTatCaDaDoc()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (
@@ -51,38 +63,56 @@ export function DoctorNotificationCenter({ onNavigate }: DoctorNotificationCente
       <button
         type="button"
         className={styles.trigger}
-        aria-label={lang === 'vi' ? `Thông báo, ${unreadCount} chưa đọc` : `Notifications, ${unreadCount} unread`}
+        aria-label={vi ? `Thông báo, ${soChuaDoc} chưa đọc` : `Notifications, ${soChuaDoc} unread`}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <Bell aria-hidden="true" size={19} />
-        {unreadCount > 0 && <span className={styles.count}>{unreadCount}</span>}
+        {soChuaDoc > 0 && <span className={styles.count}>{soChuaDoc}</span>}
       </button>
 
       {open && (
-        <section className={styles.panel} aria-label={lang === 'vi' ? 'Trung tâm thông báo' : 'Notification center'}>
+        <section className={styles.panel} aria-label={vi ? 'Trung tâm thông báo' : 'Notification center'}>
           <header className={styles.panelHeader}>
-            <strong>{lang === 'vi' ? 'Thông báo' : 'Notifications'}</strong>
-            <button
-              type="button"
-              className={styles.markAll}
-              onClick={() => setNotices((current) => current.map((notice) => ({ ...notice, read: true })))}
-            >
-              <CheckCheck aria-hidden="true" size={15} />{lang === 'vi' ? 'Đã đọc hết' : 'Mark all read'}
-            </button>
+            <strong>{vi ? 'Thông báo' : 'Notifications'}</strong>
+            {soChuaDoc > 0 && (
+              <button
+                type="button"
+                className={styles.markAll}
+                onClick={handleMarkAllRead}
+              >
+                <CheckCheck aria-hidden="true" size={15} />{vi ? 'Đã đọc hết' : 'Mark all read'}
+              </button>
+            )}
           </header>
           <div className={styles.list}>
-            {notices.map((notice) => {
-              const [title, description] = copy(notice)
-              return (
-                <button key={notice.id} type="button" className={`${styles.notice} ${notice.read ? '' : styles.unread}`} onClick={() => openNotice(notice)}>
-                  <span className={styles.noticeDot}>{notice.read ? <Check aria-hidden="true" size={13} /> : <span />}</span>
-                  <span className={styles.noticeCopy}><strong>{title}</strong><span>{description}</span><time>{notice.time}</time></span>
+            {isLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0', color: '#64748b' }}>
+                <Loader2 size={16} className="animate-spin" />
+              </div>
+            ) : notices.length === 0 ? (
+              <div style={{ padding: '16px', textAlign: 'center', color: '#8a948f', fontSize: '13px' }}>
+                {vi ? 'Không có thông báo mới' : 'No new notifications'}
+              </div>
+            ) : (
+              notices.map((notice) => (
+                <button
+                  key={notice.id}
+                  type="button"
+                  className={`${styles.notice} ${notice.daDoc ? '' : styles.unread}`}
+                  onClick={() => openNotice(notice)}
+                >
+                  <span className={styles.noticeDot}>{notice.daDoc ? <Check aria-hidden="true" size={13} /> : <span />}</span>
+                  <span className={styles.noticeCopy}>
+                    <strong>{vi ? 'Thông báo' : 'Notification'}</strong>
+                    <span>{notice.noiDung}</span>
+                    <time>{formatNoticeTime(notice.ngayTao, vi)}</time>
+                  </span>
                 </button>
-              )
-            })}
+              ))
+            )}
           </div>
-          <p className={styles.footer}>{lang === 'vi' ? 'Thông tin mẫu, chờ kết nối dịch vụ thông báo.' : 'Sample feed. Live updates require a notification service.'}</p>
+          <p className={styles.footer}>{vi ? 'Cập nhật trực tiếp từ hệ thống eClinic.' : 'Real-time updates from eClinic.'}</p>
         </section>
       )}
     </div>

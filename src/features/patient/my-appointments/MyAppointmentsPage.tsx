@@ -19,7 +19,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import type { TrangThaiLichHen } from "@/types/common.type";
-import { MOCK_APPOINTMENTS } from "./myAppointments.data";
+import { useDanhSachLichHen } from "@/hooks/useBooking";
 import styles from "./MyAppointmentsPage.module.css";
 
 type TabStatus = "upcoming" | "done" | "cancelled";
@@ -54,7 +54,9 @@ export function MyAppointmentsPage() {
   const [activeTab, setActiveTab] = useState<TabStatus | "all">("all");
   const [search, setSearch] = useState("");
 
-  const filtered: LichHenCuaToiResponse[] = MOCK_APPOINTMENTS.filter((a) => {
+  const { danhSach: appointments } = useDanhSachLichHen({ loc: "TAT_CA" });
+
+  const filtered: LichHenCuaToiResponse[] = appointments.filter((a) => {
     const category = getApptCategory(a.trangThai);
     const matchTab = activeTab === "all" || category === activeTab;
     const q = search.toLowerCase();
@@ -69,10 +71,10 @@ export function MyAppointmentsPage() {
   });
 
   const counts = {
-    all: MOCK_APPOINTMENTS.length,
-    upcoming: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "upcoming").length,
-    done: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "done").length,
-    cancelled: MOCK_APPOINTMENTS.filter((a) => getApptCategory(a.trangThai) === "cancelled").length,
+    all: appointments.length,
+    upcoming: appointments.filter((a) => getApptCategory(a.trangThai) === "upcoming").length,
+    done: appointments.filter((a) => getApptCategory(a.trangThai) === "done").length,
+    cancelled: appointments.filter((a) => getApptCategory(a.trangThai) === "cancelled").length,
   };
 
   const tabs: { key: TabStatus | "all"; label: { vi: string; en: string } }[] = [

@@ -13,7 +13,6 @@ import type {
   CapNhatHoSoRequest,
   DoiMatKhauRequest,
   DoiEmailRequest,
-  SuaThongTinTaiKhoanRequest,
   CapNhatTrangThaiTaiKhoanRequest,
   GetTaiKhoanQuanTriParams,
   TaiKhoanResponse,
@@ -163,27 +162,27 @@ export const identityService = {
   },
 
   // =========================================================================
-  // 2. HỒ SƠ CÁ NHÂN (/api/identity/ho-so-ca-nhan)
+  // 2. HỒ SƠ CÁ NHÂN (/api/users/me)
   // =========================================================================
 
   /**
    * Lấy thông tin hồ sơ tài khoản đang đăng nhập
-   * GET /api/identity/ho-so-ca-nhan
+   * GET /api/users/me
    */
   getHoSoCaNhan: async () => {
     const response = await axiosClient.get<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/identity/ho-so-ca-nhan'
+      '/api/users/me'
     );
     return response.data;
   },
 
   /**
    * Cập nhật họ tên, số điện thoại
-   * PUT /api/identity/ho-so-ca-nhan
+   * PUT /api/users/me
    */
   capNhatHoSo: async (data: CapNhatHoSoRequest) => {
     const response = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/identity/ho-so-ca-nhan',
+      '/api/users/me',
       data
     );
     return response.data;
@@ -191,29 +190,29 @@ export const identityService = {
 
   /**
    * Đổi mật khẩu
-   * PUT /api/identity/ho-so-ca-nhan/mat-khau
+   * PUT /api/users/me/change-password
    */
   doiMatKhau: async (data: DoiMatKhauRequest) => {
     const response = await axiosClient.put<ApiResponse<void>>(
-      '/api/identity/ho-so-ca-nhan/mat-khau',
+      '/api/users/me/change-password',
       data
     );
     return response.data;
   },
 
   // =========================================================================
-  // 3. ẢNH ĐẠI DIỆN (/api/identity/anh-dai-dien)
+  // 3. ẢNH ĐẠI DIỆN (/api/users/me/avatar)
   // =========================================================================
 
   /**
    * Tải lên ảnh đại diện (multipart/form-data)
-   * POST /api/identity/anh-dai-dien
+   * POST /api/users/me/avatar
    */
   taiLenAnhDaiDien: async (file: File | Blob) => {
     const formData = new FormData();
     formData.append('anh', file);
     const response = await axiosClient.post<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/identity/anh-dai-dien',
+      '/api/users/me/avatar',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
@@ -222,68 +221,101 @@ export const identityService = {
 
   /**
    * Xoá ảnh đại diện
-   * DELETE /api/identity/anh-dai-dien
+   * DELETE /api/users/me/avatar
    */
   xoaAnhDaiDien: async () => {
     const response = await axiosClient.delete<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/identity/anh-dai-dien'
+      '/api/users/me/avatar'
     );
     return response.data;
   },
 
   // =========================================================================
-  // 4. PHIÊN ĐĂNG NHẬP (/api/identity/phien-dang-nhap)
+  // 4. PHIÊN ĐĂNG NHẬP (/api/users/me/sessions)
   // =========================================================================
 
   /**
    * Lấy danh sách các phiên đăng nhập của tài khoản
-   * GET /api/identity/phien-dang-nhap
+   * GET /api/users/me/sessions
    */
   getDanhSachPhienDangNhap: async () => {
     const response = await axiosClient.get<ApiResponse<PhienDangNhapResponse[]>>(
-      '/api/identity/phien-dang-nhap'
+      '/api/users/me/sessions'
     );
     return response.data;
   },
 
   /**
    * Thu hồi một phiên đăng nhập khác theo ID
-   * DELETE /api/identity/phien-dang-nhap/{id}
+   * DELETE /api/users/me/sessions/{id}
    */
   xoaPhienDangNhap: async (id: string) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/identity/phien-dang-nhap/${id}`
+      `/api/users/me/sessions/${id}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Đăng xuất tất cả các thiết bị khác, giữ lại thiết bị hiện tại
+   * DELETE /api/users/me/sessions
+   */
+  xoaTatCaPhienKhac: async () => {
+    const response = await axiosClient.delete<ApiResponse<number>>(
+      '/api/users/me/sessions'
     );
     return response.data;
   },
 
   // =========================================================================
-  // 5. ĐỔI EMAIL (/api/identity/doi-email)
+  // 5. ĐỔI EMAIL (/api/users/me/change-email)
   // =========================================================================
 
   /**
    * Yêu cầu đổi email đăng nhập (gửi mã xác nhận tới email mới)
-   * POST /api/identity/doi-email
+   * POST /api/users/me/change-email
    */
   yeuCauDoiEmail: async (data: DoiEmailRequest) => {
     const response = await axiosClient.post<ApiResponse<YeuCauDoiEmailResponse>>(
-      '/api/identity/doi-email',
+      '/api/users/me/change-email',
       data
     );
     return response.data;
   },
 
+  /**
+   * Lấy yêu cầu đổi email đang chờ xác nhận
+   * GET /api/users/me/change-email
+   */
+  layYeuCauDoiEmailDangCho: async () => {
+    const response = await axiosClient.get<ApiResponse<YeuCauDoiEmailResponse>>(
+      '/api/users/me/change-email'
+    );
+    return response.data;
+  },
+
+  /**
+   * Huỷ yêu cầu đổi email đang chờ
+   * DELETE /api/users/me/change-email
+   */
+  huyYeuCauDoiEmail: async () => {
+    const response = await axiosClient.delete<ApiResponse<void>>(
+      '/api/users/me/change-email'
+    );
+    return response.data;
+  },
+
   // =========================================================================
-  // 6. QUẢN LÝ TÀI KHOẢN - QUẢN TRỊ VIÊN (/api/identity/quan-ly/tai-khoan)
+  // 6. QUẢN LÝ TÀI KHOẢN - QUẢN TRỊ VIÊN (/api/users)
   // =========================================================================
 
   /**
    * Lấy danh sách tài khoản (phân trang, lọc theo từ khóa, vai trò, trạng thái)
-   * GET /api/identity/quan-ly/tai-khoan
+   * GET /api/users
    */
   getDanhSachTaiKhoanQuanTri: async (params?: GetTaiKhoanQuanTriParams) => {
     const response = await axiosClient.get<ApiResponse<PageResponse<TaiKhoanQuanTriResponse>>>(
-      '/api/identity/quan-ly/tai-khoan',
+      '/api/users',
       { params }
     );
     return response.data;
@@ -291,35 +323,34 @@ export const identityService = {
 
   /**
    * Xem thông tin chi tiết một tài khoản
-   * GET /api/identity/quan-ly/tai-khoan/{id}
+   * GET /api/users/{id}
    */
   getChiTietTaiKhoan: async (id: number) => {
     const response = await axiosClient.get<ApiResponse<ChiTietTaiKhoanResponse>>(
-      `/api/identity/quan-ly/tai-khoan/${id}`
-    );
-    return response.data;
-  },
-
-  /**
-   * Cập nhật thông tin tài khoản (họ tên, SĐT, vai trò)
-   * PUT /api/identity/quan-ly/tai-khoan/{id}
-   */
-  suaThongTinTaiKhoan: async (id: number, data: SuaThongTinTaiKhoanRequest) => {
-    const response = await axiosClient.put<ApiResponse<ChiTietTaiKhoanResponse>>(
-      `/api/identity/quan-ly/tai-khoan/${id}`,
-      data
+      `/api/users/${id}`
     );
     return response.data;
   },
 
   /**
    * Cập nhật trạng thái tài khoản (Kích hoạt / Vô hiệu hóa)
-   * PUT /api/identity/quan-ly/tai-khoan/{id}/trang-thai
+   * PUT /api/users/{id}/status
    */
   capNhatTrangThaiTaiKhoan: async (id: number, data: CapNhatTrangThaiTaiKhoanRequest) => {
     const response = await axiosClient.put<ApiResponse<ChiTietTaiKhoanResponse>>(
-      `/api/identity/quan-ly/tai-khoan/${id}/trang-thai`,
+      `/api/users/${id}/status`,
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * Xoá tài khoản (chỉ khi chưa có dữ liệu tham chiếu)
+   * DELETE /api/users/{id}
+   */
+  xoaTaiKhoan: async (id: number) => {
+    const response = await axiosClient.delete<ApiResponse<void>>(
+      `/api/users/${id}`
     );
     return response.data;
   },

@@ -33,10 +33,10 @@ export const notificationService = {
 
   /**
    * Đánh dấu một thông báo là đã đọc
-   * PUT /api/notification/thong-bao/{id}/da-doc
+   * POST /api/notification/thong-bao/{id}/da-doc
    */
   danhDauDaDoc: async (id: number) => {
-    const response = await axiosClient.put<ApiResponse<void>>(
+    const response = await axiosClient.post<ApiResponse<ThongBaoResponse>>(
       `/api/notification/thong-bao/${id}/da-doc`
     );
     return response.data;
@@ -44,22 +44,11 @@ export const notificationService = {
 
   /**
    * Đánh dấu tất cả thông báo là đã đọc
-   * PUT /api/notification/thong-bao/doc-tat-ca
+   * POST /api/notification/thong-bao/da-doc-tat-ca
    */
   danhDauTatCaDaDoc: async () => {
-    const response = await axiosClient.put<ApiResponse<DanhDauDaDocResponse>>(
-      '/api/notification/thong-bao/doc-tat-ca'
-    );
-    return response.data;
-  },
-
-  /**
-   * Xoá một thông báo
-   * DELETE /api/notification/thong-bao/{id}
-   */
-  xoaThongBao: async (id: number) => {
-    const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/notification/thong-bao/${id}`
+    const response = await axiosClient.post<ApiResponse<DanhDauDaDocResponse>>(
+      '/api/notification/thong-bao/da-doc-tat-ca'
     );
     return response.data;
   },

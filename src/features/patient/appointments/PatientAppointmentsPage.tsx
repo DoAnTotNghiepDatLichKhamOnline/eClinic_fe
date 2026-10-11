@@ -18,13 +18,19 @@ import type {
   AppointmentStatus,
 } from "@/features/patient/appointment/appointment.types";
 import { PatientPortal } from "@/features/patient/PatientPortal";
-import { getAppointmentsForPatient } from "@/services/appointmentService";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { useDanhSachLichHen } from "@/hooks/useBooking";
 import styles from "./PatientAppointmentsPage.module.css";
 
 type CalendarView = "day" | "week";
 type AppointmentRange = "upcoming" | "past";
+
+interface UnifiedAppointmentRecord extends AppointmentRecord {
+  doctorName?: string;
+  specialtyName?: string;
+  hospitalName?: string;
+}
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -62,9 +68,37 @@ function statusLabel(status: AppointmentStatus, lang: "vi" | "en") {
 export function PatientAppointmentsPage() {
   const { lang } = useLanguage();
   const { user } = useAuth();
-  const [appointments] = useState(() =>
-    user ? getAppointmentsForPatient(user.id) : [],
-  );
+
+  const { danhSach: apiAppointments } = useDanhSachLichHen({ loc: "TAT_CA" });
+
+  const appointments: UnifiedAppointmentRecord[] = apiAppointments.map((lh) => {
+    let status: AppointmentStatus = "pending";
+    if (lh.trangThai === "DA_HOAN_THANH") status = "completed";
+    else if (lh.trangThai === "BI_TU_CHOI" || lh.trangThai === "DA_HUY" || lh.trangThai === "DA_HUY_DO_DOI_LICH") status = "declined";
+    else if (lh.trangThai === "CHO_XAC_NHAN") status = "pending";
+    else status = "accepted";
+
+    const slot = lh.gioKhamDuKien
+      ? `${lh.gioKhamDuKien} - ${lh.gioKetThucKhung || lh.gioKhamDuKien}`
+      : `${lh.gioBatDauKhung} - ${lh.gioKetThucKhung}`;
+
+    return {
+      bookingCode: lh.maPhieuKham,
+      patientId: user ? String(user.id) : undefined,
+      patientName: lh.hoTenBenhNhan,
+      patientPhone: "",
+      specialtyId: "",
+      doctorId: lh.bacSi ? String(lh.bacSi.id) : "",
+      date: lh.ngay,
+      slotTime: slot,
+      reason: lh.lyDoKham,
+      status,
+      createdAt: lh.ngayDat,
+      doctorName: lh.bacSi ? `${lh.bacSi.hocVi ? lh.bacSi.hocVi + " " : ""}${lh.bacSi.hoTen}` : undefined,
+      specialtyName: lh.tenChuyenKhoa,
+      hospitalName: lh.phongKham?.tenPhong,
+    };
+  });
   const [calendarView, setCalendarView] = useState<CalendarView>("week");
   const [range, setRange] = useState<AppointmentRange>("upcoming");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -339,7 +373,8 @@ export function PatientAppointmentsPage() {
                     <div className={styles.appointmentInfo}>
                       <div className={styles.appointmentTitleRow}>
                         <h3>
-                          {specialty?.name[lang] ??
+                          {appointment.specialtyName ??
+                            specialty?.name[lang] ??
                             (lang === "vi" ? "Lịch khám" : "Appointment")}
                         </h3>
                         <span
@@ -350,14 +385,15 @@ export function PatientAppointmentsPage() {
                       </div>
                       <p>
                         <Stethoscope size={14} aria-hidden="true" />
-                        {doctor?.name[lang] ??
+                        {appointment.doctorName ??
+                          doctor?.name[lang] ??
                           (lang === "vi"
                             ? "Bác sĩ theo ca"
                             : "Assigned doctor")}
                       </p>
                       <p>
                         <MapPin size={14} aria-hidden="true" />
-                        {doctor?.hospital[lang] ?? "eClinic"}
+                        {appointment.hospitalName ?? doctor?.hospital[lang] ?? "eClinic"}
                       </p>
                       <p className={styles.reason}>{appointment.reason}</p>
                       <span className={styles.bookingCode}>
