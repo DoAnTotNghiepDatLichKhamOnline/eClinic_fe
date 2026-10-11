@@ -6,7 +6,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { ResetPasswordRequest } from "@/types/auth";
+import type { ResetPasswordRequest } from "@/types/auth.type";
 import styles from "../login-patient/LoginPagePatient.module.css";
 import pageStyles from "./ResetPasswordPatient.module.css";
 
