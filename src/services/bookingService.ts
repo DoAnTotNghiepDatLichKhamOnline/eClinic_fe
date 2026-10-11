@@ -103,6 +103,18 @@ export const bookingService = {
   // =========================================================================
 
   /**
+   * Các ca và khung giờ trong ngày theo bác sĩ hoặc chuyên khoa
+   * GET /api/booking/khung-gio
+   */
+  getCaKhamTheoNgay: async (params: { ngay: string; idBacSi?: number; idChuyenKhoa?: number }) => {
+    const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
+      '/api/booking/khung-gio',
+      { params }
+    );
+    return response.data;
+  },
+
+  /**
    * Các ngày còn chỗ trong khoảng thời gian theo chuyên khoa hoặc bác sĩ
    * GET /api/booking/khung-gio/ngay-con-cho
    */
@@ -115,93 +127,91 @@ export const bookingService = {
   },
 
   /**
-   * Ngày còn chỗ sớm nhất của các bác sĩ (dùng để vẽ thẻ bác sĩ)
+   * Ngày còn chỗ sớm nhất của các bác sĩ theo chuyên khoa
    * GET /api/booking/khung-gio/ngay-som-nhat
    */
-  getNgaySomNhat: async (idsBacSi: number[]) => {
+  getNgaySomNhat: async (idChuyenKhoa: number) => {
     const response = await axiosClient.get<ApiResponse<NgaySomNhatResponse[]>>(
       '/api/booking/khung-gio/ngay-som-nhat',
-      { params: { idsBacSi: idsBacSi.join(',') } }
+      { params: { idChuyenKhoa } }
     );
     return response.data;
   },
 
   /**
-   * Ca khám và các khung giờ của một bác sĩ trong một ngày
-   * GET /api/booking/khung-gio/ca-kham
+   * Khung giờ gộp theo chuyên khoa trong ngày (cho bác sĩ bất kỳ / tự xếp)
+   * GET /api/booking/khung-gio/gop
    */
-  getCaKhamBacSi: async (params: { idBacSi: number; ngay: string }) => {
-    const response = await axiosClient.get<ApiResponse<CaKhamResponse>>(
-      '/api/booking/khung-gio/ca-kham',
-      { params }
-    );
-    return response.data;
-  },
-
-  /**
-   * Khung giờ gộp theo chuyên khoa trong ngày (khi chọn hệ thống tự xếp bác sĩ)
-   * GET /api/booking/khung-gio/chuyen-khoa
-   */
-  getKhungGioChuyenKhoa: async (params: { idChuyenKhoa: number; ngay: string }) => {
+  getKhungGioGop: async (params: { idChuyenKhoa: number; ngay: string }) => {
     const response = await axiosClient.get<ApiResponse<KhungGioGopResponse[]>>(
-      '/api/booking/khung-gio/chuyen-khoa',
+      '/api/booking/khung-gio/gop',
       { params }
     );
     return response.data;
   },
 
   // =========================================================================
-  // 4. PHIẾU KHÁM & TRA CỨU (/api/booking/phieu-kham)
+  // 4. ĐẶT LỊCH KHÁM BỆNH & TRA CỨU PHIẾU KHÁM
   // =========================================================================
 
   /**
    * Đặt lịch khám bệnh (đăng nhập hoặc khách vãng lai)
-   * POST /api/booking/phieu-kham
+   * POST /api/booking/lich-hen
    */
   datLich: async (data: DatLichRequest) => {
     const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
-      '/api/booking/phieu-kham',
+      '/api/booking/lich-hen',
       data
     );
     return response.data;
   },
 
   /**
-   * Tra cứu phiếu khám công khai bằng mã phiếu khám và mã tra cứu
-   * GET /api/booking/phieu-kham/tra-cuu
+   * Tra cứu phiếu khám công khai bằng mã phiếu khám
+   * GET /api/booking/phieu-kham/{maPhieuKham}
    */
-  traCuuPhieuKham: async (params: { maPhieuKham: string; maTraCuu: string }) => {
+  traCuuPhieuKham: async (maPhieuKham: string) => {
     const response = await axiosClient.get<ApiResponse<PhieuKhamResponse>>(
-      '/api/booking/phieu-kham/tra-cuu',
-      { params }
+      `/api/booking/phieu-kham/${maPhieuKham}`
     );
     return response.data;
   },
 
   /**
    * Hủy phiếu khám công khai (dành cho khách không đăng nhập)
-   * POST /api/booking/phieu-kham/tra-cuu/huy
+   * POST /api/booking/phieu-kham/{maPhieuKham}/huy
    */
-  huyPhieuKhamKhach: async (params: { maPhieuKham: string; maTraCuu: string; lyDoHuy: string }) => {
-    const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/booking/phieu-kham/tra-cuu/huy',
-      { lyDoHuy: params.lyDoHuy },
-      { params: { maPhieuKham: params.maPhieuKham, maTraCuu: params.maTraCuu } }
+  huyPhieuKhamKhach: async (maPhieuKham: string, data: HuyLichRequest) => {
+    const response = await axiosClient.post<ApiResponse<PhieuKhamResponse>>(
+      `/api/booking/phieu-kham/${maPhieuKham}/huy`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Đổi lịch khám công khai (dành cho khách không đăng nhập)
+   * POST /api/booking/phieu-kham/{maPhieuKham}/doi-lich
+   */
+  doiPhieuKhamKhach: async (maPhieuKham: string, data: DoiLichRequest) => {
+    const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
+      `/api/booking/phieu-kham/${maPhieuKham}/doi-lich`,
+      data
     );
     return response.data;
   },
 
   // =========================================================================
-  // 5. LỊCH HẸN CỦA TÔI (/api/booking/lich-hen)
+  // 5. LỊCH HẸN CỦA TÔI (/api/booking/lich-hen/cua-toi)
   // =========================================================================
 
   /**
    * Danh sách lịch hẹn đã lưu trong tài khoản (phân trang, lọc theo thời gian, phạm vi)
-   * GET /api/booking/lich-hen
+   * GET /api/booking/lich-hen/cua-toi
    */
   getDanhSachLichHen: async (params?: GetLichHenParams) => {
     const response = await axiosClient.get<ApiResponse<PageResponse<LichHenCuaToiResponse>>>(
-      '/api/booking/lich-hen',
+      '/api/booking/lich-hen/cua-toi',
       { params }
     );
     return response.data;
@@ -209,22 +219,22 @@ export const bookingService = {
 
   /**
    * Xem chi tiết một lịch hẹn kèm kết quả khám và đánh giá
-   * GET /api/booking/lich-hen/{maPhieuKham}
+   * GET /api/booking/lich-hen/cua-toi/{maPhieuKham}
    */
   getChiTietLichHen: async (maPhieuKham: string) => {
     const response = await axiosClient.get<ApiResponse<LichHenChiTietCuaToiResponse>>(
-      `/api/booking/lich-hen/${maPhieuKham}`
+      `/api/booking/lich-hen/cua-toi/${maPhieuKham}`
     );
     return response.data;
   },
 
   /**
-   * Hủy lịch hẹn
-   * POST /api/booking/lich-hen/{maPhieuKham}/huy
+   * Hủy lịch hẹn của tôi
+   * POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/huy
    */
-  huyLichHen: async (maPhieuKham: string, data: HuyLichRequest) => {
-    const response = await axiosClient.post<ApiResponse<void>>(
-      `/api/booking/lich-hen/${maPhieuKham}/huy`,
+  huyLichHen: async (maPhieuKham: string, data?: HuyLichRequest) => {
+    const response = await axiosClient.post<ApiResponse<PhieuKhamResponse>>(
+      `/api/booking/lich-hen/cua-toi/${maPhieuKham}/huy`,
       data
     );
     return response.data;
@@ -232,11 +242,11 @@ export const bookingService = {
 
   /**
    * Đổi sang ca khám hoặc khung giờ khác
-   * POST /api/booking/lich-hen/{maPhieuKham}/doi-lich
+   * POST /api/booking/lich-hen/cua-toi/{maPhieuKham}/doi-lich
    */
   doiLichHen: async (maPhieuKham: string, data: DoiLichRequest) => {
-    const response = await axiosClient.post<ApiResponse<PhieuKhamResponse>>(
-      `/api/booking/lich-hen/${maPhieuKham}/doi-lich`,
+    const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
+      `/api/booking/lich-hen/cua-toi/${maPhieuKham}/doi-lich`,
       data
     );
     return response.data;

@@ -401,12 +401,14 @@ export interface DanhGiaQuanTriResponse {
 
 export interface BenhNhanRequest {
   hoTen: string;
-  namSinh: number;
+  ngaySinh: string; // ISO date 'YYYY-MM-DD'
   gioiTinh: GioiTinh;
+  soDienThoai: string;
   cccd?: string | null;
-  soDienThoai?: string | null;
-  diaChi?: string | null;
+  email?: string | null;
   soBaoHiemYTe?: string | null;
+  diaChi?: string | null;
+  namSinh?: number;
   tienSuBenhLy?: string | null;
 }
 
@@ -414,18 +416,24 @@ export interface NguoiGiamHoRequest {
   hoTen: string;
   quanHe: QuanHeGiamHo;
   soDienThoai: string;
-  cccd?: string | null;
+  cccd: string;
+  ngaySinh?: string | null;
   namSinh?: number | null;
 }
 
 export interface DatLichRequest {
-  idCaKham: number;
-  gioBatDauKhung: string;
+  idLichLamViec?: number | null;
+  idChuyenKhoa?: number | null;
+  gioBatDauKhung: string; // ISO LocalDateTime 'YYYY-MM-DDTHH:mm:ss'
   lyDoKham: string;
-  nguoiDat: NguoiDatLich;
-  luuVaoTaiKhoan: boolean;
   benhNhan: BenhNhanRequest;
   nguoiGiamHo?: NguoiGiamHoRequest | null;
+  datChoBanThan?: boolean | null;
+  luuNguoiThan?: boolean | null;
+  // Các trường tương thích cũ (nếu có)
+  idCaKham?: number | null;
+  nguoiDat?: NguoiDatLich | null;
+  luuVaoTaiKhoan?: boolean | null;
 }
 
 export interface DoiLichRequest {

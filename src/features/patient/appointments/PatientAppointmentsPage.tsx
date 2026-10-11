@@ -9,10 +9,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  APPOINTMENT_DOCTORS,
-  APPOINTMENT_SPECIALTIES,
-} from "@/features/patient/appointment/appointment.data";
+
 import type {
   AppointmentRecord,
   AppointmentStatus,
@@ -355,12 +352,6 @@ export function PatientAppointmentsPage() {
           ) : (
             <div className={styles.appointmentList}>
               {selectedDayAppointments.map((appointment) => {
-                const specialty = APPOINTMENT_SPECIALTIES.find(
-                  (item) => item.id === appointment.specialtyId,
-                );
-                const doctor = APPOINTMENT_DOCTORS.find(
-                  (item) => item.id === appointment.doctorId,
-                );
                 return (
                   <article
                     className={styles.appointmentItem}
@@ -374,7 +365,6 @@ export function PatientAppointmentsPage() {
                       <div className={styles.appointmentTitleRow}>
                         <h3>
                           {appointment.specialtyName ??
-                            specialty?.name[lang] ??
                             (lang === "vi" ? "Lịch khám" : "Appointment")}
                         </h3>
                         <span
@@ -386,14 +376,13 @@ export function PatientAppointmentsPage() {
                       <p>
                         <Stethoscope size={14} aria-hidden="true" />
                         {appointment.doctorName ??
-                          doctor?.name[lang] ??
                           (lang === "vi"
                             ? "Bác sĩ theo ca"
                             : "Assigned doctor")}
                       </p>
                       <p>
                         <MapPin size={14} aria-hidden="true" />
-                        {appointment.hospitalName ?? doctor?.hospital[lang] ?? "eClinic"}
+                        {appointment.hospitalName ?? "eClinic"}
                       </p>
                       <p className={styles.reason}>{appointment.reason}</p>
                       <span className={styles.bookingCode}>

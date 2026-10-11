@@ -106,6 +106,38 @@ export function useNgayConCho(params?: GetNgayConChoParams) {
 }
 
 /**
+ * Hook lấy ca khám và khung giờ theo ngày
+ */
+export function useCaKhamTheoNgay(params?: { ngay: string; idBacSi?: number; idChuyenKhoa?: number }) {
+  const query = useQuery({
+    queryKey: ['booking', 'ca-kham', params],
+    queryFn: () => bookingService.getCaKhamTheoNgay(params!),
+    enabled: Boolean(params?.ngay),
+  });
+
+  return {
+    ...query,
+    danhSachCaKham: query.data?.duLieu ?? [],
+  };
+}
+
+/**
+ * Hook lấy khung giờ gộp theo chuyên khoa trong ngày
+ */
+export function useKhungGioGop(params?: { idChuyenKhoa: number; ngay: string }) {
+  const query = useQuery({
+    queryKey: ['booking', 'khung-gio-gop', params],
+    queryFn: () => bookingService.getKhungGioGop(params!),
+    enabled: Boolean(params?.idChuyenKhoa && params?.ngay),
+  });
+
+  return {
+    ...query,
+    danhSachKhungGio: query.data?.duLieu ?? [],
+  };
+}
+
+/**
  * Hook các thao tác đặt lịch, hủy, đổi lịch, đánh giá
  */
 export function useBookingActions() {

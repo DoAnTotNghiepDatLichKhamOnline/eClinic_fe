@@ -11,13 +11,14 @@ import {
 } from "lucide-react";
 import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
-import { calculateAge } from "../appointment.data";
+import { calculateAge, calculateAgeInYears } from "../appointment.utils";
 
 interface PatientInfoStepProps {
   lang: Lang;
   formValues: AppointmentFormValues;
-  onChange: (field: keyof AppointmentFormValues, value: string) => void;
+  onChange: (field: keyof AppointmentFormValues, value: any) => void;
   errors?: Partial<Record<keyof AppointmentFormValues, string>>;
+  isPediatric?: boolean;
 }
 
 export function PatientInfoStep({
@@ -25,9 +26,13 @@ export function PatientInfoStep({
   formValues,
   onChange,
   errors = {},
+  isPediatric = false,
 }: PatientInfoStepProps) {
-  const isPediatric = formValues.specialtyId === "pediatrics";
-  const childAgeDisplay = calculateAge(formValues.childDob, lang);
+  // Bệnh nhân là vị thành niên nếu khám khoa nhi hoặc ngày sinh < 18 tuổi
+  const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
+  const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
+  const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
+  const ageDisplay = calculateAge(effectiveDob, lang);
 
   return (
     <div className="space-y-6">
@@ -35,15 +40,15 @@ export function PatientInfoStep({
       <section className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm transition-all hover:border-slate-300">
         <div className="flex items-center gap-2.5 mb-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-[#0f4d3a] font-bold text-sm">
-            {isPediatric ? <Baby size={18} /> : "5"}
+            {isMinor ? <Baby size={18} /> : "5"}
           </span>
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <span>
-                {isPediatric
+                {isMinor
                   ? lang === "vi"
-                    ? "Thông tin Bệnh nhi"
-                    : "Child Information"
+                    ? "Thông tin Bệnh nhi / Người khám (< 18 tuổi)"
+                    : "Child / Minor Information (< 18 yrs)"
                   : lang === "vi"
                     ? "Thông tin Cá nhân Bệnh nhân (Người đến khám)"
                     : "Patient Personal Information"}
@@ -51,346 +56,288 @@ export function PatientInfoStep({
               <span className="text-rose-500 font-bold">*</span>
             </h2>
             <p className="text-xs text-slate-500">
-              {isPediatric
+              {isMinor
                 ? lang === "vi"
-                  ? "Nhập họ tên, ngày sinh và giới tính của bé để bác sĩ đánh giá thể trạng phát triển"
-                  : "Enter the child's name, date of birth, and gender"
+                  ? "Nhập họ tên, ngày sinh và giới tính để bác sĩ đánh giá thể trạng phát triển"
+                  : "Enter patient full name, date of birth, and gender"
                 : lang === "vi"
-                  ? "Thông tin chính xác giúp tạo hoặc đồng bộ đúng hồ sơ y tế"
+                  ? "Thông tin chính xác giúp tạo hoặc đồng bộ đúng hồ sơ y tế bệnh viện"
                   : "Accurate details help create or link to your medical records"}
             </p>
           </div>
         </div>
 
-        {/* Form fields: CONDITIONAL rendering based on isPediatric */}
-        {isPediatric ? (
-          /* ==================== FORM DÀNH CHO BỆNH NHI ==================== */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Họ và tên bệnh nhi */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label
-                htmlFor="child-name"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <User size={14} className="text-slate-500" />
-                <span>
-                  {lang === "vi" ? "Họ và tên bệnh nhi" : "Child Full Name"}
-                </span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <input
-                id="child-name"
-                type="text"
-                autoComplete="name"
-                maxLength={150}
-                value={formValues.patientName}
-                onChange={(e) => onChange("patientName", e.target.value)}
-                placeholder={
-                  lang === "vi"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Họ và tên */}
+          <div className="space-y-1.5 md:col-span-2">
+            <label
+              htmlFor="patient-name"
+              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+            >
+              <User size={14} className="text-slate-500" />
+              <span>
+                {isMinor
+                  ? lang === "vi"
+                    ? "Họ và tên người khám / bệnh nhi"
+                    : "Patient / Child Full Name"
+                  : lang === "vi"
+                    ? "Họ và tên đầy đủ"
+                    : "Full Name"}
+              </span>
+              <span className="text-rose-500 font-bold">*</span>
+            </label>
+            <input
+              id="patient-name"
+              type="text"
+              autoComplete="name"
+              maxLength={150}
+              value={formValues.patientName}
+              onChange={(e) => onChange("patientName", e.target.value)}
+              placeholder={
+                lang === "vi"
+                  ? isMinor
                     ? "Ví dụ: NGUYỄN GIA HÂN"
-                    : "E.g., NGUYEN GIA HAN"
-                }
-                className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
-                  errors.patientName
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              {errors.patientName && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.patientName}
-                </p>
-              )}
-            </div>
-
-            {/* Ngày sinh (có hiển thị số tuổi ở phía dưới) */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="child-dob"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <Calendar size={14} className="text-slate-500" />
-                <span>
-                  {lang === "vi" ? "Ngày sinh của bé" : "Child Date of Birth"}
-                </span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <input
-                id="child-dob"
-                type="date"
-                max={new Date().toISOString().split("T")[0]}
-                value={formValues.childDob || ""}
-                onChange={(e) => onChange("childDob", e.target.value)}
-                className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 bg-white transition-all outline-none ${
-                  errors.childDob
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-
-              {/* Hiển thị số tuổi ở dưới ngày sinh */}
-              {childAgeDisplay && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg w-fit border border-emerald-200/80 mt-1 animate-fade-in">
-                  <Sparkles size={13} className="text-emerald-600" />
-                  <span>
-                    {lang === "vi" ? "Số tuổi:" : "Age:"}{" "}
-                    <strong className="text-emerald-950 font-bold">
-                      {childAgeDisplay}
-                    </strong>
-                  </span>
-                </div>
-              )}
-
-              {errors.childDob && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.childDob}
-                </p>
-              )}
-            </div>
-
-            {/* Giới tính */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Users size={14} className="text-slate-500" />
-                <span>{lang === "vi" ? "Giới tính" : "Gender"}</span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => onChange("childGender", "male")}
-                  className={`h-11 px-3.5 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
-                    formValues.childGender === "male"
-                      ? "border-[#0f4d3a] bg-emerald-50 text-[#0f4d3a] ring-2 ring-[#0f4d3a]/20 shadow-sm"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  }`}
-                >
-                  <span>{lang === "vi" ? "Bé trai" : "Boy"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onChange("childGender", "female")}
-                  className={`h-11 px-3.5 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
-                    formValues.childGender === "female"
-                      ? "border-[#0f4d3a] bg-emerald-50 text-[#0f4d3a] ring-2 ring-[#0f4d3a]/20 shadow-sm"
-                      : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                  }`}
-                >
-                  <span>{lang === "vi" ? "Bé Nữ" : "Girl "}</span>
-                </button>
-              </div>
-              {errors.childGender && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.childGender}
-                </p>
-              )}
-            </div>
-
-            {/* Lý do khám / Triệu chứng */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label
-                htmlFor="child-reason"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <FileText size={14} className="text-slate-500" />
-                <span>
-                  {lang === "vi"
-                    ? "Lý do khám / Triệu chứng của bé"
-                    : "Reason for Visit / Symptoms"}
-                </span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <textarea
-                id="child-reason"
-                rows={3}
-                value={formValues.reason}
-                onChange={(e) => onChange("reason", e.target.value)}
-                placeholder={
-                  lang === "vi"
-                    ? "Mô tả sơ bộ triệu chứng của bé (sốt, ho, ăn uống, phát ban, tiêm chủng...) để bác sĩ nhi khoa nắm thông tin..."
-                    : "Describe the child's symptoms (fever, cough, rash, feeding, vaccination...) so the pediatrician is prepared..."
-                }
-                className={`w-full p-3 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none resize-none ${
-                  errors.reason
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              {errors.reason && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.reason}
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          /* ==================== FORM DÀNH CHO BỆNH NHÂN NGƯỜI LỚN ==================== */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Họ và tên */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label
-                htmlFor="patient-name"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <User size={14} className="text-slate-500" />
-                <span>{lang === "vi" ? "Họ và tên đầy đủ" : "Full Name"}</span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <input
-                id="patient-name"
-                type="text"
-                autoComplete="name"
-                maxLength={150}
-                value={formValues.patientName}
-                onChange={(e) => onChange("patientName", e.target.value)}
-                placeholder={
-                  lang === "vi" ? "Ví dụ: NGUYỄN VĂN AN" : "E.g., NGUYEN VAN AN"
-                }
-                className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
-                  errors.patientName
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              {errors.patientName && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.patientName}
-                </p>
-              )}
-            </div>
-
-            {/* Số điện thoại */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="patient-phone"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <Phone size={14} className="text-slate-500" />
-                <span>{lang === "vi" ? "Số điện thoại" : "Phone Number"}</span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <input
-                id="patient-phone"
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                value={formValues.patientPhone}
-                onChange={(e) =>
-                  onChange("patientPhone", e.target.value.replace(/\D/g, ""))
-                }
-                placeholder={lang === "vi" ? "Ví dụ: 0912345678" : "0912345678"}
-                className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
-                  errors.patientPhone
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              <p className="text-[11px] text-slate-500 leading-normal">
-                {lang === "vi"
-                  ? "Dùng để nhận thông tin lịch hẹn và làm cơ sở xác minh khi muốn đổi/hủy lịch."
-                  : "Used to receive booking confirmation and verify changes/cancellations."}
+                    : "Ví dụ: NGUYỄN VĂN AN"
+                  : isMinor
+                    ? "E.g., NGUYEN GIA HAN"
+                    : "E.g., NGUYEN VAN AN"
+              }
+              className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
+                errors.patientName
+                  ? "border-rose-300 ring-2 ring-rose-100"
+                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+              }`}
+            />
+            {errors.patientName && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.patientName}
               </p>
-              {errors.patientPhone && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.patientPhone}
-                </p>
-              )}
-            </div>
-
-            {/* Số CCCD */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="patient-cccd"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <ShieldCheck size={14} className="text-slate-500" />
-                <span>
-                  {lang === "vi"
-                    ? "Số Căn cước công dân (CCCD)"
-                    : "Citizen ID (CCCD)"}
-                </span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <input
-                id="patient-cccd"
-                type="text"
-                inputMode="numeric"
-                maxLength={12}
-                value={formValues.patientCccd}
-                onChange={(e) =>
-                  onChange("patientCccd", e.target.value.replace(/\D/g, ""))
-                }
-                placeholder={
-                  lang === "vi" ? "12 chữ số CCCD" : "12-digit Citizen ID"
-                }
-                className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
-                  errors.patientCccd
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              <p className="text-[11px] text-slate-500 leading-normal">
-                {lang === "vi"
-                  ? "Khóa định danh cốt lõi giúp hệ thống tra cứu và liên kết đúng hồ sơ bệnh nhân (chưa có thì khởi tạo hồ sơ mới, đã có thì dùng lại hồ sơ cũ)."
-                  : "Core identification key to match existing medical records or initialize a new record."}
-              </p>
-              {errors.patientCccd && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.patientCccd}
-                </p>
-              )}
-            </div>
-
-            {/* Lý do khám / Triệu chứng */}
-            <div className="space-y-1.5 md:col-span-2">
-              <label
-                htmlFor="patient-reason"
-                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-              >
-                <FileText size={14} className="text-slate-500" />
-                <span>
-                  {lang === "vi"
-                    ? "Lý do khám / Triệu chứng bệnh lý"
-                    : "Reason for Visit / Symptoms"}
-                </span>
-                <span className="text-rose-500 font-bold">*</span>
-              </label>
-              <textarea
-                id="patient-reason"
-                rows={3}
-                value={formValues.reason}
-                onChange={(e) => onChange("reason", e.target.value)}
-                placeholder={
-                  lang === "vi"
-                    ? "Mô tả sơ bộ tình trạng sức khỏe, triệu chứng hiện tại để bác sĩ nắm thông tin trước khi tiếp nhận..."
-                    : "Describe your symptoms or reason for visiting so the doctor is prepared before consultation..."
-                }
-                className={`w-full p-3 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none resize-none ${
-                  errors.reason
-                    ? "border-rose-300 ring-2 ring-rose-100"
-                    : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
-                }`}
-              />
-              {errors.reason && (
-                <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
-                  <AlertCircle size={13} />
-                  {errors.reason}
-                </p>
-              )}
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Ngày sinh */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="patient-dob"
+              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+            >
+              <Calendar size={14} className="text-slate-500" />
+              <span>
+                {isMinor
+                  ? lang === "vi"
+                    ? "Ngày sinh của người khám / bé"
+                    : "Date of Birth"
+                  : lang === "vi"
+                    ? "Ngày sinh"
+                    : "Date of Birth"}
+              </span>
+              <span className="text-rose-500 font-bold">*</span>
+            </label>
+            <input
+              id="patient-dob"
+              type="date"
+              max={new Date().toISOString().split("T")[0]}
+              value={effectiveDob || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChange("patientDob", val);
+                if (isPediatric) {
+                  onChange("childDob", val);
+                }
+              }}
+              className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 bg-white transition-all outline-none ${
+                errors.patientDob || (isPediatric && errors.childDob)
+                  ? "border-rose-300 ring-2 ring-rose-100"
+                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+              }`}
+            />
+            {ageDisplay && (
+              <p className="text-[11px] text-[#0f4d3a] font-semibold flex items-center gap-1">
+                <Sparkles size={12} />
+                <span>
+                  {lang === "vi" ? "Độ tuổi:" : "Age:"} {ageDisplay}
+                </span>
+              </p>
+            )}
+            {(errors.patientDob || (isPediatric && errors.childDob)) && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.patientDob || errors.childDob}
+              </p>
+            )}
+          </div>
+
+          {/* Giới tính */}
+          <div className="space-y-1.5">
+            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>{lang === "vi" ? "Giới tính" : "Gender"}</span>
+              <span className="text-rose-500 font-bold">*</span>
+            </span>
+            <div className="grid grid-cols-3 gap-2 h-11">
+              {[
+                { value: "NAM", vi: "Nam", en: "Male" },
+                { value: "NU", vi: "Nữ", en: "Female" },
+                { value: "KHAC", vi: "Khác", en: "Other" },
+              ].map((g) => {
+                const isSelected = formValues.patientGender === g.value;
+                return (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => {
+                      onChange("patientGender", g.value);
+                      if (isPediatric) {
+                        onChange("childGender", g.value);
+                      }
+                    }}
+                    className={`h-full rounded-xl border text-xs font-bold transition-all ${
+                      isSelected
+                        ? "border-[#0f4d3a] bg-[#0f4d3a] text-white shadow-sm"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    {lang === "vi" ? g.vi : g.en}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.patientGender && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.patientGender}
+              </p>
+            )}
+          </div>
+
+          {/* Số điện thoại (Chỉ bắt buộc nếu >= 18 tuổi) */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="patient-phone"
+              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+            >
+              <Phone size={14} className="text-slate-500" />
+              <span>{lang === "vi" ? "Số điện thoại liên hệ" : "Phone Number"}</span>
+              {!isMinor && <span className="text-rose-500 font-bold">*</span>}
+              {isMinor && (
+                <span className="text-slate-400 font-normal">
+                  ({lang === "vi" ? "tùy chọn" : "optional"})
+                </span>
+              )}
+            </label>
+            <input
+              id="patient-phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              value={formValues.patientPhone}
+              onChange={(e) =>
+                onChange("patientPhone", e.target.value.replace(/\D/g, ""))
+              }
+              placeholder={lang === "vi" ? "Ví dụ: 0912345678" : "0912345678"}
+              className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
+                errors.patientPhone
+                  ? "border-rose-300 ring-2 ring-rose-100"
+                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+              }`}
+            />
+            {errors.patientPhone && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.patientPhone}
+              </p>
+            )}
+          </div>
+
+          {/* Số CCCD (Bắt buộc nếu >= 18 tuổi, trẻ em bỏ trống) */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="patient-cccd"
+              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+            >
+              <ShieldCheck size={14} className="text-slate-500" />
+              <span>
+                {lang === "vi"
+                  ? "Số Căn cước công dân (CCCD)"
+                  : "Citizen ID (CCCD)"}
+              </span>
+              {!isMinor && <span className="text-rose-500 font-bold">*</span>}
+              {isMinor && (
+                <span className="text-slate-400 font-normal">
+                  ({lang === "vi" ? "trẻ em chưa có CCCD bỏ trống" : "optional for minors"})
+                </span>
+              )}
+            </label>
+            <input
+              id="patient-cccd"
+              type="text"
+              inputMode="numeric"
+              maxLength={12}
+              value={formValues.patientCccd}
+              onChange={(e) =>
+                onChange("patientCccd", e.target.value.replace(/\D/g, ""))
+              }
+              placeholder={
+                lang === "vi" ? "12 chữ số CCCD" : "12-digit Citizen ID"
+              }
+              className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
+                errors.patientCccd
+                  ? "border-rose-300 ring-2 ring-rose-100"
+                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+              }`}
+            />
+            {errors.patientCccd && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.patientCccd}
+              </p>
+            )}
+          </div>
+
+          {/* Lý do khám / Triệu chứng */}
+          <div className="space-y-1.5 md:col-span-2">
+            <label
+              htmlFor="patient-reason"
+              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+            >
+              <FileText size={14} className="text-slate-500" />
+              <span>
+                {lang === "vi"
+                  ? "Lý do khám / Triệu chứng bệnh lý"
+                  : "Reason for Visit / Symptoms"}
+              </span>
+              <span className="text-rose-500 font-bold">*</span>
+            </label>
+            <textarea
+              id="patient-reason"
+              rows={3}
+              value={formValues.reason}
+              onChange={(e) => onChange("reason", e.target.value)}
+              placeholder={
+                lang === "vi"
+                  ? isMinor
+                    ? "Mô tả triệu chứng của bé (sốt, ho, tiêu hóa, tiêm chủng, phát ban...)..."
+                    : "Mô tả sơ bộ tình trạng sức khỏe, triệu chứng hiện tại để bác sĩ nắm thông tin..."
+                  : "Describe symptoms or health concerns for the doctor..."
+              }
+              className={`w-full p-3 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none resize-none ${
+                errors.reason
+                  ? "border-rose-300 ring-2 ring-rose-100"
+                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+              }`}
+            />
+            {errors.reason && (
+              <p className="text-xs text-rose-600 flex items-center gap-1 mt-1">
+                <AlertCircle size={13} />
+                {errors.reason}
+              </p>
+            )}
+          </div>
+        </div>
       </section>
 
-      {/* FORM NGƯỜI GIÁM HỘ (BẮT BUỘC KHI LÀ KHOA NHI) */}
-      {isPediatric && (
+      {/* FORM NGƯỜI GIÁM HỘ (BẮT BUỘC KHI < 18 TUỔI / KHOA NHI) */}
+      {isMinor && (
         <section className="bg-amber-50/70 rounded-2xl p-6 border-2 border-amber-300/80 shadow-sm animate-fade-in">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -400,8 +347,8 @@ export function PatientInfoStep({
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-amber-950 font-display">
                   {lang === "vi"
-                    ? "Thông tin Người giám hộ (Bắt buộc cho Khoa Nhi)"
-                    : "Guardian Information (Required for Pediatrics)"}
+                    ? "Thông tin Người giám hộ (Bắt buộc cho người khám < 18 tuổi)"
+                    : "Guardian Information (Required for minors < 18 yrs)"}
                 </h3>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">
                   {lang === "vi" ? "Bắt buộc" : "Required"}
@@ -409,8 +356,8 @@ export function PatientInfoStep({
               </div>
               <p className="text-xs text-amber-800/90 mt-0.5">
                 {lang === "vi"
-                  ? "Bệnh nhi dưới 16 tuổi cần có thông tin người giám hộ hợp pháp (Bố/Mẹ/Người bảo hộ) đi cùng."
-                  : "Children must be accompanied by a parent or legal guardian with valid contact and ID information."}
+                  ? "Người khám dưới 18 tuổi bắt buộc có người giám hộ hợp pháp (Bố/Mẹ/Người giám hộ) bảo lãnh pháp lý."
+                  : "Minors under 18 must be accompanied by a legal parent/guardian."}
               </p>
             </div>
           </div>
@@ -465,8 +412,8 @@ export function PatientInfoStep({
                 <ShieldCheck size={14} className="text-amber-700" />
                 <span>
                   {lang === "vi"
-                    ? "Số CCCD người giám hộ"
-                    : "Guardian Citizen ID (CCCD)"}
+                    ? "Số CCCD người giám hộ (12 chữ số)"
+                    : "Guardian Citizen ID (12 digits)"}
                 </span>
                 <span className="text-rose-500 font-bold">*</span>
               </label>
@@ -490,11 +437,6 @@ export function PatientInfoStep({
                     : "border-amber-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-400/20"
                 }`}
               />
-              <p className="text-[11px] text-amber-800/80 leading-normal">
-                {lang === "vi"
-                  ? "Được sử dụng làm căn cứ pháp lý và quản lý hồ sơ khám của bé."
-                  : "Used as legal identity verification and link for child medical records."}
-              </p>
               {errors.guardianCccd && (
                 <p className="text-xs text-rose-600 flex items-center gap-1 mt-1 font-semibold">
                   <AlertCircle size={13} />
@@ -533,11 +475,6 @@ export function PatientInfoStep({
                     : "border-amber-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-400/20"
                 }`}
               />
-              <p className="text-[11px] text-amber-800/80 leading-normal">
-                {lang === "vi"
-                  ? "Dùng để gửi thông tin lịch hẹn và liên hệ với phụ huynh/người giám hộ."
-                  : "Used to send appointment details and contact the parent/guardian."}
-              </p>
               {errors.guardianPhone && (
                 <p className="text-xs text-rose-600 flex items-center gap-1 mt-1 font-semibold">
                   <AlertCircle size={13} />
@@ -546,7 +483,7 @@ export function PatientInfoStep({
               )}
             </div>
 
-            {/* Quan hệ với bệnh nhi */}
+            {/* Quan hệ với bệnh nhân */}
             <div className="space-y-1.5 md:col-span-2">
               <label
                 htmlFor="guardian-rel"
@@ -555,30 +492,33 @@ export function PatientInfoStep({
                 <Users size={14} className="text-amber-700" />
                 <span>
                   {lang === "vi"
-                    ? "Mối quan hệ với bệnh nhi"
-                    : "Relationship with Child"}
+                    ? "Mối quan hệ với người khám"
+                    : "Relationship with Patient"}
                 </span>
+                <span className="text-rose-500 font-bold">*</span>
               </label>
               <select
                 id="guardian-rel"
-                value={formValues.guardianRelationship || "Cha/Mẹ"}
+                value={formValues.guardianRelationship || "CHA"}
                 onChange={(e) =>
                   onChange("guardianRelationship", e.target.value)
                 }
                 className="w-full h-11 px-3.5 rounded-xl border border-amber-300 bg-white text-sm text-slate-900 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-400/20"
               >
-                <option value="Cha/Mẹ">
-                  {lang === "vi" ? "Cha / Mẹ" : "Parent (Father / Mother)"}
+                <option value="CHA">
+                  {lang === "vi" ? "Cha / Bố" : "Father"}
                 </option>
-                <option value="Ông/Bà">
-                  {lang === "vi" ? "Ông / Bà" : "Grandparent"}
+                <option value="ME">
+                  {lang === "vi" ? "Mẹ" : "Mother"}
                 </option>
-                <option value="Người giám hộ hợp pháp">
-                  {lang === "vi" ? "Người giám hộ hợp pháp" : "Legal Guardian"}
-                </option>
-                <option value="Khác">
+                <option value="NGUOI_GIAM_HO_HOP_PHAP">
                   {lang === "vi"
-                    ? "Khác (Anh/Chị/Người thân)"
+                    ? "Người giám hộ hợp pháp"
+                    : "Legal Guardian"}
+                </option>
+                <option value="KHAC">
+                  {lang === "vi"
+                    ? "Khác (Ông/Bà/Anh/Chị)"
                     : "Other Relative"}
                 </option>
               </select>
