@@ -63,7 +63,6 @@ axiosClient.interceptors.response.use(
       // Nếu chính API refresh-token bị lỗi 401 nghĩa là phiên đã thực sự hết hạn -> Đăng xuất
       if (originalRequest.url?.includes('/api/auth/refresh-token')) {
         setAccessToken(null);
-        window.location.href = '/dang-nhap';
         return Promise.reject(error);
       }
 
@@ -107,8 +106,6 @@ axiosClient.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
         setAccessToken(null);
-        // Nếu refresh token không hợp lệ (lỗi 401 PHIEN_DANG_NHAP_KHONG_HOP_LE) -> chuyển hướng về trang đăng nhập
-        window.location.href = '/dang-nhap';
         return Promise.reject(refreshError);
       }
     }

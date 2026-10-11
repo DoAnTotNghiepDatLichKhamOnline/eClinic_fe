@@ -1,35 +1,80 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { ResetPasswordRequest } from "@/types/auth.type";
+import { identityService } from "@/services/identityService";
+import { notifyAuth } from "@/utils/authNotification";
 import styles from "../login-patient/LoginPagePatient.module.css";
 import pageStyles from "./ResetPasswordPatient.module.css";
 
 export function ResetPasswordPatient() {
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const passwordsMismatch =
     confirmPassword.length > 0 && newPassword !== confirmPassword;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (newPassword !== confirmPassword) return;
 
-    const request: ResetPasswordRequest = {
-      token: searchParams.get("token") ?? "",
-      newPassword,
-    };
-    if (!request.newPassword) return;
+    const token = searchParams.get("token") ?? "";
+    if (!token) {
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Thiếu mã xác thực" : "Invalid Token",
+        lang === "vi"
+          ? "Liên kết không hợp lệ hoặc thiếu mã token xác thực."
+          : "Invalid reset token.",
+      );
+      return;
+    }
 
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      const response = await identityService.datLaiMatKhau({
+        token,
+        matKhauMoi: newPassword,
+      });
+
+      if (response.thanhCong) {
+        setSubmitted(true);
+        notifyAuth(
+          "success",
+          lang === "vi" ? "Đổi mật khẩu thành công" : "Password Reset Successfully",
+          lang === "vi"
+            ? "Mật khẩu của bạn đã được cập nhật. Đang chuyển tới trang đăng nhập..."
+            : "Your password has been updated. Redirecting to login...",
+        );
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
+      } else {
+        throw new Error(response.thongDiep || "Đặt lại mật khẩu thất bại");
+      }
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.thongDiep ||
+        err?.message ||
+        (lang === "vi"
+          ? "Không thể đặt lại mật khẩu. Token có thể đã hết hạn hoặc không hợp lệ."
+          : "Could not reset password. Token may have expired or is invalid.");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Đặt lại mật khẩu thất bại" : "Reset Failed",
+        msg,
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -87,8 +132,8 @@ export function ResetPasswordPatient() {
                   <CheckCircle2 size={20} aria-hidden="true" />
                   <p>
                     {lang === "vi"
-                      ? "Thông tin mật khẩu mới đã được xác nhận."
-                      : "Your new password details have been confirmed."}
+                      ? "Mật khẩu của bạn đã được cập nhật thành công!"
+                      : "Your new password has been successfully updated!"}
                   </p>
                 </div>
               ) : (
@@ -102,8 +147,8 @@ export function ResetPasswordPatient() {
                       name="newPassword"
                       type="password"
                       autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
+                      minLength={6}
+                      maxLength={72}
                       className={styles.input}
                       placeholder={
                         lang === "vi"
@@ -113,11 +158,12 @@ export function ResetPasswordPatient() {
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                       required
+                      disabled={isSubmitting}
                     />
                     <p className={pageStyles.hint}>
                       {lang === "vi"
-                        ? "Mật khẩu cần có ít nhất 8 ký tự."
-                        : "Use at least 8 characters."}
+                        ? "Mật khẩu từ 6 đến 72 ký tự."
+                        : "Use 6 to 72 characters."}
                     </p>
                   </div>
 
@@ -130,8 +176,8 @@ export function ResetPasswordPatient() {
                       name="confirmPassword"
                       type="password"
                       autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
+                      minLength={6}
+                      maxLength={72}
                       className={styles.input}
                       placeholder={
                         lang === "vi"
@@ -147,6 +193,7 @@ export function ResetPasswordPatient() {
                         passwordsMismatch ? "password-mismatch" : undefined
                       }
                       required
+                      disabled={isSubmitting}
                     />
                     {passwordsMismatch && (
                       <p
@@ -166,8 +213,18 @@ export function ResetPasswordPatient() {
                     variant="accent"
                     size="lg"
                     className={styles.submitBtn}
+                    disabled={isSubmitting || passwordsMismatch}
                   >
-                    {lang === "vi" ? "Xác nhận" : "Confirm"}
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === "vi" ? "Đang cập nhật..." : "Updating..."}</span>
+                      </span>
+                    ) : lang === "vi" ? (
+                      "Xác nhận đổi mật khẩu"
+                    ) : (
+                      "Confirm Reset"
+                    )}
                   </Button>
                 </form>
               )}

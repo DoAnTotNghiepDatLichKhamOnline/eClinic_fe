@@ -1,30 +1,38 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, Mail } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Mail, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { ForgotPasswordRequest } from "@/types/auth.type";
+import { identityService } from "@/services/identityService";
 import styles from "../login-patient/LoginPagePatient.module.css";
 import pageStyles from "./ForgotPasswordPatient.module.css";
 
 const genericSuccessMessage =
-  "Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi.";
+  "Nếu email đã đăng ký trong hệ thống eClinic, liên kết đặt lại mật khẩu đã được gửi đến hộp thư của bạn.";
 
 export function ForgotPasswordPatient() {
   const { lang } = useLanguage();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const request: ForgotPasswordRequest = { email: email.trim() };
-    if (!request.email) return;
+    if (!email.trim()) return;
 
-    // API integration will replace this local UI-only response.
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await identityService.quenMatKhau({ email: email.trim() });
+      setSubmitted(true);
+    } catch {
+      // Theo nguyên tắc bảo mật, hiển thị thông báo chung ngay cả khi email không tồn tại
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -54,7 +62,7 @@ export function ForgotPasswordPatient() {
             </h1>
             <p className={styles.heroSubtitle}>
               {lang === "vi"
-                ? "Nhập email đã đăng ký. Nếu tài khoản đủ điều kiện, bạn sẽ nhận được liên kết đặt lại mật khẩu."
+                ? "Nhập email đã đăng ký. Hệ thống sẽ gửi cho bạn liên kết an toàn để đặt lại mật khẩu."
                 : "Enter your registered email. If the account is eligible, you will receive a password reset link."}
             </p>
           </section>
@@ -81,7 +89,7 @@ export function ForgotPasswordPatient() {
                   <p>
                     {lang === "vi"
                       ? genericSuccessMessage
-                      : "If an account exists for this email, a password reset link has been sent."}
+                      : "If an account exists for this email, a password reset link has been sent to your inbox."}
                   </p>
                 </div>
               ) : (
@@ -108,6 +116,7 @@ export function ForgotPasswordPatient() {
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <p className={pageStyles.securityNote}>
@@ -120,8 +129,18 @@ export function ForgotPasswordPatient() {
                     variant="accent"
                     size="lg"
                     className={styles.submitBtn}
+                    disabled={isSubmitting}
                   >
-                    {lang === "vi" ? "Gửi" : "Send"}
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{lang === "vi" ? "Đang gửi..." : "Sending..."}</span>
+                      </span>
+                    ) : lang === "vi" ? (
+                      "Gửi liên kết khôi phục"
+                    ) : (
+                      "Send Recovery Link"
+                    )}
                   </Button>
                 </form>
               )}

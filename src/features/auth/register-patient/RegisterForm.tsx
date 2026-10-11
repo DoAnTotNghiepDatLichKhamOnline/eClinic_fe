@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import type { Lang } from "@/types/i18n";
 import styles from "../login-patient/LoginPagePatient.module.css";
@@ -15,9 +16,10 @@ export interface PatientRegistrationData {
 type RegisterFormProps = {
   lang: Lang;
   onSubmit: (data: PatientRegistrationData) => void;
+  isLoading?: boolean;
 };
 
-export function RegisterForm({ lang, onSubmit }: RegisterFormProps) {
+export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterFormProps) {
   const [hoTen, setHoTen] = useState("");
   const [email, setEmail] = useState("");
   const [matKhau, setMatKhau] = useState("");
@@ -285,8 +287,18 @@ export function RegisterForm({ lang, onSubmit }: RegisterFormProps) {
         variant="accent"
         size="lg"
         className={styles.submitBtn}
+        disabled={isLoading}
       >
-        {lang === "vi" ? "Đăng ký tài khoản" : "Create Account"}
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>{lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}</span>
+          </span>
+        ) : lang === "vi" ? (
+          "Đăng ký tài khoản"
+        ) : (
+          "Create Account"
+        )}
       </Button>
     </form>
   );

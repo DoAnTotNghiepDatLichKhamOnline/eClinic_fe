@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -5,10 +6,15 @@ import {
   CircleCheck,
   FolderOpen,
   House,
+  Lock,
   Pencil,
   Plus,
   Stethoscope,
+  Unlock,
   UsersRound,
+  Loader2,
+  AlertCircle,
+  User,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -16,6 +22,15 @@ import { LanguageToggle } from "@/features/landing/components/header/LanguageTog
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminSection } from "./AdminSidebar";
 import { AdminNotificationCenter } from "./AdminNotificationCenter";
+import {
+  useDanhSachTaiKhoanQuanTri,
+  useIdentityActions,
+} from "@/hooks/useIdentity";
+import type {
+  TrangThaiTaiKhoan,
+  VaiTro,
+  TaiKhoanQuanTriResponse,
+} from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
 
 const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
@@ -23,7 +38,7 @@ const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   schedule: { en: "Schedule Management", vi: "Quản lý lịch khám" },
   catalog: { en: "Medical Catalog", vi: "Danh mục y tế" },
   doctors: { en: "Doctor Management", vi: "Quản lý bác sĩ" },
-  patients: { en: "Patient Management", vi: "Quản lý bệnh nhân" },
+  patients: { en: "Patient Management", vi: "Quản lý người dùng & bệnh nhân" },
 };
 
 const sectionPaths: Record<AdminSection, string> = {
@@ -41,7 +56,33 @@ export function AdminDashboardPage({
 }) {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const vi = lang === "vi";
 
+  // State tìm kiếm & lọc tài khoản người dùng
+  const [userSearch, setUserSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+
+  // Lấy danh sách người dùng cho Quản trị viên
+  const {
+    danhSach: danhSachTaiKhoan,
+    tongSoPhanTu,
+    tongSoTrang,
+    isLoading: isLoadingUsers,
+  } = useDanhSachTaiKhoanQuanTri({
+    tuKhoa: userSearch.trim() || undefined,
+    vaiTro: roleFilter !== "ALL" ? (roleFilter as VaiTro) : undefined,
+    trangThai:
+      statusFilter !== "ALL" ? (statusFilter as TrangThaiTaiKhoan) : undefined,
+    trang: currentPage,
+    kichThuoc: 10,
+  });
+
+  const { capNhatTrangThaiTaiKhoan } = useIdentityActions();
+
+  // Mock doctors cho phần Doctor Directory
   const doctors = [
     {
       id: "DOC-01",
@@ -72,8 +113,89 @@ export function AdminDashboardPage({
       totalBookings: 87,
     },
   ];
+
   const navigateToSection = (section: AdminSection) =>
     navigate(`/admin/${sectionPaths[section]}`);
+
+  // Chuyển đổi trạng thái tài khoản (Kích hoạt lại hoặc Vô hiệu hóa)
+  const handleToggleStatus = async (user: TaiKhoanQuanTriResponse) => {
+    const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
+    const nextStatus: TrangThaiTaiKhoan = isCurrentlyActive
+      ? "VO_HIEU_HOA"
+      : "DA_KICH_HOAT";
+    const confirmMsg = isCurrentlyActive
+      ? vi
+        ? `Bạn có chắc chắn muốn vô hiệu hóa tài khoản "${user.hoTen}" (${user.email})?`
+        : `Are you sure you want to disable account "${user.hoTen}" (${user.email})?`
+      : vi
+        ? `Bạn có chắc chắn muốn kích hoạt lại tài khoản "${user.hoTen}" (${user.email})?`
+        : `Are you sure you want to activate account "${user.hoTen}" (${user.email})?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setUpdatingUserId(user.id);
+      await capNhatTrangThaiTaiKhoan({
+        id: user.id,
+        data: {
+          trangThai: nextStatus,
+          lyDoVoHieuHoa: isCurrentlyActive
+            ? "Vô hiệu hóa bởi Quản trị viên"
+            : undefined,
+        },
+      });
+    } catch (err: any) {
+      alert(
+        err?.response?.data?.thongDiep ||
+          (vi
+            ? "Không thể cập nhật trạng thái tài khoản."
+            : "Failed to update account status.")
+      );
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const renderStatusBadge = (status: TrangThaiTaiKhoan) => {
+    switch (status) {
+      case "DA_KICH_HOAT":
+        return (
+          <span className={`${styles.badge} ${styles.badgeActive}`}>
+            <CircleCheck aria-hidden="true" size={14} />
+            {vi ? "Đã kích hoạt" : "Active"}
+          </span>
+        );
+      case "CHO_XAC_NHAN":
+        return (
+          <span className={`${styles.badge} ${styles.badgeWarning}`}>
+            <AlertCircle aria-hidden="true" size={14} />
+            {vi ? "Chờ xác nhận" : "Pending"}
+          </span>
+        );
+      case "VO_HIEU_HOA":
+        return (
+          <span className={`${styles.badge} ${styles.badgeMuted}`}>
+            <Lock aria-hidden="true" size={14} />
+            {vi ? "Vô hiệu hóa" : "Disabled"}
+          </span>
+        );
+      default:
+        return <span className={styles.badge}>{status}</span>;
+    }
+  };
+
+  const renderRoleLabel = (role: VaiTro) => {
+    switch (role) {
+      case "BENH_NHAN":
+        return vi ? "Bệnh nhân" : "Patient";
+      case "BAC_SI":
+        return vi ? "Bác sĩ" : "Doctor";
+      case "QUAN_TRI_VIEN":
+        return vi ? "Quản trị viên" : "Admin";
+      default:
+        return role;
+    }
+  };
 
   return (
     <div className={styles.pageWrapper}>
@@ -84,7 +206,7 @@ export function AdminDashboardPage({
               eClinic Admin Control Panel
             </span>
             <span className={styles.brandTag}>
-              {lang === "vi" ? "Quản trị hệ thống" : "System Admin"}
+              {vi ? "Quản trị hệ thống" : "System Admin"}
             </span>
           </div>
 
@@ -113,16 +235,16 @@ export function AdminDashboardPage({
         <div className={styles.content}>
           <div className={styles.welcomeHeader}>
             <h1 className={styles.welcomeTitle}>
-              {lang === "vi"
+              {vi
                 ? sectionLabels[activeSection].vi
                 : sectionLabels[activeSection].en}
             </h1>
             <p className={styles.welcomeSub}>
               {activeSection === "dashboard"
-                ? lang === "vi"
-                  ? "Quản lý tài khoản bác sĩ, lịch đặt khám và cấu hình hệ thống."
-                  : "Manage doctors, appointment bookings, and system configurations."
-                : lang === "vi"
+                ? vi
+                  ? "Quản lý tài khoản, lịch khám và cấu hình hệ thống toàn diện."
+                  : "Manage user accounts, appointments, and system configurations."
+                : vi
                   ? `Không gian ${sectionLabels[activeSection].vi.toLowerCase()} của eClinic.`
                   : `eClinic ${sectionLabels[activeSection].en.toLowerCase()} workspace.`}
             </p>
@@ -137,7 +259,7 @@ export function AdminDashboardPage({
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>24</span>
                   <span className={styles.statLabel}>
-                    {lang === "vi" ? "Bác sĩ hoạt động" : "Active Doctors"}
+                    {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
                   </span>
                 </div>
               </div>
@@ -146,11 +268,11 @@ export function AdminDashboardPage({
                   <UsersRound aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>1,420</span>
+                  <span className={styles.statValue}>
+                    {tongSoPhanTu > 0 ? tongSoPhanTu.toLocaleString() : "..."}
+                  </span>
                   <span className={styles.statLabel}>
-                    {lang === "vi"
-                      ? "Bệnh nhân đăng ký"
-                      : "Registered Patients"}
+                    {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
                   </span>
                 </div>
               </div>
@@ -161,7 +283,7 @@ export function AdminDashboardPage({
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>312</span>
                   <span className={styles.statLabel}>
-                    {lang === "vi" ? "Lượt khám tháng này" : "Monthly Bookings"}
+                    {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
                   </span>
                 </div>
               </div>
@@ -172,10 +294,218 @@ export function AdminDashboardPage({
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>99.8%</span>
                   <span className={styles.statLabel}>
-                    {lang === "vi" ? "Uptime hệ thống" : "System Uptime"}
+                    {vi ? "Uptime hệ thống" : "System Uptime"}
                   </span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeSection === "patients" && (
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>
+                  {vi ? "Quản lý tài khoản người dùng" : "User Account Directory"}
+                </h2>
+                <span className={styles.statLabel}>
+                  {vi
+                    ? `Tổng số: ${tongSoPhanTu} tài khoản`
+                    : `Total: ${tongSoPhanTu} accounts`}
+                </span>
+              </div>
+
+              {/* Thanh lọc và tìm kiếm */}
+              <div className={styles.filterBar}>
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder={
+                    vi
+                      ? "Tìm theo họ tên, email, số điện thoại..."
+                      : "Search by name, email, phone..."
+                  }
+                  value={userSearch}
+                  onChange={(e) => {
+                    setUserSearch(e.target.value);
+                    setCurrentPage(0);
+                  }}
+                />
+
+                <select
+                  className={styles.filterSelect}
+                  value={roleFilter}
+                  onChange={(e) => {
+                    setRoleFilter(e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <option value="ALL">
+                    {vi ? "Tất cả vai trò" : "All Roles"}
+                  </option>
+                  <option value="BENH_NHAN">
+                    {vi ? "Bệnh nhân" : "Patient"}
+                  </option>
+                  <option value="BAC_SI">
+                    {vi ? "Bác sĩ" : "Doctor"}
+                  </option>
+                  <option value="QUAN_TRI_VIEN">
+                    {vi ? "Quản trị viên" : "Admin"}
+                  </option>
+                </select>
+
+                <select
+                  className={styles.filterSelect}
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(0);
+                  }}
+                >
+                  <option value="ALL">
+                    {vi ? "Tất cả trạng thái" : "All Statuses"}
+                  </option>
+                  <option value="DA_KICH_HOAT">
+                    {vi ? "Đã kích hoạt" : "Active"}
+                  </option>
+                  <option value="CHO_XAC_NHAN">
+                    {vi ? "Chờ xác nhận" : "Pending"}
+                  </option>
+                  <option value="VO_HIEU_HOA">
+                    {vi ? "Vô hiệu hóa" : "Disabled"}
+                  </option>
+                </select>
+              </div>
+
+              {/* Danh sách bảng */}
+              <div className={styles.tableScroll}>
+                <table className={styles.adminTable}>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>{vi ? "Người dùng" : "User"}</th>
+                      <th>Email</th>
+                      <th>{vi ? "Số điện thoại" : "Phone"}</th>
+                      <th>{vi ? "Vai trò" : "Role"}</th>
+                      <th>{vi ? "Trạng thái" : "Status"}</th>
+                      <th>{vi ? "Thao tác" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoadingUsers ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
+                          <Loader2
+                            size={24}
+                            className="animate-spin"
+                            style={{ margin: "0 auto 8px" }}
+                          />
+                          <div>{vi ? "Đang tải dữ liệu..." : "Loading users..."}</div>
+                        </td>
+                      </tr>
+                    ) : danhSachTaiKhoan.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
+                          {vi ? "Không tìm thấy tài khoản nào." : "No accounts found."}
+                        </td>
+                      </tr>
+                    ) : (
+                      danhSachTaiKhoan.map((u) => {
+                        const isUpdating = updatingUserId === u.id;
+                        const isHoatDong = u.trangThai === "DA_KICH_HOAT";
+                        return (
+                          <tr key={u.id}>
+                            <td>
+                              <strong>#{u.id}</strong>
+                            </td>
+                            <td>
+                              <div className={styles.userCell}>
+                                <div className={styles.userAvatar}>
+                                  {u.anhDaiDien ? (
+                                    <img src={u.anhDaiDien} alt="" />
+                                  ) : (
+                                    (u.hoTen || "U")
+                                      .trim()
+                                      .split(/\s+/)
+                                      .slice(-1)[0]?.[0]
+                                      ?.toUpperCase() || <User size={16} />
+                                  )}
+                                </div>
+                                <div>
+                                  <strong>{u.hoTen}</strong>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{u.email}</td>
+                            <td>{u.soDienThoai || "—"}</td>
+                            <td>
+                              <span style={{ fontWeight: 600 }}>
+                                {renderRoleLabel(u.vaiTro)}
+                              </span>
+                            </td>
+                            <td>{renderStatusBadge(u.trangThai)}</td>
+                            <td>
+                              <button
+                                type="button"
+                                className={
+                                  isHoatDong
+                                    ? styles.actionBtnDanger
+                                    : styles.actionBtnOutline
+                                }
+                                disabled={isUpdating}
+                                onClick={() => handleToggleStatus(u)}
+                              >
+                                {isUpdating ? (
+                                  <Loader2 size={13} className="animate-spin" />
+                                ) : isHoatDong ? (
+                                  <Lock size={13} />
+                                ) : (
+                                  <Unlock size={13} />
+                                )}
+                                {isHoatDong
+                                  ? vi
+                                    ? "Khóa"
+                                    : "Disable"
+                                  : vi
+                                    ? "Kích hoạt"
+                                    : "Activate"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Phân trang */}
+              {tongSoTrang > 1 && (
+                <div className={styles.paginationBar}>
+                  <span>
+                    {vi
+                      ? `Trang ${currentPage + 1} / ${tongSoTrang}`
+                      : `Page ${currentPage + 1} of ${tongSoTrang}`}
+                  </span>
+                  <div className={styles.paginationActions}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={currentPage === 0}
+                      onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                    >
+                      {vi ? "Trang trước" : "Previous"}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={currentPage >= tongSoTrang - 1}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      {vi ? "Trang sau" : "Next"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -183,11 +513,11 @@ export function AdminDashboardPage({
             <div className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
-                  {lang === "vi" ? "Danh sách bác sĩ" : "Doctor Directory"}
+                  {vi ? "Danh sách bác sĩ" : "Doctor Directory"}
                 </h2>
                 <button type="button" className={styles.actionBtn}>
                   <Plus aria-hidden="true" size={16} />
-                  {lang === "vi" ? "Thêm bác sĩ mới" : "Add New Doctor"}
+                  {vi ? "Thêm bác sĩ mới" : "Add New Doctor"}
                 </button>
               </div>
               <div className={styles.tableScroll}>
@@ -224,7 +554,7 @@ export function AdminDashboardPage({
                         <td>
                           <button type="button" className={styles.actionBtn}>
                             <Pencil aria-hidden="true" size={14} />
-                            {lang === "vi" ? "Chỉnh sửa" : "Edit"}
+                            {vi ? "Chỉnh sửa" : "Edit"}
                           </button>
                         </td>
                       </tr>
@@ -235,19 +565,21 @@ export function AdminDashboardPage({
             </div>
           )}
 
-          {activeSection !== "dashboard" && activeSection !== "doctors" && (
-            <section className={styles.sectionCard}>
-              <div className={styles.emptyState}>
-                <FolderOpen aria-hidden="true" size={32} />
-                <h2>{lang === "vi" ? "Chưa có dữ liệu" : "No data yet"}</h2>
-                <p>
-                  {lang === "vi"
-                    ? "Nội dung sẽ xuất hiện tại đây khi được cấu hình."
-                    : "Content will appear here once it has been configured."}
-                </p>
-              </div>
-            </section>
-          )}
+          {activeSection !== "dashboard" &&
+            activeSection !== "doctors" &&
+            activeSection !== "patients" && (
+              <section className={styles.sectionCard}>
+                <div className={styles.emptyState}>
+                  <FolderOpen aria-hidden="true" size={32} />
+                  <h2>{vi ? "Chưa có dữ liệu" : "No data yet"}</h2>
+                  <p>
+                    {vi
+                      ? "Nội dung sẽ xuất hiện tại đây khi được cấu hình."
+                      : "Content will appear here once it has been configured."}
+                  </p>
+                </div>
+              </section>
+            )}
         </div>
       </main>
     </div>
