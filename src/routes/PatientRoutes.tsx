@@ -44,6 +44,7 @@ export function PatientRoutes() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="account-info" element={<AccountInfoPage />} />
         <Route path="patient-profile" element={<PatientProfilePage />} />
+        <Route path="profile" element={<PatientProfilePage />} />
         <Route path="my-appointments" element={<MyAppointmentsPage />} />
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

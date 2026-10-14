@@ -26,6 +26,7 @@ import { PatientInfoStep } from "./components/PatientInfoStep";
 import { BookingSummaryCard } from "./components/BookingSummaryCard";
 import { BookingSuccessModal } from "./components/BookingSuccessModal";
 import { useDanhSachChuyenKhoa, useDanhSachBacSi } from "@/hooks/useCatalog";
+import { useThongTinDatLich } from "@/hooks/useBooking";
 
 export function AppointmentBookingPage() {
   const { lang } = useLanguage();

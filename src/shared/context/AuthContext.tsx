@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { identityService } from '@/services/identityService';
 import { setAccessToken } from '@/utils/axiosClient';
+import { applyAccountLanguage } from '@/utils/languagePreference';
 import type { DangNhapRequest, DangNhapResponse, VaiTro } from '@/types/auth.type';
 
 export interface User {
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.thanhCong && response.duLieu && isMounted) {
           setAccessToken(response.duLieu.accessToken);
           const tk = response.duLieu.taiKhoan;
+          applyAccountLanguage(tk.ngonNgu);
           setUser({
             id: String(tk.id),
             name: tk.hoTen,
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { accessToken, taiKhoan } = response.duLieu;
+    applyAccountLanguage(taiKhoan.ngonNgu);
     setAccessToken(accessToken);
 
     const mappedUser: User = {

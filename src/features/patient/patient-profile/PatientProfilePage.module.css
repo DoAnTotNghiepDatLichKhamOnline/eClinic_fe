@@ -86,6 +86,11 @@
   border-color: #c5e0d0;
   color: #14533d;
 }
+.statusBannerError {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
 
 .statusIcon {
   flex: 0 0 auto;

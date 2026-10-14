@@ -2,12 +2,14 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarClock, Download, Loader2, QrCode, XCircle } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { useAuth } from "@/shared/context/AuthContext";
 import { bookingService } from "@/services/bookingService";
 import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
 
 export function AppointmentTicketPage() {
   const { maPhieuKham = "" } = useParams();
   const { lang, t } = useLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const vi = lang === "vi";
   const [ticket, setTicket] = useState<PhieuKhamResponse | null>(null);
@@ -56,17 +58,21 @@ export function AppointmentTicketPage() {
     setError("");
     try {
       if (mode === "cancel") {
-        const response = await bookingService.huyPhieuKhamKhach(maPhieuKham, { soDienThoai: phone, lyDo: reason || undefined });
+        const response = user?.role === "patient"
+          ? await bookingService.huyLichHen(maPhieuKham, { lyDo: reason || undefined })
+          : await bookingService.huyPhieuKhamKhach(maPhieuKham, { soDienThoai: phone, lyDo: reason || undefined });
         if (!response.thanhCong) throw new Error(response.thongDiep);
         await loadTicket();
         setMode(null);
       } else {
         const body = {
-          soDienThoai: phone,
+          ...(!user?.role || user.role !== "patient" ? { soDienThoai: phone } : {}),
           ...(idLichLamViec ? { idLichLamViec: Number(idLichLamViec) } : { idChuyenKhoa: Number(idChuyenKhoa) }),
           gioBatDauKhung,
         };
-        const response = await bookingService.doiPhieuKhamKhach(maPhieuKham, body);
+        const response = user?.role === "patient"
+          ? await bookingService.doiLichHen(maPhieuKham, body)
+          : await bookingService.doiPhieuKhamKhach(maPhieuKham, body);
         if (!response.thanhCong || !response.duLieu) throw new Error(response.thongDiep);
         navigate(`/phieu-kham/${(response.duLieu as DatLichResponse).maPhieuKham}`, { replace: true });
       }
@@ -112,7 +118,7 @@ export function AppointmentTicketPage() {
             <button className="inline-flex items-center gap-2 border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900" onClick={() => setMode("reschedule")}><CalendarClock size={16} />{t({ en: "Reschedule", vi: "Đổi lịch" })}</button>
           </div> : <form className="grid max-w-2xl gap-4 sm:grid-cols-2" onSubmit={(event) => void submitAction(event)}>
             <h2 className="text-lg font-semibold sm:col-span-2">{mode === "cancel" ? t({ en: "Cancel appointment", vi: "Hủy lịch khám" }) : t({ en: "Choose a new appointment slot", vi: "Chọn khung giờ mới" })}</h2>
-            <label className="grid gap-1 text-sm">{t({ en: "Contact phone", vi: "Số điện thoại liên hệ" })}<input className="border border-slate-300 px-3 py-2" required inputMode="numeric" maxLength={10} value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))} /></label>
+            {!user && <label className="grid gap-1 text-sm">{t({ en: "Contact phone", vi: "Số điện thoại liên hệ" })}<input className="border border-slate-300 px-3 py-2" required inputMode="numeric" maxLength={10} value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))} /></label>}
             {mode === "cancel" ? <label className="grid gap-1 text-sm sm:col-span-2">{t({ en: "Reason (optional)", vi: "Lý do (không bắt buộc)" })}<textarea className="border border-slate-300 px-3 py-2" value={reason} onChange={(event) => setReason(event.target.value)} /></label> : <>
               <label className="grid gap-1 text-sm">{t({ en: "Shift ID (or use specialty)", vi: "Mã ca (hoặc chọn chuyên khoa)" })}<input className="border border-slate-300 px-3 py-2" inputMode="numeric" value={idLichLamViec} onChange={(event) => setIdLichLamViec(event.target.value)} /></label>
               {!idLichLamViec && <label className="grid gap-1 text-sm">{t({ en: "Specialty ID", vi: "Mã chuyên khoa" })}<input className="border border-slate-300 px-3 py-2" inputMode="numeric" required value={idChuyenKhoa} onChange={(event) => setIdChuyenKhoa(event.target.value)} /></label>}

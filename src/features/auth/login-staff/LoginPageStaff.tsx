@@ -8,6 +8,7 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { identityService } from "@/services/identityService";
 import { setAccessToken } from "@/utils/axiosClient";
+import { applyAccountLanguage } from "@/utils/languagePreference";
 import styles from "./LoginPageStaff.module.css";
 
 export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
@@ -39,6 +40,7 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
       }
 
       const { accessToken, taiKhoan } = response.duLieu;
+      applyAccountLanguage(taiKhoan.ngonNgu);
 
       // Kiểm tra đúng vai trò
       if (role === "doctor" && taiKhoan.vaiTro !== "BAC_SI") {
@@ -111,6 +113,7 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
       const loginResponse = await identityService.dangNhap({ email: email.trim(), matKhau: newPassword });
       if (!loginResponse.thanhCong || !loginResponse.duLieu) throw new Error(loginResponse.thongDiep);
       const { accessToken, taiKhoan } = loginResponse.duLieu;
+      applyAccountLanguage(taiKhoan.ngonNgu);
       setAccessToken(accessToken);
       login({ id: String(taiKhoan.id), name: taiKhoan.hoTen, email: taiKhoan.email, phone: taiKhoan.soDienThoai || undefined, role });
       navigate(role === "doctor" ? "/doctor" : "/admin");

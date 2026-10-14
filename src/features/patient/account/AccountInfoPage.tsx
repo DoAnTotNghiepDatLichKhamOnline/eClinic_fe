@@ -36,6 +36,8 @@ export function AccountInfoPage() {
     isRequestingEmailChange,
     taiLenAnh,
     isUploadingAvatar,
+    xoaAnh,
+    isRemovingAvatar,
   } = useIdentityActions();
 
   const [editingName, setEditingName] = useState(false);
@@ -120,6 +122,14 @@ export function AccountInfoPage() {
       await taiLenAnh(file);
     } catch (err: any) {
       alert(err?.response?.data?.thongDiep || "Không thể tải lên ảnh đại diện.");
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      await xoaAnh();
+    } catch (error: any) {
+      alert(error?.response?.data?.thongDiep || (lang === "vi" ? "Không thể xóa ảnh đại diện." : "Could not remove profile photo."));
     }
   };
 
@@ -239,6 +249,7 @@ export function AccountInfoPage() {
               {isUploadingAvatar ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
               {vi ? (isUploadingAvatar ? "Đang tải..." : "Tải ảnh mới") : (isUploadingAvatar ? "Uploading..." : "Upload photo")}
             </button>
+            {hoSo?.anhDaiDien && <button className={styles.btnOutline} type="button" disabled={isRemovingAvatar} onClick={() => void handleRemoveAvatar()}>{isRemovingAvatar ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />}{vi ? "Xóa ảnh" : "Remove photo"}</button>}
           </div>
         </div>
       </div>

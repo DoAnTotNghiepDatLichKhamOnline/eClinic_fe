@@ -62,6 +62,7 @@ export interface AnhBacSiResponse {
   loai: LoaiAnhBacSi;
   url: string;
   chuThich: string | null;
+  chuThichEn?: string | null;
 }
 
 export interface BacSiChiTietResponse extends BacSiResponse {
@@ -194,6 +195,7 @@ export interface CapNhatHoSoBacSiRequest {
 export interface CapNhatAnhBacSiRequest {
   loai: LoaiAnhBacSi;
   chuThich?: string | null;
+  chuThichEn?: string | null;
 }
 
 export interface SapXepAnhBacSiRequest {

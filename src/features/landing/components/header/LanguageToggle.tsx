@@ -12,6 +12,7 @@ export function LanguageToggle() {
 
   const changeLanguage = () => {
     const nextLanguage = lang === "en" ? "vi" : "en";
+    localStorage.setItem("eclinic_language_manual", "true");
     toggleLanguage();
     void queryClient.invalidateQueries();
     if (user) {

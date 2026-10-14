@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Bilingual, Lang } from "@/types/i18n";
 
@@ -15,6 +15,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() =>
     localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en",
   );
+
+  useEffect(() => {
+    const syncPreference = () => setLang(localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en");
+    window.addEventListener("eclinic:language-change", syncPreference);
+    return () => window.removeEventListener("eclinic:language-change", syncPreference);
+  }, []);
 
   const toggleLanguage = () => {
     setLang((previous) => {

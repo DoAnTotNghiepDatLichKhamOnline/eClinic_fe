@@ -400,6 +400,7 @@ export interface HoSoBenhNhanQuanTriResponse {
   ngaySinh: string | null;
   gioiTinh: GioiTinh | null;
   cccd: string | null;
+  cccdChe?: string | null;
   soDienThoai: string | null;
   diaChi: string | null;
   soBaoHiemYTe: string | null;

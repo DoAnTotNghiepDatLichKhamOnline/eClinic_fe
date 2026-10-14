@@ -12,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
   User,
+  Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -82,7 +83,7 @@ export function AdminDashboardPage({
     kichThuoc: 10,
   });
 
-  const { capNhatTrangThaiTaiKhoan } = useIdentityActions();
+  const { capNhatTrangThaiTaiKhoan, xoaTaiKhoan } = useIdentityActions();
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "admin-summary"],
     queryFn: () => bookingService.getTongQuanQuanTri(),
@@ -95,6 +96,7 @@ export function AdminDashboardPage({
 
   // Chuyển đổi trạng thái tài khoản (Kích hoạt lại hoặc Vô hiệu hóa)
   const handleToggleStatus = async (user: TaiKhoanQuanTriResponse) => {
+    if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN") return;
     const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
     const nextStatus: TrangThaiTaiKhoan = isCurrentlyActive
       ? "VO_HIEU_HOA"
@@ -129,6 +131,15 @@ export function AdminDashboardPage({
       );
     } finally {
       setUpdatingUserId(null);
+    }
+  };
+
+  const handleDeletePendingAccount = async (user: TaiKhoanQuanTriResponse) => {
+    if (user.trangThai !== "CHO_XAC_NHAN" || !window.confirm(vi ? `Xóa tài khoản đang chờ của ${user.email}?` : `Delete pending account ${user.email}?`)) return;
+    try {
+      await xoaTaiKhoan(user.id);
+    } catch (error: any) {
+      alert(error?.response?.data?.thongDiep || (vi ? "Không thể xóa tài khoản." : "Could not delete account."));
     }
   };
 
@@ -409,7 +420,7 @@ export function AdminDashboardPage({
                             </td>
                             <td>{renderStatusBadge(u.trangThai)}</td>
                             <td>
-                              <button
+                              {u.trangThai === "CHO_XAC_NHAN" ? <button type="button" className={styles.actionBtnDanger} disabled={isUpdating} onClick={() => void handleDeletePendingAccount(u)}><Trash2 size={13} />{vi ? "Xóa" : "Delete"}</button> : u.vaiTro !== "QUAN_TRI_VIEN" && <button
                                 type="button"
                                 className={
                                   isHoatDong
@@ -433,7 +444,7 @@ export function AdminDashboardPage({
                                   : vi
                                     ? "Kích hoạt"
                                     : "Activate"}
-                              </button>
+                              </button>}
                             </td>
                           </tr>
                         );

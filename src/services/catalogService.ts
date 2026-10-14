@@ -245,14 +245,14 @@ export const catalogService = {
    * Thêm ảnh giới thiệu (multipart/form-data: tệp 'anh', 'loai', 'chuThich')
    * POST /api/catalog/quan-tri/bac-si/{id}/anh
    */
-  themAnhBacSi: async (id: number, file: File | Blob, loai: LoaiAnhBacSi, chuThich?: string) => {
+  themAnhBacSi: async (id: number, file: File | Blob, loai: LoaiAnhBacSi, chuThich?: string, chuThichEn?: string) => {
     const formData = new FormData();
     formData.append('anh', file);
     const response = await axiosClient.post<ApiResponse<AnhBacSiResponse>>(
       `/api/catalog/quan-tri/bac-si/${id}/anh`,
       formData,
       {
-        params: { loai, ...(chuThich ? { chuThich } : {}) },
+        params: { loai, ...(chuThich ? { chuThich } : {}), ...(chuThichEn ? { chuThichEn } : {}) },
       }
     );
     return response.data;
