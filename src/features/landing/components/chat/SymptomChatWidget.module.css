@@ -120,6 +120,47 @@
   font-size: 11px;
   font-weight: 700;
 }
+.suggestions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.suggestions a {
+  margin-top: 0;
+  padding: 6px 8px;
+  border: 1px solid #d7e3dc;
+  border-radius: 5px;
+  background: #fff;
+  text-decoration: none;
+}
+.consentButton,
+.revoke {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid #0f4d3a;
+  border-radius: 5px;
+  background: #0f4d3a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.revoke {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #e8eeea;
+  border-radius: 0;
+  background: #f8faf8;
+  color: #53635b;
+  text-align: left;
+}
+.error {
+  align-self: flex-start;
+  max-width: 90%;
+  margin: 0;
+  color: #a52d31;
+  line-height: 1.5;
+}
 .form {
   display: flex;
   gap: 8px;

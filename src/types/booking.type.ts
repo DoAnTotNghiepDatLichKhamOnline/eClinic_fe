@@ -143,6 +143,8 @@ export interface PhieuKhamResponse {
 }
 
 export interface LichHenCuaToiResponse {
+  id?: number;
+  ngaySinhBenhNhan?: string | null;
   maPhieuKham: string;
   maTraCuu: string;
   linkPhieuKham: string;
@@ -299,6 +301,13 @@ export interface CaLamViecResponse {
   tongSoCho: number;
   soChoDaDat: number;
   soChoConLai: number;
+  soLuotDaDat?: number;
+  tongSoLuot?: number;
+  soLuotConTrong?: number;
+  bacSi?: BacSiTomTatResponse;
+  phongKham?: PhongKhamTomTatResponse;
+  idChuyenKhoa?: number;
+  tenChuyenKhoa?: string;
 }
 
 export interface LichHenTrongCaResponse {
@@ -333,6 +342,9 @@ export interface DanhGiaCuaBacSiResponse {
 
 export interface YeuCauDoiLichResponse {
   id: number;
+  idLichLamViec?: number;
+  loaiYeuCau?: LoaiYeuCauDoiLich;
+  ca?: CaLamViecResponse;
   idCaLamViec: number;
   ngay: string;
   gioBatDau: string;
@@ -344,9 +356,22 @@ export interface YeuCauDoiLichResponse {
   ngayTao: string;
   nguoiDuyet?: string | null;
   phanHoi?: string | null;
+  ngayMongMuon?: string | null;
+  gioBatDauMongMuon?: string | null;
+  gioKetThucMongMuon?: string | null;
+  phongKhamMongMuon?: PhongKhamTomTatResponse | null;
+  ghiChuXuLy?: string | null;
+  ngayGui?: string;
+  ngayXuLy?: string | null;
 }
 
 export interface TongQuanBacSiResponse {
+  dangCho?: number;
+  daKham?: number;
+  diemDanhGia?: number | null;
+  soDanhGia?: number;
+  yeuCauChoXacNhan?: number;
+  tinhLuc?: string;
   caHomNay: number;
   lichHenHomNay: number;
   soCaTuanNay: number;
@@ -359,6 +384,10 @@ export interface TongQuanBacSiResponse {
 // ==========================================
 
 export interface TongQuanQuanTriResponse {
+  bacSiDangCongTac?: number;
+  benhNhanDaDangKy?: number;
+  luotDatTrongThang?: number;
+  tinhLuc?: string;
   tongLichHenHomNay: number;
   tongCaLamViecHomNay: number;
   yeuCauDoiLichChoDuyet: number;
@@ -376,6 +405,8 @@ export interface HoSoBenhNhanQuanTriResponse {
   soBaoHiemYTe: string | null;
   trangThaiLienKet: TrangThaiLienKet;
   ngayTao: string;
+  soLichHen?: number;
+  coTaiKhoan?: boolean;
 }
 
 export interface ChiTietHoSoBenhNhanResponse {
@@ -437,13 +468,20 @@ export interface DatLichRequest {
 }
 
 export interface DoiLichRequest {
-  idCaKhamMoi: number;
-  gioBatDauKhungMoi: string;
+  idLichLamViec?: number;
+  idChuyenKhoa?: number;
+  gioBatDauKhung: string;
+  soDienThoai?: string;
+  lyDo?: string | null;
+  idCaKhamMoi?: number;
+  gioBatDauKhungMoi?: string;
   lyDoDoi?: string | null;
 }
 
 export interface HuyLichRequest {
-  lyDoHuy: string;
+  lyDo?: string;
+  soDienThoai?: string;
+  lyDoHuy?: string;
 }
 
 export interface DanhGiaRequest {
@@ -470,25 +508,35 @@ export interface TaoCaRequest {
   gioKetThuc: string;
   soLuotToiDaMoiGio: number;
   thoiLuongLuotPhut: number;
+  lapLai?: { cacThu: number[]; denNgay: string };
 }
 
 export interface SuaCaRequest {
-  idPhongKham?: number;
-  soLuotToiDaMoiGio?: number;
+  idPhongKham: number;
+  gioBatDau: string;
+  gioKetThuc: string;
+  soLuotToiDaMoiGio: number;
+  thoiLuongLuotPhut: number;
 }
 
 export interface HuyCaRequest {
-  lyDoHuy: string;
-}
-
-export interface GuiYeuCauDoiLichRequest {
-  idCaHienTai: number;
-  idPhongKhamMongMuon: number;
   lyDo: string;
 }
 
+export interface GuiYeuCauDoiLichRequest {
+  idLichLamViec: number;
+  loaiYeuCau: 'XIN_NGHI' | 'DOI_CA';
+  lyDo: string;
+  ngayMongMuon?: string;
+  gioBatDauMongMuon?: string;
+  gioKetThucMongMuon?: string;
+  idPhongKhamMongMuon?: number;
+  idCaHienTai?: number;
+}
+
 export interface XuLyYeuCauRequest {
-  chapNhan: boolean;
+  ghiChu?: string;
+  chapNhan?: boolean;
   lyDoTuChoi?: string | null;
 }
 
@@ -500,6 +548,7 @@ export interface GhiKetQuaKhamRequest {
 }
 
 export interface SuaHoSoBenhNhanRequest {
+  cccd?: string | null;
   hoTen?: string | null;
   ngaySinh?: string | null;
   gioiTinh?: GioiTinh | null;
@@ -510,7 +559,7 @@ export interface SuaHoSoBenhNhanRequest {
 }
 
 export interface TuChoiLienKetRequest {
-  lyDoTuChoi: string;
+  lyDo: string;
 }
 
 // ==========================================
@@ -526,6 +575,7 @@ export interface GetNgayConChoParams {
 
 export interface GetLichHenParams {
   loc?: LocLichHen;
+  cuaAi?: PhamViLichHen;
   phamVi?: PhamViLichHen;
   tuKhoa?: string;
   trang?: number;

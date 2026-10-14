@@ -1,5 +1,5 @@
-import axiosClient from '@/utils/axiosClient';
-import type { ApiResponse, PageResponse } from '@/types/common.type';
+import axiosClient from "@/utils/axiosClient";
+import type { ApiResponse, PageResponse } from "@/types/common.type";
 import type {
   HoSoCuaToiResponse,
   HoSoCuaToiRequest,
@@ -42,32 +42,32 @@ import type {
   DanhGiaQuanTriResponse,
   TongQuanQuanTriResponse,
   TrangThaiYeuCau,
-} from '@/types/booking.type';
+} from "@/types/booking.type";
 
 export const bookingService = {
   // =========================================================================
-  // 1. HỒ SƠ BỆNH NHÂN CỦA TÔI (/api/booking/ho-so-benh-nhan)
+  // 1. HỒ SƠ BỆNH NHÂN CỦA TÔI (/api/booking/ho-so-benh-nhan/cua-toi)
   // =========================================================================
 
   /**
    * Xem hồ sơ bệnh nhân liên kết với tài khoản
-   * GET /api/booking/ho-so-benh-nhan
+   * GET /api/booking/ho-so-benh-nhan/cua-toi
    */
   getHoSoCuaToi: async () => {
     const response = await axiosClient.get<ApiResponse<HoSoCuaToiResponse>>(
-      '/api/booking/ho-so-benh-nhan'
+      "/api/booking/ho-so-benh-nhan/cua-toi",
     );
     return response.data;
   },
 
   /**
    * Cập nhật thông tin hồ sơ bệnh nhân
-   * PUT /api/booking/ho-so-benh-nhan
+   * PUT /api/booking/ho-so-benh-nhan/cua-toi
    */
   capNhatHoSoCuaToi: async (data: HoSoCuaToiRequest) => {
     const response = await axiosClient.put<ApiResponse<HoSoCuaToiResponse>>(
-      '/api/booking/ho-so-benh-nhan',
-      data
+      "/api/booking/ho-so-benh-nhan/cua-toi",
+      data,
     );
     return response.data;
   },
@@ -78,22 +78,30 @@ export const bookingService = {
 
   /**
    * Lấy thông tin gợi ý khi đặt lịch (bản thân, người thân đã lưu, lần đặt gần nhất)
-   * GET /api/booking/thong-tin-dat-lich
+   * GET /api/booking/thong-tin-dat-lich/cua-toi
    */
   getThongTinDatLich: async () => {
-    const response = await axiosClient.get<ApiResponse<ThongTinDatLichResponse>>(
-      '/api/booking/thong-tin-dat-lich'
-    );
+    const response = await axiosClient.get<
+      ApiResponse<ThongTinDatLichResponse>
+    >("/api/booking/thong-tin-dat-lich/cua-toi");
     return response.data;
   },
 
   /**
    * Xoá một người thân khỏi danh sách đã lưu
-   * DELETE /api/booking/thong-tin-dat-lich/nguoi-than/{id}
+   * DELETE /api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/{id}
    */
   xoaNguoiThan: async (id: number) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/booking/thong-tin-dat-lich/nguoi-than/${id}`
+      `/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/${id}`,
+    );
+    return response.data;
+  },
+
+  capNhatNguoiThan: async (id: number, data: unknown) => {
+    const response = await axiosClient.put<ApiResponse<unknown>>(
+      `/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/${id}`,
+      data,
     );
     return response.data;
   },
@@ -104,12 +112,22 @@ export const bookingService = {
 
   /**
    * Các ca và khung giờ trong ngày theo bác sĩ hoặc chuyên khoa
-   * GET /api/booking/khung-gio
+   * GET /api/booking/khung-gio/nhieu-ngay
    */
-  getCaKhamTheoNgay: async (params: { ngay: string; idBacSi?: number; idChuyenKhoa?: number }) => {
+  getCaKhamTheoNgay: async (params: {
+    ngay: string;
+    idBacSi?: number;
+    idChuyenKhoa?: number;
+  }) => {
     const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
-      '/api/booking/khung-gio',
-      { params }
+      "/api/booking/khung-gio/nhieu-ngay",
+      {
+        params: {
+          tuNgay: params.ngay,
+          denNgay: params.ngay,
+          idBacSi: params.idBacSi,
+        },
+      },
     );
     return response.data;
   },
@@ -120,8 +138,8 @@ export const bookingService = {
    */
   getNgayConCho: async (params: GetNgayConChoParams) => {
     const response = await axiosClient.get<ApiResponse<NgayConChoResponse[]>>(
-      '/api/booking/khung-gio/ngay-con-cho',
-      { params }
+      "/api/booking/khung-gio/ngay-con-cho",
+      { params },
     );
     return response.data;
   },
@@ -132,8 +150,8 @@ export const bookingService = {
    */
   getNgaySomNhat: async (idChuyenKhoa: number) => {
     const response = await axiosClient.get<ApiResponse<NgaySomNhatResponse[]>>(
-      '/api/booking/khung-gio/ngay-som-nhat',
-      { params: { idChuyenKhoa } }
+      "/api/booking/khung-gio/ngay-som-nhat",
+      { params: { idChuyenKhoa } },
     );
     return response.data;
   },
@@ -144,8 +162,8 @@ export const bookingService = {
    */
   getKhungGioGop: async (params: { idChuyenKhoa: number; ngay: string }) => {
     const response = await axiosClient.get<ApiResponse<KhungGioGopResponse[]>>(
-      '/api/booking/khung-gio/gop',
-      { params }
+      "/api/booking/khung-gio/gop",
+      { params },
     );
     return response.data;
   },
@@ -160,8 +178,8 @@ export const bookingService = {
    */
   datLich: async (data: DatLichRequest) => {
     const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
-      '/api/booking/lich-hen',
-      data
+      "/api/booking/lich-hen",
+      data,
     );
     return response.data;
   },
@@ -172,7 +190,15 @@ export const bookingService = {
    */
   traCuuPhieuKham: async (maPhieuKham: string) => {
     const response = await axiosClient.get<ApiResponse<PhieuKhamResponse>>(
-      `/api/booking/phieu-kham/${maPhieuKham}`
+      `/api/booking/phieu-kham/${maPhieuKham}`,
+    );
+    return response.data;
+  },
+
+  getQrPhieuKham: async (maPhieuKham: string, taiVe = false) => {
+    const response = await axiosClient.get<Blob>(
+      `/api/booking/phieu-kham/${maPhieuKham}/qr`,
+      { params: taiVe ? { taiVe: true } : undefined, responseType: "blob" },
     );
     return response.data;
   },
@@ -184,7 +210,7 @@ export const bookingService = {
   huyPhieuKhamKhach: async (maPhieuKham: string, data: HuyLichRequest) => {
     const response = await axiosClient.post<ApiResponse<PhieuKhamResponse>>(
       `/api/booking/phieu-kham/${maPhieuKham}/huy`,
-      data
+      data,
     );
     return response.data;
   },
@@ -196,7 +222,7 @@ export const bookingService = {
   doiPhieuKhamKhach: async (maPhieuKham: string, data: DoiLichRequest) => {
     const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
       `/api/booking/phieu-kham/${maPhieuKham}/doi-lich`,
-      data
+      data,
     );
     return response.data;
   },
@@ -210,10 +236,9 @@ export const bookingService = {
    * GET /api/booking/lich-hen/cua-toi
    */
   getDanhSachLichHen: async (params?: GetLichHenParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<LichHenCuaToiResponse>>>(
-      '/api/booking/lich-hen/cua-toi',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<LichHenCuaToiResponse>>
+    >("/api/booking/lich-hen/cua-toi", { params });
     return response.data;
   },
 
@@ -222,9 +247,9 @@ export const bookingService = {
    * GET /api/booking/lich-hen/cua-toi/{maPhieuKham}
    */
   getChiTietLichHen: async (maPhieuKham: string) => {
-    const response = await axiosClient.get<ApiResponse<LichHenChiTietCuaToiResponse>>(
-      `/api/booking/lich-hen/cua-toi/${maPhieuKham}`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<LichHenChiTietCuaToiResponse>
+    >(`/api/booking/lich-hen/cua-toi/${maPhieuKham}`);
     return response.data;
   },
 
@@ -235,7 +260,7 @@ export const bookingService = {
   huyLichHen: async (maPhieuKham: string, data?: HuyLichRequest) => {
     const response = await axiosClient.post<ApiResponse<PhieuKhamResponse>>(
       `/api/booking/lich-hen/cua-toi/${maPhieuKham}/huy`,
-      data
+      data,
     );
     return response.data;
   },
@@ -247,7 +272,7 @@ export const bookingService = {
   doiLichHen: async (maPhieuKham: string, data: DoiLichRequest) => {
     const response = await axiosClient.post<ApiResponse<DatLichResponse>>(
       `/api/booking/lich-hen/cua-toi/${maPhieuKham}/doi-lich`,
-      data
+      data,
     );
     return response.data;
   },
@@ -260,33 +285,22 @@ export const bookingService = {
    * Đánh giá bác sĩ sau khi khám xong
    * POST /api/booking/danh-gia
    */
-  taoDanhGia: async (data: DanhGiaRequest & { maPhieuKham: string }) => {
+  taoDanhGia: async (maPhieuKham: string, data: DanhGiaRequest) => {
     const response = await axiosClient.post<ApiResponse<DanhGiaCuaToiResponse>>(
-      '/api/booking/danh-gia',
-      data
+      `/api/booking/lich-hen/cua-toi/${maPhieuKham}/danh-gia`,
+      data,
     );
     return response.data;
   },
 
   /**
    * Chỉnh sửa đánh giá (trong vòng 7 ngày)
-   * PUT /api/booking/danh-gia/{maPhieuKham}
+   * PUT /api/booking/lich-hen/cua-toi/{maPhieuKham}/danh-gia
    */
   suaDanhGia: async (maPhieuKham: string, data: DanhGiaRequest) => {
     const response = await axiosClient.put<ApiResponse<DanhGiaCuaToiResponse>>(
-      `/api/booking/danh-gia/${maPhieuKham}`,
-      data
-    );
-    return response.data;
-  },
-
-  /**
-   * Xoá đánh giá
-   * DELETE /api/booking/danh-gia/{maPhieuKham}
-   */
-  xoaDanhGia: async (maPhieuKham: string) => {
-    const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/booking/danh-gia/${maPhieuKham}`
+      `/api/booking/lich-hen/cua-toi/${maPhieuKham}/danh-gia`,
+      data,
     );
     return response.data;
   },
@@ -297,23 +311,26 @@ export const bookingService = {
 
   /**
    * Lịch sử các lần khám bệnh đã có kết quả
-   * GET /api/booking/lich-su-kham
+   * GET /api/booking/lich-su-kham/cua-toi
    */
-  getLichSuKham: async (params?: { tuKhoa?: string; trang?: number; kichThuoc?: number }) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<LanKhamCuaToiResponse>>>(
-      '/api/booking/lich-su-kham',
-      { params }
-    );
+  getLichSuKham: async (params?: {
+    tuKhoa?: string;
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<LanKhamCuaToiResponse>>
+    >("/api/booking/lich-su-kham/cua-toi", { params });
     return response.data;
   },
 
   /**
    * Dữ liệu trang cá nhân bệnh nhân (lịch sắp tới, lần khám gần đây, số lượng)
-   * GET /api/booking/trang-ca-nhan
+   * GET /api/booking/trang-ca-nhan/cua-toi
    */
   getTrangCaNhan: async () => {
     const response = await axiosClient.get<ApiResponse<TrangCaNhanResponse>>(
-      '/api/booking/trang-ca-nhan'
+      "/api/booking/trang-ca-nhan/cua-toi",
     );
     return response.data;
   },
@@ -324,12 +341,129 @@ export const bookingService = {
 
   /**
    * Lịch làm việc trong tuần của bác sĩ
-   * GET /api/booking/bac-si/lich/tuan
+   * GET /api/booking/bac-si/toi/lich-lam-viec
    */
   getLichTuanBacSi: async (params: { tuNgay: string; denNgay: string }) => {
     const response = await axiosClient.get<ApiResponse<CaLamViecResponse[]>>(
-      '/api/booking/bac-si/lich/tuan',
-      { params }
+      "/api/booking/bac-si/toi/lich-lam-viec",
+      { params },
+    );
+    return response.data;
+  },
+
+  getLichHenBacSiTheoNgay: async (params: {
+    ngay: string;
+    idLichLamViec?: number;
+    soThuTu?: number;
+    tuKhoa?: string;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<LichHenCuaToiResponse>>
+    >("/api/booking/bac-si/toi/lich-hen", { params });
+    return response.data;
+  },
+
+  getLichHenLichBacSi: async (params: { tuNgay: string; denNgay: string }) => {
+    const response = await axiosClient.get<
+      ApiResponse<LichHenCuaToiResponse[]>
+    >("/api/booking/bac-si/toi/lich-hen/lich", { params });
+    return response.data;
+  },
+
+  getHoSoKhamBacSi: async (idLichHen: number) => {
+    const response = await axiosClient.get<ApiResponse<unknown>>(
+      `/api/booking/bac-si/toi/lich-hen/${idLichHen}/ho-so-kham`
+    );
+    return response.data;
+  },
+
+  traCuuHoSoKhamBacSi: async (ma: string) => {
+    const response = await axiosClient.get<ApiResponse<unknown>>(
+      '/api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham',
+      { params: { ma } }
+    );
+    return response.data;
+  },
+
+  capNhatBenhNhanKhamBacSi: async (idLichHen: number, data: SuaHoSoBenhNhanRequest) => {
+    const response = await axiosClient.put<ApiResponse<unknown>>(
+      `/api/booking/bac-si/toi/lich-hen/${idLichHen}/benh-nhan`,
+      data
+    );
+    return response.data;
+  },
+
+  danhDauDaDoiChieuBacSi: async (idLichHen: number) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/bac-si/toi/lich-hen/${idLichHen}/da-doi-chieu`
+    );
+    return response.data;
+  },
+
+  ghiBenhAnBacSi: async (idLichHen: number, data: GhiKetQuaKhamRequest, update = false) => {
+    const response = update
+      ? await axiosClient.put<ApiResponse<KetQuaKhamResponse>>(
+          `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`,
+          data
+        )
+      : await axiosClient.post<ApiResponse<KetQuaKhamResponse>>(
+          `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`,
+          data
+        );
+    return response.data;
+  },
+
+  getBenhAnBacSi: async (idLichHen: number) => {
+    const response = await axiosClient.get<ApiResponse<KetQuaKhamResponse>>(
+      `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`
+    );
+    return response.data;
+  },
+
+  getThuocGoiY: async (tuKhoa: string) => {
+    const response = await axiosClient.get<ApiResponse<Array<{ id: number; tenThuoc: string; donVi: string | null; daXacMinh: boolean }>>>(
+      '/api/medical/bac-si/toi/thuoc',
+      { params: { tuKhoa } }
+    );
+    return response.data;
+  },
+
+  getDanhSachYeuCauBacSi: async (params?: {
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<LichHenCuaToiResponse>>
+    >("/api/booking/bac-si/toi/lich-hen/yeu-cau", { params });
+    return response.data;
+  },
+
+  rutYeuCauDoiLichBacSi: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/bac-si/toi/yeu-cau-doi-lich/${id}/rut`
+    );
+    return response.data;
+  },
+
+  xacNhanLichHenBacSi: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<LichHenCuaToiResponse>>(
+      `/api/booking/bac-si/toi/lich-hen/${id}/xac-nhan`,
+    );
+    return response.data;
+  },
+
+  tuChoiLichHenBacSi: async (id: number, data: { lyDo: string }) => {
+    const response = await axiosClient.post<ApiResponse<LichHenCuaToiResponse>>(
+      `/api/booking/bac-si/toi/lich-hen/${id}/tu-choi`,
+      data,
+    );
+    return response.data;
+  },
+
+  traCuuLichHenBacSi: async (ma: string) => {
+    const response = await axiosClient.get<ApiResponse<unknown>>(
+      "/api/booking/bac-si/toi/lich-hen/tra-cuu",
+      { params: { ma } },
     );
     return response.data;
   },
@@ -339,67 +473,72 @@ export const bookingService = {
    * GET /api/booking/bac-si/lich/ca/{id}
    */
   getChiTietCaLamViec: async (id: number) => {
-    const response = await axiosClient.get<ApiResponse<ChiTietCaLamViecResponse>>(
-      `/api/booking/bac-si/lich/ca/${id}`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<ChiTietCaLamViecResponse>
+    >(`/api/booking/bac-si/lich/ca/${id}`);
     return response.data;
   },
 
   /**
    * Ghi kết quả khám bệnh và kê đơn thuốc cho lịch hẹn
-   * POST /api/booking/bac-si/lich/ca/{id}/ket-qua
+   * POST /api/medical/bac-si/toi/lich-hen/{id}/benh-an
    */
   ghiKetQuaKham: async (idLichHen: number, data: GhiKetQuaKhamRequest) => {
     const response = await axiosClient.post<ApiResponse<KetQuaKhamResponse>>(
-      `/api/booking/bac-si/lich/ca/${idLichHen}/ket-qua`,
-      data
+      `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`,
+      data,
     );
     return response.data;
   },
 
   /**
    * Danh sách đánh giá bác sĩ nhận được từ bệnh nhân
-   * GET /api/booking/bac-si/danh-gia
+   * GET /api/booking/bac-si/toi/danh-gia
    */
-  getDanhSachDanhGiaBacSi: async (params?: { trang?: number; kichThuoc?: number }) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<DanhGiaCuaBacSiResponse>>>(
-      '/api/booking/bac-si/danh-gia',
-      { params }
-    );
+  getDanhSachDanhGiaBacSi: async (params?: {
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<DanhGiaCuaBacSiResponse>>
+    >("/api/booking/bac-si/toi/danh-gia", { params });
     return response.data;
   },
 
   /**
    * Danh sách yêu cầu đổi ca làm việc của bác sĩ
-   * GET /api/booking/bac-si/yeu-cau-doi-lich
+   * GET /api/booking/bac-si/toi/yeu-cau-doi-lich
    */
-  getYeuCauDoiLichBacSi: async (params?: { trangThai?: TrangThaiYeuCau; trang?: number; kichThuoc?: number }) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<YeuCauDoiLichResponse>>>(
-      '/api/booking/bac-si/yeu-cau-doi-lich',
-      { params }
-    );
+  getYeuCauDoiLichBacSi: async (params?: {
+    trangThai?: TrangThaiYeuCau;
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<YeuCauDoiLichResponse>>
+    >("/api/booking/bac-si/toi/yeu-cau-doi-lich", { params });
     return response.data;
   },
 
   /**
    * Bác sĩ gửi yêu cầu đổi phòng / đổi ca
-   * POST /api/booking/bac-si/yeu-cau-doi-lich
+   * POST /api/booking/bac-si/toi/yeu-cau-doi-lich
    */
   guiYeuCauDoiLich: async (data: GuiYeuCauDoiLichRequest) => {
     const response = await axiosClient.post<ApiResponse<YeuCauDoiLichResponse>>(
-      '/api/booking/bac-si/yeu-cau-doi-lich',
-      data
+      "/api/booking/bac-si/toi/yeu-cau-doi-lich",
+      data,
     );
     return response.data;
   },
 
   /**
    * Thống kê tổng quan công việc của bác sĩ
-   * GET /api/booking/bac-si/tong-quan
+   * GET /api/booking/bac-si/toi/tong-quan
    */
   getTongQuanBacSi: async () => {
     const response = await axiosClient.get<ApiResponse<TongQuanBacSiResponse>>(
-      '/api/booking/bac-si/tong-quan'
+      "/api/booking/bac-si/toi/tong-quan",
     );
     return response.data;
   },
@@ -413,10 +552,9 @@ export const bookingService = {
    * GET /api/booking/quan-tri/lich-hen
    */
   getLichHenQuanTri: async (params?: GetLichHenQuanTriParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<LichHenCuaToiResponse>>>(
-      '/api/booking/quan-tri/lich-hen',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<LichHenCuaToiResponse>>
+    >("/api/booking/quan-tri/lich-hen", { params });
     return response.data;
   },
 
@@ -424,10 +562,16 @@ export const bookingService = {
    * Danh sách ca làm việc xếp cho các bác sĩ
    * GET /api/booking/quan-tri/lich-lam-viec
    */
-  getLichLamViecQuanTri: async (params: { tuNgay: string; denNgay: string; idChuyenKhoa?: number; idBacSi?: number }) => {
+  getLichLamViecQuanTri: async (params: {
+    tuNgay: string;
+    denNgay: string;
+    idChuyenKhoa?: number;
+    idBacSi?: number;
+    idPhongKham?: number;
+  }) => {
     const response = await axiosClient.get<ApiResponse<CaLamViecResponse[]>>(
-      '/api/booking/quan-tri/lich-lam-viec',
-      { params }
+      "/api/booking/quan-tri/lich-lam-viec",
+      { params },
     );
     return response.data;
   },
@@ -438,8 +582,8 @@ export const bookingService = {
    */
   taoCaLamViec: async (data: TaoCaRequest) => {
     const response = await axiosClient.post<ApiResponse<CaLamViecResponse>>(
-      '/api/booking/quan-tri/lich-lam-viec',
-      data
+      "/api/booking/quan-tri/lich-lam-viec",
+      data,
     );
     return response.data;
   },
@@ -451,19 +595,35 @@ export const bookingService = {
   suaCaLamViec: async (id: number, data: SuaCaRequest) => {
     const response = await axiosClient.put<ApiResponse<CaLamViecResponse>>(
       `/api/booking/quan-tri/lich-lam-viec/${id}`,
-      data
+      data,
     );
     return response.data;
   },
 
   /**
    * Hủy ca làm việc
-   * DELETE /api/booking/quan-tri/lich-lam-viec/{id}
+  * POST /api/booking/quan-tri/lich-lam-viec/{id}/huy
    */
   huyCaLamViec: async (id: number, data: HuyCaRequest) => {
-    const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/booking/quan-tri/lich-lam-viec/${id}`,
-      { data }
+    const response = await axiosClient.post<ApiResponse<unknown>>(
+      `/api/booking/quan-tri/lich-lam-viec/${id}/huy`,
+      data,
+    );
+    return response.data;
+  },
+
+  getLichHenCanDoiLich: async (params?: { trang?: number; kichThuoc?: number }) => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<LichHenCuaToiResponse>>>(
+      '/api/booking/quan-tri/lich-lam-viec/can-doi-lich',
+      { params }
+    );
+    return response.data;
+  },
+
+  getLichHenTrongHoSoQuanTri: async (id: number, params?: { trang?: number; kichThuoc?: number }) => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<LichHenCuaToiResponse>>>(
+      `/api/booking/quan-tri/ho-so-benh-nhan/${id}/lich-hen`,
+      { params }
     );
     return response.data;
   },
@@ -472,22 +632,26 @@ export const bookingService = {
    * Danh sách yêu cầu đổi lịch cần xử lý
    * GET /api/booking/quan-tri/yeu-cau-doi-lich
    */
-  getYeuCauDoiLichQuanTri: async (params?: { trangThai?: TrangThaiYeuCau; trang?: number; kichThuoc?: number }) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<YeuCauDoiLichResponse>>>(
-      '/api/booking/quan-tri/yeu-cau-doi-lich',
-      { params }
-    );
+  getYeuCauDoiLichQuanTri: async (params?: {
+    trangThai?: TrangThaiYeuCau;
+    tatCa?: boolean;
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<YeuCauDoiLichResponse>>
+    >("/api/booking/quan-tri/yeu-cau-doi-lich", { params });
     return response.data;
   },
 
   /**
    * Phê duyệt hoặc từ chối yêu cầu đổi lịch
-   * PUT /api/booking/quan-tri/yeu-cau-doi-lich/{id}/duyet
+   * POST /api/booking/quan-tri/yeu-cau-doi-lich/{id}/duyet|tu-choi
    */
-  xuLyYeuCauDoiLich: async (id: number, data: XuLyYeuCauRequest) => {
-    const response = await axiosClient.put<ApiResponse<YeuCauDoiLichResponse>>(
-      `/api/booking/quan-tri/yeu-cau-doi-lich/${id}/duyet`,
-      data
+  xuLyYeuCauDoiLich: async (id: number, data: XuLyYeuCauRequest, approve = true) => {
+    const response = await axiosClient.post<ApiResponse<YeuCauDoiLichResponse>>(
+      `/api/booking/quan-tri/yeu-cau-doi-lich/${id}/${approve ? 'duyet' : 'tu-choi'}`,
+      data,
     );
     return response.data;
   },
@@ -496,9 +660,21 @@ export const bookingService = {
    * Danh sách hồ sơ bệnh nhân (quản trị viên)
    * GET /api/booking/quan-tri/ho-so-benh-nhan
    */
-  getHoSoBenhNhanQuanTri: async (params?: { tuKhoa?: string; trang?: number; kichThuoc?: number }) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<HoSoBenhNhanQuanTriResponse>>>(
-      '/api/booking/quan-tri/ho-so-benh-nhan',
+  getHoSoBenhNhanQuanTri: async (params?: {
+    tuKhoa?: string;
+    trangThaiLienKet?: string;
+    trang?: number;
+    kichThuoc?: number;
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<HoSoBenhNhanQuanTriResponse>>
+    >("/api/booking/quan-tri/ho-so-benh-nhan", { params });
+    return response.data;
+  },
+
+  getHoSoChoXacMinhQuanTri: async (params?: { trang?: number; kichThuoc?: number }) => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<unknown>>>(
+      '/api/booking/quan-tri/ho-so-benh-nhan/cho-xac-minh',
       { params }
     );
     return response.data;
@@ -509,9 +685,9 @@ export const bookingService = {
    * GET /api/booking/quan-tri/ho-so-benh-nhan/{id}
    */
   getChiTietHoSoBenhNhanQuanTri: async (id: number) => {
-    const response = await axiosClient.get<ApiResponse<ChiTietHoSoBenhNhanResponse>>(
-      `/api/booking/quan-tri/ho-so-benh-nhan/${id}`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<ChiTietHoSoBenhNhanResponse>
+    >(`/api/booking/quan-tri/ho-so-benh-nhan/${id}`);
     return response.data;
   },
 
@@ -520,32 +696,31 @@ export const bookingService = {
    * PUT /api/booking/quan-tri/ho-so-benh-nhan/{id}
    */
   suaHoSoBenhNhanQuanTri: async (id: number, data: SuaHoSoBenhNhanRequest) => {
-    const response = await axiosClient.put<ApiResponse<ChiTietHoSoBenhNhanResponse>>(
-      `/api/booking/quan-tri/ho-so-benh-nhan/${id}`,
-      data
-    );
+    const response = await axiosClient.put<
+      ApiResponse<ChiTietHoSoBenhNhanResponse>
+    >(`/api/booking/quan-tri/ho-so-benh-nhan/${id}`, data);
     return response.data;
   },
 
   /**
    * Xác nhận liên kết hồ sơ bệnh nhân
-   * POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/lien-ket
+  * POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/duyet
    */
   xacMinhLienKetHoSo: async (id: number) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      `/api/booking/quan-tri/ho-so-benh-nhan/${id}/lien-ket`
+      `/api/booking/quan-tri/ho-so-benh-nhan/${id}/duyet`,
     );
     return response.data;
   },
 
   /**
    * Từ chối liên kết hồ sơ bệnh nhân
-   * POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/tu-choi-lien-ket
+  * POST /api/booking/quan-tri/ho-so-benh-nhan/{id}/tu-choi
    */
   tuChoiLienKetHoSo: async (id: number, data: TuChoiLienKetRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      `/api/booking/quan-tri/ho-so-benh-nhan/${id}/tu-choi-lien-ket`,
-      data
+      `/api/booking/quan-tri/ho-so-benh-nhan/${id}/tu-choi`,
+      data,
     );
     return response.data;
   },
@@ -555,10 +730,9 @@ export const bookingService = {
    * GET /api/booking/quan-tri/danh-gia
    */
   getDanhGiaQuanTri: async (params?: GetDanhGiaQuanTriParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<DanhGiaQuanTriResponse>>>(
-      '/api/booking/quan-tri/danh-gia',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<DanhGiaQuanTriResponse>>
+    >("/api/booking/quan-tri/danh-gia", { params });
     return response.data;
   },
 
@@ -569,7 +743,7 @@ export const bookingService = {
   anHienDanhGia: async (id: number, an: boolean) => {
     const response = await axiosClient.put<ApiResponse<void>>(
       `/api/booking/quan-tri/danh-gia/${id}/an`,
-      { an }
+      { an },
     );
     return response.data;
   },
@@ -579,9 +753,9 @@ export const bookingService = {
    * GET /api/booking/quan-tri/tong-quan
    */
   getTongQuanQuanTri: async () => {
-    const response = await axiosClient.get<ApiResponse<TongQuanQuanTriResponse>>(
-      '/api/booking/quan-tri/tong-quan'
-    );
+    const response = await axiosClient.get<
+      ApiResponse<TongQuanQuanTriResponse>
+    >("/api/booking/quan-tri/tong-quan");
     return response.data;
   },
 };

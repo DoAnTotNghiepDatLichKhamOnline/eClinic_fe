@@ -1,10 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity,
   CalendarDays,
   CircleCheck,
-  FolderOpen,
   House,
   Lock,
   Pencil,
@@ -32,6 +31,9 @@ import type {
   TaiKhoanQuanTriResponse,
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
+import { bookingService } from "@/services/bookingService";
+import { catalogService } from "@/services/catalogService";
+import { AdminOperationsPanel } from "./AdminOperationsPanel";
 
 const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   dashboard: { en: "Dashboard", vi: "Bảng điều khiển" },
@@ -39,6 +41,7 @@ const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   catalog: { en: "Medical Catalog", vi: "Danh mục y tế" },
   doctors: { en: "Doctor Management", vi: "Quản lý bác sĩ" },
   patients: { en: "Patient Management", vi: "Quản lý người dùng & bệnh nhân" },
+  accounts: { en: "Account Management", vi: "Quản lý tài khoản" },
 };
 
 const sectionPaths: Record<AdminSection, string> = {
@@ -47,6 +50,7 @@ const sectionPaths: Record<AdminSection, string> = {
   catalog: "medical-catalog",
   doctors: "doctors",
   patients: "patients",
+  accounts: "accounts",
 };
 
 export function AdminDashboardPage({
@@ -81,38 +85,18 @@ export function AdminDashboardPage({
   });
 
   const { capNhatTrangThaiTaiKhoan } = useIdentityActions();
-
-  // Mock doctors cho phần Doctor Directory
-  const doctors = [
-    {
-      id: "DOC-01",
-      name: "BS. Mattias Larsson",
-      specialty: "Tim mạch",
-      status: "Hoạt động",
-      totalBookings: 142,
-    },
-    {
-      id: "DOC-02",
-      name: "BS. Rafi Kot",
-      specialty: "Nhi khoa",
-      status: "Hoạt động",
-      totalBookings: 98,
-    },
-    {
-      id: "DOC-03",
-      name: "BS. Nguyễn Văn A",
-      specialty: "Nội khoa",
-      status: "Hoạt động",
-      totalBookings: 215,
-    },
-    {
-      id: "DOC-04",
-      name: "BS. Trần Thị Bình",
-      specialty: "Sản phụ khoa",
-      status: "Hoạt động",
-      totalBookings: 87,
-    },
-  ];
+  const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ["booking", "admin-summary"],
+    queryFn: () => bookingService.getTongQuanQuanTri(),
+    enabled: activeSection === "dashboard",
+  });
+  const { data: doctorsResponse, isLoading: isLoadingDoctors } = useQuery({
+    queryKey: ["catalog", "admin-doctors"],
+    queryFn: () => catalogService.getDanhSachBacSiQuanTri({ trang: 0, kichThuoc: 100 }),
+    enabled: activeSection === "doctors",
+  });
+  const summary = summaryResponse?.duLieu;
+  const doctors = doctorsResponse?.duLieu?.noiDung ?? [];
 
   const navigateToSection = (section: AdminSection) =>
     navigate(`/admin/${sectionPaths[section]}`);
@@ -257,7 +241,7 @@ export function AdminDashboardPage({
                   <Stethoscope aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>24</span>
+                  <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.bacSiDangCongTac ?? 0}</span>
                   <span className={styles.statLabel}>
                     {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
                   </span>
@@ -269,7 +253,7 @@ export function AdminDashboardPage({
                 </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
-                    {tongSoPhanTu > 0 ? tongSoPhanTu.toLocaleString() : "..."}
+                    {isLoadingSummary ? "..." : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
                   </span>
                   <span className={styles.statLabel}>
                     {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
@@ -281,27 +265,16 @@ export function AdminDashboardPage({
                   <CalendarDays aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>312</span>
+                  <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.luotDatTrongThang ?? 0}</span>
                   <span className={styles.statLabel}>
                     {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
-                  </span>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Activity aria-hidden="true" />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>99.8%</span>
-                  <span className={styles.statLabel}>
-                    {vi ? "Uptime hệ thống" : "System Uptime"}
                   </span>
                 </div>
               </div>
             </div>
           )}
 
-          {activeSection === "patients" && (
+          {activeSection === "accounts" && (
             <div className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
@@ -533,22 +506,21 @@ export function AdminDashboardPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {doctors.map((doc) => (
+                    {isLoadingDoctors ? <tr><td colSpan={6}>{vi ? "Đang tải danh sách bác sĩ..." : "Loading doctors..."}</td></tr> : doctors.map((doc) => (
                       <tr key={doc.id}>
                         <td>
-                          <strong>{doc.id}</strong>
+                          <strong>{doc.maBacSi}</strong>
                         </td>
                         <td>
-                          <strong>{doc.name}</strong>
+                          <strong>{doc.hoTen}</strong>
                         </td>
-                        <td>{doc.specialty}</td>
-                        <td>{doc.totalBookings} ca</td>
+                        <td>{doc.tenChuyenKhoa}</td>
+                        <td>{doc.soLuotDaKham} ca</td>
                         <td>
                           <span
-                            className={`${styles.badge} ${styles.badgeActive}`}
+                            className={`${styles.badge} ${doc.trangThai === "DANG_CONG_TAC" ? styles.badgeActive : styles.badgeMuted}`}
                           >
-                            <CircleCheck aria-hidden="true" size={14} />{" "}
-                            {doc.status}
+                            <CircleCheck aria-hidden="true" size={14} /> {doc.trangThai === "DANG_CONG_TAC" ? (vi ? "Đang công tác" : "Active") : (vi ? "Ngừng công tác" : "Inactive")}
                           </span>
                         </td>
                         <td>
@@ -565,21 +537,9 @@ export function AdminDashboardPage({
             </div>
           )}
 
-          {activeSection !== "dashboard" &&
-            activeSection !== "doctors" &&
-            activeSection !== "patients" && (
-              <section className={styles.sectionCard}>
-                <div className={styles.emptyState}>
-                  <FolderOpen aria-hidden="true" size={32} />
-                  <h2>{vi ? "Chưa có dữ liệu" : "No data yet"}</h2>
-                  <p>
-                    {vi
-                      ? "Nội dung sẽ xuất hiện tại đây khi được cấu hình."
-                      : "Content will appear here once it has been configured."}
-                  </p>
-                </div>
-              </section>
-            )}
+          {activeSection !== "dashboard" && activeSection !== "doctors" && activeSection !== "accounts" && (
+            <AdminOperationsPanel activeSection={activeSection} />
+          )}
         </div>
       </main>
     </div>

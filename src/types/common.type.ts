@@ -24,9 +24,9 @@ export type GioiTinh = 'NAM' | 'NU' | 'KHAC';
 export type TrangThaiBacSi = 'DANG_CONG_TAC' | 'NGUNG_CONG_TAC';
 export type TrangThaiPhongKham = 'HOAT_DONG' | 'NGUNG_HOAT_DONG';
 export type TrangThaiLichHen = 'CHO_XAC_NHAN' | 'DA_XAC_NHAN' | 'BI_TU_CHOI' | 'DA_HOAN_THANH' | 'DA_HUY' | 'DA_HUY_DO_DOI_LICH';
-export type TrangThaiLichLamViec = 'DANG_HOAT_DONG' | 'DA_HUY';
-export type TrangThaiYeuCau = 'CHO_DUYET' | 'DA_DUYET' | 'BI_TU_CHOI';
-export type LoaiYeuCauDoiLich = 'BAC_SI_YEU_CAU' | 'BENH_VIEN_YEU_CAU';
+export type TrangThaiLichLamViec = 'HOAT_DONG' | 'DANG_HOAT_DONG' | 'DA_HUY';
+export type TrangThaiYeuCau = 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI' | 'DA_RUT' | 'BI_TU_CHOI';
+export type LoaiYeuCauDoiLich = 'XIN_NGHI' | 'DOI_CA' | 'BAC_SI_YEU_CAU' | 'BENH_VIEN_YEU_CAU';
 export type LocLichHen = 'TAT_CA' | 'SAP_TOI' | 'LICH_SU';
 export type PhamViLichHen = 'TAT_CA' | 'BAN_THAN' | 'NGUOI_KHAC';
 export type NguoiDatLich = 'TOI' | 'KHACH' | 'TAI_KHOAN_KHAC';
@@ -35,4 +35,4 @@ export type LoaiAnhBacSi = 'ANH_CONG_VIEC' | 'CHUNG_CHI';
 export type LoaiThongBao = 
   | 'LICH_HEN_DA_XAC_NHAN' | 'LICH_HEN_BI_TU_CHOI' | 'LICH_HEN_CAN_DOI' | 'LICH_HEN_DOI_PHONG'
   | 'LICH_HEN_MOI' | 'LICH_HEN_DA_DOI' | 'LICH_HEN_DA_HUY' | 'KET_QUA_DUYET_DOI_LICH'
-  | 'CA_LAM_VIEC_THAY_DOI' | 'YEU_CAU_DOI_LICH_MOI' | 'NHAC_LICH_KHAM' | 'HE_THONG';
+  | 'CA_LAM_VIEC_THAY_DOI' | 'YEU_CAU_DOI_LICH_MOI' | 'NHAC_LICH_KHAM' | 'NHAC_TAI_KHAM' | 'HE_THONG';

@@ -31,6 +31,9 @@ export function AppointmentBookingPage() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const queryShiftId = queryParams.get("idLichLamViec");
+  const querySlot = queryParams.get("gioBatDauKhung") || "";
 
   // Mặc định chọn ngày mai hoặc hôm nay
   const defaultDates = getUpcomingBookingDays(2);
@@ -48,18 +51,19 @@ export function AppointmentBookingPage() {
     | undefined;
 
   const [formValues, setFormValues] = useState<AppointmentFormValues>({
-    specialtyId: routerState?.specialtyId ? String(routerState.specialtyId) : "",
-    doctorId: routerState?.doctorId ? String(routerState.doctorId) : "",
-    date: routerState?.date || defaultDate,
-    slotId: "",
-    slotTime: "",
-    gioBatDauKhung: "",
-    idLichLamViec: undefined,
+    specialtyId: routerState?.specialtyId ? String(routerState.specialtyId) : queryParams.get("idChuyenKhoa") || "",
+    doctorId: routerState?.doctorId ? String(routerState.doctorId) : queryParams.get("idBacSi") || "",
+    date: routerState?.date || queryParams.get("ngay") || defaultDate,
+    slotId: querySlot ? (queryShiftId ? `${queryShiftId}-${querySlot}` : `gop-${querySlot}`) : "",
+    slotTime: querySlot,
+    gioBatDauKhung: querySlot,
+    idLichLamViec: queryShiftId ? Number(queryShiftId) : undefined,
     patientName: "",
     patientDob: "",
     patientGender: "NAM",
     patientPhone: "",
     patientCccd: "",
+    patientEmail: user?.email || "",
     reason: "",
     childDob: "",
     childGender: "",
@@ -365,7 +369,7 @@ export function AppointmentBookingPage() {
             formValues.patientPhone.trim() ||
             (formValues.guardianPhone?.trim() ?? ""),
           cccd: formValues.patientCccd?.trim() || undefined,
-          email: user?.email || undefined,
+          email: formValues.patientEmail?.trim() || user?.email || undefined,
         },
         nguoiGiamHo: isMinor
           ? {

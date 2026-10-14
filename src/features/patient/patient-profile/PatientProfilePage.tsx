@@ -36,6 +36,7 @@ export function PatientProfilePage() {
 
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const [form, setForm] = useState<HoSoCuaToiResponse>(initialForm);
   const [draft, setDraft] = useState<HoSoCuaToiResponse>(initialForm);
@@ -59,6 +60,7 @@ export function PatientProfilePage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError("");
     try {
       const updated = await capNhatHoSo({
         cccd: draft.cccd,
@@ -70,18 +72,13 @@ export function PatientProfilePage() {
         soBaoHiemYTe: draft.soBaoHiemYTe,
         tienSuBenhLy: draft.tienSuBenhLy,
       });
-      if (updated?.duLieu) {
-        setForm(updated.duLieu);
-      } else {
-        setForm({ ...draft });
-      }
+      if (!updated?.thanhCong || !updated.duLieu) throw new Error(updated?.thongDiep || "Profile update failed");
+      setForm(updated.duLieu);
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch {
-      // In case of error, still save locally
-      setForm({ ...draft });
-      setEditing(false);
+    } catch (error) {
+      setSaveError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể lưu hồ sơ." : "Could not save profile.")));
     }
   };
 
@@ -134,6 +131,7 @@ export function PatientProfilePage() {
             {vi ? "Đã lưu hồ sơ bệnh nhân thành công!" : "Patient profile saved successfully!"}
           </div>
         )}
+        {saveError && <div className={`${styles.statusBanner} ${styles.statusBannerError}`} role="alert">{saveError}</div>}
 
         {/* ─── Personal Identity Card ─── */}
         <div className={styles.card}>

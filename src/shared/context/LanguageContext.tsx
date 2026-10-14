@@ -12,12 +12,22 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>(() =>
+    localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en",
+  );
+
+  const toggleLanguage = () => {
+    setLang((previous) => {
+      const next = previous === "en" ? "vi" : "en";
+      localStorage.setItem("eclinic_language", next);
+      return next;
+    });
+  };
 
   const value = useMemo<LanguageContextValue>(
     () => ({
       lang,
-      toggleLanguage: () => setLang((prev) => (prev === "en" ? "vi" : "en")),
+      toggleLanguage,
       t: (copy) => copy[lang],
     }),
     [lang],

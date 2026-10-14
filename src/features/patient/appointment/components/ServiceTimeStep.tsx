@@ -82,6 +82,7 @@ export function ServiceTimeStep({
     hetCho: boolean;
     isMorning: boolean;
     roomName?: string;
+    tongSoCho: number;
   }
 
   const allSlots: UnifiedSlot[] = useMemo(() => {
@@ -99,6 +100,7 @@ export function ServiceTimeStep({
             gioKetThuc: kg.gioKetThuc,
             timeLabel: formatSlotRange(kg.gioBatDau, kg.gioKetThuc),
             soChoConLai: kg.soChoConLai,
+            tongSoCho: kg.tongSoCho,
             hetCho: kg.hetCho || kg.soChoConLai <= 0,
             isMorning: isNaN(hour) ? true : hour < 12,
             roomName: ca.phongKham?.tenPhong,
@@ -119,6 +121,7 @@ export function ServiceTimeStep({
         gioKetThuc: kg.gioKetThuc,
         timeLabel: formatSlotRange(kg.gioBatDau, kg.gioKetThuc),
         soChoConLai: kg.soChoConLai,
+        tongSoCho: kg.tongSoCho,
         hetCho: kg.hetCho || kg.soChoConLai <= 0,
         isMorning: isNaN(hour) ? true : hour < 12,
       };
@@ -591,8 +594,8 @@ export function ServiceTimeStep({
                           }`}
                         >
                           {lang === "vi"
-                            ? `Còn ${slot.soChoConLai} chỗ`
-                            : `${slot.soChoConLai} left`}
+                            ? `Còn ${slot.soChoConLai}/${slot.tongSoCho} chỗ`
+                            : `${slot.soChoConLai}/${slot.tongSoCho} left`}
                         </span>
                       </button>
                     );
@@ -657,8 +660,8 @@ export function ServiceTimeStep({
                           }`}
                         >
                           {lang === "vi"
-                            ? `Còn ${slot.soChoConLai} chỗ`
-                            : `${slot.soChoConLai} left`}
+                            ? `Còn ${slot.soChoConLai}/${slot.tongSoCho} chỗ`
+                            : `${slot.soChoConLai}/${slot.tongSoCho} left`}
                         </span>
                       </button>
                     );

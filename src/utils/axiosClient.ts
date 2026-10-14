@@ -1,6 +1,6 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-// 1. Lưu trữ Access Token trong bộ nhớ (không lưu vào localStorage để bảo mật theo tài liệu)
+// 1. Storage Access Token in memory
 let memoryAccessToken: string | null = null;
 
 export const setAccessToken = (token: string | null) => {
@@ -11,29 +11,35 @@ export const getAccessToken = () => {
   return memoryAccessToken;
 };
 
-// 2. Khởi tạo cấu hình Axios Client
+const getRequestLanguage = () => {
+  if (typeof window === "undefined") return "en";
+  return window.localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en";
+};
+
+// 2. Init Axios Client config
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080', // Trỏ tới API Gateway (cổng 8080)
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080", // Trỏ tới API Gateway (cổng 8080)
   withCredentials: true, // Bắt buộc để trình duyệt tự động đính kèm cookie refresh token (eclinic_rt)
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// 3. Request Interceptor: Tự động gắn Bearer Token vào header trước mỗi request cần đăng nhập
+// 3. Request Interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    config.headers["Accept-Language"] = getRequestLanguage();
     if (memoryAccessToken && config.headers) {
-      config.headers['Authorization'] = `Bearer ${memoryAccessToken}`;
+      config.headers["Authorization"] = `Bearer ${memoryAccessToken}`;
     }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
-// Biến hỗ trợ xử lý hàng đợi khi đang gọi refresh token đồng thời
+// Support auto refresh token
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
@@ -51,17 +57,16 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// 4. Response Interceptor: Xử lý tự động làm mới token khi gặp lỗi 401 (CHUA_DANG_NHAP)
+// 4. Response Interceptor
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    // Kiểm tra nếu response trả về lỗi 401 và request chưa được thử lại lần nào
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
-      // Nếu chính API refresh-token bị lỗi 401 nghĩa là phiên đã thực sự hết hạn -> Đăng xuất
-      if (originalRequest.url?.includes('/api/auth/refresh-token')) {
+      if (originalRequest.url?.includes("/api/auth/refresh-token")) {
         setAccessToken(null);
         return Promise.reject(error);
       }
@@ -72,7 +77,7 @@ axiosClient.interceptors.response.use(
         })
           .then((token) => {
             if (originalRequest.headers) {
-              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              originalRequest.headers["Authorization"] = `Bearer ${token}`;
             }
             return axiosClient(originalRequest);
           })
@@ -85,18 +90,21 @@ axiosClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Gọi API làm mới phiên (Refresh token được tự động gửi kèm qua cookie HttpOnly eclinic_rt)
+        // Call APi to refresh token
         const response = await axios.post(
           `${axiosClient.defaults.baseURL}/api/auth/refresh-token`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: { "Accept-Language": getRequestLanguage() },
+          },
         );
 
         const newToken = response.data.duLieu?.accessToken;
         if (newToken) {
           setAccessToken(newToken);
           if (originalRequest.headers) {
-            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
           }
           processQueue(null, newToken);
           isRefreshing = false;
@@ -111,7 +119,7 @@ axiosClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosClient;

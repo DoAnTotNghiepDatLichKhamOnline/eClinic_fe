@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   CalendarDays,
   Calendar,
@@ -14,12 +14,13 @@ import {
   CheckCircle,
   Clock3,
   Ban,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import type { TrangThaiLichHen } from "@/types/common.type";
-import { useDanhSachLichHen } from "@/hooks/useBooking";
+import { useBookingActions, useChiTietLichHen, useDanhSachLichHen } from "@/hooks/useBooking";
 import styles from "./MyAppointmentsPage.module.css";
 
 type TabStatus = "upcoming" | "done" | "cancelled";
@@ -53,8 +54,69 @@ export function MyAppointmentsPage() {
   const [selectedDate, setSelectedDate] = useState<string>(() => toDateKey(new Date()));
   const [activeTab, setActiveTab] = useState<TabStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [scope, setScope] = useState<"TAT_CA" | "BAN_THAN" | "NGUOI_KHAC">("TAT_CA");
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
+  const [newShiftId, setNewShiftId] = useState("");
+  const [newSpecialtyId, setNewSpecialtyId] = useState("");
+  const [newSlot, setNewSlot] = useState("");
+  const [reviewStars, setReviewStars] = useState(5);
+  const [reviewText, setReviewText] = useState("");
 
-  const { danhSach: appointments } = useDanhSachLichHen({ loc: "TAT_CA" });
+  const { danhSach: appointments } = useDanhSachLichHen({ loc: "TAT_CA", cuaAi: scope });
+  const { chiTiet, isLoading: loadingDetail } = useChiTietLichHen(selectedTicket ?? undefined);
+  const { huyLich, isCancelling, doiLich, isRescheduling, danhGia, isSubmittingReview, suaDanhGia, isUpdatingReview } = useBookingActions();
+
+  useEffect(() => {
+    if (chiTiet?.danhGia) {
+      setReviewStars(chiTiet.danhGia.soSao);
+      setReviewText(chiTiet.danhGia.nhanXet ?? "");
+    } else {
+      setReviewStars(5);
+      setReviewText("");
+    }
+  }, [chiTiet]);
+
+  const handleCancel = async (maPhieuKham: string) => {
+    if (!window.confirm(vi ? "Bạn có chắc muốn hủy lịch hẹn này?" : "Cancel this appointment?")) return;
+    setActionError("");
+    try {
+      await huyLich({ maPhieuKham, data: {} });
+    } catch (error) {
+      setActionError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (vi ? "Không thể hủy lịch hẹn." : "Could not cancel the appointment."));
+    }
+  };
+
+  const handleReschedule = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedTicket || !newSlot) return;
+    setActionError("");
+    try {
+      await doiLich({
+        maPhieuKham: selectedTicket,
+        data: {
+          ...(newShiftId ? { idLichLamViec: Number(newShiftId) } : { idChuyenKhoa: Number(newSpecialtyId) }),
+          gioBatDauKhung: newSlot,
+        },
+      });
+      setSelectedTicket(null);
+    } catch (error) {
+      setActionError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (vi ? "Không thể đổi lịch." : "Could not reschedule."));
+    }
+  };
+
+  const handleReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedTicket) return;
+    setActionError("");
+    const data = { soSao: reviewStars, nhanXet: reviewText.trim() || undefined };
+    try {
+      if (chiTiet?.danhGia) await suaDanhGia({ maPhieuKham: selectedTicket, data });
+      else await danhGia({ maPhieuKham: selectedTicket, data });
+    } catch (error) {
+      setActionError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (vi ? "Không thể lưu đánh giá." : "Could not save the review."));
+    }
+  };
 
   const filtered: LichHenCuaToiResponse[] = appointments.filter((a) => {
     const category = getApptCategory(a.trangThai);
@@ -177,17 +239,20 @@ export function MyAppointmentsPage() {
           </span>
           {category === "upcoming" && (
             <>
-              <button className={`${styles.btnSmall} ${styles.btnSmallOutline}`}>
+              <button type="button" className={`${styles.btnSmall} ${styles.btnSmallOutline}`} onClick={() => setSelectedTicket(appt.maPhieuKham)}>
                 {vi ? "Chi tiết" : "Details"}
               </button>
-              <button className={`${styles.btnSmall} ${styles.btnSmallDanger}`}>
+              {appt.duocHuyDoi && <button type="button" className={`${styles.btnSmall} ${styles.btnSmallOutline}`} onClick={() => setSelectedTicket(appt.maPhieuKham)}>
+                {vi ? "Đổi lịch" : "Reschedule"}
+              </button>}
+              {appt.duocHuyDoi && <button type="button" className={`${styles.btnSmall} ${styles.btnSmallDanger}`} disabled={isCancelling} onClick={() => void handleCancel(appt.maPhieuKham)}>
                 <X size={11} />
                 {vi ? "Hủy lịch" : "Cancel"}
-              </button>
+              </button>}
             </>
           )}
           {category === "done" && (
-            <button className={`${styles.btnSmall} ${styles.btnSmallPrimary}`}>
+            <button type="button" className={`${styles.btnSmall} ${styles.btnSmallPrimary}`} onClick={() => setSelectedTicket(appt.maPhieuKham)}>
               {vi ? "Xem kết quả" : "View result"}
             </button>
           )}
@@ -272,6 +337,16 @@ export function MyAppointmentsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <select
+            aria-label={vi ? "Lọc lịch theo người khám" : "Filter appointments by patient"}
+            className={styles.searchInput}
+            value={scope}
+            onChange={(event) => setScope(event.target.value as typeof scope)}
+          >
+            <option value="TAT_CA">{vi ? "Tất cả lịch" : "All appointments"}</option>
+            <option value="BAN_THAN">{vi ? "Lịch của tôi" : "My appointments"}</option>
+            <option value="NGUOI_KHAC">{vi ? "Lịch người thân" : "Family appointments"}</option>
+          </select>
         </div>
 
         {/* ─── Main Content ─── */}
@@ -473,6 +548,24 @@ export function MyAppointmentsPage() {
           )
         )}
       </div>
+      {actionError && <p role="alert" className="mx-auto max-w-5xl px-5 pb-4 text-sm text-rose-700">{actionError}</p>}
+      {selectedTicket && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedTicket(null); }}>
+          <section role="dialog" aria-modal="true" aria-label={vi ? "Chi tiết lịch hẹn" : "Appointment details"} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+              <div><p className="text-xs font-bold uppercase text-emerald-800">{vi ? "Phiếu khám" : "Appointment ticket"}</p><h2 className="mt-1 text-xl font-bold">{selectedTicket}</h2></div>
+              <button type="button" className="text-sm font-semibold text-slate-600" onClick={() => setSelectedTicket(null)}>{vi ? "Đóng" : "Close"}</button>
+            </div>
+            {loadingDetail ? <p className="py-8 text-sm text-slate-500">{vi ? "Đang tải..." : "Loading..."}</p> : chiTiet && <div className="space-y-6 py-5">
+              <div className="grid gap-3 text-sm sm:grid-cols-2"><p><b>{vi ? "Bác sĩ" : "Doctor"}:</b> {chiTiet.lichHen.bacSi.hoTen}</p><p><b>{vi ? "Bệnh nhân" : "Patient"}:</b> {chiTiet.lichHen.hoTenBenhNhan}</p><p><b>{vi ? "Ngày giờ" : "Date/time"}:</b> {chiTiet.lichHen.ngay} · {chiTiet.lichHen.gioKhamDuKien}</p><p><b>{vi ? "Trạng thái" : "Status"}:</b> {chiTiet.lichHen.trangThai}</p></div>
+              {chiTiet.ketQua && <section className="border-t border-slate-200 pt-4"><h3 className="font-semibold">{vi ? "Kết quả khám" : "Visit result"}</h3><p className="mt-2 text-sm"><b>{vi ? "Chẩn đoán" : "Diagnosis"}:</b> {chiTiet.ketQua.chanDoan}</p>{chiTiet.ketQua.ghiChu && <p className="mt-1 text-sm">{chiTiet.ketQua.ghiChu}</p>}{chiTiet.ketQua.donThuoc.map((medicine, index) => <p className="mt-2 text-sm" key={`${medicine.tenThuoc}-${index}`}>{medicine.tenThuoc} · {medicine.lieuDung} · {medicine.soLanMoiNgay ?? "-"} {vi ? "lần/ngày" : "times/day"}</p>)}</section>}
+              {chiTiet.lichHen.duocHuyDoi && <form className="grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-2" onSubmit={(event) => void handleReschedule(event)}><h3 className="font-semibold sm:col-span-2">{vi ? "Đổi sang khung giờ khác" : "Reschedule"}</h3><label className="grid gap-1 text-xs">{vi ? "Mã ca (hoặc dùng chuyên khoa)" : "Shift ID (or use specialty)"}<input className="border border-slate-300 px-3 py-2 text-sm" value={newShiftId} onChange={(event) => setNewShiftId(event.target.value)} /></label>{!newShiftId && <label className="grid gap-1 text-xs">{vi ? "Mã chuyên khoa" : "Specialty ID"}<input required className="border border-slate-300 px-3 py-2 text-sm" value={newSpecialtyId} onChange={(event) => setNewSpecialtyId(event.target.value)} /></label>}<label className="grid gap-1 text-xs">{vi ? "Khung giờ bắt đầu" : "Slot start"}<input required type="datetime-local" className="border border-slate-300 px-3 py-2 text-sm" value={newSlot} onChange={(event) => setNewSlot(event.target.value)} /></label><button className="self-end bg-emerald-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={isRescheduling}>{isRescheduling ? <Loader2 size={16} className="animate-spin" /> : vi ? "Xác nhận đổi lịch" : "Confirm reschedule"}</button></form>}
+              {chiTiet.duocDanhGia && <form className="grid gap-3 border-t border-slate-200 pt-4" onSubmit={(event) => void handleReview(event)}><h3 className="font-semibold">{chiTiet.danhGia ? (vi ? "Cập nhật đánh giá" : "Update review") : (vi ? "Đánh giá lượt khám" : "Rate this visit")}</h3><label className="grid max-w-xs gap-1 text-xs">{vi ? "Số sao" : "Rating"}<select className="border border-slate-300 px-3 py-2 text-sm" value={reviewStars} onChange={(event) => setReviewStars(Number(event.target.value))}>{[5,4,3,2,1].map((stars) => <option value={stars} key={stars}>{stars} / 5</option>)}</select></label><textarea className="min-h-24 border border-slate-300 px-3 py-2 text-sm" maxLength={1000} placeholder={vi ? "Nhận xét (không bắt buộc)" : "Comment (optional)"} value={reviewText} onChange={(event) => setReviewText(event.target.value)} /><button className="w-fit bg-emerald-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={isSubmittingReview || isUpdatingReview}>{isSubmittingReview || isUpdatingReview ? <Loader2 size={16} className="animate-spin" /> : vi ? "Lưu đánh giá" : "Save review"}</button></form>}
+              {actionError && <p role="alert" className="text-sm text-rose-700">{actionError}</p>}
+            </div>}
+          </section>
+        </div>
+      )}
     </PatientPortal>
   );
 }

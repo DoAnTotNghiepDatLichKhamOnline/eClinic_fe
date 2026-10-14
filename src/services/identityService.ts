@@ -188,6 +188,14 @@ export const identityService = {
     return response.data;
   },
 
+  capNhatNgonNgu: async (ngonNgu: 'VI' | 'EN') => {
+    const response = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>(
+      '/api/users/me/language',
+      { ngonNgu }
+    );
+    return response.data;
+  },
+
   /**
    * Đổi mật khẩu
    * PUT /api/users/me/change-password

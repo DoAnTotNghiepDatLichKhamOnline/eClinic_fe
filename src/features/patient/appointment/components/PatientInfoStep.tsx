@@ -249,6 +249,22 @@ export function PatientInfoStep({
             )}
           </div>
 
+          <div className="space-y-1.5 md:col-span-2">
+            <label htmlFor="patient-email" className="text-xs font-bold text-slate-700">
+              {lang === "vi" ? "Email nhận xác nhận và nhắc lịch (không bắt buộc)" : "Email for confirmation and reminders (optional)"}
+            </label>
+            <input
+              id="patient-email"
+              type="email"
+              maxLength={255}
+              value={formValues.patientEmail || ""}
+              onChange={(event) => onChange("patientEmail", event.target.value)}
+              placeholder="email@example.com"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+            />
+            <p className="text-xs text-slate-500">{lang === "vi" ? "Khách không nhập email sẽ không nhận được email xác nhận hoặc nhắc lịch." : "Guests who leave this blank will not receive booking confirmations or reminders."}</p>
+          </div>
+
           {/* Số CCCD (Bắt buộc nếu >= 18 tuổi, trẻ em bỏ trống) */}
           <div className="space-y-1.5">
             <label

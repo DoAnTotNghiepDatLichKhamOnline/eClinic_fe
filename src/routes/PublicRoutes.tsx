@@ -9,6 +9,8 @@ import { DoctorPage } from "@/features/patient/doctors/DoctorPage";
 import { DoctorDetailPage } from "@/features/patient/doctors/DoctorDetailPage";
 import { SpecialtyDirectoryPage } from "@/features/patient/doctors/SpecialtyDirectoryPage";
 import { RoleSelectionPage } from "@/features/entry/RoleSelectionPage";
+import { AppointmentTicketPage } from "@/features/patient/appointment/AppointmentTicketPage";
+import { EmailTokenPage } from "@/features/auth/EmailTokenPage";
 
 export const PublicRoutes = () => {
   return (
@@ -17,6 +19,7 @@ export const PublicRoutes = () => {
       <Route path="/home" element={<LandingPage />} />
       <Route path="/entry" element={<RoleSelectionPage />} />
       <Route path="/appointment" element={<AppointmentBookingPage />} />
+      <Route path="/phieu-kham/:maPhieuKham" element={<AppointmentTicketPage />} />
       <Route path="/doctors" element={<DoctorPage />} />
       <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
       <Route path="/specialties" element={<SpecialtyDirectoryPage />} />
@@ -25,6 +28,8 @@ export const PublicRoutes = () => {
       <Route path="/register" element={<RegisterPagePatient />} />
       <Route path="/forgot-password" element={<ForgotPasswordPatient />} />
       <Route path="/reset-password" element={<ResetPasswordPatient />} />
+      <Route path="/verify-email" element={<EmailTokenPage kind="verify" />} />
+      <Route path="/confirm-email-change" element={<EmailTokenPage kind="change" />} />
     </Routes>
   );
 };

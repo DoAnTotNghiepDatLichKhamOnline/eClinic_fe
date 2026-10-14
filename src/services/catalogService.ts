@@ -23,6 +23,9 @@ import type {
   GetBacSiQuanTriParams,
   PhongKhamQuanTriResponse,
   GetPhongKhamQuanTriParams,
+  ThuocResponse,
+  ThuocRequest,
+  GetThuocParams,
   LoaiAnhBacSi,
   AnhBacSiResponse,
 } from '@/types/catalog.type';
@@ -51,6 +54,14 @@ export const catalogService = {
   getChiTietChuyenKhoa: async (id: number) => {
     const response = await axiosClient.get<ApiResponse<ChuyenKhoaResponse>>(
       `/api/catalog/chuyen-khoa/${id}`
+    );
+    return response.data;
+  },
+
+  getDanhSachChuyenKhoaQuanTri: async (params?: GetChuyenKhoaParams) => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<ChuyenKhoaResponse>>>(
+      '/api/catalog/quan-tri/chuyen-khoa',
+      { params }
     );
     return response.data;
   },
@@ -242,7 +253,6 @@ export const catalogService = {
       formData,
       {
         params: { loai, ...(chuThich ? { chuThich } : {}) },
-        headers: { 'Content-Type': 'multipart/form-data' },
       }
     );
     return response.data;
@@ -341,6 +351,51 @@ export const catalogService = {
   hoatDongLaiPhongKham: async (id: number) => {
     const response = await axiosClient.post<ApiResponse<PhongKhamQuanTriResponse>>(
       `/api/catalog/quan-tri/phong-kham/${id}/hoat-dong-lai`
+    );
+    return response.data;
+  },
+
+  getDanhSachThuocQuanTri: async (params?: GetThuocParams) => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<ThuocResponse>>>(
+      '/api/medical/quan-tri/thuoc',
+      { params }
+    );
+    return response.data;
+  },
+
+  taoThuoc: async (data: ThuocRequest) => {
+    const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
+      '/api/medical/quan-tri/thuoc',
+      data
+    );
+    return response.data;
+  },
+
+  capNhatThuoc: async (id: number, data: ThuocRequest) => {
+    const response = await axiosClient.put<ApiResponse<ThuocResponse>>(
+      `/api/medical/quan-tri/thuoc/${id}`,
+      data
+    );
+    return response.data;
+  },
+
+  xacMinhThuoc: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
+      `/api/medical/quan-tri/thuoc/${id}/xac-minh`
+    );
+    return response.data;
+  },
+
+  ngungDungThuoc: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
+      `/api/medical/quan-tri/thuoc/${id}/ngung-dung`
+    );
+    return response.data;
+  },
+
+  dungLaiThuoc: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
+      `/api/medical/quan-tri/thuoc/${id}/dung-lai`
     );
     return response.data;
   },

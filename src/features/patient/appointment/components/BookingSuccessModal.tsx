@@ -14,6 +14,7 @@ import {
   Hash,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { Link } from "react-router-dom";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
 import type { Lang } from "@/types/i18n";
@@ -151,6 +152,14 @@ export function BookingSuccessModal({
                 ? "Xuất trình mã này hoặc quét mã QR tại quầy tiếp đón khi đến khám"
                 : "Show this code or present the QR code at the reception counter"}
             </p>
+            {bookingResult?.maPhieuKham && (
+              <Link
+                className="mt-2 inline-block text-xs font-bold text-emerald-900 underline"
+                to={`/phieu-kham/${bookingResult.maPhieuKham}`}
+              >
+                {lang === "vi" ? "Mở phiếu khám" : "Open appointment ticket"}
+              </Link>
+            )}
           </div>
 
           <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 shrink-0">

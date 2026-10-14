@@ -91,11 +91,11 @@ export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterForm
     }
 
     const trimmedCCCD = soCCCD.trim();
-    if (trimmedCCCD && !/^\d{9,12}$/.test(trimmedCCCD)) {
+    if (trimmedCCCD && !/^\d{12}$/.test(trimmedCCCD)) {
       setValidationError(
         lang === "vi"
-          ? "Số CCCD/CMND không hợp lệ (phải gồm 9-12 chữ số)."
-          : "Invalid ID/CCCD number (9-12 digits).",
+          ? "Số CCCD không hợp lệ (phải gồm đúng 12 chữ số)."
+          : "Invalid CCCD (must be exactly 12 digits).",
       );
       return;
     }

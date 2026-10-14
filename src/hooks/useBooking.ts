@@ -179,9 +179,18 @@ export function useBookingActions() {
 
   const danhGiaMutation = useMutation({
     mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: DanhGiaRequest }) =>
-      bookingService.taoDanhGia({ ...data, maPhieuKham }),
+      bookingService.taoDanhGia(maPhieuKham, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
+    },
+  });
+
+  const suaDanhGiaMutation = useMutation({
+    mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: DanhGiaRequest }) =>
+      bookingService.suaDanhGia(maPhieuKham, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
+      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen-detail', variables.maPhieuKham] });
     },
   });
 
@@ -196,5 +205,7 @@ export function useBookingActions() {
     isRescheduling: doiLichMutation.isPending,
     danhGia: danhGiaMutation.mutateAsync,
     isSubmittingReview: danhGiaMutation.isPending,
+    suaDanhGia: suaDanhGiaMutation.mutateAsync,
+    isUpdatingReview: suaDanhGiaMutation.isPending,
   };
 }
