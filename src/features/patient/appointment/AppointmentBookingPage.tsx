@@ -66,6 +66,14 @@ export function AppointmentBookingPage() {
     patientPhone: "",
     patientCccd: "",
     patientEmail: user?.email || "",
+    reason: "",
+    childDob: "",
+    childGender: "",
+    guardianName: "",
+    guardianCccd: "",
+    guardianPhone: "",
+    guardianRelationship: "CHA",
+  });
   const [bookForSelf, setBookForSelf] = useState(true);
   const [saveRelative, setSaveRelative] = useState(true);
   const [selectedRelativeId, setSelectedRelativeId] = useState("");
@@ -73,8 +81,7 @@ export function AppointmentBookingPage() {
 
   useEffect(() => {
     if (user?.role !== "patient" || !bookingInfo) return;
-    const selfPending = bookingInfo.banThan?.trangThaiLienKet === "CHO_XAC_MINH";
-    setBookForSelf(!selfPending);
+    setBookForSelf(bookingInfo.banThan?.trangThaiLienKet !== "CHO_XAC_MINH");
     const profile = bookingInfo.banThan;
     if (profile) setFormValues((previous) => ({
       ...previous,
@@ -89,14 +96,6 @@ export function AppointmentBookingPage() {
       childGender: profile.gioiTinh ?? previous.childGender,
     }));
   }, [bookingInfo, user?.role]);
-    reason: "",
-    childDob: "",
-    childGender: "",
-    guardianName: "",
-    guardianCccd: "",
-    guardianPhone: "",
-    guardianRelationship: "CHA",
-  });
 
   // Fetch danh sách chuyên khoa để resolve tên & kiểm tra chuyên khoa Nhi
   const { danhSach: danhSachChuyenKhoa } = useDanhSachChuyenKhoa({ kichThuoc: 50 });
@@ -119,8 +118,7 @@ export function AppointmentBookingPage() {
     idChuyenKhoaNum && !isNaN(idChuyenKhoaNum)
       ? { idChuyenKhoa: idChuyenKhoaNum, kichThuoc: 50 }
       : { kichThuoc: 50 },
-        datChoBanThan: Boolean(user?.role === "patient" && bookForSelf),
-        luuNguoiThan: Boolean(user?.role === "patient" && !bookForSelf && saveRelative),
+  );
   const selectedSpecialty = useMemo(
     () => danhSachChuyenKhoa.find((s) => String(s.id) === formValues.specialtyId),
     [danhSachChuyenKhoa, formValues.specialtyId],
@@ -402,8 +400,8 @@ export function AppointmentBookingPage() {
         idChuyenKhoa: idChuyenKhoaNum,
         gioBatDauKhung,
         lyDoKham: formValues.reason.trim(),
-        datChoBanThan: Boolean(user && user.role === "patient"),
-        luuNguoiThan: Boolean(user && user.role === "patient"),
+        datChoBanThan: Boolean(user?.role === "patient" && bookForSelf),
+        luuNguoiThan: Boolean(user?.role === "patient" && !bookForSelf && saveRelative),
         benhNhan: {
           hoTen: formValues.patientName.trim(),
           ngaySinh: effectiveDob!,
