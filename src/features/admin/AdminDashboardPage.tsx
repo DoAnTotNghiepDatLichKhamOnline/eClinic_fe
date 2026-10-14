@@ -6,8 +6,6 @@ import {
   CircleCheck,
   House,
   Lock,
-  Pencil,
-  Plus,
   Stethoscope,
   Unlock,
   UsersRound,
@@ -32,8 +30,8 @@ import type {
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
 import { bookingService } from "@/services/bookingService";
-import { catalogService } from "@/services/catalogService";
 import { AdminOperationsPanel } from "./AdminOperationsPanel";
+import { AdminDoctorPanel } from "./AdminDoctorPanel";
 
 const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   dashboard: { en: "Dashboard", vi: "Bảng điều khiển" },
@@ -90,13 +88,7 @@ export function AdminDashboardPage({
     queryFn: () => bookingService.getTongQuanQuanTri(),
     enabled: activeSection === "dashboard",
   });
-  const { data: doctorsResponse, isLoading: isLoadingDoctors } = useQuery({
-    queryKey: ["catalog", "admin-doctors"],
-    queryFn: () => catalogService.getDanhSachBacSiQuanTri({ trang: 0, kichThuoc: 100 }),
-    enabled: activeSection === "doctors",
-  });
   const summary = summaryResponse?.duLieu;
-  const doctors = doctorsResponse?.duLieu?.noiDung ?? [];
 
   const navigateToSection = (section: AdminSection) =>
     navigate(`/admin/${sectionPaths[section]}`);
@@ -482,60 +474,7 @@ export function AdminDashboardPage({
             </div>
           )}
 
-          {activeSection === "doctors" && (
-            <div className={styles.sectionCard}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>
-                  {vi ? "Danh sách bác sĩ" : "Doctor Directory"}
-                </h2>
-                <button type="button" className={styles.actionBtn}>
-                  <Plus aria-hidden="true" size={16} />
-                  {vi ? "Thêm bác sĩ mới" : "Add New Doctor"}
-                </button>
-              </div>
-              <div className={styles.tableScroll}>
-                <table className={styles.adminTable}>
-                  <thead>
-                    <tr>
-                      <th>Mã BS</th>
-                      <th>Họ và Tên</th>
-                      <th>Chuyên khoa</th>
-                      <th>Lượt khám đã thực hiện</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoadingDoctors ? <tr><td colSpan={6}>{vi ? "Đang tải danh sách bác sĩ..." : "Loading doctors..."}</td></tr> : doctors.map((doc) => (
-                      <tr key={doc.id}>
-                        <td>
-                          <strong>{doc.maBacSi}</strong>
-                        </td>
-                        <td>
-                          <strong>{doc.hoTen}</strong>
-                        </td>
-                        <td>{doc.tenChuyenKhoa}</td>
-                        <td>{doc.soLuotDaKham} ca</td>
-                        <td>
-                          <span
-                            className={`${styles.badge} ${doc.trangThai === "DANG_CONG_TAC" ? styles.badgeActive : styles.badgeMuted}`}
-                          >
-                            <CircleCheck aria-hidden="true" size={14} /> {doc.trangThai === "DANG_CONG_TAC" ? (vi ? "Đang công tác" : "Active") : (vi ? "Ngừng công tác" : "Inactive")}
-                          </span>
-                        </td>
-                        <td>
-                          <button type="button" className={styles.actionBtn}>
-                            <Pencil aria-hidden="true" size={14} />
-                            {vi ? "Chỉnh sửa" : "Edit"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          {activeSection === "doctors" && <AdminDoctorPanel />}
 
           {activeSection !== "dashboard" && activeSection !== "doctors" && activeSection !== "accounts" && (
             <AdminOperationsPanel activeSection={activeSection} />
