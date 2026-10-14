@@ -19,6 +19,9 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,6 +78,10 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
         navigate(role === "doctor" ? "/doctor" : "/admin");
       }, 400);
     } catch (err: any) {
+      if (err?.response?.data?.maLoi === "PHAI_DOI_MAT_KHAU") {
+        setRequiresPasswordChange(true);
+        return;
+      }
       const msg =
         err?.response?.data?.thongDiep ||
         err?.message ||
@@ -86,6 +93,29 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
         lang === "vi" ? "Đăng nhập thất bại" : "Login Failed",
         msg,
       );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFirstPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (newPassword.length < 6 || newPassword !== confirmNewPassword) {
+      notifyAuth("error", lang === "vi" ? "Mật khẩu chưa hợp lệ" : "Password is invalid", lang === "vi" ? "Mật khẩu mới phải có ít nhất 6 ký tự và hai lần nhập phải khớp." : "Use at least 6 characters and make both entries match.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const result = await identityService.datMatKhauLanDau({ email: email.trim(), matKhauHienTai: password, matKhauMoi: newPassword });
+      if (!result.thanhCong) throw new Error(result.thongDiep);
+      const loginResponse = await identityService.dangNhap({ email: email.trim(), matKhau: newPassword });
+      if (!loginResponse.thanhCong || !loginResponse.duLieu) throw new Error(loginResponse.thongDiep);
+      const { accessToken, taiKhoan } = loginResponse.duLieu;
+      setAccessToken(accessToken);
+      login({ id: String(taiKhoan.id), name: taiKhoan.hoTen, email: taiKhoan.email, phone: taiKhoan.soDienThoai || undefined, role });
+      navigate(role === "doctor" ? "/doctor" : "/admin");
+    } catch (error: any) {
+      notifyAuth("error", lang === "vi" ? "Không thể đặt mật khẩu" : "Could not set password", error?.response?.data?.thongDiep || error?.message || "Request failed");
     } finally {
       setIsLoading(false);
     }
@@ -306,6 +336,13 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
                   )}
                 </Button>
               </form>
+
+              {requiresPasswordChange && <form onSubmit={(event) => void handleFirstPassword(event)} className={`${styles.form} mt-5 border-t border-slate-200 pt-5`}>
+                <h3 className="text-sm font-bold text-slate-900">{lang === "vi" ? "Đặt mật khẩu mới lần đầu" : "Set your first password"}</h3>
+                <label className={styles.fieldGroup}><span className={styles.label}>{lang === "vi" ? "Mật khẩu mới" : "New password"}</span><input className={styles.input} type="password" minLength={6} maxLength={72} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
+                <label className={styles.fieldGroup}><span className={styles.label}>{lang === "vi" ? "Xác nhận mật khẩu mới" : "Confirm new password"}</span><input className={styles.input} type="password" minLength={6} maxLength={72} required value={confirmNewPassword} onChange={(event) => setConfirmNewPassword(event.target.value)} /></label>
+                <Button type="submit" variant="accent" size="lg" className={styles.submitBtn} disabled={isLoading}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (lang === "vi" ? "Đổi mật khẩu và đăng nhập" : "Set password and sign in")}</Button>
+              </form>}
 
               <div className={styles.patientLinkWrapper}>
                 <Link

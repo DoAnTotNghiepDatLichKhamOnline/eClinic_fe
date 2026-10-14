@@ -29,7 +29,8 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.headers["Accept-Language"] = getRequestLanguage();
-    if (memoryAccessToken && config.headers) {
+      const isPublicAuthRequest = config.url?.startsWith('/api/auth/');
+      if (memoryAccessToken && config.headers && !isPublicAuthRequest) {
       config.headers["Authorization"] = `Bearer ${memoryAccessToken}`;
     }
     return config;
