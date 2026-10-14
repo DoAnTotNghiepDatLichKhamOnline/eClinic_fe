@@ -60,7 +60,8 @@ export function AdminDoctorPanel() {
 
   const addDoctor = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const body: ThemBacSiRequest = {
       hoTen: String(values.get("hoTen")),
       email: String(values.get("email")),
@@ -76,7 +77,7 @@ export function AdminDoctorPanel() {
       if (!result.thanhCong) throw new Error(result.thongDiep);
       setMessage(result.thongDiep);
       setError("");
-      event.currentTarget.reset();
+      form.reset();
       await refreshDoctors();
     } catch (cause) { fail(cause); }
   };
@@ -150,7 +151,8 @@ export function AdminDoctorPanel() {
   const uploadPhoto = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedDoctor) return;
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const file = values.get("anh");
     if (!(file instanceof File) || !file.size) return;
     try {
@@ -158,7 +160,7 @@ export function AdminDoctorPanel() {
       if (!result.thanhCong) throw new Error(result.thongDiep);
       setMessage(result.thongDiep);
       await client.invalidateQueries({ queryKey: ["catalog", "admin-doctor-detail", selectedDoctor.id] });
-      event.currentTarget.reset();
+      form.reset();
     } catch (cause) { fail(cause); }
   };
 

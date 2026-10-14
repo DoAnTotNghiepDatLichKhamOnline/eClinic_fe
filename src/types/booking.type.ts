@@ -424,6 +424,9 @@ export interface DanhGiaQuanTriResponse {
   tenChuyenKhoa: string;
   hoTenBenhNhan: string;
   maPhieuKham: string;
+  tenBacSi?: string;
+  tenBenhNhan?: string;
+  ngayKham?: string;
 }
 
 // ==========================================
@@ -595,6 +598,7 @@ export interface GetDanhGiaQuanTriParams {
   tuKhoa?: string;
   idBacSi?: number;
   soSao?: number;
+  soSaoToiDa?: number;
   anHien?: boolean;
   trang?: number;
   kichThuoc?: number;

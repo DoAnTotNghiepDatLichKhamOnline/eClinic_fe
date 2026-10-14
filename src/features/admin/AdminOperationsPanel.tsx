@@ -24,6 +24,7 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
   const [tab, setTab] = useState<CatalogTab>("specialties");
   const [patientSearch, setPatientSearch] = useState("");
   const [patientPage, setPatientPage] = useState(0);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const from = currentDateKey(new Date());
   const throughDate = new Date();
   throughDate.setDate(throughDate.getDate() + 41);
@@ -74,6 +75,16 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
     queryFn: () => bookingService.getHoSoChoXacMinhQuanTri({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "patients",
   });
+  const patientDetailQuery = useQuery({
+    queryKey: ["booking", "admin-patient-detail", selectedPatientId],
+    queryFn: () => bookingService.getChiTietHoSoBenhNhanQuanTri(selectedPatientId!),
+    enabled: activeSection === "patients" && selectedPatientId !== null,
+  });
+  const patientAppointmentsQuery = useQuery({
+    queryKey: ["booking", "admin-patient-appointments", selectedPatientId],
+    queryFn: () => bookingService.getLichHenTrongHoSoQuanTri(selectedPatientId!, { trang: 0, kichThuoc: 50 }),
+    enabled: activeSection === "patients" && selectedPatientId !== null,
+  });
 
   const showFailure = (cause: unknown) => {
     setError((cause as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (cause instanceof Error ? cause.message : (vi ? "Thao tác thất bại." : "The operation failed.")));
@@ -87,7 +98,8 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
 
   const createShift = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const weekDays = values.getAll("repeatDay").map(Number);
     const request: TaoCaRequest = {
       idBacSi: Number(values.get("idBacSi")),
@@ -103,7 +115,7 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
       const result = await bookingService.taoCaLamViec(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, ["booking|admin-shifts"]);
-      event.currentTarget.reset();
+      form.reset();
     } catch (cause) { showFailure(cause); }
   };
 
@@ -129,7 +141,8 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
 
   const saveSpecialty = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const request: ChuyenKhoaRequest = {
       tenChuyenKhoa: String(values.get("tenChuyenKhoa")),
       moTa: String(values.get("moTa") || "") || null,
@@ -142,13 +155,14 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
       const result = await catalogService.taoChuyenKhoa(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, ["catalog|admin-specialties", "catalog|chuyen-khoa"]);
-      event.currentTarget.reset();
+      form.reset();
     } catch (cause) { showFailure(cause); }
   };
 
   const saveClinic = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const request: PhongKhamRequest = {
       tenPhong: String(values.get("tenPhong")),
       tang: String(values.get("tang") || "") || null,
@@ -160,13 +174,14 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
       const result = await catalogService.themPhongKham(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, ["catalog|admin-clinics", "catalog|phong-kham"]);
-      event.currentTarget.reset();
+      form.reset();
     } catch (cause) { showFailure(cause); }
   };
 
   const saveMedicine = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const values = new FormData(form);
     const request: ThuocRequest = {
       tenThuoc: String(values.get("tenThuoc")),
       donVi: String(values.get("donVi") || "") || null,
@@ -178,7 +193,7 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
       const result = await catalogService.taoThuoc(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, ["catalog|admin-medicines"]);
-      event.currentTarget.reset();
+      form.reset();
     } catch (cause) { showFailure(cause); }
   };
 
@@ -187,6 +202,27 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
       const response = approve ? await bookingService.xacMinhLienKetHoSo(id) : await bookingService.tuChoiLienKetHoSo(id, { lyDo: window.prompt(vi ? "Lý do từ chối:" : "Rejection reason:")?.trim() || "" });
       if (!response.thanhCong) throw new Error(response.thongDiep);
       await finish(response.thongDiep, ["booking|admin-patient-verification", "booking|admin-patients"]);
+    } catch (cause) { showFailure(cause); }
+  };
+
+  const savePatient = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedPatientId) return;
+    const values = new FormData(event.currentTarget);
+    try {
+      const result = await bookingService.suaHoSoBenhNhanQuanTri(selectedPatientId, {
+        hoTen: String(values.get("hoTen") || "").trim(),
+        ngaySinh: String(values.get("ngaySinh") || "") || null,
+        gioiTinh: String(values.get("gioiTinh") || "NAM") as "NAM" | "NU" | "KHAC",
+        soDienThoai: String(values.get("soDienThoai") || "") || null,
+        diaChi: String(values.get("diaChi") || "") || null,
+        soBaoHiemYTe: String(values.get("soBaoHiemYTe") || "") || null,
+        cccd: String(values.get("cccd") || "") || null,
+      });
+      if (!result.thanhCong) throw new Error(result.thongDiep);
+      setMessage(result.thongDiep);
+      await client.invalidateQueries({ queryKey: ["booking", "admin-patient-detail", selectedPatientId] });
+      await client.invalidateQueries({ queryKey: ["booking", "admin-patients"] });
     } catch (cause) { showFailure(cause); }
   };
 
@@ -229,7 +265,8 @@ export function AdminOperationsPanel({ activeSection }: { activeSection: Operati
     <h3 className="mb-2 font-semibold">{vi ? "Liên kết chờ xác minh" : "Pending profile links"}</h3>
     {(pending?.noiDung ?? []).map((item) => <article className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3" key={item.id ?? item.hoSo?.id}><div><strong>{item.hoSo?.hoTen ?? item.taiKhoan?.hoTen}</strong><p className="text-xs text-slate-600">{item.taiKhoan?.email} · {vi ? "Khớp tên" : "Name match"}: {item.khopHoTen ? "✓" : "—"} · {vi ? "Khớp điện thoại" : "Phone match"}: {item.khopSoDienThoai ? "✓" : "—"}</p></div><div className="flex gap-2"><button className={styles.actionBtn} type="button" onClick={() => void handlePatientLink(item.hoSo?.id ?? item.id ?? 0, true)}>{vi ? "Duyệt" : "Approve"}</button><button className={styles.actionBtnDanger} type="button" onClick={() => void handlePatientLink(item.hoSo?.id ?? item.id ?? 0, false)}>{vi ? "Từ chối" : "Reject"}</button></div></article>)}
     <div className="my-5 flex gap-2"><input className={styles.searchInput} value={patientSearch} onChange={(event) => { setPatientSearch(event.target.value); setPatientPage(0); }} placeholder={vi ? "Tìm tên, điện thoại, CCCD đủ 12 số..." : "Search name, phone, full 12-digit ID..."} /></div>
-    <div className={styles.tableScroll}><table className={styles.adminTable}><thead><tr><th>ID</th><th>{vi ? "Bệnh nhân" : "Patient"}</th><th>{vi ? "Ngày sinh" : "Birth date"}</th><th>{vi ? "Điện thoại" : "Phone"}</th><th>{vi ? "CCCD" : "National ID"}</th><th>{vi ? "Lịch hẹn" : "Appointments"}</th></tr></thead><tbody>{(patients?.noiDung ?? []).map((patient) => <tr key={patient.id}><td>{patient.id}</td><td>{patient.hoTen}</td><td>{patient.ngaySinh ?? "—"}</td><td>{patient.soDienThoai ?? "—"}</td><td>{patient.cccd ?? "—"}</td><td>{patient.soLichHen ?? "—"}</td></tr>)}</tbody></table></div>
+    <div className={styles.tableScroll}><table className={styles.adminTable}><thead><tr><th>ID</th><th>{vi ? "Bệnh nhân" : "Patient"}</th><th>{vi ? "Ngày sinh" : "Birth date"}</th><th>{vi ? "Điện thoại" : "Phone"}</th><th>{vi ? "CCCD" : "National ID"}</th><th>{vi ? "Lịch hẹn" : "Appointments"}</th><th /></tr></thead><tbody>{(patients?.noiDung ?? []).map((patient) => <tr key={patient.id}><td>{patient.id}</td><td>{patient.hoTen}</td><td>{patient.ngaySinh ?? "—"}</td><td>{patient.soDienThoai ?? "—"}</td><td>{patient.cccd ?? "—"}</td><td>{patient.soLichHen ?? "—"}</td><td><button className={styles.actionBtn} type="button" onClick={() => setSelectedPatientId(patient.id)}>{vi ? "Chi tiết" : "Details"}</button></td></tr>)}</tbody></table></div>
     <div className={styles.paginationBar}><span>{vi ? `Trang ${patientPage + 1} / ${patients?.tongSoTrang ?? 1}` : `Page ${patientPage + 1} / ${patients?.tongSoTrang ?? 1}`}</span><div className={styles.paginationActions}><button className={styles.pageBtn} disabled={!patientPage} onClick={() => setPatientPage((page) => page - 1)}>{vi ? "Trước" : "Previous"}</button><button className={styles.pageBtn} disabled={patientPage + 1 >= (patients?.tongSoTrang ?? 1)} onClick={() => setPatientPage((page) => page + 1)}>{vi ? "Sau" : "Next"}</button></div></div>
+    {selectedPatientId !== null && <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedPatientId(null); }}><section role="dialog" aria-modal="true" aria-label={vi ? "Chi tiết hồ sơ bệnh nhân" : "Patient profile detail"} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto bg-white p-6"><div className="mb-5 flex justify-between border-b border-slate-200 pb-3"><h2 className="text-xl font-bold">{patientDetailQuery.data?.duLieu?.hoSo.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}</h2><button type="button" onClick={() => setSelectedPatientId(null)}>{vi ? "Đóng" : "Close"}</button></div>{patientDetailQuery.data?.duLieu && <form className="grid gap-3 sm:grid-cols-2" onSubmit={(event) => void savePatient(event)}>{(["hoTen","ngaySinh","soDienThoai","cccd","diaChi","soBaoHiemYTe"] as const).map((field) => <label className="grid gap-1 text-xs" key={field}>{field}<input name={field} type={field === "ngaySinh" ? "date" : "text"} defaultValue={patientDetailQuery.data!.duLieu!.hoSo[field] ?? ""} /></label>)}<label className="grid gap-1 text-xs">{vi ? "Giới tính" : "Gender"}<select name="gioiTinh" defaultValue={patientDetailQuery.data.duLieu.hoSo.gioiTinh ?? "NAM"}><option value="NAM">NAM</option><option value="NU">NU</option><option value="KHAC">KHAC</option></select></label><button className={styles.actionBtn} type="submit">{vi ? "Lưu hồ sơ" : "Save profile"}</button></form>}{patientAppointmentsQuery.data?.duLieu?.noiDung && <div className="mt-6"><h3 className="mb-2 font-semibold">{vi ? "Lịch sử lịch hẹn" : "Appointment history"}</h3>{patientAppointmentsQuery.data.duLieu.noiDung.map((appointment) => <p className="border-b border-slate-100 py-2 text-sm" key={appointment.maPhieuKham}>{appointment.ngay} · {appointment.gioKhamDuKien} · {appointment.bacSi.hoTen} · {appointment.trangThai}</p>)}</div>}</section></div>}
   </section>;
 }
