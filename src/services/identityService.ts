@@ -221,8 +221,7 @@ export const identityService = {
     formData.append('anh', file);
     const response = await axiosClient.post<ApiResponse<HoSoCaNhanResponse>>(
       '/api/users/me/avatar',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     );
     return response.data;
   },

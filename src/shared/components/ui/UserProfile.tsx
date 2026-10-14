@@ -168,6 +168,15 @@ export function UserProfile({ className }: UserProfileProps) {
             </nav>
           ) : (
             <div className={styles.profileDetails}>
+              <Link to="/account" className={styles.item} onClick={closeMenu}>
+                <UserRound aria-hidden="true" />
+                {lang === "vi" ? "Thông tin tài khoản" : "Account information"}
+              </Link>
+              <Link to="/account/sessions" className={styles.item} onClick={closeMenu}>
+                <ShieldAlert aria-hidden="true" />
+                {lang === "vi" ? "Thiết bị đăng nhập" : "Login devices"}
+              </Link>
+              <div className={styles.divider} />
               <div>
                 <span>{lang === "vi" ? "Vai trò" : "Role"}</span>
                 <strong>{roleLabel}</strong>

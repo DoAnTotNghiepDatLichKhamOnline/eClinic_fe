@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
+import { identityService } from "@/services/identityService";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
 import styles from "./AccountInfoPage.module.css";
@@ -60,6 +61,7 @@ export function AccountInfoPage() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState("");
 
   useEffect(() => {
     const currentName = hoSo?.hoTen || user?.name || "";
@@ -69,6 +71,14 @@ export function AccountInfoPage() {
     setPhone(currentPhone);
     setTempPhone(currentPhone);
   }, [hoSo, user]);
+
+  useEffect(() => {
+    let active = true;
+    void identityService.layYeuCauDoiEmailDangCho().then((response) => {
+      if (active) setPendingEmail(response.duLieu?.emailMoi ?? "");
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [user?.id]);
 
   const initials = (name || "U")
     .trim()
@@ -101,6 +111,11 @@ export function AccountInfoPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      alert(lang === "vi" ? "Ảnh phải là JPEG, PNG hoặc WebP và không quá 2 MB." : "Choose a JPEG, PNG or WebP image under 2 MB.");
+      e.target.value = "";
+      return;
+    }
     try {
       await taiLenAnh(file);
     } catch (err: any) {
@@ -134,7 +149,8 @@ export function AccountInfoPage() {
     e.preventDefault();
     setEmailError(null);
     try {
-      await yeuCauDoiEmail({ emailMoi: newEmail, matKhauHienTai: emailPw });
+      const response = await yeuCauDoiEmail({ emailMoi: newEmail, matKhauHienTai: emailPw });
+      setPendingEmail(response.duLieu?.emailMoi ?? newEmail);
       setEmailSuccess(true);
       setTimeout(() => {
         setEmailSuccess(false);
@@ -144,6 +160,16 @@ export function AccountInfoPage() {
       }, 2500);
     } catch (err: any) {
       setEmailError(err?.response?.data?.thongDiep || (lang === "vi" ? "Gửi yêu cầu thất bại" : "Failed to request email change"));
+    }
+  };
+
+  const handleCancelEmailRequest = async () => {
+    try {
+      await identityService.huyYeuCauDoiEmail();
+      setPendingEmail("");
+      setEmailSuccess(false);
+    } catch (error: any) {
+      setEmailError(error?.response?.data?.thongDiep || (lang === "vi" ? "Không thể hủy yêu cầu đổi email." : "Could not cancel the email-change request."));
     }
   };
 
@@ -185,7 +211,7 @@ export function AccountInfoPage() {
               type="file"
               ref={fileInputRef}
               style={{ display: "none" }}
-              accept="image/png,image/jpeg,image/gif"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
             />
             <button
@@ -201,8 +227,8 @@ export function AccountInfoPage() {
           <div className={styles.avatarInfo}>
             <p className={styles.avatarHint}>
               {vi
-                ? "Ảnh JPG, PNG hoặc GIF. Kích thước tối đa 5MB."
-                : "JPG, PNG or GIF. Max size 5MB."}
+                ? "Ảnh JPEG, PNG hoặc WebP, tối đa 2 MB."
+                : "JPEG, PNG or WebP, up to 2 MB."}
             </p>
             <button
               className={styles.btnOutline}
@@ -342,6 +368,7 @@ export function AccountInfoPage() {
             </div>
           </form>
         )}
+        {pendingEmail && <div className={styles.subCard} role="status"><p>{vi ? `Đang chờ xác nhận email mới: ${pendingEmail}` : `Waiting for confirmation at ${pendingEmail}`}</p><button type="button" className={styles.btnTextLink} onClick={() => void handleCancelEmailRequest()}>{vi ? "Hủy yêu cầu" : "Cancel request"}</button></div>}
       </div>
 
       {/* ─── Security Card ─── */}

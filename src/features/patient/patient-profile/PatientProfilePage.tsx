@@ -10,9 +10,11 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
+import { useQueryClient } from "@tanstack/react-query";
+import { bookingService } from "@/services/bookingService";
 import type { HoSoCuaToiResponse } from "@/types/booking.type";
 import type { GioiTinh } from "@/types/common.type";
-import { useHoSoBenhNhan, useBookingActions } from "@/hooks/useBooking";
+import { useHoSoBenhNhan, useBookingActions, useThongTinDatLich } from "@/hooks/useBooking";
 import styles from "./PatientProfilePage.module.css";
 
 const initialForm: HoSoCuaToiResponse = {
@@ -32,11 +34,15 @@ export function PatientProfilePage() {
   const vi = lang === "vi";
 
   const { hoSo, isLoading } = useHoSoBenhNhan();
+  const { thongTin } = useThongTinDatLich();
+  const queryClient = useQueryClient();
   const { capNhatHoSo, isUpdatingHoSo } = useBookingActions();
 
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [editingRelative, setEditingRelative] = useState<number | null>(null);
+  const [familyError, setFamilyError] = useState("");
 
   const [form, setForm] = useState<HoSoCuaToiResponse>(initialForm);
   const [draft, setDraft] = useState<HoSoCuaToiResponse>(initialForm);
@@ -79,6 +85,43 @@ export function PatientProfilePage() {
       setTimeout(() => setSaved(false), 2500);
     } catch (error) {
       setSaveError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể lưu hồ sơ." : "Could not save profile.")));
+    }
+  };
+
+  const saveRelative = async (event: React.FormEvent<HTMLFormElement>, id: number) => {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const relative = thongTin?.nguoiThan.find((item) => item.id === id);
+    try {
+      const response = await bookingService.capNhatNguoiThan(id, {
+        hoTen: String(values.get("hoTen") || "").trim(),
+        ngaySinh: String(values.get("ngaySinh") || ""),
+        gioiTinh: String(values.get("gioiTinh") || "NAM"),
+        soDienThoai: String(values.get("soDienThoai") || "").trim(),
+        email: String(values.get("email") || "") || null,
+        diaChi: String(values.get("diaChi") || "") || null,
+        soBaoHiemYTe: String(values.get("soBaoHiemYTe") || "") || null,
+        nguoiGiamHo: relative?.nguoiGiamHo ?? null,
+      });
+      if (!response.thanhCong) throw new Error(response.thongDiep);
+      setFamilyError("");
+      setEditingRelative(null);
+      await queryClient.invalidateQueries({ queryKey: ["booking", "thong-tin-dat-lich"] });
+      await queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
+    } catch (error) {
+      setFamilyError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể cập nhật người thân." : "Could not update family member.")));
+    }
+  };
+
+  const removeRelative = async (id: number) => {
+    if (!window.confirm(vi ? "Xóa người thân khỏi danh sách đã lưu?" : "Remove this family member from saved details?")) return;
+    try {
+      const response = await bookingService.xoaNguoiThan(id);
+      if (!response.thanhCong) throw new Error(response.thongDiep);
+      await queryClient.invalidateQueries({ queryKey: ["booking", "thong-tin-dat-lich"] });
+      await queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
+    } catch (error) {
+      setFamilyError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể xóa người thân." : "Could not remove family member.")));
     }
   };
 
@@ -339,6 +382,16 @@ export function PatientProfilePage() {
               <span className={styles.viewItemEmpty}>{vi ? "Chưa cập nhật tiền sử bệnh lý" : "No medical history provided"}</span>
             )
           )}
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardTitleRow}><h2 className={styles.cardTitle}>{vi ? "Người thân đã lưu" : "Saved family members"}</h2></div>
+          {familyError && <p role="alert" className="mb-3 text-sm text-rose-700">{familyError}</p>}
+          {!thongTin?.nguoiThan.length ? <p className={styles.viewItemEmpty}>{vi ? "Chưa có người thân đã lưu. Có thể lưu người thân khi đặt lịch." : "No saved family members. Save a family member during booking."}</p> : <div className="grid gap-4">{thongTin.nguoiThan.map((relative) => <article className="border-b border-slate-200 pb-4" key={relative.id}>
+            {editingRelative === relative.id ? <form className="grid gap-3 sm:grid-cols-2" onSubmit={(event) => void saveRelative(event, relative.id)}>
+              <label className="grid gap-1 text-xs">{vi ? "Họ tên" : "Full name"}<input name="hoTen" required defaultValue={relative.hoTen} /></label><label className="grid gap-1 text-xs">{vi ? "Ngày sinh" : "Date of birth"}<input name="ngaySinh" type="date" required defaultValue={relative.ngaySinh} /></label><label className="grid gap-1 text-xs">{vi ? "Giới tính" : "Gender"}<select name="gioiTinh" defaultValue={relative.gioiTinh}><option value="NAM">NAM</option><option value="NU">NU</option><option value="KHAC">KHAC</option></select></label><label className="grid gap-1 text-xs">{vi ? "Điện thoại" : "Phone"}<input name="soDienThoai" required defaultValue={relative.soDienThoai} /></label><label className="grid gap-1 text-xs">Email<input name="email" type="email" defaultValue={relative.email ?? ""} /></label><label className="grid gap-1 text-xs">{vi ? "Địa chỉ" : "Address"}<input name="diaChi" defaultValue={relative.diaChi ?? ""} /></label><label className="grid gap-1 text-xs">{vi ? "Bảo hiểm y tế" : "Health insurance"}<input name="soBaoHiemYTe" defaultValue={relative.soBaoHiemYTe ?? ""} /></label><div className="flex gap-2"><button className={styles.btnPrimary} type="submit">{vi ? "Lưu" : "Save"}</button><button className={styles.btnOutline} type="button" onClick={() => setEditingRelative(null)}>{vi ? "Hủy" : "Cancel"}</button></div>
+            </form> : <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{relative.hoTen}</strong><p className="text-xs text-slate-500">{relative.ngaySinh} · {relative.soDienThoai}{relative.nguoiGiamHo ? ` · ${vi ? "Người giám hộ" : "Guardian"}: ${relative.nguoiGiamHo.hoTen}` : ""}</p></div><div className="flex gap-2"><button className={styles.btnOutline} type="button" onClick={() => setEditingRelative(relative.id)}>{vi ? "Sửa" : "Edit"}</button><button className={styles.btnOutline} type="button" onClick={() => void removeRelative(relative.id)}>{vi ? "Xóa" : "Remove"}</button></div></div>}
+          </article>)}</div>}
         </div>
       </div>
     </PatientPortal>

@@ -1,4 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
+import { useAuth } from "@/shared/context/AuthContext";
+import { AccountInfoPage } from "@/features/patient/account/AccountInfoPage";
+import { SessionsPage } from "@/features/patient/sessions/SessionsPage";
 import { LandingPage } from "@/features/landing";
 import { LoginPagePatient } from "@/features/auth/login-patient/LoginPagePatient";
 import { RegisterPagePatient } from "@/features/auth/register-patient/RegisterPagePatient";
@@ -11,6 +14,12 @@ import { SpecialtyDirectoryPage } from "@/features/patient/doctors/SpecialtyDire
 import { RoleSelectionPage } from "@/features/entry/RoleSelectionPage";
 import { AppointmentTicketPage } from "@/features/patient/appointment/AppointmentTicketPage";
 import { EmailTokenPage } from "@/features/auth/EmailTokenPage";
+
+function ProtectedAccountPage({ sessions = false }: { sessions?: boolean }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return sessions ? <SessionsPage /> : <AccountInfoPage />;
+}
 
 export const PublicRoutes = () => {
   return (
@@ -30,6 +39,8 @@ export const PublicRoutes = () => {
       <Route path="/reset-password" element={<ResetPasswordPatient />} />
       <Route path="/verify-email" element={<EmailTokenPage kind="verify" />} />
       <Route path="/confirm-email-change" element={<EmailTokenPage kind="change" />} />
+      <Route path="/account" element={<ProtectedAccountPage />} />
+      <Route path="/account/sessions" element={<ProtectedAccountPage sessions />} />
     </Routes>
   );
 };
