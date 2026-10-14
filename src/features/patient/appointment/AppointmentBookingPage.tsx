@@ -12,6 +12,7 @@ import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { bookingService } from "@/services/bookingService";
+import { catalogService } from "@/services/catalogService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
 import type { DatLichRequest, DatLichResponse } from "@/types/booking.type";
@@ -34,6 +35,7 @@ export function AppointmentBookingPage() {
   const queryParams = new URLSearchParams(location.search);
   const queryShiftId = queryParams.get("idLichLamViec");
   const querySlot = queryParams.get("gioBatDauKhung") || "";
+  const followupTicket = queryParams.get("followup");
 
   // Mặc định chọn ngày mai hoặc hôm nay
   const defaultDates = getUpcomingBookingDays(2);
@@ -139,6 +141,24 @@ export function AppointmentBookingPage() {
       }));
     }
   }, [routerState]);
+
+  useEffect(() => {
+    if (!followupTicket) return;
+    let cancelled = false;
+    void bookingService.traCuuPhieuKham(followupTicket).then(async (response) => {
+      const doctorId = response.duLieu?.bacSi?.id;
+      if (!response.thanhCong || !doctorId) return;
+      const doctor = await catalogService.getChiTietBacSi(doctorId);
+      if (!cancelled && doctor.duLieu) {
+        setFormValues((previous) => ({
+          ...previous,
+          doctorId: String(doctorId),
+          specialtyId: String(doctor.duLieu!.idChuyenKhoa),
+        }));
+      }
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [followupTicket]);
 
   const [formErrors, setFormErrors] = useState<
     Partial<Record<keyof AppointmentFormValues, string>>

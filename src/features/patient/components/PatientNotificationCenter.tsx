@@ -24,6 +24,8 @@ function getNoticeTitle(loai: LoaiThongBao, vi: boolean): string {
   switch (loai) {
     case "NHAC_LICH_KHAM":
       return vi ? "Nhắc nhở lịch khám" : "Appointment reminder";
+    case "NHAC_TAI_KHAM":
+      return vi ? "Nhắc lịch tái khám" : "Follow-up reminder";
     case "LICH_HEN_MOI":
     case "LICH_HEN_DA_XAC_NHAN":
       return vi ? "Đặt lịch thành công" : "Booking confirmed";
@@ -90,6 +92,10 @@ export function PatientNotificationCenter() {
       }
     }
     setOpen(false);
+    if (notice.loai === "NHAC_TAI_KHAM" && notice.maPhieuKham) {
+      navigate(`/appointment?followup=${encodeURIComponent(notice.maPhieuKham)}`);
+      return;
+    }
     if (notice.maPhieuKham || notice.loai === "NHAC_LICH_KHAM" || notice.loai === "LICH_HEN_MOI" || notice.loai === "LICH_HEN_DA_XAC_NHAN") {
       navigate("/patient/my-appointments");
     } else {

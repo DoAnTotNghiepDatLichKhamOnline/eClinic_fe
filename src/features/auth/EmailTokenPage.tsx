@@ -72,7 +72,7 @@ export function EmailTokenPage({ kind }: { kind: "verify" | "change" }) {
               {isVerify ? t({ en: "Verify email", vi: "Xác thực email" }) : t({ en: "Confirm change", vi: "Xác nhận đổi email" })}
             </button>
           </form>}
-          {state === "error" && isVerify && expired && <form className="mt-5 flex flex-wrap gap-3" onSubmit={(event) => void resendVerification(event)}><label className="grid min-w-60 flex-1 gap-1 text-xs">{t({ en: "Account email", vi: "Email tài khoản" })}<input className="border border-slate-300 px-3 py-2 text-sm" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><button className="self-end bg-emerald-900 px-4 py-2 text-sm font-semibold text-white" disabled={state === "busy"}>{t({ en: "Send a new link", vi: "Gửi liên kết mới" })}</button></form>}
+          {state === "error" && isVerify && expired && <form className="mt-5 flex flex-wrap gap-3" onSubmit={(event) => void resendVerification(event)}><label className="grid min-w-60 flex-1 gap-1 text-xs">{t({ en: "Account email", vi: "Email tài khoản" })}<input className="border border-slate-300 px-3 py-2 text-sm" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><button className="self-end bg-emerald-900 px-4 py-2 text-sm font-semibold text-white">{t({ en: "Send a new link", vi: "Gửi liên kết mới" })}</button></form>}
           {state === "done" && <Link className="mt-6 inline-block font-semibold text-emerald-900" to="/login">{t({ en: "Go to sign in", vi: "Đến trang đăng nhập" })}</Link>}
         </div>
       </main>

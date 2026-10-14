@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/services/notificationService';
 import type { GetThongBaoParams } from '@/types/notification.type';
@@ -6,10 +7,21 @@ import type { GetThongBaoParams } from '@/types/notification.type';
  * Hook lấy danh sách thông báo
  */
 export function useDanhSachThongBao(params?: GetThongBaoParams) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void queryClient.invalidateQueries({ queryKey: ['notification'] });
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
+  }, [queryClient]);
+
   const query = useQuery({
     queryKey: ['notification', 'danh-sach', params],
     queryFn: () => notificationService.getDanhSachThongBao(params),
-    refetchInterval: 30000, // Tự động làm mới mỗi 30s
+    refetchInterval: () => document.hidden ? false : 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   return {
@@ -25,10 +37,21 @@ export function useDanhSachThongBao(params?: GetThongBaoParams) {
  * Hook lấy số lượng thông báo chưa đọc
  */
 export function useSoThongBaoChuaDoc() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void queryClient.invalidateQueries({ queryKey: ['notification', 'so-chua-doc'] });
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
+  }, [queryClient]);
+
   const query = useQuery({
     queryKey: ['notification', 'so-chua-doc'],
     queryFn: () => notificationService.getSoChuaDoc(),
-    refetchInterval: 30000,
+    refetchInterval: () => document.hidden ? false : 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   return {
