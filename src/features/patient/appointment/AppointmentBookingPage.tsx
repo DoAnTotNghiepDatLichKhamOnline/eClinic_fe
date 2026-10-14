@@ -66,6 +66,29 @@ export function AppointmentBookingPage() {
     patientPhone: "",
     patientCccd: "",
     patientEmail: user?.email || "",
+  const [bookForSelf, setBookForSelf] = useState(true);
+  const [saveRelative, setSaveRelative] = useState(true);
+  const [selectedRelativeId, setSelectedRelativeId] = useState("");
+  const { thongTin: bookingInfo } = useThongTinDatLich(user?.role === "patient");
+
+  useEffect(() => {
+    if (user?.role !== "patient" || !bookingInfo) return;
+    const selfPending = bookingInfo.banThan?.trangThaiLienKet === "CHO_XAC_MINH";
+    setBookForSelf(!selfPending);
+    const profile = bookingInfo.banThan;
+    if (profile) setFormValues((previous) => ({
+      ...previous,
+      patientName: profile.hoTen ?? previous.patientName,
+      patientDob: profile.ngaySinh ?? previous.patientDob,
+      patientGender: profile.gioiTinh ?? previous.patientGender,
+      patientPhone: profile.soDienThoai ?? previous.patientPhone,
+      patientCccd: profile.cccd ?? previous.patientCccd,
+      patientAddress: profile.diaChi ?? previous.patientAddress,
+      patientEmail: bookingInfo.emailTaiKhoan || previous.patientEmail,
+      childDob: profile.ngaySinh ?? previous.childDob,
+      childGender: profile.gioiTinh ?? previous.childGender,
+    }));
+  }, [bookingInfo, user?.role]);
     reason: "",
     childDob: "",
     childGender: "",
@@ -96,8 +119,8 @@ export function AppointmentBookingPage() {
     idChuyenKhoaNum && !isNaN(idChuyenKhoaNum)
       ? { idChuyenKhoa: idChuyenKhoaNum, kichThuoc: 50 }
       : { kichThuoc: 50 },
-  );
-
+        datChoBanThan: Boolean(user?.role === "patient" && bookForSelf),
+        luuNguoiThan: Boolean(user?.role === "patient" && !bookForSelf && saveRelative),
   const selectedSpecialty = useMemo(
     () => danhSachChuyenKhoa.find((s) => String(s.id) === formValues.specialtyId),
     [danhSachChuyenKhoa, formValues.specialtyId],
@@ -544,6 +567,34 @@ export function AppointmentBookingPage() {
                 onChange={handleFieldChange}
                 errors={formErrors}
               />
+
+              {user?.role === "patient" && bookingInfo && <section className="grid gap-4 border-y border-slate-200 bg-white py-5">
+                <h2 className="text-sm font-bold text-slate-900">{lang === "vi" ? "Đặt lịch cho" : "Booking for"}</h2>
+                {bookingInfo.banThan?.trangThaiLienKet === "CHO_XAC_MINH" && <p className="text-sm text-amber-800">{lang === "vi" ? "Hồ sơ của bạn đang chờ xác minh, hiện chưa thể đặt lịch cho bản thân." : "Your patient profile is awaiting verification, so self-booking is unavailable."}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" disabled={bookingInfo.banThan?.trangThaiLienKet === "CHO_XAC_MINH"} aria-pressed={bookForSelf} className={`border px-4 py-2 text-sm font-semibold disabled:opacity-50 ${bookForSelf ? "border-emerald-900 bg-emerald-900 text-white" : "border-slate-300"}`} onClick={() => {
+                    setBookForSelf(true);
+                    setSelectedRelativeId("");
+                    const profile = bookingInfo.banThan;
+                    if (profile) setFormValues((previous) => ({ ...previous, patientName: profile.hoTen ?? "", patientDob: profile.ngaySinh ?? "", patientGender: profile.gioiTinh ?? "NAM", patientPhone: profile.soDienThoai ?? "", patientCccd: profile.cccd ?? "", patientAddress: profile.diaChi ?? "", patientEmail: bookingInfo.emailTaiKhoan ?? "", childDob: profile.ngaySinh ?? "", childGender: profile.gioiTinh ?? "" }));
+                  }}>{lang === "vi" ? "Bản thân" : "Myself"}</button>
+                  <button type="button" aria-pressed={!bookForSelf} className={`border px-4 py-2 text-sm font-semibold ${!bookForSelf ? "border-emerald-900 bg-emerald-900 text-white" : "border-slate-300"}`} onClick={() => setBookForSelf(false)}>{lang === "vi" ? "Người thân" : "Family member"}</button>
+                </div>
+                {!bookForSelf && <>
+                  <label className="grid max-w-lg gap-1 text-xs font-semibold">{lang === "vi" ? "Chọn người thân đã lưu (không bắt buộc)" : "Choose a saved family member (optional)"}
+                    <select className="border border-slate-300 px-3 py-2 text-sm" value={selectedRelativeId} onChange={(event) => {
+                      const id = event.target.value;
+                      setSelectedRelativeId(id);
+                      const relative = bookingInfo.nguoiThan.find((item) => String(item.id) === id);
+                      if (relative) setFormValues((previous) => ({ ...previous, patientName: relative.hoTen, patientDob: relative.ngaySinh, patientGender: relative.gioiTinh, patientPhone: relative.soDienThoai, patientCccd: relative.cccd ?? "", patientEmail: relative.email ?? "", patientAddress: relative.diaChi ?? "", childDob: relative.ngaySinh, childGender: relative.gioiTinh, guardianName: relative.nguoiGiamHo?.hoTen ?? "", guardianCccd: relative.nguoiGiamHo?.cccd ?? "", guardianPhone: relative.nguoiGiamHo?.soDienThoai ?? "", guardianRelationship: relative.nguoiGiamHo?.quanHe ?? "CHA" }));
+                    }}>
+                      <option value="">{lang === "vi" ? "Nhập thông tin người thân mới" : "Enter a new family member"}</option>
+                      {bookingInfo.nguoiThan.map((relative) => <option value={relative.id} key={relative.id}>{relative.hoTen}</option>)}
+                    </select>
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={saveRelative} onChange={(event) => setSaveRelative(event.target.checked)} />{lang === "vi" ? "Lưu người thân này để đặt lịch lần sau" : "Save this family member for future bookings"}</label>
+                </>}
+              </section>}
 
               {/* Step 2: Nhóm Thông tin Cá nhân Bệnh nhân (+ Người giám hộ nếu < 18 tuổi) */}
               <PatientInfoStep

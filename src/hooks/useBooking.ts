@@ -77,10 +77,11 @@ export function useChiTietLichHen(maPhieuKham?: string) {
 /**
  * Hook lấy thông tin gợi ý khi đặt lịch
  */
-export function useThongTinDatLich() {
+export function useThongTinDatLich(enabled = true) {
   const query = useQuery({
     queryKey: ['booking', 'thong-tin-dat-lich'],
     queryFn: () => bookingService.getThongTinDatLich(),
+    enabled,
   });
 
   return {
