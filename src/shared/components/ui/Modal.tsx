@@ -10,6 +10,7 @@ export interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl";
+  className?: string;
 }
 
 export function Modal({
@@ -20,6 +21,7 @@ export function Modal({
   children,
   footer,
   maxWidth = "md",
+  className,
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -56,7 +58,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`w-full ${maxWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all`}
+        className={`w-full ${maxWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all ${className ?? ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

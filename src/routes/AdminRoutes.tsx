@@ -9,6 +9,7 @@ const sections: { path: string; section: AdminSection }[] = [
   { path: "medical-catalog", section: "catalog" },
   { path: "doctors", section: "doctors" },
   { path: "patients", section: "patients" },
+  { path: "accounts", section: "accounts" },
 ];
 
 export function AdminRoutes() {

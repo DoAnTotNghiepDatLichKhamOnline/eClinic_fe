@@ -29,7 +29,9 @@ export function PatientInfoStep({
   isPediatric = false,
 }: PatientInfoStepProps) {
   // Bệnh nhân là vị thành niên nếu khám khoa nhi hoặc ngày sinh < 18 tuổi
-  const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
+  const effectiveDob = isPediatric
+    ? formValues.childDob
+    : formValues.patientDob;
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
   const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
   const ageDisplay = calculateAge(effectiveDob, lang);
@@ -217,7 +219,9 @@ export function PatientInfoStep({
               className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
             >
               <Phone size={14} className="text-slate-500" />
-              <span>{lang === "vi" ? "Số điện thoại liên hệ" : "Phone Number"}</span>
+              <span>
+                {lang === "vi" ? "Số điện thoại liên hệ" : "Phone Number"}
+              </span>
               {!isMinor && <span className="text-rose-500 font-bold">*</span>}
               {isMinor && (
                 <span className="text-slate-400 font-normal">
@@ -249,6 +253,31 @@ export function PatientInfoStep({
             )}
           </div>
 
+          <div className="space-y-1.5 md:col-span-2">
+            <label
+              htmlFor="patient-email"
+              className="text-xs font-bold text-slate-700"
+            >
+              {lang === "vi"
+                ? "Email nhận xác nhận và nhắc lịch (không bắt buộc)"
+                : "Email for confirmation and reminders (optional)"}
+            </label>
+            <input
+              id="patient-email"
+              type="email"
+              maxLength={255}
+              value={formValues.patientEmail || ""}
+              onChange={(event) => onChange("patientEmail", event.target.value)}
+              placeholder="email@example.com"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+            />
+            <p className="text-xs text-slate-500">
+              {lang === "vi"
+                ? "Khách không nhập email sẽ không nhận được email xác nhận hoặc nhắc lịch."
+                : "Guests who leave this blank will not receive booking confirmations or reminders."}
+            </p>
+          </div>
+
           {/* Số CCCD (Bắt buộc nếu >= 18 tuổi, trẻ em bỏ trống) */}
           <div className="space-y-1.5">
             <label
@@ -264,7 +293,11 @@ export function PatientInfoStep({
               {!isMinor && <span className="text-rose-500 font-bold">*</span>}
               {isMinor && (
                 <span className="text-slate-400 font-normal">
-                  ({lang === "vi" ? "trẻ em chưa có CCCD bỏ trống" : "optional for minors"})
+                  (
+                  {lang === "vi"
+                    ? "trẻ em chưa có CCCD bỏ trống"
+                    : "optional for minors"}
+                  )
                 </span>
               )}
             </label>
@@ -508,18 +541,12 @@ export function PatientInfoStep({
                 <option value="CHA">
                   {lang === "vi" ? "Cha / Bố" : "Father"}
                 </option>
-                <option value="ME">
-                  {lang === "vi" ? "Mẹ" : "Mother"}
-                </option>
+                <option value="ME">{lang === "vi" ? "Mẹ" : "Mother"}</option>
                 <option value="NGUOI_GIAM_HO_HOP_PHAP">
-                  {lang === "vi"
-                    ? "Người giám hộ hợp pháp"
-                    : "Legal Guardian"}
+                  {lang === "vi" ? "Người giám hộ hợp pháp" : "Legal Guardian"}
                 </option>
                 <option value="KHAC">
-                  {lang === "vi"
-                    ? "Khác (Ông/Bà/Anh/Chị)"
-                    : "Other Relative"}
+                  {lang === "vi" ? "Khác (Ông/Bà/Anh/Chị)" : "Other Relative"}
                 </option>
               </select>
             </div>

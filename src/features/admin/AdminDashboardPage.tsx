@@ -1,20 +1,18 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity,
   CalendarDays,
   CircleCheck,
-  FolderOpen,
   House,
   Lock,
-  Pencil,
-  Plus,
   Stethoscope,
   Unlock,
   UsersRound,
   Loader2,
   AlertCircle,
   User,
+  Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -32,6 +30,9 @@ import type {
   TaiKhoanQuanTriResponse,
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
+import { adminBookingService } from "@/services/booking/adminBooking.service";
+import { AdminOperationsPanel } from "./AdminOperationsPanel";
+import { AdminDoctorPanel } from "./AdminDoctorPanel";
 
 const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   dashboard: { en: "Dashboard", vi: "Bảng điều khiển" },
@@ -39,6 +40,7 @@ const sectionLabels: Record<AdminSection, { en: string; vi: string }> = {
   catalog: { en: "Medical Catalog", vi: "Danh mục y tế" },
   doctors: { en: "Doctor Management", vi: "Quản lý bác sĩ" },
   patients: { en: "Patient Management", vi: "Quản lý người dùng & bệnh nhân" },
+  accounts: { en: "Account Management", vi: "Quản lý tài khoản" },
 };
 
 const sectionPaths: Record<AdminSection, string> = {
@@ -47,6 +49,7 @@ const sectionPaths: Record<AdminSection, string> = {
   catalog: "medical-catalog",
   doctors: "doctors",
   patients: "patients",
+  accounts: "accounts",
 };
 
 export function AdminDashboardPage({
@@ -80,45 +83,21 @@ export function AdminDashboardPage({
     kichThuoc: 10,
   });
 
-  const { capNhatTrangThaiTaiKhoan } = useIdentityActions();
-
-  // Mock doctors cho phần Doctor Directory
-  const doctors = [
-    {
-      id: "DOC-01",
-      name: "BS. Mattias Larsson",
-      specialty: "Tim mạch",
-      status: "Hoạt động",
-      totalBookings: 142,
-    },
-    {
-      id: "DOC-02",
-      name: "BS. Rafi Kot",
-      specialty: "Nhi khoa",
-      status: "Hoạt động",
-      totalBookings: 98,
-    },
-    {
-      id: "DOC-03",
-      name: "BS. Nguyễn Văn A",
-      specialty: "Nội khoa",
-      status: "Hoạt động",
-      totalBookings: 215,
-    },
-    {
-      id: "DOC-04",
-      name: "BS. Trần Thị Bình",
-      specialty: "Sản phụ khoa",
-      status: "Hoạt động",
-      totalBookings: 87,
-    },
-  ];
+  const { capNhatTrangThaiTaiKhoan, xoaTaiKhoan } = useIdentityActions();
+  const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ["booking", "admin-summary"],
+    queryFn: () => bookingService.getTongQuanQuanTri(),
+    enabled: activeSection === "dashboard",
+  });
+  const summary = summaryResponse?.duLieu;
 
   const navigateToSection = (section: AdminSection) =>
     navigate(`/admin/${sectionPaths[section]}`);
 
   // Chuyển đổi trạng thái tài khoản (Kích hoạt lại hoặc Vô hiệu hóa)
   const handleToggleStatus = async (user: TaiKhoanQuanTriResponse) => {
+    if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN")
+      return;
     const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
     const nextStatus: TrangThaiTaiKhoan = isCurrentlyActive
       ? "VO_HIEU_HOA"
@@ -149,10 +128,30 @@ export function AdminDashboardPage({
         err?.response?.data?.thongDiep ||
           (vi
             ? "Không thể cập nhật trạng thái tài khoản."
-            : "Failed to update account status.")
+            : "Failed to update account status."),
       );
     } finally {
       setUpdatingUserId(null);
+    }
+  };
+
+  const handleDeletePendingAccount = async (user: TaiKhoanQuanTriResponse) => {
+    if (
+      user.trangThai !== "CHO_XAC_NHAN" ||
+      !window.confirm(
+        vi
+          ? `Xóa tài khoản đang chờ của ${user.email}?`
+          : `Delete pending account ${user.email}?`,
+      )
+    )
+      return;
+    try {
+      await xoaTaiKhoan(user.id);
+    } catch (error: any) {
+      alert(
+        error?.response?.data?.thongDiep ||
+          (vi ? "Không thể xóa tài khoản." : "Could not delete account."),
+      );
     }
   };
 
@@ -257,7 +256,11 @@ export function AdminDashboardPage({
                   <Stethoscope aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>24</span>
+                  <span className={styles.statValue}>
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.bacSiDangCongTac ?? 0)}
+                  </span>
                   <span className={styles.statLabel}>
                     {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
                   </span>
@@ -269,7 +272,9 @@ export function AdminDashboardPage({
                 </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
-                    {tongSoPhanTu > 0 ? tongSoPhanTu.toLocaleString() : "..."}
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
                   </span>
                   <span className={styles.statLabel}>
                     {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
@@ -281,31 +286,26 @@ export function AdminDashboardPage({
                   <CalendarDays aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>312</span>
+                  <span className={styles.statValue}>
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.luotDatTrongThang ?? 0)}
+                  </span>
                   <span className={styles.statLabel}>
                     {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
-                  </span>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Activity aria-hidden="true" />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>99.8%</span>
-                  <span className={styles.statLabel}>
-                    {vi ? "Uptime hệ thống" : "System Uptime"}
                   </span>
                 </div>
               </div>
             </div>
           )}
 
-          {activeSection === "patients" && (
+          {activeSection === "accounts" && (
             <div className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
-                  {vi ? "Quản lý tài khoản người dùng" : "User Account Directory"}
+                  {vi
+                    ? "Quản lý tài khoản người dùng"
+                    : "User Account Directory"}
                 </h2>
                 <span className={styles.statLabel}>
                   {vi
@@ -345,9 +345,7 @@ export function AdminDashboardPage({
                   <option value="BENH_NHAN">
                     {vi ? "Bệnh nhân" : "Patient"}
                   </option>
-                  <option value="BAC_SI">
-                    {vi ? "Bác sĩ" : "Doctor"}
-                  </option>
+                  <option value="BAC_SI">{vi ? "Bác sĩ" : "Doctor"}</option>
                   <option value="QUAN_TRI_VIEN">
                     {vi ? "Quản trị viên" : "Admin"}
                   </option>
@@ -393,19 +391,29 @@ export function AdminDashboardPage({
                   <tbody>
                     {isLoadingUsers ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
+                        <td
+                          colSpan={7}
+                          style={{ textAlign: "center", padding: "36px" }}
+                        >
                           <Loader2
                             size={24}
                             className="animate-spin"
                             style={{ margin: "0 auto 8px" }}
                           />
-                          <div>{vi ? "Đang tải dữ liệu..." : "Loading users..."}</div>
+                          <div>
+                            {vi ? "Đang tải dữ liệu..." : "Loading users..."}
+                          </div>
                         </td>
                       </tr>
                     ) : danhSachTaiKhoan.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
-                          {vi ? "Không tìm thấy tài khoản nào." : "No accounts found."}
+                        <td
+                          colSpan={7}
+                          style={{ textAlign: "center", padding: "36px" }}
+                        >
+                          {vi
+                            ? "Không tìm thấy tài khoản nào."
+                            : "No accounts found."}
                         </td>
                       </tr>
                     ) : (
@@ -444,31 +452,50 @@ export function AdminDashboardPage({
                             </td>
                             <td>{renderStatusBadge(u.trangThai)}</td>
                             <td>
-                              <button
-                                type="button"
-                                className={
-                                  isHoatDong
-                                    ? styles.actionBtnDanger
-                                    : styles.actionBtnOutline
-                                }
-                                disabled={isUpdating}
-                                onClick={() => handleToggleStatus(u)}
-                              >
-                                {isUpdating ? (
-                                  <Loader2 size={13} className="animate-spin" />
-                                ) : isHoatDong ? (
-                                  <Lock size={13} />
-                                ) : (
-                                  <Unlock size={13} />
-                                )}
-                                {isHoatDong
-                                  ? vi
-                                    ? "Khóa"
-                                    : "Disable"
-                                  : vi
-                                    ? "Kích hoạt"
-                                    : "Activate"}
-                              </button>
+                              {u.trangThai === "CHO_XAC_NHAN" ? (
+                                <button
+                                  type="button"
+                                  className={styles.actionBtnDanger}
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    void handleDeletePendingAccount(u)
+                                  }
+                                >
+                                  <Trash2 size={13} />
+                                  {vi ? "Xóa" : "Delete"}
+                                </button>
+                              ) : (
+                                u.vaiTro !== "QUAN_TRI_VIEN" && (
+                                  <button
+                                    type="button"
+                                    className={
+                                      isHoatDong
+                                        ? styles.actionBtnDanger
+                                        : styles.actionBtnOutline
+                                    }
+                                    disabled={isUpdating}
+                                    onClick={() => handleToggleStatus(u)}
+                                  >
+                                    {isUpdating ? (
+                                      <Loader2
+                                        size={13}
+                                        className="animate-spin"
+                                      />
+                                    ) : isHoatDong ? (
+                                      <Lock size={13} />
+                                    ) : (
+                                      <Unlock size={13} />
+                                    )}
+                                    {isHoatDong
+                                      ? vi
+                                        ? "Khóa"
+                                        : "Disable"
+                                      : vi
+                                        ? "Kích hoạt"
+                                        : "Activate"}
+                                  </button>
+                                )
+                              )}
                             </td>
                           </tr>
                         );
@@ -509,76 +536,12 @@ export function AdminDashboardPage({
             </div>
           )}
 
-          {activeSection === "doctors" && (
-            <div className={styles.sectionCard}>
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>
-                  {vi ? "Danh sách bác sĩ" : "Doctor Directory"}
-                </h2>
-                <button type="button" className={styles.actionBtn}>
-                  <Plus aria-hidden="true" size={16} />
-                  {vi ? "Thêm bác sĩ mới" : "Add New Doctor"}
-                </button>
-              </div>
-              <div className={styles.tableScroll}>
-                <table className={styles.adminTable}>
-                  <thead>
-                    <tr>
-                      <th>Mã BS</th>
-                      <th>Họ và Tên</th>
-                      <th>Chuyên khoa</th>
-                      <th>Lượt khám đã thực hiện</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {doctors.map((doc) => (
-                      <tr key={doc.id}>
-                        <td>
-                          <strong>{doc.id}</strong>
-                        </td>
-                        <td>
-                          <strong>{doc.name}</strong>
-                        </td>
-                        <td>{doc.specialty}</td>
-                        <td>{doc.totalBookings} ca</td>
-                        <td>
-                          <span
-                            className={`${styles.badge} ${styles.badgeActive}`}
-                          >
-                            <CircleCheck aria-hidden="true" size={14} />{" "}
-                            {doc.status}
-                          </span>
-                        </td>
-                        <td>
-                          <button type="button" className={styles.actionBtn}>
-                            <Pencil aria-hidden="true" size={14} />
-                            {vi ? "Chỉnh sửa" : "Edit"}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          {activeSection === "doctors" && <AdminDoctorPanel />}
 
           {activeSection !== "dashboard" &&
             activeSection !== "doctors" &&
-            activeSection !== "patients" && (
-              <section className={styles.sectionCard}>
-                <div className={styles.emptyState}>
-                  <FolderOpen aria-hidden="true" size={32} />
-                  <h2>{vi ? "Chưa có dữ liệu" : "No data yet"}</h2>
-                  <p>
-                    {vi
-                      ? "Nội dung sẽ xuất hiện tại đây khi được cấu hình."
-                      : "Content will appear here once it has been configured."}
-                  </p>
-                </div>
-              </section>
+            activeSection !== "accounts" && (
+              <AdminOperationsPanel activeSection={activeSection} />
             )}
         </div>
       </main>

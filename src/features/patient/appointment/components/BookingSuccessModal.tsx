@@ -14,6 +14,7 @@ import {
   Hash,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { Link } from "react-router-dom";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
 import type { Lang } from "@/types/i18n";
@@ -50,7 +51,9 @@ export function BookingSuccessModal({
   lang,
   isPediatric = false,
 }: BookingSuccessModalProps) {
-  const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
+  const effectiveDob = isPediatric
+    ? formValues.childDob
+    : formValues.patientDob;
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
   const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
@@ -63,13 +66,12 @@ export function BookingSuccessModal({
   const displayCode =
     bookingResult?.maTraCuu || bookingResult?.maPhieuKham || bookingCode;
 
-  const doctorDisplay =
-    bookingResult?.bacSi?.hoTen
-      ? `${bookingResult.bacSi.hocVi ? bookingResult.bacSi.hocVi + " " : ""}${bookingResult.bacSi.hoTen}`
-      : doctorName ||
-        (lang === "vi"
-          ? "Bác sĩ theo ca trực (Phòng khám xếp)"
-          : "On-duty assigned doctor");
+  const doctorDisplay = bookingResult?.bacSi?.hoTen
+    ? `${bookingResult.bacSi.hocVi ? bookingResult.bacSi.hocVi + " " : ""}${bookingResult.bacSi.hoTen}`
+    : doctorName ||
+      (lang === "vi"
+        ? "Bác sĩ theo ca trực (Phòng khám xếp)"
+        : "On-duty assigned doctor");
 
   return (
     <Modal
@@ -132,7 +134,9 @@ export function BookingSuccessModal({
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded">
-                {lang === "vi" ? "Mã tra cứu / Phiếu khám" : "Booking Reference"}
+                {lang === "vi"
+                  ? "Mã tra cứu / Phiếu khám"
+                  : "Booking Reference"}
               </span>
               {bookingResult?.soThuTu ? (
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-white bg-[#0f4d3a] px-2 py-0.5 rounded flex items-center gap-1">
@@ -151,6 +155,14 @@ export function BookingSuccessModal({
                 ? "Xuất trình mã này hoặc quét mã QR tại quầy tiếp đón khi đến khám"
                 : "Show this code or present the QR code at the reception counter"}
             </p>
+            {bookingResult?.maPhieuKham && (
+              <Link
+                className="mt-2 inline-block text-xs font-bold text-emerald-900 underline"
+                to={`/phieu-kham/${bookingResult.maPhieuKham}`}
+              >
+                {lang === "vi" ? "Mở phiếu khám" : "Open appointment ticket"}
+              </Link>
+            )}
           </div>
 
           <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 shrink-0">
@@ -177,9 +189,7 @@ export function BookingSuccessModal({
               <User size={13} className="text-emerald-700" />
               <span>{lang === "vi" ? "Bác sĩ phụ trách" : "Doctor"}</span>
             </div>
-            <p className="font-bold text-slate-900 text-sm">
-              {doctorDisplay}
-            </p>
+            <p className="font-bold text-slate-900 text-sm">{doctorDisplay}</p>
           </div>
 
           {/* Ngày khám & Khung giờ */}
@@ -196,7 +206,9 @@ export function BookingSuccessModal({
                   <MapPin size={12} />
                   <span>
                     {bookingResult.phongKham.tenPhong}
-                    {bookingResult.phongKham.tang ? ` - Tầng ${bookingResult.phongKham.tang}` : ""}
+                    {bookingResult.phongKham.tang
+                      ? ` - Tầng ${bookingResult.phongKham.tang}`
+                      : ""}
                   </span>
                 </div>
               )}
@@ -215,7 +227,11 @@ export function BookingSuccessModal({
           <div className="p-3.5 rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between text-slate-400 font-semibold mb-1 uppercase text-[10px]">
               <span className="flex items-center gap-1 text-slate-700 font-bold">
-                {isMinor ? <Baby size={13} className="text-emerald-700" /> : <ShieldCheck size={13} className="text-emerald-700" />}
+                {isMinor ? (
+                  <Baby size={13} className="text-emerald-700" />
+                ) : (
+                  <ShieldCheck size={13} className="text-emerald-700" />
+                )}
                 {isMinor
                   ? lang === "vi"
                     ? "Bệnh nhi / Người khám"

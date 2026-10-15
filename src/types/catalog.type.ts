@@ -3,10 +3,15 @@ import type {
   TrangThaiBacSi,
   TrangThaiTaiKhoan,
   TrangThaiPhongKham,
-} from './common.type';
+} from "./common.type";
 
 // Re-export common types for convenience
-export type { LoaiAnhBacSi, TrangThaiBacSi, TrangThaiTaiKhoan, TrangThaiPhongKham };
+export type {
+  LoaiAnhBacSi,
+  TrangThaiBacSi,
+  TrangThaiTaiKhoan,
+  TrangThaiPhongKham,
+};
 
 // ==========================================
 // 1. CHUYÊN KHOA (SPECIALTY)
@@ -16,11 +21,19 @@ export interface ChuyenKhoaResponse {
   id: number;
   tenChuyenKhoa: string;
   moTa: string | null;
+  tenChuyenKhoaEn?: string | null;
+  moTaEn?: string | null;
+  trieuChung?: string | null;
+  trieuChungEn?: string | null;
 }
 
 export interface ChuyenKhoaRequest {
   tenChuyenKhoa: string;
   moTa?: string | null;
+  tenChuyenKhoaEn?: string | null;
+  moTaEn?: string | null;
+  trieuChung?: string | null;
+  trieuChungEn?: string | null;
 }
 
 export interface GetChuyenKhoaParams {
@@ -45,6 +58,8 @@ export interface BacSiResponse {
   tenChuyenKhoa: string;
   diemDanhGia: number | null;
   soDanhGia: number;
+  chucVuEn?: string | null;
+  gioiThieuNganEn?: string | null;
 }
 
 export interface AnhBacSiResponse {
@@ -52,6 +67,7 @@ export interface AnhBacSiResponse {
   loai: LoaiAnhBacSi;
   url: string;
   chuThich: string | null;
+  chuThichEn?: string | null;
 }
 
 export interface BacSiChiTietResponse extends BacSiResponse {
@@ -79,12 +95,16 @@ export interface PhongKhamResponse {
   tang: string | null;
   idChuyenKhoa: number;
   tenChuyenKhoa: string;
+  tenPhongEn?: string | null;
+  tangEn?: string | null;
 }
 
 export interface PhongKhamRequest {
   tenPhong: string;
   tang?: string | null;
   idChuyenKhoa: number;
+  tenPhongEn?: string | null;
+  tangEn?: string | null;
 }
 
 export interface GetPhongKhamParams {
@@ -134,6 +154,12 @@ export interface HoSoBacSiQuanTriResponse {
   quaTrinhCongTac: string[];
   linhVucKhamChua: string[];
   anh: AnhBacSiResponse[];
+  chucVuEn?: string | null;
+  gioiThieuNganEn?: string | null;
+  tieuSuEn?: string | null;
+  quaTrinhDaoTaoEn?: string[];
+  quaTrinhCongTacEn?: string[];
+  linhVucKhamChuaEn?: string[];
 }
 
 export interface ThemBacSiRequest {
@@ -163,11 +189,18 @@ export interface CapNhatHoSoBacSiRequest {
   quaTrinhDaoTao?: string[];
   quaTrinhCongTac?: string[];
   linhVucKhamChua?: string[];
+  chucVuEn?: string | null;
+  gioiThieuNganEn?: string | null;
+  tieuSuEn?: string | null;
+  quaTrinhDaoTaoEn?: string[];
+  quaTrinhCongTacEn?: string[];
+  linhVucKhamChuaEn?: string[];
 }
 
 export interface CapNhatAnhBacSiRequest {
   loai: LoaiAnhBacSi;
   chuThich?: string | null;
+  chuThichEn?: string | null;
 }
 
 export interface SapXepAnhBacSiRequest {
@@ -209,12 +242,43 @@ export interface PhongKhamQuanTriResponse {
   tenChuyenKhoa: string;
   trangThai: TrangThaiPhongKham;
   soCaSapToi: number;
+  tenPhongEn?: string | null;
+  tangEn?: string | null;
 }
 
 export interface GetPhongKhamQuanTriParams {
   tuKhoa?: string;
   idChuyenKhoa?: number;
   trangThai?: TrangThaiPhongKham;
+  trang?: number;
+  kichThuoc?: number;
+}
+
+export interface ThuocResponse {
+  id: number;
+  tenThuoc: string;
+  donVi: string | null;
+  moTa: string | null;
+  daXacMinh: boolean;
+  trangThai: "DANG_DUNG" | "NGUNG_DUNG";
+  tenBacSiTao?: string | null;
+  soLanKe: number;
+  donViEn?: string | null;
+  moTaEn?: string | null;
+}
+
+export interface ThuocRequest {
+  tenThuoc: string;
+  donVi?: string | null;
+  moTa?: string | null;
+  donViEn?: string | null;
+  moTaEn?: string | null;
+}
+
+export interface GetThuocParams {
+  tuKhoa?: string;
+  daXacMinh?: boolean;
+  trangThai?: "DANG_DUNG" | "NGUNG_DUNG";
   trang?: number;
   kichThuoc?: number;
 }

@@ -62,12 +62,14 @@ export function ServiceTimeStep({
   );
 
   // Khi chọn "Bác sĩ bất kỳ" -> Khung giờ gộp theo chuyên khoa
-  const { danhSachKhungGio: danhSachKhungGioGop, isLoading: loadingKhungGioGop } =
-    useKhungGioGop(
-      formValues.date && idChuyenKhoaNum && !idBacSiNum
-        ? { idChuyenKhoa: idChuyenKhoaNum, ngay: formValues.date }
-        : undefined,
-    );
+  const {
+    danhSachKhungGio: danhSachKhungGioGop,
+    isLoading: loadingKhungGioGop,
+  } = useKhungGioGop(
+    formValues.date && idChuyenKhoaNum && !idBacSiNum
+      ? { idChuyenKhoa: idChuyenKhoaNum, ngay: formValues.date }
+      : undefined,
+  );
 
   const loadingSlots = idBacSiNum ? loadingCaKham : loadingKhungGioGop;
 
@@ -82,6 +84,7 @@ export function ServiceTimeStep({
     hetCho: boolean;
     isMorning: boolean;
     roomName?: string;
+    tongSoCho: number;
   }
 
   const allSlots: UnifiedSlot[] = useMemo(() => {
@@ -99,6 +102,7 @@ export function ServiceTimeStep({
             gioKetThuc: kg.gioKetThuc,
             timeLabel: formatSlotRange(kg.gioBatDau, kg.gioKetThuc),
             soChoConLai: kg.soChoConLai,
+            tongSoCho: kg.tongSoCho,
             hetCho: kg.hetCho || kg.soChoConLai <= 0,
             isMorning: isNaN(hour) ? true : hour < 12,
             roomName: ca.phongKham?.tenPhong,
@@ -119,6 +123,7 @@ export function ServiceTimeStep({
         gioKetThuc: kg.gioKetThuc,
         timeLabel: formatSlotRange(kg.gioBatDau, kg.gioKetThuc),
         soChoConLai: kg.soChoConLai,
+        tongSoCho: kg.tongSoCho,
         hetCho: kg.hetCho || kg.soChoConLai <= 0,
         isMorning: isNaN(hour) ? true : hour < 12,
       };
@@ -182,7 +187,11 @@ export function ServiceTimeStep({
         {loadingChuyenKhoa ? (
           <div className="flex items-center justify-center py-10 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
-            <span>{lang === "vi" ? "Đang tải danh sách chuyên khoa..." : "Loading specialties..."}</span>
+            <span>
+              {lang === "vi"
+                ? "Đang tải danh sách chuyên khoa..."
+                : "Loading specialties..."}
+            </span>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -278,7 +287,11 @@ export function ServiceTimeStep({
         {loadingBacSi ? (
           <div className="flex items-center justify-center py-8 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
-            <span>{lang === "vi" ? "Đang tải danh sách bác sĩ..." : "Loading doctors..."}</span>
+            <span>
+              {lang === "vi"
+                ? "Đang tải danh sách bác sĩ..."
+                : "Loading doctors..."}
+            </span>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -517,7 +530,11 @@ export function ServiceTimeStep({
         {loadingSlots ? (
           <div className="flex items-center justify-center py-10 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
-            <span>{lang === "vi" ? "Đang tải khung giờ khám..." : "Loading time slots..."}</span>
+            <span>
+              {lang === "vi"
+                ? "Đang tải khung giờ khám..."
+                : "Loading time slots..."}
+            </span>
           </div>
         ) : allSlots.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-xl bg-slate-50 border border-dashed border-slate-200">
@@ -539,9 +556,7 @@ export function ServiceTimeStep({
             {morningSlots.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400 tracking-wider mb-2.5">
-                  <span>
-                    ☀️ {lang === "vi" ? "Ca sáng" : "Morning Shift"}
-                  </span>
+                  <span>☀️ {lang === "vi" ? "Ca sáng" : "Morning Shift"}</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
                   {morningSlots.map((slot) => {
@@ -552,7 +567,11 @@ export function ServiceTimeStep({
                         <div
                           key={slot.key}
                           className="py-2.5 px-2 rounded-xl border border-slate-100 bg-slate-100/70 text-slate-400 text-center cursor-not-allowed select-none"
-                          title={lang === "vi" ? "Khung giờ này đã kín" : "Slot already booked"}
+                          title={
+                            lang === "vi"
+                              ? "Khung giờ này đã kín"
+                              : "Slot already booked"
+                          }
                         >
                           <span className="text-xs font-semibold line-through block">
                             {slot.timeLabel}
@@ -591,8 +610,8 @@ export function ServiceTimeStep({
                           }`}
                         >
                           {lang === "vi"
-                            ? `Còn ${slot.soChoConLai} chỗ`
-                            : `${slot.soChoConLai} left`}
+                            ? `Còn ${slot.soChoConLai}/${slot.tongSoCho} chỗ`
+                            : `${slot.soChoConLai}/${slot.tongSoCho} left`}
                         </span>
                       </button>
                     );
@@ -618,7 +637,11 @@ export function ServiceTimeStep({
                         <div
                           key={slot.key}
                           className="py-2.5 px-2 rounded-xl border border-slate-100 bg-slate-100/70 text-slate-400 text-center cursor-not-allowed select-none"
-                          title={lang === "vi" ? "Khung giờ này đã kín" : "Slot already booked"}
+                          title={
+                            lang === "vi"
+                              ? "Khung giờ này đã kín"
+                              : "Slot already booked"
+                          }
                         >
                           <span className="text-xs font-semibold line-through block">
                             {slot.timeLabel}
@@ -657,8 +680,8 @@ export function ServiceTimeStep({
                           }`}
                         >
                           {lang === "vi"
-                            ? `Còn ${slot.soChoConLai} chỗ`
-                            : `${slot.soChoConLai} left`}
+                            ? `Còn ${slot.soChoConLai}/${slot.tongSoCho} chỗ`
+                            : `${slot.soChoConLai}/${slot.tongSoCho} left`}
                         </span>
                       </button>
                     );

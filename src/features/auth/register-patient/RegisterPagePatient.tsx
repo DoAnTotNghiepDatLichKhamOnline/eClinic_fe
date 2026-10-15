@@ -22,6 +22,7 @@ export function RegisterPagePatient() {
         email: data.email,
         matKhau: data.matKhau,
         soDienThoai: data.soDienThoai,
+        cccd: data.soCCCD || undefined,
       });
 
       if (response.thanhCong) {

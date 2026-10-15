@@ -4,10 +4,16 @@ import type {
   TrangThaiLienKet,
   TrangThaiBacSi,
   GioiTinh,
-} from './common.type';
+} from "./common.type";
 
 // Re-export common types for convenience
-export type { VaiTro, TrangThaiTaiKhoan, TrangThaiLienKet, TrangThaiBacSi, GioiTinh };
+export type {
+  VaiTro,
+  TrangThaiTaiKhoan,
+  TrangThaiLienKet,
+  TrangThaiBacSi,
+  GioiTinh,
+};
 
 // ==========================================
 // 1. DTO PHẢN HỒI (RESPONSES)
@@ -20,6 +26,7 @@ export interface TaiKhoanResponse {
   soDienThoai: string | null;
   vaiTro: VaiTro;
   trangThai: TrangThaiTaiKhoan;
+  ngonNgu?: "VI" | "EN";
 }
 
 export interface DangNhapResponse {
@@ -62,6 +69,7 @@ export interface HoSoCaNhanResponse {
   anhDaiDien: string | null;
   vaiTro: VaiTro;
   trangThai: TrangThaiTaiKhoan;
+  ngonNgu?: "VI" | "EN";
   coMatKhau: boolean;
   lienKetGoogle: boolean;
   ngayTao: string;
@@ -122,6 +130,7 @@ export interface DangKyRequest {
   email: string;
   matKhau: string;
   soDienThoai?: string | null;
+  cccd?: string | null;
 }
 
 export interface XacThucEmailRequest {
@@ -143,7 +152,7 @@ export interface DangNhapGoogleRequest {
 
 export interface DatMatKhauLanDauRequest {
   email: string;
-  matKhauMacDinh: string;
+  matKhauHienTai: string;
   matKhauMoi: string;
 }
 

@@ -19,7 +19,11 @@ type RegisterFormProps = {
   isLoading?: boolean;
 };
 
-export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterFormProps) {
+export function RegisterForm({
+  lang,
+  onSubmit,
+  isLoading = false,
+}: RegisterFormProps) {
   const [hoTen, setHoTen] = useState("");
   const [email, setEmail] = useState("");
   const [matKhau, setMatKhau] = useState("");
@@ -91,11 +95,11 @@ export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterForm
     }
 
     const trimmedCCCD = soCCCD.trim();
-    if (trimmedCCCD && !/^\d{9,12}$/.test(trimmedCCCD)) {
+    if (trimmedCCCD && !/^\d{12}$/.test(trimmedCCCD)) {
       setValidationError(
         lang === "vi"
-          ? "Số CCCD/CMND không hợp lệ (phải gồm 9-12 chữ số)."
-          : "Invalid ID/CCCD number (9-12 digits).",
+          ? "Số CCCD không hợp lệ (phải gồm đúng 12 chữ số)."
+          : "Invalid CCCD (must be exactly 12 digits).",
       );
       return;
     }
@@ -292,7 +296,9 @@ export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterForm
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>{lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}</span>
+            <span>
+              {lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}
+            </span>
           </span>
         ) : lang === "vi" ? (
           "Đăng ký tài khoản"
