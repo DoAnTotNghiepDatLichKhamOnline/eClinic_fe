@@ -30,7 +30,7 @@ import type {
   TaiKhoanQuanTriResponse,
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
-import { bookingService } from "@/services/bookingService";
+import { adminBookingService } from "@/services/booking/adminBooking.service";
 import { AdminOperationsPanel } from "./AdminOperationsPanel";
 import { AdminDoctorPanel } from "./AdminDoctorPanel";
 
@@ -96,7 +96,8 @@ export function AdminDashboardPage({
 
   // Chuyển đổi trạng thái tài khoản (Kích hoạt lại hoặc Vô hiệu hóa)
   const handleToggleStatus = async (user: TaiKhoanQuanTriResponse) => {
-    if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN") return;
+    if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN")
+      return;
     const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
     const nextStatus: TrangThaiTaiKhoan = isCurrentlyActive
       ? "VO_HIEU_HOA"
@@ -127,7 +128,7 @@ export function AdminDashboardPage({
         err?.response?.data?.thongDiep ||
           (vi
             ? "Không thể cập nhật trạng thái tài khoản."
-            : "Failed to update account status.")
+            : "Failed to update account status."),
       );
     } finally {
       setUpdatingUserId(null);
@@ -135,11 +136,22 @@ export function AdminDashboardPage({
   };
 
   const handleDeletePendingAccount = async (user: TaiKhoanQuanTriResponse) => {
-    if (user.trangThai !== "CHO_XAC_NHAN" || !window.confirm(vi ? `Xóa tài khoản đang chờ của ${user.email}?` : `Delete pending account ${user.email}?`)) return;
+    if (
+      user.trangThai !== "CHO_XAC_NHAN" ||
+      !window.confirm(
+        vi
+          ? `Xóa tài khoản đang chờ của ${user.email}?`
+          : `Delete pending account ${user.email}?`,
+      )
+    )
+      return;
     try {
       await xoaTaiKhoan(user.id);
     } catch (error: any) {
-      alert(error?.response?.data?.thongDiep || (vi ? "Không thể xóa tài khoản." : "Could not delete account."));
+      alert(
+        error?.response?.data?.thongDiep ||
+          (vi ? "Không thể xóa tài khoản." : "Could not delete account."),
+      );
     }
   };
 
@@ -244,7 +256,11 @@ export function AdminDashboardPage({
                   <Stethoscope aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.bacSiDangCongTac ?? 0}</span>
+                  <span className={styles.statValue}>
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.bacSiDangCongTac ?? 0)}
+                  </span>
                   <span className={styles.statLabel}>
                     {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
                   </span>
@@ -256,7 +272,9 @@ export function AdminDashboardPage({
                 </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
-                    {isLoadingSummary ? "..." : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
                   </span>
                   <span className={styles.statLabel}>
                     {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
@@ -268,7 +286,11 @@ export function AdminDashboardPage({
                   <CalendarDays aria-hidden="true" />
                 </div>
                 <div className={styles.statInfo}>
-                  <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.luotDatTrongThang ?? 0}</span>
+                  <span className={styles.statValue}>
+                    {isLoadingSummary
+                      ? "..."
+                      : (summary?.luotDatTrongThang ?? 0)}
+                  </span>
                   <span className={styles.statLabel}>
                     {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
                   </span>
@@ -281,7 +303,9 @@ export function AdminDashboardPage({
             <div className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
-                  {vi ? "Quản lý tài khoản người dùng" : "User Account Directory"}
+                  {vi
+                    ? "Quản lý tài khoản người dùng"
+                    : "User Account Directory"}
                 </h2>
                 <span className={styles.statLabel}>
                   {vi
@@ -321,9 +345,7 @@ export function AdminDashboardPage({
                   <option value="BENH_NHAN">
                     {vi ? "Bệnh nhân" : "Patient"}
                   </option>
-                  <option value="BAC_SI">
-                    {vi ? "Bác sĩ" : "Doctor"}
-                  </option>
+                  <option value="BAC_SI">{vi ? "Bác sĩ" : "Doctor"}</option>
                   <option value="QUAN_TRI_VIEN">
                     {vi ? "Quản trị viên" : "Admin"}
                   </option>
@@ -369,19 +391,29 @@ export function AdminDashboardPage({
                   <tbody>
                     {isLoadingUsers ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
+                        <td
+                          colSpan={7}
+                          style={{ textAlign: "center", padding: "36px" }}
+                        >
                           <Loader2
                             size={24}
                             className="animate-spin"
                             style={{ margin: "0 auto 8px" }}
                           />
-                          <div>{vi ? "Đang tải dữ liệu..." : "Loading users..."}</div>
+                          <div>
+                            {vi ? "Đang tải dữ liệu..." : "Loading users..."}
+                          </div>
                         </td>
                       </tr>
                     ) : danhSachTaiKhoan.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
-                          {vi ? "Không tìm thấy tài khoản nào." : "No accounts found."}
+                        <td
+                          colSpan={7}
+                          style={{ textAlign: "center", padding: "36px" }}
+                        >
+                          {vi
+                            ? "Không tìm thấy tài khoản nào."
+                            : "No accounts found."}
                         </td>
                       </tr>
                     ) : (
@@ -420,31 +452,50 @@ export function AdminDashboardPage({
                             </td>
                             <td>{renderStatusBadge(u.trangThai)}</td>
                             <td>
-                              {u.trangThai === "CHO_XAC_NHAN" ? <button type="button" className={styles.actionBtnDanger} disabled={isUpdating} onClick={() => void handleDeletePendingAccount(u)}><Trash2 size={13} />{vi ? "Xóa" : "Delete"}</button> : u.vaiTro !== "QUAN_TRI_VIEN" && <button
-                                type="button"
-                                className={
-                                  isHoatDong
-                                    ? styles.actionBtnDanger
-                                    : styles.actionBtnOutline
-                                }
-                                disabled={isUpdating}
-                                onClick={() => handleToggleStatus(u)}
-                              >
-                                {isUpdating ? (
-                                  <Loader2 size={13} className="animate-spin" />
-                                ) : isHoatDong ? (
-                                  <Lock size={13} />
-                                ) : (
-                                  <Unlock size={13} />
-                                )}
-                                {isHoatDong
-                                  ? vi
-                                    ? "Khóa"
-                                    : "Disable"
-                                  : vi
-                                    ? "Kích hoạt"
-                                    : "Activate"}
-                              </button>}
+                              {u.trangThai === "CHO_XAC_NHAN" ? (
+                                <button
+                                  type="button"
+                                  className={styles.actionBtnDanger}
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    void handleDeletePendingAccount(u)
+                                  }
+                                >
+                                  <Trash2 size={13} />
+                                  {vi ? "Xóa" : "Delete"}
+                                </button>
+                              ) : (
+                                u.vaiTro !== "QUAN_TRI_VIEN" && (
+                                  <button
+                                    type="button"
+                                    className={
+                                      isHoatDong
+                                        ? styles.actionBtnDanger
+                                        : styles.actionBtnOutline
+                                    }
+                                    disabled={isUpdating}
+                                    onClick={() => handleToggleStatus(u)}
+                                  >
+                                    {isUpdating ? (
+                                      <Loader2
+                                        size={13}
+                                        className="animate-spin"
+                                      />
+                                    ) : isHoatDong ? (
+                                      <Lock size={13} />
+                                    ) : (
+                                      <Unlock size={13} />
+                                    )}
+                                    {isHoatDong
+                                      ? vi
+                                        ? "Khóa"
+                                        : "Disable"
+                                      : vi
+                                        ? "Kích hoạt"
+                                        : "Activate"}
+                                  </button>
+                                )
+                              )}
                             </td>
                           </tr>
                         );
@@ -487,9 +538,11 @@ export function AdminDashboardPage({
 
           {activeSection === "doctors" && <AdminDoctorPanel />}
 
-          {activeSection !== "dashboard" && activeSection !== "doctors" && activeSection !== "accounts" && (
-            <AdminOperationsPanel activeSection={activeSection} />
-          )}
+          {activeSection !== "dashboard" &&
+            activeSection !== "doctors" &&
+            activeSection !== "accounts" && (
+              <AdminOperationsPanel activeSection={activeSection} />
+            )}
         </div>
       </main>
     </div>

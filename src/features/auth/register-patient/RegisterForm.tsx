@@ -19,7 +19,11 @@ type RegisterFormProps = {
   isLoading?: boolean;
 };
 
-export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterFormProps) {
+export function RegisterForm({
+  lang,
+  onSubmit,
+  isLoading = false,
+}: RegisterFormProps) {
   const [hoTen, setHoTen] = useState("");
   const [email, setEmail] = useState("");
   const [matKhau, setMatKhau] = useState("");
@@ -292,7 +296,9 @@ export function RegisterForm({ lang, onSubmit, isLoading = false }: RegisterForm
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>{lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}</span>
+            <span>
+              {lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}
+            </span>
           </span>
         ) : lang === "vi" ? (
           "Đăng ký tài khoản"

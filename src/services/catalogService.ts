@@ -1,5 +1,5 @@
-import axiosClient from '@/utils/axiosClient';
-import type { ApiResponse, PageResponse } from '@/types/common.type';
+import axiosClient from "@/utils/axiosClient";
+import type { ApiResponse, PageResponse } from "@/types/common.type";
 import type {
   ChuyenKhoaResponse,
   ChuyenKhoaRequest,
@@ -28,7 +28,7 @@ import type {
   GetThuocParams,
   LoaiAnhBacSi,
   AnhBacSiResponse,
-} from '@/types/catalog.type';
+} from "@/types/catalog.type";
 
 export const catalogService = {
   // =========================================================================
@@ -40,10 +40,9 @@ export const catalogService = {
    * GET /api/catalog/chuyen-khoa
    */
   getDanhSachChuyenKhoa: async (params?: GetChuyenKhoaParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<ChuyenKhoaResponse>>>(
-      '/api/catalog/chuyen-khoa',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<ChuyenKhoaResponse>>
+    >("/api/catalog/chuyen-khoa", { params });
     return response.data;
   },
 
@@ -53,16 +52,15 @@ export const catalogService = {
    */
   getChiTietChuyenKhoa: async (id: number) => {
     const response = await axiosClient.get<ApiResponse<ChuyenKhoaResponse>>(
-      `/api/catalog/chuyen-khoa/${id}`
+      `/api/catalog/chuyen-khoa/${id}`,
     );
     return response.data;
   },
 
   getDanhSachChuyenKhoaQuanTri: async (params?: GetChuyenKhoaParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<ChuyenKhoaResponse>>>(
-      '/api/catalog/quan-tri/chuyen-khoa',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<ChuyenKhoaResponse>>
+    >("/api/catalog/quan-tri/chuyen-khoa", { params });
     return response.data;
   },
 
@@ -72,8 +70,8 @@ export const catalogService = {
    */
   taoChuyenKhoa: async (data: ChuyenKhoaRequest) => {
     const response = await axiosClient.post<ApiResponse<ChuyenKhoaResponse>>(
-      '/api/catalog/chuyen-khoa',
-      data
+      "/api/catalog/chuyen-khoa",
+      data,
     );
     return response.data;
   },
@@ -85,7 +83,7 @@ export const catalogService = {
   capNhatChuyenKhoa: async (id: number, data: ChuyenKhoaRequest) => {
     const response = await axiosClient.put<ApiResponse<ChuyenKhoaResponse>>(
       `/api/catalog/chuyen-khoa/${id}`,
-      data
+      data,
     );
     return response.data;
   },
@@ -96,7 +94,7 @@ export const catalogService = {
    */
   xoaChuyenKhoa: async (id: number) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/catalog/chuyen-khoa/${id}`
+      `/api/catalog/chuyen-khoa/${id}`,
     );
     return response.data;
   },
@@ -110,10 +108,9 @@ export const catalogService = {
    * GET /api/catalog/bac-si
    */
   getDanhSachBacSi: async (params?: GetBacSiParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<BacSiResponse>>>(
-      '/api/catalog/bac-si',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<BacSiResponse>>
+    >("/api/catalog/bac-si", { params });
     return response.data;
   },
 
@@ -123,7 +120,7 @@ export const catalogService = {
    */
   getChiTietBacSi: async (id: number) => {
     const response = await axiosClient.get<ApiResponse<BacSiChiTietResponse>>(
-      `/api/catalog/bac-si/${id}`
+      `/api/catalog/bac-si/${id}`,
     );
     return response.data;
   },
@@ -138,8 +135,8 @@ export const catalogService = {
    */
   getDanhSachPhongKham: async (params?: GetPhongKhamParams) => {
     const response = await axiosClient.get<ApiResponse<PhongKhamResponse[]>>(
-      '/api/catalog/phong-kham',
-      { params }
+      "/api/catalog/phong-kham",
+      { params },
     );
     return response.data;
   },
@@ -153,10 +150,9 @@ export const catalogService = {
    * GET /api/catalog/quan-tri/bac-si
    */
   getDanhSachBacSiQuanTri: async (params?: GetBacSiQuanTriParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<BacSiQuanTriResponse>>>(
-      '/api/catalog/quan-tri/bac-si',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<BacSiQuanTriResponse>>
+    >("/api/catalog/quan-tri/bac-si", { params });
     return response.data;
   },
 
@@ -165,10 +161,9 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/bac-si
    */
   themBacSi: async (data: ThemBacSiRequest) => {
-    const response = await axiosClient.post<ApiResponse<HoSoBacSiQuanTriResponse>>(
-      '/api/catalog/quan-tri/bac-si',
-      data
-    );
+    const response = await axiosClient.post<
+      ApiResponse<HoSoBacSiQuanTriResponse>
+    >("/api/catalog/quan-tri/bac-si", data);
     return response.data;
   },
 
@@ -177,10 +172,9 @@ export const catalogService = {
    * PUT /api/catalog/quan-tri/bac-si/{id}
    */
   suaBacSi: async (id: number, data: SuaBacSiRequest) => {
-    const response = await axiosClient.put<ApiResponse<HoSoBacSiQuanTriResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}`,
-      data
-    );
+    const response = await axiosClient.put<
+      ApiResponse<HoSoBacSiQuanTriResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}`, data);
     return response.data;
   },
 
@@ -189,9 +183,9 @@ export const catalogService = {
    * GET /api/catalog/quan-tri/bac-si/{id}/anh-huong-ngung-cong-tac
    */
   getAnhHuongNgungCongTac: async (id: number) => {
-    const response = await axiosClient.get<ApiResponse<AnhHuongNgungCongTacResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}/anh-huong-ngung-cong-tac`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<AnhHuongNgungCongTacResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}/anh-huong-ngung-cong-tac`);
     return response.data;
   },
 
@@ -200,10 +194,9 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/bac-si/{id}/ngung-cong-tac
    */
   ngungCongTacBacSi: async (id: number, data: NgungCongTacRequest) => {
-    const response = await axiosClient.post<ApiResponse<KetQuaNgungCongTacResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}/ngung-cong-tac`,
-      data
-    );
+    const response = await axiosClient.post<
+      ApiResponse<KetQuaNgungCongTacResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}/ngung-cong-tac`, data);
     return response.data;
   },
 
@@ -212,9 +205,9 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/bac-si/{id}/cong-tac-lai
    */
   congTacLaiBacSi: async (id: number) => {
-    const response = await axiosClient.post<ApiResponse<HoSoBacSiQuanTriResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}/cong-tac-lai`
-    );
+    const response = await axiosClient.post<
+      ApiResponse<HoSoBacSiQuanTriResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}/cong-tac-lai`);
     return response.data;
   },
 
@@ -223,9 +216,9 @@ export const catalogService = {
    * GET /api/catalog/quan-tri/bac-si/{id}
    */
   getHoSoBacSiQuanTri: async (id: number) => {
-    const response = await axiosClient.get<ApiResponse<HoSoBacSiQuanTriResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<HoSoBacSiQuanTriResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}`);
     return response.data;
   },
 
@@ -234,10 +227,9 @@ export const catalogService = {
    * PUT /api/catalog/quan-tri/bac-si/{id}/ho-so
    */
   capNhatHoSoBacSi: async (id: number, data: CapNhatHoSoBacSiRequest) => {
-    const response = await axiosClient.put<ApiResponse<HoSoBacSiQuanTriResponse>>(
-      `/api/catalog/quan-tri/bac-si/${id}/ho-so`,
-      data
-    );
+    const response = await axiosClient.put<
+      ApiResponse<HoSoBacSiQuanTriResponse>
+    >(`/api/catalog/quan-tri/bac-si/${id}/ho-so`, data);
     return response.data;
   },
 
@@ -245,15 +237,25 @@ export const catalogService = {
    * Thêm ảnh giới thiệu (multipart/form-data: tệp 'anh', 'loai', 'chuThich')
    * POST /api/catalog/quan-tri/bac-si/{id}/anh
    */
-  themAnhBacSi: async (id: number, file: File | Blob, loai: LoaiAnhBacSi, chuThich?: string, chuThichEn?: string) => {
+  themAnhBacSi: async (
+    id: number,
+    file: File | Blob,
+    loai: LoaiAnhBacSi,
+    chuThich?: string,
+    chuThichEn?: string,
+  ) => {
     const formData = new FormData();
-    formData.append('anh', file);
+    formData.append("anh", file);
     const response = await axiosClient.post<ApiResponse<AnhBacSiResponse>>(
       `/api/catalog/quan-tri/bac-si/${id}/anh`,
       formData,
       {
-        params: { loai, ...(chuThich ? { chuThich } : {}), ...(chuThichEn ? { chuThichEn } : {}) },
-      }
+        params: {
+          loai,
+          ...(chuThich ? { chuThich } : {}),
+          ...(chuThichEn ? { chuThichEn } : {}),
+        },
+      },
     );
     return response.data;
   },
@@ -262,10 +264,14 @@ export const catalogService = {
    * Sửa loại và chú thích của ảnh giới thiệu
    * PUT /api/catalog/quan-tri/bac-si/{id}/anh/{idAnh}
    */
-  capNhatAnhBacSi: async (id: number, idAnh: number, data: CapNhatAnhBacSiRequest) => {
+  capNhatAnhBacSi: async (
+    id: number,
+    idAnh: number,
+    data: CapNhatAnhBacSiRequest,
+  ) => {
     const response = await axiosClient.put<ApiResponse<AnhBacSiResponse>>(
       `/api/catalog/quan-tri/bac-si/${id}/anh/${idAnh}`,
-      data
+      data,
     );
     return response.data;
   },
@@ -277,7 +283,7 @@ export const catalogService = {
   sapXepAnhBacSi: async (id: number, data: SapXepAnhBacSiRequest) => {
     const response = await axiosClient.put<ApiResponse<AnhBacSiResponse[]>>(
       `/api/catalog/quan-tri/bac-si/${id}/anh/thu-tu`,
-      data
+      data,
     );
     return response.data;
   },
@@ -288,7 +294,7 @@ export const catalogService = {
    */
   xoaAnhBacSi: async (id: number, idAnh: number) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/catalog/quan-tri/bac-si/${id}/anh/${idAnh}`
+      `/api/catalog/quan-tri/bac-si/${id}/anh/${idAnh}`,
     );
     return response.data;
   },
@@ -302,10 +308,9 @@ export const catalogService = {
    * GET /api/catalog/quan-tri/phong-kham
    */
   getDanhSachPhongKhamQuanTri: async (params?: GetPhongKhamQuanTriParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<PhongKhamQuanTriResponse>>>(
-      '/api/catalog/quan-tri/phong-kham',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<PhongKhamQuanTriResponse>>
+    >("/api/catalog/quan-tri/phong-kham", { params });
     return response.data;
   },
 
@@ -314,10 +319,9 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/phong-kham
    */
   themPhongKham: async (data: PhongKhamRequest) => {
-    const response = await axiosClient.post<ApiResponse<PhongKhamQuanTriResponse>>(
-      '/api/catalog/quan-tri/phong-kham',
-      data
-    );
+    const response = await axiosClient.post<
+      ApiResponse<PhongKhamQuanTriResponse>
+    >("/api/catalog/quan-tri/phong-kham", data);
     return response.data;
   },
 
@@ -326,10 +330,9 @@ export const catalogService = {
    * PUT /api/catalog/quan-tri/phong-kham/{id}
    */
   suaPhongKham: async (id: number, data: PhongKhamRequest) => {
-    const response = await axiosClient.put<ApiResponse<PhongKhamQuanTriResponse>>(
-      `/api/catalog/quan-tri/phong-kham/${id}`,
-      data
-    );
+    const response = await axiosClient.put<
+      ApiResponse<PhongKhamQuanTriResponse>
+    >(`/api/catalog/quan-tri/phong-kham/${id}`, data);
     return response.data;
   },
 
@@ -338,9 +341,9 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/phong-kham/{id}/ngung-hoat-dong
    */
   ngungHoatDongPhongKham: async (id: number) => {
-    const response = await axiosClient.post<ApiResponse<PhongKhamQuanTriResponse>>(
-      `/api/catalog/quan-tri/phong-kham/${id}/ngung-hoat-dong`
-    );
+    const response = await axiosClient.post<
+      ApiResponse<PhongKhamQuanTriResponse>
+    >(`/api/catalog/quan-tri/phong-kham/${id}/ngung-hoat-dong`);
     return response.data;
   },
 
@@ -349,24 +352,23 @@ export const catalogService = {
    * POST /api/catalog/quan-tri/phong-kham/{id}/hoat-dong-lai
    */
   hoatDongLaiPhongKham: async (id: number) => {
-    const response = await axiosClient.post<ApiResponse<PhongKhamQuanTriResponse>>(
-      `/api/catalog/quan-tri/phong-kham/${id}/hoat-dong-lai`
-    );
+    const response = await axiosClient.post<
+      ApiResponse<PhongKhamQuanTriResponse>
+    >(`/api/catalog/quan-tri/phong-kham/${id}/hoat-dong-lai`);
     return response.data;
   },
 
   getDanhSachThuocQuanTri: async (params?: GetThuocParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<ThuocResponse>>>(
-      '/api/medical/quan-tri/thuoc',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<ThuocResponse>>
+    >("/api/medical/quan-tri/thuoc", { params });
     return response.data;
   },
 
   taoThuoc: async (data: ThuocRequest) => {
     const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
-      '/api/medical/quan-tri/thuoc',
-      data
+      "/api/medical/quan-tri/thuoc",
+      data,
     );
     return response.data;
   },
@@ -374,28 +376,28 @@ export const catalogService = {
   capNhatThuoc: async (id: number, data: ThuocRequest) => {
     const response = await axiosClient.put<ApiResponse<ThuocResponse>>(
       `/api/medical/quan-tri/thuoc/${id}`,
-      data
+      data,
     );
     return response.data;
   },
 
   xacMinhThuoc: async (id: number) => {
     const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
-      `/api/medical/quan-tri/thuoc/${id}/xac-minh`
+      `/api/medical/quan-tri/thuoc/${id}/xac-minh`,
     );
     return response.data;
   },
 
   ngungDungThuoc: async (id: number) => {
     const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
-      `/api/medical/quan-tri/thuoc/${id}/ngung-dung`
+      `/api/medical/quan-tri/thuoc/${id}/ngung-dung`,
     );
     return response.data;
   },
 
   dungLaiThuoc: async (id: number) => {
     const response = await axiosClient.post<ApiResponse<ThuocResponse>>(
-      `/api/medical/quan-tri/thuoc/${id}/dung-lai`
+      `/api/medical/quan-tri/thuoc/${id}/dung-lai`,
     );
     return response.data;
   },

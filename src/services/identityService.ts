@@ -1,5 +1,5 @@
-import axiosClient from '@/utils/axiosClient';
-import type { ApiResponse, PageResponse } from '@/types/common.type';
+import axiosClient from "@/utils/axiosClient";
+import type { ApiResponse, PageResponse } from "@/types/common.type";
 import type {
   DangKyRequest,
   XacThucEmailRequest,
@@ -22,7 +22,7 @@ import type {
   YeuCauDoiEmailResponse,
   TaiKhoanQuanTriResponse,
   ChiTietTaiKhoanResponse,
-} from '@/types/auth.type';
+} from "@/types/auth.type";
 
 export const identityService = {
   // =========================================================================
@@ -35,8 +35,8 @@ export const identityService = {
    */
   dangKy: async (data: DangKyRequest) => {
     const response = await axiosClient.post<ApiResponse<TaiKhoanResponse>>(
-      '/api/auth/register',
-      data
+      "/api/auth/register",
+      data,
     );
     return response.data;
   },
@@ -47,8 +47,8 @@ export const identityService = {
    */
   xacThucEmail: async (data: XacThucEmailRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/verify-email',
-      data
+      "/api/auth/verify-email",
+      data,
     );
     return response.data;
   },
@@ -59,8 +59,8 @@ export const identityService = {
    */
   guiLaiXacThuc: async (data: GuiLaiXacThucRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/resend-verification',
-      data
+      "/api/auth/resend-verification",
+      data,
     );
     return response.data;
   },
@@ -71,8 +71,8 @@ export const identityService = {
    */
   dangNhap: async (data: DangNhapRequest) => {
     const response = await axiosClient.post<ApiResponse<DangNhapResponse>>(
-      '/api/auth/login',
-      data
+      "/api/auth/login",
+      data,
     );
     return response.data;
   },
@@ -83,8 +83,8 @@ export const identityService = {
    */
   datMatKhauLanDau: async (data: DatMatKhauLanDauRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/first-password',
-      data
+      "/api/auth/first-password",
+      data,
     );
     return response.data;
   },
@@ -95,8 +95,8 @@ export const identityService = {
    */
   lamMoiToken: async (data?: PhienDangNhapRequest) => {
     const response = await axiosClient.post<ApiResponse<DangNhapResponse>>(
-      '/api/auth/refresh-token',
-      data
+      "/api/auth/refresh-token",
+      data,
     );
     return response.data;
   },
@@ -107,8 +107,8 @@ export const identityService = {
    */
   dangXuat: async (data?: PhienDangNhapRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/logout',
-      data
+      "/api/auth/logout",
+      data,
     );
     return response.data;
   },
@@ -119,8 +119,8 @@ export const identityService = {
    */
   quenMatKhau: async (data: QuenMatKhauRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/forgot-password',
-      data
+      "/api/auth/forgot-password",
+      data,
     );
     return response.data;
   },
@@ -131,8 +131,8 @@ export const identityService = {
    */
   datLaiMatKhau: async (data: DatLaiMatKhauRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/reset-password',
-      data
+      "/api/auth/reset-password",
+      data,
     );
     return response.data;
   },
@@ -143,8 +143,8 @@ export const identityService = {
    */
   xacNhanDoiEmail: async (data: XacThucEmailRequest) => {
     const response = await axiosClient.post<ApiResponse<void>>(
-      '/api/auth/confirm-email-change',
-      data
+      "/api/auth/confirm-email-change",
+      data,
     );
     return response.data;
   },
@@ -155,8 +155,8 @@ export const identityService = {
    */
   dangNhapGoogle: async (data: DangNhapGoogleRequest) => {
     const response = await axiosClient.post<ApiResponse<DangNhapResponse>>(
-      '/api/auth/google',
-      data
+      "/api/auth/google",
+      data,
     );
     return response.data;
   },
@@ -170,9 +170,8 @@ export const identityService = {
    * GET /api/users/me
    */
   getHoSoCaNhan: async () => {
-    const response = await axiosClient.get<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/users/me'
-    );
+    const response =
+      await axiosClient.get<ApiResponse<HoSoCaNhanResponse>>("/api/users/me");
     return response.data;
   },
 
@@ -182,16 +181,16 @@ export const identityService = {
    */
   capNhatHoSo: async (data: CapNhatHoSoRequest) => {
     const response = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/users/me',
-      data
+      "/api/users/me",
+      data,
     );
     return response.data;
   },
 
-  capNhatNgonNgu: async (ngonNgu: 'VI' | 'EN') => {
+  capNhatNgonNgu: async (ngonNgu: "VI" | "EN") => {
     const response = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/users/me/language',
-      { ngonNgu }
+      "/api/users/me/language",
+      { ngonNgu },
     );
     return response.data;
   },
@@ -202,8 +201,8 @@ export const identityService = {
    */
   doiMatKhau: async (data: DoiMatKhauRequest) => {
     const response = await axiosClient.put<ApiResponse<void>>(
-      '/api/users/me/change-password',
-      data
+      "/api/users/me/change-password",
+      data,
     );
     return response.data;
   },
@@ -218,10 +217,10 @@ export const identityService = {
    */
   taiLenAnhDaiDien: async (file: File | Blob) => {
     const formData = new FormData();
-    formData.append('anh', file);
+    formData.append("anh", file);
     const response = await axiosClient.post<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/users/me/avatar',
-      formData
+      "/api/users/me/avatar",
+      formData,
     );
     return response.data;
   },
@@ -232,7 +231,7 @@ export const identityService = {
    */
   xoaAnhDaiDien: async () => {
     const response = await axiosClient.delete<ApiResponse<HoSoCaNhanResponse>>(
-      '/api/users/me/avatar'
+      "/api/users/me/avatar",
     );
     return response.data;
   },
@@ -246,9 +245,9 @@ export const identityService = {
    * GET /api/users/me/sessions
    */
   getDanhSachPhienDangNhap: async () => {
-    const response = await axiosClient.get<ApiResponse<PhienDangNhapResponse[]>>(
-      '/api/users/me/sessions'
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PhienDangNhapResponse[]>
+    >("/api/users/me/sessions");
     return response.data;
   },
 
@@ -258,7 +257,7 @@ export const identityService = {
    */
   xoaPhienDangNhap: async (id: string) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/users/me/sessions/${id}`
+      `/api/users/me/sessions/${id}`,
     );
     return response.data;
   },
@@ -269,7 +268,7 @@ export const identityService = {
    */
   xoaTatCaPhienKhac: async () => {
     const response = await axiosClient.delete<ApiResponse<number>>(
-      '/api/users/me/sessions'
+      "/api/users/me/sessions",
     );
     return response.data;
   },
@@ -283,10 +282,9 @@ export const identityService = {
    * POST /api/users/me/change-email
    */
   yeuCauDoiEmail: async (data: DoiEmailRequest) => {
-    const response = await axiosClient.post<ApiResponse<YeuCauDoiEmailResponse>>(
-      '/api/users/me/change-email',
-      data
-    );
+    const response = await axiosClient.post<
+      ApiResponse<YeuCauDoiEmailResponse>
+    >("/api/users/me/change-email", data);
     return response.data;
   },
 
@@ -296,7 +294,7 @@ export const identityService = {
    */
   layYeuCauDoiEmailDangCho: async () => {
     const response = await axiosClient.get<ApiResponse<YeuCauDoiEmailResponse>>(
-      '/api/users/me/change-email'
+      "/api/users/me/change-email",
     );
     return response.data;
   },
@@ -307,7 +305,7 @@ export const identityService = {
    */
   huyYeuCauDoiEmail: async () => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      '/api/users/me/change-email'
+      "/api/users/me/change-email",
     );
     return response.data;
   },
@@ -321,10 +319,9 @@ export const identityService = {
    * GET /api/users
    */
   getDanhSachTaiKhoanQuanTri: async (params?: GetTaiKhoanQuanTriParams) => {
-    const response = await axiosClient.get<ApiResponse<PageResponse<TaiKhoanQuanTriResponse>>>(
-      '/api/users',
-      { params }
-    );
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<TaiKhoanQuanTriResponse>>
+    >("/api/users", { params });
     return response.data;
   },
 
@@ -333,9 +330,9 @@ export const identityService = {
    * GET /api/users/{id}
    */
   getChiTietTaiKhoan: async (id: number) => {
-    const response = await axiosClient.get<ApiResponse<ChiTietTaiKhoanResponse>>(
-      `/api/users/${id}`
-    );
+    const response = await axiosClient.get<
+      ApiResponse<ChiTietTaiKhoanResponse>
+    >(`/api/users/${id}`);
     return response.data;
   },
 
@@ -343,11 +340,13 @@ export const identityService = {
    * Cập nhật trạng thái tài khoản (Kích hoạt / Vô hiệu hóa)
    * PUT /api/users/{id}/status
    */
-  capNhatTrangThaiTaiKhoan: async (id: number, data: CapNhatTrangThaiTaiKhoanRequest) => {
-    const response = await axiosClient.put<ApiResponse<ChiTietTaiKhoanResponse>>(
-      `/api/users/${id}/status`,
-      data
-    );
+  capNhatTrangThaiTaiKhoan: async (
+    id: number,
+    data: CapNhatTrangThaiTaiKhoanRequest,
+  ) => {
+    const response = await axiosClient.put<
+      ApiResponse<ChiTietTaiKhoanResponse>
+    >(`/api/users/${id}/status`, data);
     return response.data;
   },
 
@@ -357,7 +356,7 @@ export const identityService = {
    */
   xoaTaiKhoan: async (id: number) => {
     const response = await axiosClient.delete<ApiResponse<void>>(
-      `/api/users/${id}`
+      `/api/users/${id}`,
     );
     return response.data;
   },

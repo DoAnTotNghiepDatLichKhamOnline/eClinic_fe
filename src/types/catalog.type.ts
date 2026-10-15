@@ -3,10 +3,15 @@ import type {
   TrangThaiBacSi,
   TrangThaiTaiKhoan,
   TrangThaiPhongKham,
-} from './common.type';
+} from "./common.type";
 
 // Re-export common types for convenience
-export type { LoaiAnhBacSi, TrangThaiBacSi, TrangThaiTaiKhoan, TrangThaiPhongKham };
+export type {
+  LoaiAnhBacSi,
+  TrangThaiBacSi,
+  TrangThaiTaiKhoan,
+  TrangThaiPhongKham,
+};
 
 // ==========================================
 // 1. CHUYÊN KHOA (SPECIALTY)
@@ -255,7 +260,7 @@ export interface ThuocResponse {
   donVi: string | null;
   moTa: string | null;
   daXacMinh: boolean;
-  trangThai: 'DANG_DUNG' | 'NGUNG_DUNG';
+  trangThai: "DANG_DUNG" | "NGUNG_DUNG";
   tenBacSiTao?: string | null;
   soLanKe: number;
   donViEn?: string | null;
@@ -273,7 +278,7 @@ export interface ThuocRequest {
 export interface GetThuocParams {
   tuKhoa?: string;
   daXacMinh?: boolean;
-  trangThai?: 'DANG_DUNG' | 'NGUNG_DUNG';
+  trangThai?: "DANG_DUNG" | "NGUNG_DUNG";
   trang?: number;
   kichThuoc?: number;
 }

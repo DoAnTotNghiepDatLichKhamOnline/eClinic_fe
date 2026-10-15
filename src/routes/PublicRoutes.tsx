@@ -28,7 +28,10 @@ export const PublicRoutes = () => {
       <Route path="/home" element={<LandingPage />} />
       <Route path="/entry" element={<RoleSelectionPage />} />
       <Route path="/appointment" element={<AppointmentBookingPage />} />
-      <Route path="/phieu-kham/:maPhieuKham" element={<AppointmentTicketPage />} />
+      <Route
+        path="/phieu-kham/:maPhieuKham"
+        element={<AppointmentTicketPage />}
+      />
       <Route path="/doctors" element={<DoctorPage />} />
       <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
       <Route path="/specialties" element={<SpecialtyDirectoryPage />} />
@@ -38,9 +41,15 @@ export const PublicRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPatient />} />
       <Route path="/reset-password" element={<ResetPasswordPatient />} />
       <Route path="/verify-email" element={<EmailTokenPage kind="verify" />} />
-      <Route path="/confirm-email-change" element={<EmailTokenPage kind="change" />} />
+      <Route
+        path="/confirm-email-change"
+        element={<EmailTokenPage kind="change" />}
+      />
       <Route path="/account" element={<ProtectedAccountPage />} />
-      <Route path="/account/sessions" element={<ProtectedAccountPage sessions />} />
+      <Route
+        path="/account/sessions"
+        element={<ProtectedAccountPage sessions />}
+      />
     </Routes>
   );
 };

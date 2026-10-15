@@ -11,10 +11,14 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useQueryClient } from "@tanstack/react-query";
-import { bookingService } from "@/services/bookingService";
+import { patientBookingService } from "@/services/booking/patientBooking.service";
 import type { HoSoCuaToiResponse } from "@/types/booking.type";
 import type { GioiTinh } from "@/types/common.type";
-import { useHoSoBenhNhan, useBookingActions, useThongTinDatLich } from "@/hooks/useBooking";
+import {
+  useHoSoBenhNhan,
+  useBookingActions,
+  useThongTinDatLich,
+} from "@/hooks/useBooking";
 import styles from "./PatientProfilePage.module.css";
 
 const initialForm: HoSoCuaToiResponse = {
@@ -78,17 +82,29 @@ export function PatientProfilePage() {
         soBaoHiemYTe: draft.soBaoHiemYTe,
         tienSuBenhLy: draft.tienSuBenhLy,
       });
-      if (!updated?.thanhCong || !updated.duLieu) throw new Error(updated?.thongDiep || "Profile update failed");
+      if (!updated?.thanhCong || !updated.duLieu)
+        throw new Error(updated?.thongDiep || "Profile update failed");
       setForm(updated.duLieu);
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (error) {
-      setSaveError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể lưu hồ sơ." : "Could not save profile.")));
+      setSaveError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : vi
+              ? "Không thể lưu hồ sơ."
+              : "Could not save profile."),
+      );
     }
   };
 
-  const saveRelative = async (event: React.FormEvent<HTMLFormElement>, id: number) => {
+  const saveRelative = async (
+    event: React.FormEvent<HTMLFormElement>,
+    id: number,
+  ) => {
     event.preventDefault();
     const values = new FormData(event.currentTarget);
     const relative = thongTin?.nguoiThan.find((item) => item.id === id);
@@ -106,29 +122,65 @@ export function PatientProfilePage() {
       if (!response.thanhCong) throw new Error(response.thongDiep);
       setFamilyError("");
       setEditingRelative(null);
-      await queryClient.invalidateQueries({ queryKey: ["booking", "thong-tin-dat-lich"] });
-      await queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "thong-tin-dat-lich"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "trang-ca-nhan"],
+      });
     } catch (error) {
-      setFamilyError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể cập nhật người thân." : "Could not update family member.")));
+      setFamilyError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : vi
+              ? "Không thể cập nhật người thân."
+              : "Could not update family member."),
+      );
     }
   };
 
   const removeRelative = async (id: number) => {
-    if (!window.confirm(vi ? "Xóa người thân khỏi danh sách đã lưu?" : "Remove this family member from saved details?")) return;
+    if (
+      !window.confirm(
+        vi
+          ? "Xóa người thân khỏi danh sách đã lưu?"
+          : "Remove this family member from saved details?",
+      )
+    )
+      return;
     try {
       const response = await bookingService.xoaNguoiThan(id);
       if (!response.thanhCong) throw new Error(response.thongDiep);
-      await queryClient.invalidateQueries({ queryKey: ["booking", "thong-tin-dat-lich"] });
-      await queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "thong-tin-dat-lich"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "trang-ca-nhan"],
+      });
     } catch (error) {
-      setFamilyError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : (vi ? "Không thể xóa người thân." : "Could not remove family member.")));
+      setFamilyError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : vi
+              ? "Không thể xóa người thân."
+              : "Could not remove family member."),
+      );
     }
   };
 
   const setDraftField = (key: keyof HoSoCuaToiResponse, value: any) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-  const completionFields = [form.cccd, form.ngaySinh, form.soBaoHiemYTe, form.tienSuBenhLy];
+  const completionFields = [
+    form.cccd,
+    form.ngaySinh,
+    form.soBaoHiemYTe,
+    form.tienSuBenhLy,
+  ];
   const completedCount = completionFields.filter(Boolean).length;
   const isComplete = completedCount === completionFields.length;
 
@@ -153,28 +205,49 @@ export function PatientProfilePage() {
         </div>
 
         {/* ─── Completion banner ─── */}
-        <div className={`${styles.statusBanner} ${isComplete ? styles.statusBannerComplete : ""}`}>
+        <div
+          className={`${styles.statusBanner} ${isComplete ? styles.statusBannerComplete : ""}`}
+        >
           <span className={styles.statusIcon}>
-            {isComplete ? <ShieldCheck size={18} /> : <AlertTriangle size={18} />}
+            {isComplete ? (
+              <ShieldCheck size={18} />
+            ) : (
+              <AlertTriangle size={18} />
+            )}
           </span>
           <span>
             {isLoading
-              ? (vi ? "Đang tải dữ liệu hồ sơ..." : "Loading profile data...")
+              ? vi
+                ? "Đang tải dữ liệu hồ sơ..."
+                : "Loading profile data..."
               : isComplete
-              ? (vi ? "Hồ sơ của bạn đã đầy đủ thông tin." : "Your profile is complete.")
-              : (vi
+                ? vi
+                  ? "Hồ sơ của bạn đã đầy đủ thông tin."
+                  : "Your profile is complete."
+                : vi
                   ? `Hồ sơ hoàn thành ${completedCount}/${completionFields.length} mục. Vui lòng bổ sung để đặt lịch thuận tiện hơn.`
-                  : `Profile ${completedCount}/${completionFields.length} complete. Please fill in the missing fields.`)}
+                  : `Profile ${completedCount}/${completionFields.length} complete. Please fill in the missing fields.`}
           </span>
         </div>
 
         {saved && (
-          <div className={`${styles.statusBanner} ${styles.statusBannerComplete}`}>
+          <div
+            className={`${styles.statusBanner} ${styles.statusBannerComplete}`}
+          >
             <Check size={16} />
-            {vi ? "Đã lưu hồ sơ bệnh nhân thành công!" : "Patient profile saved successfully!"}
+            {vi
+              ? "Đã lưu hồ sơ bệnh nhân thành công!"
+              : "Patient profile saved successfully!"}
           </div>
         )}
-        {saveError && <div className={`${styles.statusBanner} ${styles.statusBannerError}`} role="alert">{saveError}</div>}
+        {saveError && (
+          <div
+            className={`${styles.statusBanner} ${styles.statusBannerError}`}
+            role="alert"
+          >
+            {saveError}
+          </div>
+        )}
 
         {/* ─── Personal Identity Card ─── */}
         <div className={styles.card}>
@@ -183,7 +256,11 @@ export function PatientProfilePage() {
               {vi ? "Thông tin nhân thân" : "Personal Identity"}
             </h2>
             {!editing && (
-              <button className={styles.btnOutline} type="button" onClick={handleEdit}>
+              <button
+                className={styles.btnOutline}
+                type="button"
+                onClick={handleEdit}
+              >
                 <Edit3 size={14} />
                 {vi ? "Chỉnh sửa" : "Edit"}
               </button>
@@ -237,7 +314,9 @@ export function PatientProfilePage() {
                     id="pp-gender"
                     className={styles.select}
                     value={draft.gioiTinh || "NAM"}
-                    onChange={(e) => setDraftField("gioiTinh", e.target.value as GioiTinh)}
+                    onChange={(e) =>
+                      setDraftField("gioiTinh", e.target.value as GioiTinh)
+                    }
                   >
                     <option value="NAM">{vi ? "Nam" : "Male"}</option>
                     <option value="NU">{vi ? "Nữ" : "Female"}</option>
@@ -252,7 +331,9 @@ export function PatientProfilePage() {
                     id="pp-phone"
                     className={styles.input}
                     value={draft.soDienThoai || ""}
-                    onChange={(e) => setDraftField("soDienThoai", e.target.value)}
+                    onChange={(e) =>
+                      setDraftField("soDienThoai", e.target.value)
+                    }
                   />
                 </div>
                 <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
@@ -268,13 +349,27 @@ export function PatientProfilePage() {
                 </div>
               </div>
               <div className={styles.actionBar}>
-                <button className={styles.btnOutline} type="button" onClick={handleCancel}>
+                <button
+                  className={styles.btnOutline}
+                  type="button"
+                  onClick={handleCancel}
+                >
                   <X size={14} />
                   {vi ? "Hủy" : "Cancel"}
                 </button>
-                <button className={styles.btnPrimary} type="submit" disabled={isUpdatingHoSo}>
+                <button
+                  className={styles.btnPrimary}
+                  type="submit"
+                  disabled={isUpdatingHoSo}
+                >
                   <Save size={14} />
-                  {isUpdatingHoSo ? (vi ? "Đang lưu..." : "Saving...") : (vi ? "Lưu thay đổi" : "Save changes")}
+                  {isUpdatingHoSo
+                    ? vi
+                      ? "Đang lưu..."
+                      : "Saving..."
+                    : vi
+                      ? "Lưu thay đổi"
+                      : "Save changes"}
                 </button>
               </div>
             </form>
@@ -282,32 +377,61 @@ export function PatientProfilePage() {
             <div className={styles.viewGrid}>
               {[
                 { label: vi ? "Họ và tên" : "Full name", value: form.hoTen },
-                { label: vi ? "Số CCCD / CMND" : "National ID", value: form.cccd },
+                {
+                  label: vi ? "Số CCCD / CMND" : "National ID",
+                  value: form.cccd,
+                },
                 {
                   label: vi ? "Ngày sinh" : "Date of birth",
-                  value: form.ngaySinh ? new Date(form.ngaySinh).toLocaleDateString(vi ? "vi-VN" : "en-US") : "",
+                  value: form.ngaySinh
+                    ? new Date(form.ngaySinh).toLocaleDateString(
+                        vi ? "vi-VN" : "en-US",
+                      )
+                    : "",
                 },
                 {
                   label: vi ? "Giới tính" : "Gender",
-                  value: form.gioiTinh === "NAM" ? (vi ? "Nam" : "Male") : form.gioiTinh === "NU" ? (vi ? "Nữ" : "Female") : form.gioiTinh === "KHAC" ? (vi ? "Khác" : "Other") : "",
+                  value:
+                    form.gioiTinh === "NAM"
+                      ? vi
+                        ? "Nam"
+                        : "Male"
+                      : form.gioiTinh === "NU"
+                        ? vi
+                          ? "Nữ"
+                          : "Female"
+                        : form.gioiTinh === "KHAC"
+                          ? vi
+                            ? "Khác"
+                            : "Other"
+                          : "",
                 },
-                { label: vi ? "Số điện thoại" : "Phone", value: form.soDienThoai },
+                {
+                  label: vi ? "Số điện thoại" : "Phone",
+                  value: form.soDienThoai,
+                },
               ].map((item) => (
                 <div className={styles.viewItem} key={item.label}>
                   <span className={styles.viewItemLabel}>{item.label}</span>
                   {item.value ? (
                     <span className={styles.viewItemValue}>{item.value}</span>
                   ) : (
-                    <span className={styles.viewItemEmpty}>{vi ? "Chưa cập nhật" : "Not provided"}</span>
+                    <span className={styles.viewItemEmpty}>
+                      {vi ? "Chưa cập nhật" : "Not provided"}
+                    </span>
                   )}
                 </div>
               ))}
               <div className={`${styles.viewItem} ${styles.fullWidth}`}>
-                <span className={styles.viewItemLabel}>{vi ? "Địa chỉ" : "Address"}</span>
+                <span className={styles.viewItemLabel}>
+                  {vi ? "Địa chỉ" : "Address"}
+                </span>
                 {form.diaChi ? (
                   <span className={styles.viewItemValue}>{form.diaChi}</span>
                 ) : (
-                  <span className={styles.viewItemEmpty}>{vi ? "Chưa cập nhật" : "Not provided"}</span>
+                  <span className={styles.viewItemEmpty}>
+                    {vi ? "Chưa cập nhật" : "Not provided"}
+                  </span>
                 )}
               </div>
             </div>
@@ -321,7 +445,11 @@ export function PatientProfilePage() {
               {vi ? "Bảo hiểm y tế" : "Health Insurance"}
             </h2>
             {!editing && (
-              <button className={styles.btnOutline} type="button" onClick={handleEdit}>
+              <button
+                className={styles.btnOutline}
+                type="button"
+                onClick={handleEdit}
+              >
                 <Edit3 size={14} />
                 {vi ? "Cập nhật" : "Update"}
               </button>
@@ -336,14 +464,20 @@ export function PatientProfilePage() {
                 <div className={styles.insuranceName}>
                   {vi ? "Bảo hiểm Y tế Quốc gia" : "National Health Insurance"}
                 </div>
-                <div className={styles.insuranceNumber}>{form.soBaoHiemYTe}</div>
+                <div className={styles.insuranceNumber}>
+                  {form.soBaoHiemYTe}
+                </div>
                 <div className={styles.insuranceExpiry}>
                   {vi ? "Thẻ còn hiệu lực" : "Card is active"}
                 </div>
               </div>
             </div>
           ) : (
-            <span className={styles.viewItemEmpty}>{vi ? "Chưa cập nhật số bảo hiểm y tế" : "No health insurance number provided"}</span>
+            <span className={styles.viewItemEmpty}>
+              {vi
+                ? "Chưa cập nhật số bảo hiểm y tế"
+                : "No health insurance number provided"}
+            </span>
           )}
         </div>
 
@@ -354,7 +488,11 @@ export function PatientProfilePage() {
               {vi ? "Tiền sử bệnh lý" : "Medical History"}
             </h2>
             {!editing && (
-              <button className={styles.btnOutline} type="button" onClick={handleEdit}>
+              <button
+                className={styles.btnOutline}
+                type="button"
+                onClick={handleEdit}
+              >
                 <Edit3 size={14} />
                 {vi ? "Cập nhật" : "Update"}
               </button>
@@ -363,35 +501,173 @@ export function PatientProfilePage() {
           {editing ? (
             <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
               <label className={styles.fieldLabel} htmlFor="pp-history">
-                {vi ? "Tiền sử bệnh lý & Dị ứng" : "Medical history & Allergies"}
+                {vi
+                  ? "Tiền sử bệnh lý & Dị ứng"
+                  : "Medical history & Allergies"}
               </label>
               <textarea
                 id="pp-history"
                 className={styles.textarea}
                 value={draft.tienSuBenhLy || ""}
                 onChange={(e) => setDraftField("tienSuBenhLy", e.target.value)}
-                placeholder={vi ? "Mô tả các bệnh lý nền, dị ứng thuốc..." : "Describe chronic conditions, drug allergies..."}
+                placeholder={
+                  vi
+                    ? "Mô tả các bệnh lý nền, dị ứng thuốc..."
+                    : "Describe chronic conditions, drug allergies..."
+                }
               />
             </div>
+          ) : form.tienSuBenhLy ? (
+            <p
+              className={styles.viewItemValue}
+              style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}
+            >
+              {form.tienSuBenhLy}
+            </p>
           ) : (
-            form.tienSuBenhLy ? (
-              <p className={styles.viewItemValue} style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
-                {form.tienSuBenhLy}
-              </p>
-            ) : (
-              <span className={styles.viewItemEmpty}>{vi ? "Chưa cập nhật tiền sử bệnh lý" : "No medical history provided"}</span>
-            )
+            <span className={styles.viewItemEmpty}>
+              {vi
+                ? "Chưa cập nhật tiền sử bệnh lý"
+                : "No medical history provided"}
+            </span>
           )}
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardTitleRow}><h2 className={styles.cardTitle}>{vi ? "Người thân đã lưu" : "Saved family members"}</h2></div>
-          {familyError && <p role="alert" className="mb-3 text-sm text-rose-700">{familyError}</p>}
-          {!thongTin?.nguoiThan.length ? <p className={styles.viewItemEmpty}>{vi ? "Chưa có người thân đã lưu. Có thể lưu người thân khi đặt lịch." : "No saved family members. Save a family member during booking."}</p> : <div className="grid gap-4">{thongTin.nguoiThan.map((relative) => <article className="border-b border-slate-200 pb-4" key={relative.id}>
-            {editingRelative === relative.id ? <form className="grid gap-3 sm:grid-cols-2" onSubmit={(event) => void saveRelative(event, relative.id)}>
-              <label className="grid gap-1 text-xs">{vi ? "Họ tên" : "Full name"}<input name="hoTen" required defaultValue={relative.hoTen} /></label><label className="grid gap-1 text-xs">{vi ? "Ngày sinh" : "Date of birth"}<input name="ngaySinh" type="date" required defaultValue={relative.ngaySinh} /></label><label className="grid gap-1 text-xs">{vi ? "Giới tính" : "Gender"}<select name="gioiTinh" defaultValue={relative.gioiTinh}><option value="NAM">NAM</option><option value="NU">NU</option><option value="KHAC">KHAC</option></select></label><label className="grid gap-1 text-xs">{vi ? "Điện thoại" : "Phone"}<input name="soDienThoai" required defaultValue={relative.soDienThoai} /></label><label className="grid gap-1 text-xs">Email<input name="email" type="email" defaultValue={relative.email ?? ""} /></label><label className="grid gap-1 text-xs">{vi ? "Địa chỉ" : "Address"}<input name="diaChi" defaultValue={relative.diaChi ?? ""} /></label><label className="grid gap-1 text-xs">{vi ? "Bảo hiểm y tế" : "Health insurance"}<input name="soBaoHiemYTe" defaultValue={relative.soBaoHiemYTe ?? ""} /></label><div className="flex gap-2"><button className={styles.btnPrimary} type="submit">{vi ? "Lưu" : "Save"}</button><button className={styles.btnOutline} type="button" onClick={() => setEditingRelative(null)}>{vi ? "Hủy" : "Cancel"}</button></div>
-            </form> : <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{relative.hoTen}</strong><p className="text-xs text-slate-500">{relative.ngaySinh} · {relative.soDienThoai}{relative.nguoiGiamHo ? ` · ${vi ? "Người giám hộ" : "Guardian"}: ${relative.nguoiGiamHo.hoTen}` : ""}</p></div><div className="flex gap-2"><button className={styles.btnOutline} type="button" onClick={() => setEditingRelative(relative.id)}>{vi ? "Sửa" : "Edit"}</button><button className={styles.btnOutline} type="button" onClick={() => void removeRelative(relative.id)}>{vi ? "Xóa" : "Remove"}</button></div></div>}
-          </article>)}</div>}
+          <div className={styles.cardTitleRow}>
+            <h2 className={styles.cardTitle}>
+              {vi ? "Người thân đã lưu" : "Saved family members"}
+            </h2>
+          </div>
+          {familyError && (
+            <p role="alert" className="mb-3 text-sm text-rose-700">
+              {familyError}
+            </p>
+          )}
+          {!thongTin?.nguoiThan.length ? (
+            <p className={styles.viewItemEmpty}>
+              {vi
+                ? "Chưa có người thân đã lưu. Có thể lưu người thân khi đặt lịch."
+                : "No saved family members. Save a family member during booking."}
+            </p>
+          ) : (
+            <div className="grid gap-4">
+              {thongTin.nguoiThan.map((relative) => (
+                <article
+                  className="border-b border-slate-200 pb-4"
+                  key={relative.id}
+                >
+                  {editingRelative === relative.id ? (
+                    <form
+                      className="grid gap-3 sm:grid-cols-2"
+                      onSubmit={(event) =>
+                        void saveRelative(event, relative.id)
+                      }
+                    >
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Họ tên" : "Full name"}
+                        <input
+                          name="hoTen"
+                          required
+                          defaultValue={relative.hoTen}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Ngày sinh" : "Date of birth"}
+                        <input
+                          name="ngaySinh"
+                          type="date"
+                          required
+                          defaultValue={relative.ngaySinh}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Giới tính" : "Gender"}
+                        <select
+                          name="gioiTinh"
+                          defaultValue={relative.gioiTinh}
+                        >
+                          <option value="NAM">NAM</option>
+                          <option value="NU">NU</option>
+                          <option value="KHAC">KHAC</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Điện thoại" : "Phone"}
+                        <input
+                          name="soDienThoai"
+                          required
+                          defaultValue={relative.soDienThoai}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        Email
+                        <input
+                          name="email"
+                          type="email"
+                          defaultValue={relative.email ?? ""}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Địa chỉ" : "Address"}
+                        <input
+                          name="diaChi"
+                          defaultValue={relative.diaChi ?? ""}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs">
+                        {vi ? "Bảo hiểm y tế" : "Health insurance"}
+                        <input
+                          name="soBaoHiemYTe"
+                          defaultValue={relative.soBaoHiemYTe ?? ""}
+                        />
+                      </label>
+                      <div className="flex gap-2">
+                        <button className={styles.btnPrimary} type="submit">
+                          {vi ? "Lưu" : "Save"}
+                        </button>
+                        <button
+                          className={styles.btnOutline}
+                          type="button"
+                          onClick={() => setEditingRelative(null)}
+                        >
+                          {vi ? "Hủy" : "Cancel"}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <strong>{relative.hoTen}</strong>
+                        <p className="text-xs text-slate-500">
+                          {relative.ngaySinh} · {relative.soDienThoai}
+                          {relative.nguoiGiamHo
+                            ? ` · ${vi ? "Người giám hộ" : "Guardian"}: ${relative.nguoiGiamHo.hoTen}`
+                            : ""}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className={styles.btnOutline}
+                          type="button"
+                          onClick={() => setEditingRelative(relative.id)}
+                        >
+                          {vi ? "Sửa" : "Edit"}
+                        </button>
+                        <button
+                          className={styles.btnOutline}
+                          type="button"
+                          onClick={() => void removeRelative(relative.id)}
+                        >
+                          {vi ? "Xóa" : "Remove"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </PatientPortal>

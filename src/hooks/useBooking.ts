@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { bookingService } from '@/services/bookingService';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { patientBookingService } from "@/services/booking/patientBooking.service";
 import type {
   HoSoCuaToiRequest,
   GetLichHenParams,
@@ -8,14 +8,14 @@ import type {
   DanhGiaRequest,
   DatLichRequest,
   GetNgayConChoParams,
-} from '@/types/booking.type';
+} from "@/types/booking.type";
 
 /**
  * Hook lấy hồ sơ bệnh nhân của người dùng
  */
 export function useHoSoBenhNhan() {
   const query = useQuery({
-    queryKey: ['booking', 'ho-so-benh-nhan'],
+    queryKey: ["booking", "ho-so-benh-nhan"],
     queryFn: () => bookingService.getHoSoCuaToi(),
   });
 
@@ -30,7 +30,7 @@ export function useHoSoBenhNhan() {
  */
 export function useTrangCaNhan() {
   const query = useQuery({
-    queryKey: ['booking', 'trang-ca-nhan'],
+    queryKey: ["booking", "trang-ca-nhan"],
     queryFn: () => bookingService.getTrangCaNhan(),
   });
 
@@ -45,7 +45,7 @@ export function useTrangCaNhan() {
  */
 export function useDanhSachLichHen(params?: GetLichHenParams) {
   const query = useQuery({
-    queryKey: ['booking', 'lich-hen', params],
+    queryKey: ["booking", "lich-hen", params],
     queryFn: () => bookingService.getDanhSachLichHen(params),
   });
 
@@ -63,7 +63,7 @@ export function useDanhSachLichHen(params?: GetLichHenParams) {
  */
 export function useChiTietLichHen(maPhieuKham?: string) {
   const query = useQuery({
-    queryKey: ['booking', 'lich-hen-detail', maPhieuKham],
+    queryKey: ["booking", "lich-hen-detail", maPhieuKham],
     queryFn: () => bookingService.getChiTietLichHen(maPhieuKham!),
     enabled: Boolean(maPhieuKham),
   });
@@ -79,7 +79,7 @@ export function useChiTietLichHen(maPhieuKham?: string) {
  */
 export function useThongTinDatLich(enabled = true) {
   const query = useQuery({
-    queryKey: ['booking', 'thong-tin-dat-lich'],
+    queryKey: ["booking", "thong-tin-dat-lich"],
     queryFn: () => bookingService.getThongTinDatLich(),
     enabled,
   });
@@ -95,7 +95,7 @@ export function useThongTinDatLich(enabled = true) {
  */
 export function useNgayConCho(params?: GetNgayConChoParams) {
   const query = useQuery({
-    queryKey: ['booking', 'ngay-con-cho', params],
+    queryKey: ["booking", "ngay-con-cho", params],
     queryFn: () => bookingService.getNgayConCho(params!),
     enabled: Boolean(params?.tuNgay && params?.denNgay),
   });
@@ -109,9 +109,13 @@ export function useNgayConCho(params?: GetNgayConChoParams) {
 /**
  * Hook lấy ca khám và khung giờ theo ngày
  */
-export function useCaKhamTheoNgay(params?: { ngay: string; idBacSi?: number; idChuyenKhoa?: number }) {
+export function useCaKhamTheoNgay(params?: {
+  ngay: string;
+  idBacSi?: number;
+  idChuyenKhoa?: number;
+}) {
   const query = useQuery({
-    queryKey: ['booking', 'ca-kham', params],
+    queryKey: ["booking", "ca-kham", params],
     queryFn: () => bookingService.getCaKhamTheoNgay(params!),
     enabled: Boolean(params?.ngay),
   });
@@ -125,9 +129,12 @@ export function useCaKhamTheoNgay(params?: { ngay: string; idBacSi?: number; idC
 /**
  * Hook lấy khung giờ gộp theo chuyên khoa trong ngày
  */
-export function useKhungGioGop(params?: { idChuyenKhoa: number; ngay: string }) {
+export function useKhungGioGop(params?: {
+  idChuyenKhoa: number;
+  ngay: string;
+}) {
   const query = useQuery({
-    queryKey: ['booking', 'khung-gio-gop', params],
+    queryKey: ["booking", "khung-gio-gop", params],
     queryFn: () => bookingService.getKhungGioGop(params!),
     enabled: Boolean(params?.idChuyenKhoa && params?.ngay),
   });
@@ -147,51 +154,76 @@ export function useBookingActions() {
   const datLichMutation = useMutation({
     mutationFn: (data: DatLichRequest) => bookingService.datLich(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', 'trang-ca-nhan'] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
     },
   });
 
   const capNhatHoSoMutation = useMutation({
-    mutationFn: (data: HoSoCuaToiRequest) => bookingService.capNhatHoSoCuaToi(data),
+    mutationFn: (data: HoSoCuaToiRequest) =>
+      bookingService.capNhatHoSoCuaToi(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'ho-so-benh-nhan'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', 'trang-ca-nhan'] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking", "ho-so-benh-nhan"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
     },
   });
 
   const huyLichMutation = useMutation({
-    mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: HuyLichRequest }) =>
-      bookingService.huyLichHen(maPhieuKham, data),
+    mutationFn: ({
+      maPhieuKham,
+      data,
+    }: {
+      maPhieuKham: string;
+      data: HuyLichRequest;
+    }) => bookingService.huyLichHen(maPhieuKham, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', 'trang-ca-nhan'] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
     },
   });
 
   const doiLichMutation = useMutation({
-    mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: DoiLichRequest }) =>
-      bookingService.doiLichHen(maPhieuKham, data),
+    mutationFn: ({
+      maPhieuKham,
+      data,
+    }: {
+      maPhieuKham: string;
+      data: DoiLichRequest;
+    }) => bookingService.doiLichHen(maPhieuKham, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', 'trang-ca-nhan'] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
     },
   });
 
   const danhGiaMutation = useMutation({
-    mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: DanhGiaRequest }) =>
-      bookingService.taoDanhGia(maPhieuKham, data),
+    mutationFn: ({
+      maPhieuKham,
+      data,
+    }: {
+      maPhieuKham: string;
+      data: DanhGiaRequest;
+    }) => bookingService.taoDanhGia(maPhieuKham, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
     },
   });
 
   const suaDanhGiaMutation = useMutation({
-    mutationFn: ({ maPhieuKham, data }: { maPhieuKham: string; data: DanhGiaRequest }) =>
-      bookingService.suaDanhGia(maPhieuKham, data),
+    mutationFn: ({
+      maPhieuKham,
+      data,
+    }: {
+      maPhieuKham: string;
+      data: DanhGiaRequest;
+    }) => bookingService.suaDanhGia(maPhieuKham, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen'] });
-      queryClient.invalidateQueries({ queryKey: ['booking', 'lich-hen-detail', variables.maPhieuKham] });
+      queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking", "lich-hen-detail", variables.maPhieuKham],
+      });
     },
   });
 

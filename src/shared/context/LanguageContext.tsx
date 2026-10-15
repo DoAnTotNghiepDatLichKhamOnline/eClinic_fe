@@ -17,9 +17,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const syncPreference = () => setLang(localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en");
+    const syncPreference = () =>
+      setLang(localStorage.getItem("eclinic_language") === "vi" ? "vi" : "en");
     window.addEventListener("eclinic:language-change", syncPreference);
-    return () => window.removeEventListener("eclinic:language-change", syncPreference);
+    return () =>
+      window.removeEventListener("eclinic:language-change", syncPreference);
   }, []);
 
   const toggleLanguage = () => {

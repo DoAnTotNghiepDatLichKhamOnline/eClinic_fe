@@ -54,7 +54,11 @@ interface ConsultationLookup {
     gioKhamDuKien: string;
     trangThai: string;
     lyDoKham: string;
-    doiChieu?: { canDoiChieu: boolean; hoTenDaNhap?: string; ngaySinhDaNhap?: string };
+    doiChieu?: {
+      canDoiChieu: boolean;
+      hoTenDaNhap?: string;
+      ngaySinhDaNhap?: string;
+    };
   };
   hoSoBenhNhan: {
     id: number;
@@ -67,8 +71,17 @@ interface ConsultationLookup {
     tienSuBenhLy?: string | null;
     soBaoHiemYTe?: string | null;
   };
-  lanKhamTruoc: Array<{ ngay: string; tenChuyenKhoa: string; hoTenBacSi: string; ketQua?: { chanDoan: string } | null }>;
-  ketQua?: { chanDoan: string; ghiChu?: string | null; ngayTaiKhamDeXuat?: string | null } | null;
+  lanKhamTruoc: Array<{
+    ngay: string;
+    tenChuyenKhoa: string;
+    hoTenBacSi: string;
+    ketQua?: { chanDoan: string } | null;
+  }>;
+  ketQua?: {
+    chanDoan: string;
+    ghiChu?: string | null;
+    ngayTaiKhamDeXuat?: string | null;
+  } | null;
 }
 
 interface DoctorWorkspaceProps {
@@ -82,7 +95,9 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [patientCode, setPatientCode] = useState("");
   const [patientLookup, setPatientLookup] = useState<Appointment | null>(null);
-  const [lookupDetails, setLookupDetails] = useState<ConsultationLookup | null>(null);
+  const [lookupDetails, setLookupDetails] = useState<ConsultationLookup | null>(
+    null,
+  );
   const [medicationName, setMedicationName] = useState("");
   const [consultationError, setConsultationError] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
@@ -95,26 +110,42 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const today = new Date();
-  const formatDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const formatDateKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const queryStart = new Date(scheduleDate);
-  if (scheduleView === "week") queryStart.setDate(queryStart.getDate() - ((queryStart.getDay() + 6) % 7));
+  if (scheduleView === "week")
+    queryStart.setDate(queryStart.getDate() - ((queryStart.getDay() + 6) % 7));
   const queryEnd = new Date(queryStart);
   if (scheduleView === "week") queryEnd.setDate(queryEnd.getDate() + 6);
   const scheduleFrom = formatDateKey(queryStart);
   const scheduleTo = formatDateKey(queryEnd);
   const { data: shiftsResponse, isLoading: isLoadingShifts } = useQuery({
     queryKey: ["booking", "doctor-shifts", scheduleFrom, scheduleTo],
-    queryFn: () => bookingService.getLichTuanBacSi({ tuNgay: scheduleFrom, denNgay: scheduleTo }),
+    queryFn: () =>
+      bookingService.getLichTuanBacSi({
+        tuNgay: scheduleFrom,
+        denNgay: scheduleTo,
+      }),
     enabled: activeSection === "schedule",
   });
   const { data: calendarAppointmentsResponse } = useQuery({
-    queryKey: ["booking", "doctor-calendar-appointments", scheduleFrom, scheduleTo],
-    queryFn: () => bookingService.getLichHenLichBacSi({ tuNgay: scheduleFrom, denNgay: scheduleTo }),
+    queryKey: [
+      "booking",
+      "doctor-calendar-appointments",
+      scheduleFrom,
+      scheduleTo,
+    ],
+    queryFn: () =>
+      bookingService.getLichHenLichBacSi({
+        tuNgay: scheduleFrom,
+        denNgay: scheduleTo,
+      }),
     enabled: activeSection === "schedule",
   });
   const { data: ownShiftRequestsResponse } = useQuery({
     queryKey: ["booking", "doctor-shift-requests"],
-    queryFn: () => bookingService.getYeuCauDoiLichBacSi({ trang: 0, kichThuoc: 100 }),
+    queryFn: () =>
+      bookingService.getYeuCauDoiLichBacSi({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "schedule",
   });
   const shifts = shiftsResponse?.duLieu ?? [];
@@ -123,7 +154,8 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const medicationQuery = useQuery({
     queryKey: ["medical", "doctor-medications", medicationName],
     queryFn: () => bookingService.getThuocGoiY(medicationName),
-    enabled: activeSection === "consultation" && medicationName.trim().length >= 2,
+    enabled:
+      activeSection === "consultation" && medicationName.trim().length >= 2,
   });
   const doctorAccountQuery = useQuery({
     queryKey: ["identity", "doctor-profile"],
@@ -140,17 +172,29 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const doctorAccount = doctorAccountQuery.data?.duLieu;
   const { data: requestResponse } = useQuery({
     queryKey: ["booking", "doctor-appointment-requests"],
-    queryFn: () => bookingService.getDanhSachYeuCauBacSi({ trang: 0, kichThuoc: 100 }),
+    queryFn: () =>
+      bookingService.getDanhSachYeuCauBacSi({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "appointments",
   });
-  const appointments: Appointment[] = (requestResponse?.duLieu?.noiDung ?? []).map((visit) => ({
+  const appointments: Appointment[] = (
+    requestResponse?.duLieu?.noiDung ?? []
+  ).map((visit) => ({
     id: String(visit.id ?? visit.maTraCuu),
     time: `${visit.gioKhamDuKien} - ${visit.gioKetThucKhung}`,
     patientName: visit.hoTenBenhNhan,
-    age: visit.ngaySinhBenhNhan ? today.getFullYear() - Number(visit.ngaySinhBenhNhan.slice(0, 4)) : 0,
+    age: visit.ngaySinhBenhNhan
+      ? today.getFullYear() - Number(visit.ngaySinhBenhNhan.slice(0, 4))
+      : 0,
     phone: "",
     reason: visit.lyDoKham,
-    status: visit.trangThai === "DA_XAC_NHAN" ? "accepted" : visit.trangThai === "DA_HOAN_THANH" ? "completed" : visit.trangThai === "BI_TU_CHOI" ? "declined" : "pending",
+    status:
+      visit.trangThai === "DA_XAC_NHAN"
+        ? "accepted"
+        : visit.trangThai === "DA_HOAN_THANH"
+          ? "completed"
+          : visit.trangThai === "BI_TU_CHOI"
+            ? "declined"
+            : "pending",
   }));
 
   useEffect(() => {
@@ -204,9 +248,16 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const acceptAppointment = async (appointmentId: string) => {
     try {
       await bookingService.xacNhanLichHenBacSi(Number(appointmentId));
-      await queryClient.invalidateQueries({ queryKey: ["booking", "doctor-appointment-requests"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "doctor-appointment-requests"],
+      });
     } catch (error) {
-      notifyAuth("error", lang === "vi" ? "Không thể xác nhận" : "Could not accept", (error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? "Request failed");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Không thể xác nhận" : "Could not accept",
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ?? "Request failed",
+      );
       return;
     }
     notifyAuth(
@@ -227,10 +278,19 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     const reason = String(formData.get("rejectionReason") || "").trim();
     if (!reason) return;
     try {
-      await bookingService.tuChoiLichHenBacSi(Number(appointmentId), { lyDo: reason });
-      await queryClient.invalidateQueries({ queryKey: ["booking", "doctor-appointment-requests"] });
+      await bookingService.tuChoiLichHenBacSi(Number(appointmentId), {
+        lyDo: reason,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "doctor-appointment-requests"],
+      });
     } catch (error) {
-      notifyAuth("error", lang === "vi" ? "Không thể từ chối" : "Could not decline", (error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? "Request failed");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Không thể từ chối" : "Could not decline",
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ?? "Request failed",
+      );
       return;
     }
     setRejectingId(null);
@@ -249,7 +309,8 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     setConsultationError("");
     try {
       const response = await bookingService.traCuuHoSoKhamBacSi(normalizedCode);
-      if (!response.thanhCong || !response.duLieu) throw new Error(response.thongDiep || "Visit not found");
+      if (!response.thanhCong || !response.duLieu)
+        throw new Error(response.thongDiep || "Visit not found");
       const details = response.duLieu as ConsultationLookup;
       setLookupDetails(details);
       setPatientLookup({
@@ -259,7 +320,12 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
         phone: details.hoSoBenhNhan.soDienThoai,
         time: details.lichHen.gioKhamDuKien,
         reason: details.lichHen.lyDoKham,
-        status: details.lichHen.trangThai === "DA_HOAN_THANH" ? "completed" : details.lichHen.trangThai === "DA_XAC_NHAN" ? "accepted" : "pending",
+        status:
+          details.lichHen.trangThai === "DA_HOAN_THANH"
+            ? "completed"
+            : details.lichHen.trangThai === "DA_XAC_NHAN"
+              ? "accepted"
+              : "pending",
       });
       setCompletedRecord(null);
       setDiagnosis(details.ketQua?.chanDoan ?? "");
@@ -268,11 +334,19 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     } catch (error) {
       setPatientLookup(null);
       setLookupDetails(null);
-      setConsultationError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : "Visit not found"));
+      setConsultationError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error ? error.message : "Visit not found"),
+      );
       notifyAuth(
         "error",
         lang === "vi" ? "Không tìm thấy phiếu khám" : "Visit not found",
-        (error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (lang === "vi" ? "Kiểm tra mã tra cứu hoặc nội dung QR." : "Check the visit code or QR content."),
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (lang === "vi"
+            ? "Kiểm tra mã tra cứu hoặc nội dung QR."
+            : "Check the visit code or QR content."),
       );
     }
   };
@@ -282,32 +356,65 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     if (!lookupDetails) return;
     const values = new FormData(event.currentTarget);
     try {
-      const response = await bookingService.capNhatBenhNhanKhamBacSi(lookupDetails.lichHen.id, {
-        hoTen: String(values.get("hoTen") || "").trim(),
-        ngaySinh: String(values.get("ngaySinh") || ""),
-        soDienThoai: String(values.get("soDienThoai") || "").trim(),
-        gioiTinh: String(values.get("gioiTinh") || "NAM") as "NAM" | "NU" | "KHAC",
-        diaChi: String(values.get("diaChi") || "").trim() || undefined,
-        cccd: String(values.get("cccd") || "").trim() || undefined,
-      });
+      const response = await bookingService.capNhatBenhNhanKhamBacSi(
+        lookupDetails.lichHen.id,
+        {
+          hoTen: String(values.get("hoTen") || "").trim(),
+          ngaySinh: String(values.get("ngaySinh") || ""),
+          soDienThoai: String(values.get("soDienThoai") || "").trim(),
+          gioiTinh: String(values.get("gioiTinh") || "NAM") as
+            | "NAM"
+            | "NU"
+            | "KHAC",
+          diaChi: String(values.get("diaChi") || "").trim() || undefined,
+          cccd: String(values.get("cccd") || "").trim() || undefined,
+        },
+      );
       if (!response.thanhCong) throw new Error(response.thongDiep);
-      await bookingService.traCuuHoSoKhamBacSi(lookupDetails.lichHen.maTraCuu).then((result) => {
-        if (result.duLieu) setLookupDetails(result.duLieu as ConsultationLookup);
-      });
-      notifyAuth("success", lang === "vi" ? "Đã cập nhật hồ sơ" : "Patient details updated", response.thongDiep);
+      await bookingService
+        .traCuuHoSoKhamBacSi(lookupDetails.lichHen.maTraCuu)
+        .then((result) => {
+          if (result.duLieu)
+            setLookupDetails(result.duLieu as ConsultationLookup);
+        });
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đã cập nhật hồ sơ" : "Patient details updated",
+        response.thongDiep,
+      );
     } catch (error) {
-      setConsultationError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : "Could not update patient details"));
+      setConsultationError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : "Could not update patient details"),
+      );
     }
   };
 
   const markIdentityChecked = async () => {
     if (!lookupDetails) return;
     try {
-      const response = await bookingService.danhDauDaDoiChieuBacSi(lookupDetails.lichHen.id);
+      const response = await bookingService.danhDauDaDoiChieuBacSi(
+        lookupDetails.lichHen.id,
+      );
       if (!response.thanhCong) throw new Error(response.thongDiep);
-      setLookupDetails({ ...lookupDetails, lichHen: { ...lookupDetails.lichHen, doiChieu: { ...lookupDetails.lichHen.doiChieu, canDoiChieu: false } } });
+      setLookupDetails({
+        ...lookupDetails,
+        lichHen: {
+          ...lookupDetails.lichHen,
+          doiChieu: { ...lookupDetails.lichHen.doiChieu, canDoiChieu: false },
+        },
+      });
     } catch (error) {
-      setConsultationError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : "Could not mark identity as checked"));
+      setConsultationError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : "Could not mark identity as checked"),
+      );
     }
   };
 
@@ -315,26 +422,66 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     event.preventDefault();
     if (!patientLookup || !lookupDetails || !diagnosis.trim()) return;
     setConsultationError("");
-    const selectedMedicine = (medicationQuery.data?.duLieu ?? []).find((medicine) => medicine.tenThuoc === medicationName.trim());
+    const selectedMedicine = (medicationQuery.data?.duLieu ?? []).find(
+      (medicine) => medicine.tenThuoc === medicationName.trim(),
+    );
     try {
-      const response = await bookingService.ghiBenhAnBacSi(lookupDetails.lichHen.id, {
-        chanDoan: diagnosis.trim(),
-        ghiChu: prescription.trim() || undefined,
-        donThuoc: selectedMedicine ? [{ tenThuoc: selectedMedicine.tenThuoc, donVi: selectedMedicine.donVi ?? "", lieuDung: prescription.trim() || "Theo chỉ định", soLanMoiNgay: 1, soNgayDung: 1, ghiChuSuDung: null }] : [],
-      }, Boolean(lookupDetails.ketQua));
-      if (!response.thanhCong || !response.duLieu) throw new Error(response.thongDiep || "Could not save the medical record");
+      const response = await bookingService.ghiBenhAnBacSi(
+        lookupDetails.lichHen.id,
+        {
+          chanDoan: diagnosis.trim(),
+          ghiChu: prescription.trim() || undefined,
+          donThuoc: selectedMedicine
+            ? [
+                {
+                  tenThuoc: selectedMedicine.tenThuoc,
+                  donVi: selectedMedicine.donVi ?? "",
+                  lieuDung: prescription.trim() || "Theo chỉ định",
+                  soLanMoiNgay: 1,
+                  soNgayDung: 1,
+                  ghiChuSuDung: null,
+                },
+              ]
+            : [],
+        },
+        Boolean(lookupDetails.ketQua),
+      );
+      if (!response.thanhCong || !response.duLieu)
+        throw new Error(
+          response.thongDiep || "Could not save the medical record",
+        );
       setCompletedRecord({
         recordCode: lookupDetails.lichHen.maTraCuu,
         appointmentCode: lookupDetails.lichHen.maTraCuu,
         patientName: patientLookup.patientName,
         diagnosis: response.duLieu.chanDoan,
-        prescription: response.duLieu.donThuoc.map((medicine) => `${medicine.tenThuoc}: ${medicine.lieuDung}`).join("; ") || response.duLieu.ghiChu || "",
-        createdAt: new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
+        prescription:
+          response.duLieu.donThuoc
+            .map((medicine) => `${medicine.tenThuoc}: ${medicine.lieuDung}`)
+            .join("; ") ||
+          response.duLieu.ghiChu ||
+          "",
+        createdAt: new Intl.DateTimeFormat(lang, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(new Date()),
       });
-      await queryClient.invalidateQueries({ queryKey: ["booking", "doctor-today"] });
-      notifyAuth("success", lang === "vi" ? "Đã lưu bệnh án" : "Medical record saved", response.thongDiep);
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "doctor-today"],
+      });
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đã lưu bệnh án" : "Medical record saved",
+        response.thongDiep,
+      );
     } catch (error) {
-      setConsultationError((error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : "Could not save the medical record"));
+      setConsultationError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : "Could not save the medical record"),
+      );
     }
   };
 
@@ -349,9 +496,16 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const withdrawShiftRequest = async (id: number) => {
     try {
       await bookingService.rutYeuCauDoiLichBacSi(id);
-      await queryClient.invalidateQueries({ queryKey: ["booking", "doctor-shift-requests"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "doctor-shift-requests"],
+      });
     } catch (error) {
-      notifyAuth("error", lang === "vi" ? "Không thể rút yêu cầu" : "Could not withdraw request", (error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? "Request failed");
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Không thể rút yêu cầu" : "Could not withdraw request",
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ?? "Request failed",
+      );
     }
   };
 
@@ -396,10 +550,14 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
       const form = event.currentTarget;
       const formData = new FormData(form);
       const shiftId = Number(formData.get("idLichLamViec"));
-      const requestType = String(formData.get("loaiYeuCau")) as "XIN_NGHI" | "DOI_CA";
+      const requestType = String(formData.get("loaiYeuCau")) as
+        | "XIN_NGHI"
+        | "DOI_CA";
       const reason = String(formData.get("reason") || "").trim();
       const currentShift = shifts.find((shift) => shift.id === shiftId);
-      const shiftStart = currentShift ? new Date(`${currentShift.ngay}T${currentShift.gioBatDau}`) : null;
+      const shiftStart = currentShift
+        ? new Date(`${currentShift.ngay}T${currentShift.gioBatDau}`)
+        : null;
       if (!currentShift || !reason) {
         notifyAuth(
           "error",
@@ -410,34 +568,69 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
         );
         return;
       }
-      if (shiftStart && shiftStart.getTime() < Date.now() + 24 * 60 * 60 * 1000) {
-        notifyAuth("error", lang === "vi" ? "Quá hạn gửi yêu cầu" : "Request deadline passed", lang === "vi" ? "Yêu cầu phải được gửi trước ca ít nhất 24 giờ." : "Requests must be submitted at least 24 hours before the shift.");
+      if (
+        shiftStart &&
+        shiftStart.getTime() < Date.now() + 24 * 60 * 60 * 1000
+      ) {
+        notifyAuth(
+          "error",
+          lang === "vi" ? "Quá hạn gửi yêu cầu" : "Request deadline passed",
+          lang === "vi"
+            ? "Yêu cầu phải được gửi trước ca ít nhất 24 giờ."
+            : "Requests must be submitted at least 24 hours before the shift.",
+        );
         return;
       }
       const requestedStart = String(formData.get("requestedStart") || "");
       const requestedEnd = String(formData.get("requestedEnd") || "");
       if (requestType === "DOI_CA" && (!requestedStart || !requestedEnd)) {
-        notifyAuth("error", lang === "vi" ? "Thiếu thời gian đổi ca" : "New shift time required", lang === "vi" ? "Hãy nhập giờ bắt đầu và kết thúc mong muốn." : "Enter the requested start and end times.");
+        notifyAuth(
+          "error",
+          lang === "vi" ? "Thiếu thời gian đổi ca" : "New shift time required",
+          lang === "vi"
+            ? "Hãy nhập giờ bắt đầu và kết thúc mong muốn."
+            : "Enter the requested start and end times.",
+        );
         return;
       }
-      void bookingService.guiYeuCauDoiLich({
-        idLichLamViec: shiftId,
-        loaiYeuCau: requestType,
-        lyDo: reason,
-        ...(requestType === "DOI_CA" ? {
-          ngayMongMuon: requestedStart.slice(0, 10),
-          gioBatDauMongMuon: `${requestedStart.slice(11, 16)}:00`,
-          gioKetThucMongMuon: `${requestedEnd.slice(11, 16)}:00`,
-        } : {}),
-        idPhongKhamMongMuon: Number(formData.get("idPhongKhamMongMuon")) || undefined,
-      }).then(async (response) => {
-        if (!response.thanhCong) throw new Error(response.thongDiep);
-        await queryClient.invalidateQueries({ queryKey: ["booking", "doctor-shift-requests"] });
-        notifyAuth("success", lang === "vi" ? "Đã gửi yêu cầu" : "Request sent", response.thongDiep);
-        form.reset();
-      }).catch((error) => {
-        notifyAuth("error", lang === "vi" ? "Không thể gửi yêu cầu" : "Could not submit request", (error as { response?: { data?: { thongDiep?: string } } }).response?.data?.thongDiep ?? (error instanceof Error ? error.message : "Request failed"));
-      });
+      void bookingService
+        .guiYeuCauDoiLich({
+          idLichLamViec: shiftId,
+          loaiYeuCau: requestType,
+          lyDo: reason,
+          ...(requestType === "DOI_CA"
+            ? {
+                ngayMongMuon: requestedStart.slice(0, 10),
+                gioBatDauMongMuon: `${requestedStart.slice(11, 16)}:00`,
+                gioKetThucMongMuon: `${requestedEnd.slice(11, 16)}:00`,
+              }
+            : {}),
+          idPhongKhamMongMuon:
+            Number(formData.get("idPhongKhamMongMuon")) || undefined,
+        })
+        .then(async (response) => {
+          if (!response.thanhCong) throw new Error(response.thongDiep);
+          await queryClient.invalidateQueries({
+            queryKey: ["booking", "doctor-shift-requests"],
+          });
+          notifyAuth(
+            "success",
+            lang === "vi" ? "Đã gửi yêu cầu" : "Request sent",
+            response.thongDiep,
+          );
+          form.reset();
+        })
+        .catch((error) => {
+          notifyAuth(
+            "error",
+            lang === "vi"
+              ? "Không thể gửi yêu cầu"
+              : "Could not submit request",
+            (error as { response?: { data?: { thongDiep?: string } } }).response
+              ?.data?.thongDiep ??
+              (error instanceof Error ? error.message : "Request failed"),
+          );
+        });
     };
 
     return (
@@ -509,8 +702,12 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
           >
             {calendarDays.map((date) => {
               const shiftDateKey = formatDateKey(date);
-              const dayShifts = shifts.filter((shift) => shift.ngay === shiftDateKey);
-              const dayAppointments = calendarAppointments.filter((appointment) => appointment.ngay === shiftDateKey);
+              const dayShifts = shifts.filter(
+                (shift) => shift.ngay === shiftDateKey,
+              );
+              const dayAppointments = calendarAppointments.filter(
+                (appointment) => appointment.ngay === shiftDateKey,
+              );
               const dayLabel = new Intl.DateTimeFormat(lang, {
                 weekday: "short",
               }).format(date);
@@ -534,17 +731,28 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
                     {date.getDate()}
                   </strong>
                   {isLoadingShifts ? (
-                    <span className={styles.calendarOff}>{lang === "vi" ? "Đang tải..." : "Loading..."}</span>
+                    <span className={styles.calendarOff}>
+                      {lang === "vi" ? "Đang tải..." : "Loading..."}
+                    </span>
                   ) : dayShifts.length ? (
                     <span className={styles.calendarShift}>
                       {dayShifts.map((shift) => (
                         <span key={shift.id}>
                           <Clock3 size={13} aria-hidden="true" />
                           {shift.gioBatDau} - {shift.gioKetThuc}
-                          <small>{shift.tenPhongKham} · {shift.soLuotDaDat ?? shift.soChoDaDat}/{shift.tongSoLuot ?? shift.tongSoCho}</small>
+                          <small>
+                            {shift.tenPhongKham} ·{" "}
+                            {shift.soLuotDaDat ?? shift.soChoDaDat}/
+                            {shift.tongSoLuot ?? shift.tongSoCho}
+                          </small>
                         </span>
                       ))}
-                      {dayAppointments.map((appointment) => <small key={appointment.maPhieuKham}>{appointment.gioKhamDuKien} · {appointment.hoTenBenhNhan}</small>)}
+                      {dayAppointments.map((appointment) => (
+                        <small key={appointment.maPhieuKham}>
+                          {appointment.gioKhamDuKien} ·{" "}
+                          {appointment.hoTenBenhNhan}
+                        </small>
+                      ))}
                     </span>
                   ) : (
                     <span className={styles.calendarOff}>
@@ -557,14 +765,50 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
           </div>
         </section>
         <section className={styles.panel}>
-          <div className={styles.panelHeading}><div><h2>{lang === "vi" ? "Yêu cầu đã gửi" : "My submitted requests"}</h2></div></div>
-          {ownShiftRequests.length === 0 ? <p className={styles.emptyState}>{lang === "vi" ? "Chưa có yêu cầu nào." : "No shift requests yet."}</p> : <div className={styles.shiftList}>
-            {ownShiftRequests.map((request) => <article className={styles.shiftCard} key={request.id}>
-              <div className={styles.shiftDate}><strong>{request.ca?.ngay ?? request.ngay}</strong><span>{request.ca?.gioBatDau ?? request.gioBatDau} - {request.ca?.gioKetThuc ?? request.gioKetThuc}</span></div>
-              <div className={styles.shiftDetails}><strong>{request.loaiYeuCau ?? ""} · {request.trangThai}</strong><span>{request.lyDo}</span><small>{request.ghiChuXuLy ?? request.phanHoi ?? ""}</small></div>
-              {request.trangThai === "CHO_DUYET" && <button type="button" className={styles.secondaryButton} onClick={() => void withdrawShiftRequest(request.id)}>{lang === "vi" ? "Rút yêu cầu" : "Withdraw"}</button>}
-            </article>)}
-          </div>}
+          <div className={styles.panelHeading}>
+            <div>
+              <h2>
+                {lang === "vi" ? "Yêu cầu đã gửi" : "My submitted requests"}
+              </h2>
+            </div>
+          </div>
+          {ownShiftRequests.length === 0 ? (
+            <p className={styles.emptyState}>
+              {lang === "vi"
+                ? "Chưa có yêu cầu nào."
+                : "No shift requests yet."}
+            </p>
+          ) : (
+            <div className={styles.shiftList}>
+              {ownShiftRequests.map((request) => (
+                <article className={styles.shiftCard} key={request.id}>
+                  <div className={styles.shiftDate}>
+                    <strong>{request.ca?.ngay ?? request.ngay}</strong>
+                    <span>
+                      {request.ca?.gioBatDau ?? request.gioBatDau} -{" "}
+                      {request.ca?.gioKetThuc ?? request.gioKetThuc}
+                    </span>
+                  </div>
+                  <div className={styles.shiftDetails}>
+                    <strong>
+                      {request.loaiYeuCau ?? ""} · {request.trangThai}
+                    </strong>
+                    <span>{request.lyDo}</span>
+                    <small>{request.ghiChuXuLy ?? request.phanHoi ?? ""}</small>
+                  </div>
+                  {request.trangThai === "CHO_DUYET" && (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={() => void withdrawShiftRequest(request.id)}
+                    >
+                      {lang === "vi" ? "Rút yêu cầu" : "Withdraw"}
+                    </button>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
         </section>
         <form className={styles.panel} onSubmit={submitShiftRequest}>
           <div className={styles.panelHeading}>
@@ -585,24 +829,52 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
             <label>
               {lang === "vi" ? "Ca làm việc" : "Assigned shift"}
               <select name="idLichLamViec" required defaultValue="">
-                <option value="" disabled>{lang === "vi" ? "Chọn ca" : "Choose a shift"}</option>
-                {shifts.filter((shift) => shift.trangThai === "HOAT_DONG").map((shift) => <option value={shift.id} key={shift.id}>{shift.ngay} · {shift.gioBatDau}-{shift.gioKetThuc} · {shift.tenPhongKham}</option>)}
+                <option value="" disabled>
+                  {lang === "vi" ? "Chọn ca" : "Choose a shift"}
+                </option>
+                {shifts
+                  .filter((shift) => shift.trangThai === "HOAT_DONG")
+                  .map((shift) => (
+                    <option value={shift.id} key={shift.id}>
+                      {shift.ngay} · {shift.gioBatDau}-{shift.gioKetThuc} ·{" "}
+                      {shift.tenPhongKham}
+                    </option>
+                  ))}
               </select>
             </label>
             <label>
               {lang === "vi" ? "Loại yêu cầu" : "Request type"}
-              <select name="loaiYeuCau" defaultValue="XIN_NGHI"><option value="XIN_NGHI">{lang === "vi" ? "Xin nghỉ" : "Leave"}</option><option value="DOI_CA">{lang === "vi" ? "Đổi ca" : "Change shift"}</option></select>
+              <select name="loaiYeuCau" defaultValue="XIN_NGHI">
+                <option value="XIN_NGHI">
+                  {lang === "vi" ? "Xin nghỉ" : "Leave"}
+                </option>
+                <option value="DOI_CA">
+                  {lang === "vi" ? "Đổi ca" : "Change shift"}
+                </option>
+              </select>
             </label>
             <label>
-              {lang === "vi" ? "Giờ bắt đầu mong muốn (khi đổi ca)" : "Requested start (shift change)"}
-              <input name="requestedStart" type="datetime-local" min={minimumRequestTime} />
+              {lang === "vi"
+                ? "Giờ bắt đầu mong muốn (khi đổi ca)"
+                : "Requested start (shift change)"}
+              <input
+                name="requestedStart"
+                type="datetime-local"
+                min={minimumRequestTime}
+              />
             </label>
             <label>
               {lang === "vi" ? "Giờ kết thúc mong muốn" : "Requested end"}
-              <input name="requestedEnd" type="datetime-local" min={minimumRequestTime} />
+              <input
+                name="requestedEnd"
+                type="datetime-local"
+                min={minimumRequestTime}
+              />
             </label>
             <label>
-              {lang === "vi" ? "Mã phòng mong muốn (không bắt buộc)" : "Requested clinic ID (optional)"}
+              {lang === "vi"
+                ? "Mã phòng mong muốn (không bắt buộc)"
+                : "Requested clinic ID (optional)"}
               <input name="idPhongKhamMongMuon" inputMode="numeric" />
             </label>
             <label className={styles.fullWidth}>
@@ -853,25 +1125,127 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
                   {lang === "vi" ? "Hồ sơ bệnh nhân" : "Patient record"}
                 </span>
               </div>
-              {lookupDetails?.lichHen.doiChieu?.canDoiChieu && <div className={styles.historyBox}>
-                <strong>{lang === "vi" ? "Cần đối chiếu giấy tờ" : "Identity verification required"}</strong>
-                <p>{lang === "vi" ? "Thông tin đặt lịch khác hồ sơ bệnh nhân. Hãy đối chiếu giấy tờ trước khi xác nhận." : "Booking details differ from the patient record. Verify the patient's documents."}</p>
-                <form className={styles.formGrid} onSubmit={(event) => void savePatientIdentity(event)}>
-                  <label>{lang === "vi" ? "Họ tên" : "Full name"}<input name="hoTen" required defaultValue={lookupDetails.hoSoBenhNhan.hoTen} /></label>
-                  <label>{lang === "vi" ? "Ngày sinh" : "Date of birth"}<input name="ngaySinh" type="date" required defaultValue={lookupDetails.hoSoBenhNhan.ngaySinh} /></label>
-                  <label>{lang === "vi" ? "Điện thoại" : "Phone"}<input name="soDienThoai" required defaultValue={lookupDetails.hoSoBenhNhan.soDienThoai} /></label>
-                  <label>{lang === "vi" ? "Giới tính" : "Gender"}<select name="gioiTinh" defaultValue={lookupDetails.hoSoBenhNhan.gioiTinh}><option value="NAM">{lang === "vi" ? "Nam" : "Male"}</option><option value="NU">{lang === "vi" ? "Nữ" : "Female"}</option><option value="KHAC">{lang === "vi" ? "Khác" : "Other"}</option></select></label>
-                  <label>{lang === "vi" ? "Địa chỉ" : "Address"}<input name="diaChi" defaultValue={lookupDetails.hoSoBenhNhan.diaChi ?? ""} /></label>
-                  {!lookupDetails.hoSoBenhNhan.soBaoHiemYTe && <label>{lang === "vi" ? "CCCD (nếu hồ sơ chưa có)" : "National ID (if not on record)"}<input name="cccd" inputMode="numeric" maxLength={12} /></label>}
-                  <div className={styles.fullWidth}><button type="submit" className={styles.primaryButton}>{lang === "vi" ? "Cập nhật hồ sơ" : "Update patient record"}</button> <button type="button" className={styles.secondaryButton} onClick={() => void markIdentityChecked()}>{lang === "vi" ? "Đã đối chiếu giấy tờ" : "Mark documents verified"}</button></div>
-                </form>
-              </div>}
-              {consultationError && <p className={styles.refusal} role="alert">{consultationError}</p>}
+              {lookupDetails?.lichHen.doiChieu?.canDoiChieu && (
+                <div className={styles.historyBox}>
+                  <strong>
+                    {lang === "vi"
+                      ? "Cần đối chiếu giấy tờ"
+                      : "Identity verification required"}
+                  </strong>
+                  <p>
+                    {lang === "vi"
+                      ? "Thông tin đặt lịch khác hồ sơ bệnh nhân. Hãy đối chiếu giấy tờ trước khi xác nhận."
+                      : "Booking details differ from the patient record. Verify the patient's documents."}
+                  </p>
+                  <form
+                    className={styles.formGrid}
+                    onSubmit={(event) => void savePatientIdentity(event)}
+                  >
+                    <label>
+                      {lang === "vi" ? "Họ tên" : "Full name"}
+                      <input
+                        name="hoTen"
+                        required
+                        defaultValue={lookupDetails.hoSoBenhNhan.hoTen}
+                      />
+                    </label>
+                    <label>
+                      {lang === "vi" ? "Ngày sinh" : "Date of birth"}
+                      <input
+                        name="ngaySinh"
+                        type="date"
+                        required
+                        defaultValue={lookupDetails.hoSoBenhNhan.ngaySinh}
+                      />
+                    </label>
+                    <label>
+                      {lang === "vi" ? "Điện thoại" : "Phone"}
+                      <input
+                        name="soDienThoai"
+                        required
+                        defaultValue={lookupDetails.hoSoBenhNhan.soDienThoai}
+                      />
+                    </label>
+                    <label>
+                      {lang === "vi" ? "Giới tính" : "Gender"}
+                      <select
+                        name="gioiTinh"
+                        defaultValue={lookupDetails.hoSoBenhNhan.gioiTinh}
+                      >
+                        <option value="NAM">
+                          {lang === "vi" ? "Nam" : "Male"}
+                        </option>
+                        <option value="NU">
+                          {lang === "vi" ? "Nữ" : "Female"}
+                        </option>
+                        <option value="KHAC">
+                          {lang === "vi" ? "Khác" : "Other"}
+                        </option>
+                      </select>
+                    </label>
+                    <label>
+                      {lang === "vi" ? "Địa chỉ" : "Address"}
+                      <input
+                        name="diaChi"
+                        defaultValue={lookupDetails.hoSoBenhNhan.diaChi ?? ""}
+                      />
+                    </label>
+                    {!lookupDetails.hoSoBenhNhan.soBaoHiemYTe && (
+                      <label>
+                        {lang === "vi"
+                          ? "CCCD (nếu hồ sơ chưa có)"
+                          : "National ID (if not on record)"}
+                        <input name="cccd" inputMode="numeric" maxLength={12} />
+                      </label>
+                    )}
+                    <div className={styles.fullWidth}>
+                      <button type="submit" className={styles.primaryButton}>
+                        {lang === "vi"
+                          ? "Cập nhật hồ sơ"
+                          : "Update patient record"}
+                      </button>{" "}
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={() => void markIdentityChecked()}
+                      >
+                        {lang === "vi"
+                          ? "Đã đối chiếu giấy tờ"
+                          : "Mark documents verified"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+              {consultationError && (
+                <p className={styles.refusal} role="alert">
+                  {consultationError}
+                </p>
+              )}
               <div className={styles.historyBox}>
-                <strong>{lang === "vi" ? "Hồ sơ và tiền sử khám" : "Patient record and visit history"}</strong>
-                <p>{lookupDetails?.hoSoBenhNhan.tienSuBenhLy || (lang === "vi" ? "Chưa ghi nhận tiền sử bệnh lý." : "No medical history recorded.")}</p>
-                <span>{lang === "vi" ? "Lý do lần này:" : "Current reason:"} {patientLookup.reason}</span>
-                {lookupDetails?.lanKhamTruoc.map((visit, index) => <p key={`${visit.ngay}-${index}`}>{visit.ngay} · {visit.tenChuyenKhoa} · {visit.hoTenBacSi}{visit.ketQua?.chanDoan ? ` · ${visit.ketQua.chanDoan}` : ""}</p>)}
+                <strong>
+                  {lang === "vi"
+                    ? "Hồ sơ và tiền sử khám"
+                    : "Patient record and visit history"}
+                </strong>
+                <p>
+                  {lookupDetails?.hoSoBenhNhan.tienSuBenhLy ||
+                    (lang === "vi"
+                      ? "Chưa ghi nhận tiền sử bệnh lý."
+                      : "No medical history recorded.")}
+                </p>
+                <span>
+                  {lang === "vi" ? "Lý do lần này:" : "Current reason:"}{" "}
+                  {patientLookup.reason}
+                </span>
+                {lookupDetails?.lanKhamTruoc.map((visit, index) => (
+                  <p key={`${visit.ngay}-${index}`}>
+                    {visit.ngay} · {visit.tenChuyenKhoa} · {visit.hoTenBacSi}
+                    {visit.ketQua?.chanDoan
+                      ? ` · ${visit.ketQua.chanDoan}`
+                      : ""}
+                  </p>
+                ))}
               </div>
               <form className={styles.formGrid} onSubmit={completeConsultation}>
                 <label className={styles.fullWidth}>
@@ -885,11 +1259,23 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
                 </label>
                 <label>
                   {lang === "vi" ? "Tên thuốc" : "Medication"}
-                  <input list="doctor-medication-suggestions" value={medicationName} onChange={(event) => setMedicationName(event.target.value)} />
-                  <datalist id="doctor-medication-suggestions">{(medicationQuery.data?.duLieu ?? []).map((medicine) => <option key={medicine.id} value={medicine.tenThuoc}>{medicine.donVi ?? ""}</option>)}</datalist>
+                  <input
+                    list="doctor-medication-suggestions"
+                    value={medicationName}
+                    onChange={(event) => setMedicationName(event.target.value)}
+                  />
+                  <datalist id="doctor-medication-suggestions">
+                    {(medicationQuery.data?.duLieu ?? []).map((medicine) => (
+                      <option key={medicine.id} value={medicine.tenThuoc}>
+                        {medicine.donVi ?? ""}
+                      </option>
+                    ))}
+                  </datalist>
                 </label>
                 <label className={styles.fullWidth}>
-                  {lang === "vi" ? "Lời dặn / hướng điều trị" : "Care instructions"}
+                  {lang === "vi"
+                    ? "Lời dặn / hướng điều trị"
+                    : "Care instructions"}
                   <textarea
                     rows={3}
                     value={prescription}
@@ -897,7 +1283,13 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
                   />
                 </label>
                 <button type="submit" className={styles.primaryButton}>
-                  {lookupDetails?.ketQua ? (lang === "vi" ? "Cập nhật bệnh án" : "Update medical record") : (lang === "vi" ? "Hoàn tất và lưu bệnh án" : "Complete consultation")}
+                  {lookupDetails?.ketQua
+                    ? lang === "vi"
+                      ? "Cập nhật bệnh án"
+                      : "Update medical record"
+                    : lang === "vi"
+                      ? "Hoàn tất và lưu bệnh án"
+                      : "Complete consultation"}
                 </button>
               </form>
             </section>
@@ -977,7 +1369,8 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
           </span>
           <div>
             <h2>
-              {doctorAccount?.hoTen || user?.name ||
+              {doctorAccount?.hoTen ||
+                user?.name ||
                 (lang === "vi" ? "Bác sĩ eClinic" : "eClinic Doctor")}
             </h2>
             <span>{lang === "vi" ? "Hồ sơ bác sĩ" : "Doctor profile"}</span>
@@ -995,14 +1388,18 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
           <div>
             <dt>{lang === "vi" ? "Chuyên khoa" : "Specialty"}</dt>
             <dd>
-              {doctorProfile?.tenChuyenKhoa || doctorAccount?.bacSi?.tenChuyenKhoa || user?.specialty ||
+              {doctorProfile?.tenChuyenKhoa ||
+                doctorAccount?.bacSi?.tenChuyenKhoa ||
+                user?.specialty ||
                 (lang === "vi" ? "Chưa cập nhật" : "Not provided")}
             </dd>
           </div>
           <div>
             <dt>{lang === "vi" ? "Trình độ / Học vị" : "Qualification"}</dt>
             <dd>
-              {doctorProfile?.hocVi || doctorAccount?.bacSi?.hocVi || user?.degree ||
+              {doctorProfile?.hocVi ||
+                doctorAccount?.bacSi?.hocVi ||
+                user?.degree ||
                 (lang === "vi" ? "Chưa cập nhật" : "Not provided")}
             </dd>
           </div>
@@ -1014,8 +1411,12 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
             </dd>
           </div>
         </dl>
-        {doctorProfile?.gioiThieuNgan && <p className={styles.readOnlyNote}>{doctorProfile.gioiThieuNgan}</p>}
-        {doctorProfile?.tieuSu && <p className={styles.readOnlyNote}>{doctorProfile.tieuSu}</p>}
+        {doctorProfile?.gioiThieuNgan && (
+          <p className={styles.readOnlyNote}>{doctorProfile.gioiThieuNgan}</p>
+        )}
+        {doctorProfile?.tieuSu && (
+          <p className={styles.readOnlyNote}>{doctorProfile.tieuSu}</p>
+        )}
         <p className={styles.readOnlyNote}>
           {lang === "vi"
             ? "Muốn cập nhật thông tin? Vui lòng liên hệ Quản trị viên."

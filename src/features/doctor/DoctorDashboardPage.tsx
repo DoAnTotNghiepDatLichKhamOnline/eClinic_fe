@@ -16,7 +16,7 @@ import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
 import { DoctorSearchBar } from "./DoctorSearchBar";
 import { useQuery } from "@tanstack/react-query";
-import { bookingService } from "@/services/bookingService";
+import { patientBookingService as bookingService } from "@/services/booking/patientBooking.service";
 
 function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -46,10 +46,11 @@ export function DoctorDashboardPage({
     queryKey: ["booking", "doctor-summary"],
     queryFn: () => bookingService.getTongQuanBacSi(),
   });
-  const { data: appointmentsResponse, isLoading: isLoadingAppointments } = useQuery({
-    queryKey: ["booking", "doctor-today", today],
-    queryFn: () => bookingService.getLichHenBacSiTheoNgay({ ngay: today }),
-  });
+  const { data: appointmentsResponse, isLoading: isLoadingAppointments } =
+    useQuery({
+      queryKey: ["booking", "doctor-today", today],
+      queryFn: () => bookingService.getLichHenBacSiTheoNgay({ ngay: today }),
+    });
   const summary = summaryResponse?.duLieu;
   const appointments = appointmentsResponse?.duLieu?.noiDung ?? [];
   const navigateToSection = (section: DoctorSection) =>
@@ -114,7 +115,11 @@ export function DoctorDashboardPage({
                     <CalendarDays aria-hidden="true" />
                   </div>
                   <div className={styles.statInfo}>
-                    <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.lichHenHomNay ?? summary?.caHomNay ?? 0}</span>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.lichHenHomNay ?? summary?.caHomNay ?? 0)}
+                    </span>
                     <span className={styles.statLabel}>
                       {lang === "vi"
                         ? "Lịch khám hôm nay"
@@ -128,7 +133,9 @@ export function DoctorDashboardPage({
                     <Clock3 aria-hidden="true" />
                   </div>
                   <div className={styles.statInfo}>
-                    <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.dangCho ?? 0}</span>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary ? "..." : (summary?.dangCho ?? 0)}
+                    </span>
                     <span className={styles.statLabel}>
                       {lang === "vi"
                         ? "Bệnh nhân chờ khám"
@@ -142,7 +149,9 @@ export function DoctorDashboardPage({
                     <CircleCheck aria-hidden="true" />
                   </div>
                   <div className={styles.statInfo}>
-                    <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.daKham ?? 0}</span>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary ? "..." : (summary?.daKham ?? 0)}
+                    </span>
                     <span className={styles.statLabel}>
                       {lang === "vi" ? "Đã hoàn thành" : "Completed Exams"}
                     </span>
@@ -154,7 +163,13 @@ export function DoctorDashboardPage({
                     <Star aria-hidden="true" />
                   </div>
                   <div className={styles.statInfo}>
-                    <span className={styles.statValue}>{isLoadingSummary ? "..." : summary?.diemDanhGia ?? summary?.danhGiaTrungBinh ?? "—"}</span>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.diemDanhGia ??
+                          summary?.danhGiaTrungBinh ??
+                          "—")}
+                    </span>
                     <span className={styles.statLabel}>
                       {lang === "vi" ? "Đánh giá trung bình" : "Average Rating"}
                     </span>
@@ -184,53 +199,86 @@ export function DoctorDashboardPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {isLoadingAppointments ? <tr><td colSpan={7}>{lang === "vi" ? "Đang tải lịch hẹn..." : "Loading appointments..."}</td></tr> : appointments.map((apt) => (
-                      <tr key={apt.maPhieuKham}>
-                        <td>
-                          <strong>{apt.maTraCuu}</strong>
-                        </td>
-                        <td>{apt.gioKhamDuKien}</td>
-                        <td>
-                          <strong>{apt.hoTenBenhNhan}</strong>
-                        </td>
-                        <td>{apt.ngaySinhBenhNhan ? new Date().getFullYear() - Number(apt.ngaySinhBenhNhan.slice(0, 4)) : "—"}</td>
-                        <td>{apt.lyDoKham}</td>
-                        <td>
-                          {apt.trangThai === "CHO_XAC_NHAN" && (
-                            <span
-                              className={`${styles.badge} ${styles.badgeWaiting}`}
-                            >
-                              <Clock3 aria-hidden="true" size={14} /> Chờ khám
-                            </span>
-                          )}
-                          {apt.trangThai === "DA_XAC_NHAN" && (
-                            <span
-                              className={`${styles.badge} ${styles.badgeProgress}`}
-                            >
-                              <Stethoscope aria-hidden="true" size={14} /> Đang
-                              khám
-                            </span>
-                          )}
-                          {apt.trangThai === "DA_HOAN_THANH" && (
-                            <span
-                              className={`${styles.badge} ${styles.badgeDone}`}
-                            >
-                              <CircleCheck aria-hidden="true" size={14} /> Hoàn
-                              thành
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          <button type="button" className={styles.actionBtn} onClick={() => navigate(`/doctor/consultation?ma=${encodeURIComponent(apt.maTraCuu)}`)}>
-                            {apt.trangThai === "DA_HOAN_THANH" && (
-                              <FolderOpen aria-hidden="true" size={14} />
-                            )}
-                            {apt.trangThai === "DA_HOAN_THANH" ? "Xem hồ sơ" : "Khám bệnh"}
-                          </button>
+                    {isLoadingAppointments ? (
+                      <tr>
+                        <td colSpan={7}>
+                          {lang === "vi"
+                            ? "Đang tải lịch hẹn..."
+                            : "Loading appointments..."}
                         </td>
                       </tr>
-                    ))}
-                    {!isLoadingAppointments && appointments.length === 0 && <tr><td colSpan={7}>{lang === "vi" ? "Hôm nay chưa có lịch hẹn." : "No appointments today."}</td></tr>}
+                    ) : (
+                      appointments.map((apt) => (
+                        <tr key={apt.maPhieuKham}>
+                          <td>
+                            <strong>{apt.maTraCuu}</strong>
+                          </td>
+                          <td>{apt.gioKhamDuKien}</td>
+                          <td>
+                            <strong>{apt.hoTenBenhNhan}</strong>
+                          </td>
+                          <td>
+                            {apt.ngaySinhBenhNhan
+                              ? new Date().getFullYear() -
+                                Number(apt.ngaySinhBenhNhan.slice(0, 4))
+                              : "—"}
+                          </td>
+                          <td>{apt.lyDoKham}</td>
+                          <td>
+                            {apt.trangThai === "CHO_XAC_NHAN" && (
+                              <span
+                                className={`${styles.badge} ${styles.badgeWaiting}`}
+                              >
+                                <Clock3 aria-hidden="true" size={14} /> Chờ khám
+                              </span>
+                            )}
+                            {apt.trangThai === "DA_XAC_NHAN" && (
+                              <span
+                                className={`${styles.badge} ${styles.badgeProgress}`}
+                              >
+                                <Stethoscope aria-hidden="true" size={14} />{" "}
+                                Đang khám
+                              </span>
+                            )}
+                            {apt.trangThai === "DA_HOAN_THANH" && (
+                              <span
+                                className={`${styles.badge} ${styles.badgeDone}`}
+                              >
+                                <CircleCheck aria-hidden="true" size={14} />{" "}
+                                Hoàn thành
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className={styles.actionBtn}
+                              onClick={() =>
+                                navigate(
+                                  `/doctor/consultation?ma=${encodeURIComponent(apt.maTraCuu)}`,
+                                )
+                              }
+                            >
+                              {apt.trangThai === "DA_HOAN_THANH" && (
+                                <FolderOpen aria-hidden="true" size={14} />
+                              )}
+                              {apt.trangThai === "DA_HOAN_THANH"
+                                ? "Xem hồ sơ"
+                                : "Khám bệnh"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                    {!isLoadingAppointments && appointments.length === 0 && (
+                      <tr>
+                        <td colSpan={7}>
+                          {lang === "vi"
+                            ? "Hôm nay chưa có lịch hẹn."
+                            : "No appointments today."}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

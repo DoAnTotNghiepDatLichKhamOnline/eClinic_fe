@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Calendar, Check, CheckCheck, FileText, HeartPulse, Loader2 } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  Check,
+  CheckCheck,
+  FileText,
+  HeartPulse,
+  Loader2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { useDanhSachThongBao, useSoThongBaoChuaDoc, useNotificationActions } from "@/hooks/useNotification";
+import {
+  useDanhSachThongBao,
+  useSoThongBaoChuaDoc,
+  useNotificationActions,
+} from "@/hooks/useNotification";
 import type { LoaiThongBao, ThongBaoResponse } from "@/types/notification.type";
 import styles from "./PatientNotificationCenter.module.css";
 
@@ -17,7 +29,10 @@ function formatNoticeTime(isoDate?: string, vi?: boolean): string {
   if (mins < 60) return vi ? `${mins} phút trước` : `${mins}m ago`;
   if (hours < 24) return vi ? `${hours} giờ trước` : `${hours}h ago`;
   if (days < 7) return vi ? `${days} ngày trước` : `${days}d ago`;
-  return d.toLocaleDateString(vi ? "vi-VN" : "en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(vi ? "vi-VN" : "en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function getNoticeTitle(loai: LoaiThongBao, vi: boolean): string {
@@ -48,7 +63,9 @@ export function PatientNotificationCenter() {
   const vi = lang === "vi";
   const navigate = useNavigate();
 
-  const { danhSach: notices, isLoading } = useDanhSachThongBao({ kichThuoc: 10 });
+  const { danhSach: notices, isLoading } = useDanhSachThongBao({
+    kichThuoc: 10,
+  });
   const { soChuaDoc } = useSoThongBaoChuaDoc();
   const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions();
 
@@ -57,7 +74,10 @@ export function PatientNotificationCenter() {
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -93,10 +113,17 @@ export function PatientNotificationCenter() {
     }
     setOpen(false);
     if (notice.loai === "NHAC_TAI_KHAM" && notice.maPhieuKham) {
-      navigate(`/appointment?followup=${encodeURIComponent(notice.maPhieuKham)}`);
+      navigate(
+        `/appointment?followup=${encodeURIComponent(notice.maPhieuKham)}`,
+      );
       return;
     }
-    if (notice.maPhieuKham || notice.loai === "NHAC_LICH_KHAM" || notice.loai === "LICH_HEN_MOI" || notice.loai === "LICH_HEN_DA_XAC_NHAN") {
+    if (
+      notice.maPhieuKham ||
+      notice.loai === "NHAC_LICH_KHAM" ||
+      notice.loai === "LICH_HEN_MOI" ||
+      notice.loai === "LICH_HEN_DA_XAC_NHAN"
+    ) {
       navigate("/patient/my-appointments");
     } else {
       navigate("/patient/dashboard");
@@ -105,8 +132,14 @@ export function PatientNotificationCenter() {
 
   const renderIcon = (notice: ThongBaoResponse) => {
     if (notice.daDoc) return <Check size={13} aria-hidden="true" />;
-    if (notice.loai === "NHAC_LICH_KHAM" || notice.loai === "LICH_HEN_MOI" || notice.loai === "LICH_HEN_DA_XAC_NHAN") return <Calendar size={12} aria-hidden="true" />;
-    if (notice.loai === "HE_THONG") return <FileText size={12} aria-hidden="true" />;
+    if (
+      notice.loai === "NHAC_LICH_KHAM" ||
+      notice.loai === "LICH_HEN_MOI" ||
+      notice.loai === "LICH_HEN_DA_XAC_NHAN"
+    )
+      return <Calendar size={12} aria-hidden="true" />;
+    if (notice.loai === "HE_THONG")
+      return <FileText size={12} aria-hidden="true" />;
     return <HeartPulse size={12} aria-hidden="true" />;
   };
 
@@ -137,7 +170,11 @@ export function PatientNotificationCenter() {
               {vi ? "Thông báo bệnh nhân" : "Patient Notifications"}
             </span>
             {soChuaDoc > 0 && (
-              <button type="button" className={styles.markAll} onClick={handleMarkAllRead}>
+              <button
+                type="button"
+                className={styles.markAll}
+                onClick={handleMarkAllRead}
+              >
                 <CheckCheck size={14} aria-hidden="true" />
                 {vi ? "Đã đọc hết" : "Mark all read"}
               </button>
@@ -146,7 +183,14 @@ export function PatientNotificationCenter() {
 
           <div className={styles.list}>
             {isLoading ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: "24px 0", color: "#64748b" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "24px 0",
+                  color: "#64748b",
+                }}
+              >
                 <Loader2 size={16} className="animate-spin" />
               </div>
             ) : notices.length === 0 ? (

@@ -1,5 +1,5 @@
-import axiosClient from '@/utils/axiosClient';
-import type { ApiResponse } from '@/types/common.type';
+import axiosClient from "@/utils/axiosClient";
+import type { ApiResponse } from "@/types/common.type";
 
 export interface ChatSuggestion {
   chuyenKhoa?: { id: number; ten: string } | null;
@@ -19,7 +19,11 @@ export interface ChatSuggestion {
     ngay: string;
     tenPhong: string;
     tang: string | null;
-    khungGio: Array<{ gioBatDau: string; gioKetThuc: string; soChoConLai: number }>;
+    khungGio: Array<{
+      gioBatDau: string;
+      gioKetThuc: string;
+      soChoConLai: number;
+    }>;
   }>;
   lichHenCuaToi?: unknown[] | null;
   lanKham?: unknown[] | null;
@@ -27,8 +31,14 @@ export interface ChatSuggestion {
 
 export interface ChatMessage {
   id: number;
-  nguoiGui: 'NGUOI_DUNG' | 'CHATBOT';
-  loai: 'CAU_HOI' | 'LOI_CHAO' | 'TRA_LOI' | 'NGOAI_PHAM_VI' | 'KHAN_CAP' | 'CAN_DONG_Y';
+  nguoiGui: "NGUOI_DUNG" | "CHATBOT";
+  loai:
+    | "CAU_HOI"
+    | "LOI_CHAO"
+    | "TRA_LOI"
+    | "NGOAI_PHAM_VI"
+    | "KHAN_CAP"
+    | "CAN_DONG_Y";
   noiDung: string;
   ngayTao: string;
   goiY: ChatSuggestion | null;
@@ -45,18 +55,20 @@ export interface ChatSession {
 export const chatbotService = {
   taoPhien: async (maKhach?: string) => {
     const response = await axiosClient.post<ApiResponse<ChatSession>>(
-      '/api/chatbot/phien',
+      "/api/chatbot/phien",
       {},
-      { headers: maKhach ? { 'X-Chat-Khach': maKhach } : undefined },
+      { headers: maKhach ? { "X-Chat-Khach": maKhach } : undefined },
     );
     return response.data;
   },
 
   guiTinNhan: async (idPhien: string, noiDung: string, maKhach?: string) => {
-    const response = await axiosClient.post<ApiResponse<{ tinNhan: ChatMessage; traLoi: ChatMessage }>>(
+    const response = await axiosClient.post<
+      ApiResponse<{ tinNhan: ChatMessage; traLoi: ChatMessage }>
+    >(
       `/api/chatbot/phien/${idPhien}/tin-nhan`,
       { noiDung },
-      { headers: maKhach ? { 'X-Chat-Khach': maKhach } : undefined },
+      { headers: maKhach ? { "X-Chat-Khach": maKhach } : undefined },
     );
     return response.data;
   },
@@ -64,13 +76,14 @@ export const chatbotService = {
   getTinNhan: async (idPhien: string, maKhach?: string) => {
     const response = await axiosClient.get<ApiResponse<ChatMessage[]>>(
       `/api/chatbot/phien/${idPhien}/tin-nhan`,
-      { headers: maKhach ? { 'X-Chat-Khach': maKhach } : undefined },
+      { headers: maKhach ? { "X-Chat-Khach": maKhach } : undefined },
     );
     return response.data;
   },
 
   getPhienCuaToi: async () => {
-    const response = await axiosClient.get<ApiResponse<ChatSession[]>>('/api/chatbot/phien');
+    const response =
+      await axiosClient.get<ApiResponse<ChatSession[]>>("/api/chatbot/phien");
     return response.data;
   },
 

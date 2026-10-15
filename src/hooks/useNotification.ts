@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationService } from '@/services/notificationService';
-import type { GetThongBaoParams } from '@/types/notification.type';
+import { useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { notificationService } from "@/services/notificationService";
+import type { GetThongBaoParams } from "@/types/notification.type";
 
 /**
  * Hook lấy danh sách thông báo
@@ -10,16 +10,18 @@ export function useDanhSachThongBao(params?: GetThongBaoParams) {
   const queryClient = useQueryClient();
   useEffect(() => {
     const refreshWhenVisible = () => {
-      if (!document.hidden) void queryClient.invalidateQueries({ queryKey: ['notification'] });
+      if (!document.hidden)
+        void queryClient.invalidateQueries({ queryKey: ["notification"] });
     };
-    document.addEventListener('visibilitychange', refreshWhenVisible);
-    return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () =>
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
   }, [queryClient]);
 
   const query = useQuery({
-    queryKey: ['notification', 'danh-sach', params],
+    queryKey: ["notification", "danh-sach", params],
     queryFn: () => notificationService.getDanhSachThongBao(params),
-    refetchInterval: () => document.hidden ? false : 30000,
+    refetchInterval: () => (document.hidden ? false : 30000),
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -40,16 +42,20 @@ export function useSoThongBaoChuaDoc() {
   const queryClient = useQueryClient();
   useEffect(() => {
     const refreshWhenVisible = () => {
-      if (!document.hidden) void queryClient.invalidateQueries({ queryKey: ['notification', 'so-chua-doc'] });
+      if (!document.hidden)
+        void queryClient.invalidateQueries({
+          queryKey: ["notification", "so-chua-doc"],
+        });
     };
-    document.addEventListener('visibilitychange', refreshWhenVisible);
-    return () => document.removeEventListener('visibilitychange', refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () =>
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
   }, [queryClient]);
 
   const query = useQuery({
-    queryKey: ['notification', 'so-chua-doc'],
+    queryKey: ["notification", "so-chua-doc"],
     queryFn: () => notificationService.getSoChuaDoc(),
-    refetchInterval: () => document.hidden ? false : 30000,
+    refetchInterval: () => (document.hidden ? false : 30000),
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -69,14 +75,14 @@ export function useNotificationActions() {
   const danhDauDaDocMutation = useMutation({
     mutationFn: (id: number) => notificationService.danhDauDaDoc(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification'] });
+      queryClient.invalidateQueries({ queryKey: ["notification"] });
     },
   });
 
   const danhDauTatCaDaDocMutation = useMutation({
     mutationFn: () => notificationService.danhDauTatCaDaDoc(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification'] });
+      queryClient.invalidateQueries({ queryKey: ["notification"] });
     },
   });
 

@@ -1,16 +1,20 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { identityService } from '@/services/identityService';
-import { setAccessToken } from '@/utils/axiosClient';
-import { applyAccountLanguage } from '@/utils/languagePreference';
-import type { DangNhapRequest, DangNhapResponse, VaiTro } from '@/types/auth.type';
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { identityService } from "@/services/identityService";
+import { setAccessToken } from "@/utils/axiosClient";
+import { applyAccountLanguage } from "@/utils/languagePreference";
+import type {
+  DangNhapRequest,
+  DangNhapResponse,
+  VaiTro,
+} from "@/types/auth.type";
 
 export interface User {
   id: string;
   name: string;
   phone?: string;
   email?: string;
-  role: 'patient' | 'doctor' | 'admin';
+  role: "patient" | "doctor" | "admin";
   avatarUrl?: string;
   specialty?: string;
   degree?: string;
@@ -27,17 +31,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'eclinic_user_session';
+const STORAGE_KEY = "eclinic_user_session";
 
-function mapVaiTroToRole(vaiTro: VaiTro): 'patient' | 'doctor' | 'admin' {
+function mapVaiTroToRole(vaiTro: VaiTro): "patient" | "doctor" | "admin" {
   switch (vaiTro) {
-    case 'BAC_SI':
-      return 'doctor';
-    case 'QUAN_TRI_VIEN':
-      return 'admin';
-    case 'BENH_NHAN':
+    case "BAC_SI":
+      return "doctor";
+    case "QUAN_TRI_VIEN":
+      return "admin";
+    case "BENH_NHAN":
     default:
-      return 'patient';
+      return "patient";
   }
 }
 
@@ -92,10 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   };
 
-  const loginWithCredentials = async (data: DangNhapRequest): Promise<DangNhapResponse> => {
+  const loginWithCredentials = async (
+    data: DangNhapRequest,
+  ): Promise<DangNhapResponse> => {
     const response = await identityService.dangNhap(data);
     if (!response.thanhCong || !response.duLieu) {
-      throw new Error(response.thongDiep || 'Đăng nhập không thành công');
+      throw new Error(response.thongDiep || "Đăng nhập không thành công");
     }
 
     const { accessToken, taiKhoan } = response.duLieu;
@@ -144,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return ctx;
 }

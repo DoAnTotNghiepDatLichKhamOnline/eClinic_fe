@@ -9,7 +9,7 @@ import type {
   PhamViLichHen,
   NguoiDatLich,
   QuanHeGiamHo,
-} from './common.type';
+} from "./common.type";
 
 // Re-export common types
 export type {
@@ -529,7 +529,7 @@ export interface HuyCaRequest {
 
 export interface GuiYeuCauDoiLichRequest {
   idLichLamViec: number;
-  loaiYeuCau: 'XIN_NGHI' | 'DOI_CA';
+  loaiYeuCau: "XIN_NGHI" | "DOI_CA";
   lyDo: string;
   ngayMongMuon?: string;
   gioBatDauMongMuon?: string;

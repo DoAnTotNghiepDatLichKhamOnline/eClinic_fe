@@ -104,7 +104,9 @@
 }
 
 @media (max-width: 560px) {
-  .fieldsGrid { grid-template-columns: 1fr; }
+  .fieldsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fieldGroup {
@@ -138,7 +140,9 @@
   color: #18372b;
   background: #fff;
   width: 100%;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .input:focus {
@@ -212,7 +216,9 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.btnPrimary:hover { background: #0f3d2c; }
+.btnPrimary:hover {
+  background: #0f3d2c;
+}
 
 .btnOutline {
   display: inline-flex;
@@ -230,7 +236,10 @@
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.btnOutline:hover { border-color: #15553e; color: #14533d; }
+.btnOutline:hover {
+  border-color: #15553e;
+  color: #14533d;
+}
 
 /* ─── Read-only view ─── */
 .viewGrid {
@@ -239,10 +248,20 @@
   gap: 14px;
 }
 
-@media (max-width: 560px) { .viewGrid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .viewGrid {
+    grid-template-columns: 1fr;
+  }
+}
 
-.viewItem { display: flex; flex-direction: column; gap: 4px; }
-.viewItem.fullWidth { grid-column: 1 / -1; }
+.viewItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.viewItem.fullWidth {
+  grid-column: 1 / -1;
+}
 
 .viewItemLabel {
   font-size: 11px;
@@ -286,7 +305,10 @@
   flex: 0 0 auto;
 }
 
-.insuranceInfo { flex: 1; min-width: 0; }
+.insuranceInfo {
+  flex: 1;
+  min-width: 0;
+}
 
 .insuranceName {
   font-size: 13px;
