@@ -33,8 +33,8 @@ const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
     
     {
       id: "appointments",
-      en: "Appointment Requests",
-      vi: "Yêu cầu đặt lịch",
+      en: "Upcoming Appointments",
+      vi: "Lịch hẹn sắp tới",
       icon: ClipboardList,
     },
     {
