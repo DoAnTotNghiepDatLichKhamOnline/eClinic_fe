@@ -21,7 +21,6 @@ import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { DoctorSection } from "./DoctorSidebar";
 import styles from "./DoctorWorkspace.module.css";
-import { patientBookingService } from "@/services/booking/patientBookingService";
 
 type AppointmentStatus = "pending" | "accepted" | "declined" | "completed";
 
