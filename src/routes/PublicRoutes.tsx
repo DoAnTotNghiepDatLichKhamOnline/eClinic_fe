@@ -3,17 +3,17 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { AccountInfoPage } from "@/features/patient/account/AccountInfoPage";
 import { SessionsPage } from "@/features/patient/sessions/SessionsPage";
 import { LandingPage } from "@/features/landing";
-import { LoginPagePatient } from "@/features/auth/login-patient/LoginPagePatient";
+import { LoginPagePatient } from "@/features/auth/login/LoginPagePatient";
 import { RegisterPagePatient } from "@/features/auth/register-patient/RegisterPagePatient";
-import { ForgotPasswordPatient } from "@/features/auth/forgot-password/ForgotPasswordPatient";
-import { ResetPasswordPatient } from "@/features/auth/reset-password/ResetPasswordPatient";
+import { ForgotPasswordPatient } from "@/features/auth/recovery/ForgotPasswordPatient";
+import { ResetPasswordPatient } from "@/features/auth/recovery/ResetPasswordPatient";
 import { AppointmentBookingPage } from "@/features/patient/appointment/AppointmentBookingPage";
 import { DoctorPage } from "@/features/patient/doctors/DoctorPage";
 import { DoctorDetailPage } from "@/features/patient/doctors/DoctorDetailPage";
 import { SpecialtyDirectoryPage } from "@/features/patient/doctors/SpecialtyDirectoryPage";
 import { RoleSelectionPage } from "@/features/entry/RoleSelectionPage";
 import { AppointmentTicketPage } from "@/features/patient/appointment/AppointmentTicketPage";
-import { EmailTokenPage } from "@/features/auth/EmailTokenPage";
+import { EmailTokenPage } from "@/features/auth/verification/EmailTokenPage";
 
 function ProtectedAccountPage({ sessions = false }: { sessions?: boolean }) {
   const { user } = useAuth();

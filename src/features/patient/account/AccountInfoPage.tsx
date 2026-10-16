@@ -18,6 +18,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
+import { userProfileService } from "@/services/identity";
 import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
@@ -75,9 +76,9 @@ export function AccountInfoPage() {
 
   useEffect(() => {
     let active = true;
-    void identityService
+    void userProfileService
       .layYeuCauDoiEmailDangCho()
-      .then((response) => {
+      .then((response: { duLieu?: { emailMoi?: string } | null }) => {
         if (active) setPendingEmail(response.duLieu?.emailMoi ?? "");
       })
       .catch(() => undefined);
@@ -216,7 +217,7 @@ export function AccountInfoPage() {
 
   const handleCancelEmailRequest = async () => {
     try {
-      await identityService.huyYeuCauDoiEmail();
+      await userProfileService.huyYeuCauDoiEmail();
       setPendingEmail("");
       setEmailSuccess(false);
     } catch (error: any) {

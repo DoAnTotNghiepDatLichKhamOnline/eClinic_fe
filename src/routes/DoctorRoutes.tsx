@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoginPageDoctor } from "@/features/auth/login-doctor/LoginPageDoctor";
+import { LoginPageDoctor } from "@/features/auth/login/LoginPageDoctor";
 import { DoctorDashboardPage } from "@/features/doctor/DoctorDashboardPage";
 import type { DoctorSection } from "@/features/doctor/DoctorSidebar";
 
@@ -14,6 +14,7 @@ const sections: { path: string; section: DoctorSection | null }[] = [
   { path: "dashboard", section: null },
   { path: "work-schedule", section: "schedule" },
   { path: "appointment-requests", section: "appointments" },
+  { path: "upcoming-appointments", section: "appointments" },
   { path: "consultation", section: "consultation" },
   { path: "profile", section: "profile" },
 ];

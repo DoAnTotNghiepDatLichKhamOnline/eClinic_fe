@@ -42,6 +42,11 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
       const { accessToken, taiKhoan } = response.duLieu;
       applyAccountLanguage(taiKhoan.ngonNgu);
 
+      if (taiKhoan.phaiDoiMatKhau) {
+        setRequiresPasswordChange(true);
+        return;
+      }
+
       // Kiểm tra đúng vai trò
       if (role === "doctor" && taiKhoan.vaiTro !== "BAC_SI") {
         throw new Error(

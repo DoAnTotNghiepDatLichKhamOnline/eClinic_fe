@@ -7,7 +7,7 @@ import { notifyAuth } from "@/utils/authNotification";
 import { authService } from "@/services/identity/authService";
 import { RegisterForm } from "./RegisterForm";
 import type { PatientRegistrationData } from "./RegisterForm";
-import styles from "../login-patient/LoginPagePatient.module.css";
+import styles from "@/features/auth/login/LoginPagePatient.module.css";
 
 export function RegisterPagePatient() {
   const { lang } = useLanguage();

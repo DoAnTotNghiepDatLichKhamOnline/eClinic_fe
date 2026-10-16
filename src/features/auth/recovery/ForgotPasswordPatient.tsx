@@ -7,7 +7,7 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { authService } from "@/services/identity/authService";
-import styles from "../login-patient/LoginPagePatient.module.css";
+import styles from "@/features/auth/login/LoginPagePatient.module.css";
 import pageStyles from "./ForgotPasswordPatient.module.css";
 
 const genericSuccessMessage =

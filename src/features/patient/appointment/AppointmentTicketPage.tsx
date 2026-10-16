@@ -150,8 +150,42 @@ export function AppointmentTicketPage() {
             {t({ en: "Appointment ticket", vi: "Phiếu khám" })}
           </p>
           <h1 className="mt-2 text-3xl font-bold">{ticket.maTraCuu}</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            {ticket.trangThai.replaceAll("_", " ")}
+          <p className="mt-2 text-sm font-medium">
+            <span
+              className={`inline-block rounded px-2.5 py-0.5 text-xs font-semibold ${
+                ticket.trangThai === "DA_XAC_NHAN"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : ticket.trangThai === "DA_HOAN_THANH"
+                    ? "bg-blue-100 text-blue-800"
+                    : ticket.trangThai === "BI_TU_CHOI" || ticket.trangThai === "DA_HUY"
+                      ? "bg-rose-100 text-rose-800"
+                      : ticket.trangThai === "KHONG_DEN"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-slate-100 text-slate-800"
+              }`}
+            >
+              {ticket.trangThai === "DA_XAC_NHAN"
+                ? vi
+                  ? "Đã xác nhận"
+                  : "Confirmed"
+                : ticket.trangThai === "BI_TU_CHOI"
+                  ? vi
+                    ? "Bác sĩ đã hủy"
+                    : "Cancelled by doctor"
+                  : ticket.trangThai === "DA_HUY"
+                    ? vi
+                      ? "Đã hủy"
+                      : "Cancelled"
+                    : ticket.trangThai === "DA_HOAN_THANH"
+                      ? vi
+                        ? "Đã hoàn thành"
+                        : "Completed"
+                      : ticket.trangThai === "KHONG_DEN"
+                        ? vi
+                          ? "Không đến"
+                          : "No-show"
+                        : ticket.trangThai.replaceAll("_", " ")}
+            </span>
           </p>
           <dl className="mt-7 grid gap-x-8 gap-y-5 sm:grid-cols-2">
             <div>
@@ -200,13 +234,18 @@ export function AppointmentTicketPage() {
             </div>
           </dl>
           {ticket.lyDoHuy && (
-            <p className="mt-5 text-sm text-rose-700">
-              {t({
-                en: "Reason for cancellation/decline:",
-                vi: "Lý do hủy/từ chối:",
-              })}{" "}
+            <div className="mt-5 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              <strong>
+                {ticket.trangThai === "BI_TU_CHOI"
+                  ? vi
+                    ? "Lý do bác sĩ hủy lịch:"
+                    : "Doctor cancellation reason:"
+                  : vi
+                    ? "Lý do hủy:"
+                    : "Cancellation reason:"}{" "}
+              </strong>
               {ticket.lyDoHuy}
-            </p>
+            </div>
           )}
         </div>
         <div className="flex flex-col items-center gap-3">
