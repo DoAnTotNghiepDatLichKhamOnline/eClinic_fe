@@ -11,7 +11,7 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useQueryClient } from "@tanstack/react-query";
-import { patientBookingService } from "@/services/booking/patientBooking.service";
+import { patientBookingService } from "@/services/booking";
 import type { HoSoCuaToiResponse } from "@/types/booking.type";
 import type { GioiTinh } from "@/types/common.type";
 import {
@@ -109,7 +109,7 @@ export function PatientProfilePage() {
     const values = new FormData(event.currentTarget);
     const relative = thongTin?.nguoiThan.find((item) => item.id === id);
     try {
-      const response = await bookingService.capNhatNguoiThan(id, {
+      const response = await patientBookingService.capNhatNguoiThan(id, {
         hoTen: String(values.get("hoTen") || "").trim(),
         ngaySinh: String(values.get("ngaySinh") || ""),
         gioiTinh: String(values.get("gioiTinh") || "NAM"),
@@ -151,7 +151,7 @@ export function PatientProfilePage() {
     )
       return;
     try {
-      const response = await bookingService.xoaNguoiThan(id);
+      const response = await patientBookingService.xoaNguoiThan(id);
       if (!response.thanhCong) throw new Error(response.thongDiep);
       await queryClient.invalidateQueries({
         queryKey: ["booking", "thong-tin-dat-lich"],
