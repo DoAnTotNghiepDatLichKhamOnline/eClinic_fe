@@ -8,7 +8,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { authService } from "@/services/identity/authService";
 import { notifyAuth } from "@/utils/authNotification";
-import styles from "../login-patient/LoginPagePatient.module.css";
+import styles from "@/features/auth/login/LoginPagePatient.module.css";
 import pageStyles from "./ResetPasswordPatient.module.css";
 
 export function ResetPasswordPatient() {

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoginPageDoctor } from "@/features/auth/login-doctor/LoginPageDoctor";
+import { LoginPageDoctor } from "@/features/auth/login/LoginPageDoctor";
 import { DoctorDashboardPage } from "@/features/doctor/DoctorDashboardPage";
 import type { DoctorSection } from "@/features/doctor/DoctorSidebar";
 

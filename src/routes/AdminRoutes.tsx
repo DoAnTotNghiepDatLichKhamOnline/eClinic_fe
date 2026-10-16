@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LoginPageAdmin } from "@/features/auth/login-admin/LoginPageAdmin";
+import { LoginPageAdmin } from "@/features/auth/login/LoginPageAdmin";
 import { AdminDashboardPage } from "@/features/admin/AdminDashboardPage";
 import type { AdminSection } from "@/features/admin/AdminSidebar";
 

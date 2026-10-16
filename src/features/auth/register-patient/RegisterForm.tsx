@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import type { Lang } from "@/types/i18n";
-import styles from "../login-patient/LoginPagePatient.module.css";
+import styles from "@/features/auth/login/LoginPagePatient.module.css";
 
 export interface PatientRegistrationData {
   hoTen: string;
