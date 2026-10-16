@@ -63,6 +63,9 @@ export interface ConsultationLookup {
     chanDoan: string;
     ghiChu?: string | null;
     ngayTaiKhamDeXuat?: string | null;
+    phienBan?: number;
+    ngaySuaCuoi?: string | null;
+    lyDoSua?: string | null;
   } | null;
 }
 
