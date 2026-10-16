@@ -28,6 +28,11 @@ export function AdminDoctorPanel() {
   const [message, setMessage] = useState("");
   const [lowRatingOnly, setLowRatingOnly] = useState(false);
   const [uploadType, setUploadType] = useState("ANH_CONG_VIEC");
+  const [deactivatingDoctor, setDeactivatingDoctor] = useState<{
+    doctor: BacSiQuanTriResponse;
+    impact: { soCaSapToi: number; soLichHenBiAnhHuong: number };
+  } | null>(null);
+  const [deactivateReason, setDeactivateReason] = useState("");
 
   const specialties = useDanhSachChuyenKhoa({ kichThuoc: 100 }).danhSach;
   const doctorsQuery = useQuery({
@@ -92,6 +97,7 @@ export function AdminDoctorPanel() {
     event.preventDefault();
     const form = event.currentTarget;
     const values = new FormData(form);
+    const namBatDau = Number(values.get("namBatDauHanhNghe")) || null;
     const body: ThemBacSiRequest = {
       hoTen: String(values.get("hoTen")),
       email: String(values.get("email")),
@@ -100,7 +106,10 @@ export function AdminDoctorPanel() {
       soGiayPhep: String(values.get("soGiayPhep") || "") || null,
       hocVi: String(values.get("hocVi") || "") || null,
       chucVu: String(values.get("chucVu") || "") || null,
-      soNamKinhNghiem: Number(values.get("soNamKinhNghiem")) || null,
+      namBatDauHanhNghe: namBatDau,
+      soNamKinhNghiem: namBatDau
+        ? new Date().getFullYear() - namBatDau
+        : Number(values.get("soNamKinhNghiem")) || null,
     };
     try {
       const result = await doctorService.themBacSi(body);
@@ -142,11 +151,15 @@ export function AdminDoctorPanel() {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
+    const namBatDau = Number(values.get("namBatDauHanhNghe")) || null;
     const body: CapNhatHoSoBacSiRequest = {
       hocVi: String(values.get("hocVi") || "") || null,
       chucVu: String(values.get("chucVu") || "") || null,
       chucVuEn: String(values.get("chucVuEn") || "") || null,
-      soNamKinhNghiem: Number(values.get("soNamKinhNghiem")) || null,
+      namBatDauHanhNghe: namBatDau,
+      soNamKinhNghiem: namBatDau
+        ? new Date().getFullYear() - namBatDau
+        : Number(values.get("soNamKinhNghiem")) || null,
       gioiThieuNgan: String(values.get("gioiThieuNgan") || "") || null,
       gioiThieuNganEn: String(values.get("gioiThieuNganEn") || "") || null,
       tieuSu: String(values.get("tieuSu") || "") || null,
@@ -177,25 +190,41 @@ export function AdminDoctorPanel() {
         const impact = await doctorService.getAnhHuongNgungCongTac(doctor.id);
         if (!impact.thanhCong || !impact.duLieu)
           throw new Error(impact.thongDiep);
-        const reason = window
-          .prompt(
-            vi
-              ? `Hủy ${impact.duLieu.soCaSapToi} ca và ảnh hưởng ${impact.duLieu.soLichHenBiAnhHuong} lịch. Nhập lý do:`
-              : `This cancels ${impact.duLieu.soCaSapToi} shifts and affects ${impact.duLieu.soLichHenBiAnhHuong} appointments. Enter a reason:`,
-          )
-          ?.trim();
-        if (!reason) return;
-        const result = await doctorService.ngungCongTacBacSi(doctor.id, {
-          lyDo: reason,
-        });
-        if (!result.thanhCong) throw new Error(result.thongDiep);
-        setMessage(result.thongDiep);
+        setDeactivatingDoctor({ doctor, impact: impact.duLieu });
+        setDeactivateReason("");
       } else {
+        if (
+          !window.confirm(
+            vi
+              ? `Kích hoạt lại trạng thái công tác cho bác sĩ ${doctor.hoTen}?`
+              : `Reactivate doctor ${doctor.hoTen}?`,
+          )
+        )
+          return;
         const result = await doctorService.congTacLaiBacSi(doctor.id);
         if (!result.thanhCong) throw new Error(result.thongDiep);
         setMessage(result.thongDiep);
+        setError("");
+        await refreshDoctors();
       }
+    } catch (cause) {
+      fail(cause);
+    }
+  };
+
+  const confirmDeactivate = async () => {
+    if (!deactivatingDoctor || !deactivateReason.trim()) return;
+    try {
+      const result = await doctorService.ngungCongTacBacSi(
+        deactivatingDoctor.doctor.id,
+        {
+          lyDo: deactivateReason.trim(),
+        },
+      );
+      if (!result.thanhCong) throw new Error(result.thongDiep);
+      setMessage(result.thongDiep);
       setError("");
+      setDeactivatingDoctor(null);
       await refreshDoctors();
     } catch (cause) {
       fail(cause);
@@ -343,8 +372,14 @@ export function AdminDoctorPanel() {
               <input name="chucVu" />
             </label>
             <label className="grid gap-1 text-xs">
-              {vi ? "Số năm kinh nghiệm" : "Years of experience"}
-              <input name="soNamKinhNghiem" type="number" min={0} />
+              {vi ? "Năm bắt đầu hành nghề" : "Practicing since (Year)"}
+              <input
+                name="namBatDauHanhNghe"
+                type="number"
+                min={1960}
+                max={new Date().getFullYear()}
+                placeholder="VD: 2015"
+              />
             </label>
             <button className={styles.actionBtn} type="submit">
               {vi ? "Tạo tài khoản bác sĩ" : "Create doctor account"}
@@ -588,7 +623,7 @@ export function AdminDoctorPanel() {
                     "hocVi",
                     "chucVu",
                     "chucVuEn",
-                    "soNamKinhNghiem",
+                    "namBatDauHanhNghe",
                     "gioiThieuNgan",
                     "gioiThieuNganEn",
                     "tieuSu",
@@ -707,6 +742,71 @@ export function AdminDoctorPanel() {
               ))}
             </div>
           </section>
+        </div>
+      )}
+      {/* SAFE DEACTIVATION MODAL */}
+      {deactivatingDoctor && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-rose-700 mb-2">
+              {vi ? "Ngừng công tác bác sĩ" : "Deactivate Doctor"}
+            </h3>
+            <p className="text-sm font-semibold text-slate-800 mb-3">
+              {deactivatingDoctor.doctor.hoTen} ({deactivatingDoctor.doctor.maBacSi}) - {deactivatingDoctor.doctor.tenChuyenKhoa}
+            </p>
+
+            <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+              <p className="font-bold mb-1">
+                {vi ? "Cảnh báo ảnh hưởng:" : "Impact Warning:"}
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  {vi
+                    ? `Sẽ tự động hủy ${deactivatingDoctor.impact.soCaSapToi} ca trực sắp tới`
+                    : `Will cancel ${deactivatingDoctor.impact.soCaSapToi} upcoming work shifts`}
+                </li>
+                <li>
+                  {vi
+                    ? `Ảnh hưởng đến ${deactivatingDoctor.impact.soLichHenBiAnhHuong} lịch hẹn đã đặt của bệnh nhân (chuyển sang trạng thái cần đổi lịch)`
+                    : `Affects ${deactivatingDoctor.impact.soLichHenBiAnhHuong} booked patient appointments`}
+                </li>
+              </ul>
+            </div>
+
+            <label className="block text-xs font-semibold mb-3">
+              {vi ? "Lý do ngừng công tác (bắt buộc) *" : "Reason for deactivation (required) *"}
+              <textarea
+                rows={3}
+                required
+                className="w-full mt-1 p-2 border rounded text-xs"
+                placeholder={
+                  vi
+                    ? "Nhập lý do (nghỉ việc, chuyển viện, nghỉ phép dài hạn...)"
+                    : "Enter reason..."
+                }
+                value={deactivateReason}
+                onChange={(e) => setDeactivateReason(e.target.value)}
+              />
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setDeactivatingDoctor(null)}
+              >
+                {vi ? "Hủy bỏ" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className={styles.actionBtnDanger}
+                disabled={!deactivateReason.trim()}
+                onClick={() => void confirmDeactivate()}
+              >
+                {vi ? "Xác nhận ngưng công tác" : "Confirm Deactivation"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
