@@ -5,7 +5,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 
 export function EmailTokenPage({ kind }: { kind: "verify" | "change" }) {
   const { t } = useLanguage();
@@ -35,8 +35,8 @@ export function EmailTokenPage({ kind }: { kind: "verify" | "change" }) {
     setState("busy");
     try {
       const response = isVerify
-        ? await identityService.xacThucEmail({ token })
-        : await identityService.xacNhanDoiEmail({ token });
+        ? await authService.xacThucEmail({ token })
+        : await authService.xacNhanDoiEmail({ token });
       if (!response.thanhCong) throw new Error(response.thongDiep);
       if (!isVerify) await logout();
       setState("done");
@@ -74,7 +74,7 @@ export function EmailTokenPage({ kind }: { kind: "verify" | "change" }) {
     event.preventDefault();
     setState("busy");
     try {
-      const response = await identityService.guiLaiXacThuc({
+      const response = await authService.guiLaiXacThuc({
         email: email.trim(),
       });
       if (!response.thanhCong) throw new Error(response.thongDiep);
