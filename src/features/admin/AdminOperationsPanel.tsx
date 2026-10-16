@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminBookingService } from "@/services/booking/adminBooking.service";
-import { catalogService } from "@/services/catalogService";
+import { adminBookingService as bookingService } from "@/services/booking";
+import {
+  specialtyService,
+  doctorService,
+  clinicService,
+  medicineService,
+} from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { AdminSection } from "./AdminSidebar";
 import type {
@@ -52,13 +57,13 @@ export function AdminOperationsPanel({
   const doctorsQuery = useQuery({
     queryKey: ["catalog", "admin-doctors"],
     queryFn: () =>
-      catalogService.getDanhSachBacSiQuanTri({ trang: 0, kichThuoc: 100 }),
+      doctorService.getDanhSachBacSiQuanTri({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "schedule",
   });
   const clinicsQuery = useQuery({
     queryKey: ["catalog", "admin-clinics", tab],
     queryFn: () =>
-      catalogService.getDanhSachPhongKhamQuanTri({ trang: 0, kichThuoc: 100 }),
+      clinicService.getDanhSachPhongKhamQuanTri({ trang: 0, kichThuoc: 100 }),
     enabled:
       activeSection === "schedule" ||
       (activeSection === "catalog" && tab === "clinics"),
@@ -82,13 +87,13 @@ export function AdminOperationsPanel({
   const specialtiesQuery = useQuery({
     queryKey: ["catalog", "admin-specialties"],
     queryFn: () =>
-      catalogService.getDanhSachChuyenKhoaQuanTri({ trang: 0, kichThuoc: 100 }),
+      specialtyService.getDanhSachChuyenKhoaQuanTri({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "catalog" && tab === "specialties",
   });
   const medicinesQuery = useQuery({
     queryKey: ["catalog", "admin-medicines"],
     queryFn: () =>
-      catalogService.getDanhSachThuocQuanTri({ trang: 0, kichThuoc: 100 }),
+      medicineService.getDanhSachThuocQuanTri({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "catalog" && tab === "medicines",
   });
   const patientsQuery = useQuery({
@@ -275,7 +280,7 @@ export function AdminOperationsPanel({
       trieuChungEn: String(values.get("trieuChungEn") || "") || null,
     };
     try {
-      const result = await catalogService.taoChuyenKhoa(request);
+      const result = await specialtyService.taoChuyenKhoa(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, [
         "catalog|admin-specialties",
@@ -299,7 +304,7 @@ export function AdminOperationsPanel({
       tangEn: String(values.get("tangEn") || "") || null,
     };
     try {
-      const result = await catalogService.themPhongKham(request);
+      const result = await clinicService.themPhongKham(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, [
         "catalog|admin-clinics",
@@ -323,7 +328,7 @@ export function AdminOperationsPanel({
       moTaEn: String(values.get("moTaEn") || "") || null,
     };
     try {
-      const result = await catalogService.taoThuoc(request);
+      const result = await medicineService.taoThuoc(request);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await finish(result.thongDiep, ["catalog|admin-medicines"]);
       form.reset();
@@ -365,7 +370,7 @@ export function AdminOperationsPanel({
       trieuChungEn: specialty.trieuChungEn,
     };
     try {
-      const response = await catalogService.capNhatChuyenKhoa(
+      const response = await specialtyService.capNhatChuyenKhoa(
         specialty.id,
         request,
       );
@@ -404,7 +409,7 @@ export function AdminOperationsPanel({
       idChuyenKhoa: clinic.idChuyenKhoa,
     };
     try {
-      const response = await catalogService.suaPhongKham(clinic.id, request);
+      const response = await clinicService.suaPhongKham(clinic.id, request);
       if (!response.thanhCong) throw new Error(response.thongDiep);
       await finish(response.thongDiep, [
         "catalog|admin-clinics",
@@ -440,7 +445,7 @@ export function AdminOperationsPanel({
       moTaEn: medicine.moTaEn,
     };
     try {
-      const response = await catalogService.capNhatThuoc(medicine.id, request);
+      const response = await medicineService.capNhatThuoc(medicine.id, request);
       if (!response.thanhCong) throw new Error(response.thongDiep);
       await finish(response.thongDiep, ["catalog|admin-medicines"]);
     } catch (cause) {
@@ -890,7 +895,7 @@ export function AdminOperationsPanel({
                             className={styles.actionBtnDanger}
                             type="button"
                             onClick={() =>
-                              void catalogService
+                              void clinicService
                                 .ngungHoatDongPhongKham(clinic.id)
                                 .then(() =>
                                   client.invalidateQueries({
@@ -907,7 +912,7 @@ export function AdminOperationsPanel({
                             className={styles.actionBtn}
                             type="button"
                             onClick={() =>
-                              void catalogService
+                              void clinicService
                                 .hoatDongLaiPhongKham(clinic.id)
                                 .then(() =>
                                   client.invalidateQueries({
@@ -983,7 +988,7 @@ export function AdminOperationsPanel({
                               className={styles.actionBtn}
                               type="button"
                               onClick={() =>
-                                void catalogService
+                                void medicineService
                                   .xacMinhThuoc(medicine.id)
                                   .then(() =>
                                     client.invalidateQueries({
@@ -1001,7 +1006,7 @@ export function AdminOperationsPanel({
                               className={styles.actionBtnDanger}
                               type="button"
                               onClick={() =>
-                                void catalogService
+                                void medicineService
                                   .ngungDungThuoc(medicine.id)
                                   .then(() =>
                                     client.invalidateQueries({
@@ -1018,7 +1023,7 @@ export function AdminOperationsPanel({
                               className={styles.actionBtn}
                               type="button"
                               onClick={() =>
-                                void catalogService
+                                void medicineService
                                   .dungLaiThuoc(medicine.id)
                                   .then(() =>
                                     client.invalidateQueries({
