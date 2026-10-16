@@ -14,7 +14,7 @@ import type {
   PhongKhamRequest,
   ThuocRequest,
 } from "@/types/catalog.type";
-import type { TaoCaRequest } from "@/types/booking.type";
+import type { TaoCaRequest, CaLamViecResponse } from "@/types/booking.type";
 import styles from "./AdminDashboardPage.module.css";
 
 type OperationsSection = Extract<
@@ -199,11 +199,7 @@ export function AdminOperationsPanel({
     }
   };
 
-  const editShift = async (
-    shift: NonNullable<typeof shiftQuery.data>["duLieu"] extends Array<infer V>
-      ? V
-      : never,
-  ) => {
+  const editShift = async (shift: CaLamViecResponse) => {
     const idPhongKham = window.prompt(
       vi ? "Mã phòng khám:" : "Clinic ID:",
       String(shift.idPhongKham),
