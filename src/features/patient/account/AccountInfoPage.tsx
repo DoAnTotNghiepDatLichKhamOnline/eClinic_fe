@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import { identityService } from "@/services/identityService";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
 import styles from "./AccountInfoPage.module.css";

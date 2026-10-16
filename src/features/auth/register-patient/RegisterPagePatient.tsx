@@ -4,7 +4,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 import { RegisterForm } from "./RegisterForm";
 import type { PatientRegistrationData } from "./RegisterForm";
 import styles from "../login-patient/LoginPagePatient.module.css";
@@ -17,7 +17,7 @@ export function RegisterPagePatient() {
   const handleRegisterSubmit = async (data: PatientRegistrationData) => {
     setIsSubmitting(true);
     try {
-      const response = await identityService.dangKy({
+      const response = await authService.dangKy({
         hoTen: data.hoTen,
         email: data.email,
         matKhau: data.matKhau,

@@ -6,8 +6,8 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import { patientBookingService } from "@/services/booking/patientBooking.service";
-import { catalogService } from "@/services/catalogService";
+import { patientBookingService } from "@/services/booking";
+import { doctorService } from "@/services/catalog";
 import { notifyAuth } from "@/utils/authNotification";
 import type { AppointmentFormValues } from "./appointment.types";
 import type { DatLichRequest, DatLichResponse } from "@/types/booking.type";
@@ -178,12 +178,12 @@ export function AppointmentBookingPage() {
   useEffect(() => {
     if (!followupTicket) return;
     let cancelled = false;
-    void bookingService
+    void patientBookingService
       .traCuuPhieuKham(followupTicket)
       .then(async (response) => {
         const doctorId = response.duLieu?.bacSi?.id;
         if (!response.thanhCong || !doctorId) return;
-        const doctor = await catalogService.getChiTietBacSi(doctorId);
+        const doctor = await doctorService.getChiTietBacSi(doctorId);
         if (!cancelled && doctor.duLieu) {
           setFormValues((previous) => ({
             ...previous,
@@ -448,7 +448,7 @@ export function AppointmentBookingPage() {
           : undefined,
       };
 
-      const response = await bookingService.datLich(requestPayload);
+      const response = await patientBookingService.datLich(requestPayload);
 
       if (response.thanhCong && response.duLieu) {
         const result = response.duLieu;

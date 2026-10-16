@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminBookingService } from "@/services/booking/adminBooking.service";
-import { catalogService } from "@/services/catalogService";
+import { adminBookingService } from "@/services/booking";
+import { doctorService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
 import type {
@@ -40,7 +40,7 @@ export function AdminDoctorPanel() {
       page,
     ],
     queryFn: () =>
-      catalogService.getDanhSachBacSiQuanTri({
+      doctorService.getDanhSachBacSiQuanTri({
         tuKhoa: query.trim() || undefined,
         idChuyenKhoa: specialtyFilter ? Number(specialtyFilter) : undefined,
         trangThai: statusFilter
@@ -53,13 +53,13 @@ export function AdminDoctorPanel() {
   });
   const detailQuery = useQuery({
     queryKey: ["catalog", "admin-doctor-detail", selectedDoctor?.id],
-    queryFn: () => catalogService.getHoSoBacSiQuanTri(selectedDoctor!.id),
+    queryFn: () => doctorService.getHoSoBacSiQuanTri(selectedDoctor!.id),
     enabled: Boolean(selectedDoctor),
   });
   const reviewsQuery = useQuery({
     queryKey: ["booking", "admin-doctor-reviews", lowRatingOnly],
     queryFn: () =>
-      bookingService.getDanhGiaQuanTri({
+      adminBookingService.getDanhGiaQuanTri({
         soSaoToiDa: lowRatingOnly ? 2 : undefined,
         trang: 0,
         kichThuoc: 50,
@@ -103,7 +103,7 @@ export function AdminDoctorPanel() {
       soNamKinhNghiem: Number(values.get("soNamKinhNghiem")) || null,
     };
     try {
-      const result = await catalogService.themBacSi(body);
+      const result = await doctorService.themBacSi(body);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       setMessage(result.thongDiep);
       setError("");
@@ -119,7 +119,7 @@ export function AdminDoctorPanel() {
     if (!selectedDoctor) return;
     const values = new FormData(event.currentTarget);
     try {
-      const result = await catalogService.suaBacSi(selectedDoctor.id, {
+      const result = await doctorService.suaBacSi(selectedDoctor.id, {
         hoTen: String(values.get("hoTen")),
         soDienThoai: String(values.get("soDienThoai") || "") || null,
         idChuyenKhoa: Number(values.get("idChuyenKhoa")),
@@ -159,7 +159,7 @@ export function AdminDoctorPanel() {
       linhVucKhamChuaEn: lines("linhVucKhamChuaEn"),
     };
     try {
-      const result = await catalogService.capNhatHoSoBacSi(
+      const result = await doctorService.capNhatHoSoBacSi(
         selectedDoctor.id,
         body,
       );
@@ -174,7 +174,7 @@ export function AdminDoctorPanel() {
   const toggleWorkStatus = async (doctor: BacSiQuanTriResponse) => {
     try {
       if (doctor.trangThai === "DANG_CONG_TAC") {
-        const impact = await catalogService.getAnhHuongNgungCongTac(doctor.id);
+        const impact = await doctorService.getAnhHuongNgungCongTac(doctor.id);
         if (!impact.thanhCong || !impact.duLieu)
           throw new Error(impact.thongDiep);
         const reason = window
@@ -185,13 +185,13 @@ export function AdminDoctorPanel() {
           )
           ?.trim();
         if (!reason) return;
-        const result = await catalogService.ngungCongTacBacSi(doctor.id, {
+        const result = await doctorService.ngungCongTacBacSi(doctor.id, {
           lyDo: reason,
         });
         if (!result.thanhCong) throw new Error(result.thongDiep);
         setMessage(result.thongDiep);
       } else {
-        const result = await catalogService.congTacLaiBacSi(doctor.id);
+        const result = await doctorService.congTacLaiBacSi(doctor.id);
         if (!result.thanhCong) throw new Error(result.thongDiep);
         setMessage(result.thongDiep);
       }
@@ -210,7 +210,7 @@ export function AdminDoctorPanel() {
     const file = values.get("anh");
     if (!(file instanceof File) || !file.size) return;
     try {
-      const result = await catalogService.themAnhBacSi(
+      const result = await doctorService.themAnhBacSi(
         selectedDoctor.id,
         file,
         uploadType as "ANH_CONG_VIEC" | "CHUNG_CHI",
@@ -235,7 +235,7 @@ export function AdminDoctorPanel() {
     if (target < 0 || target >= imageIds.length) return;
     [imageIds[index], imageIds[target]] = [imageIds[target], imageIds[index]];
     try {
-      const result = await catalogService.sapXepAnhBacSi(selectedDoctor.id, {
+      const result = await doctorService.sapXepAnhBacSi(selectedDoctor.id, {
         idAnh: imageIds,
       });
       if (!result.thanhCong) throw new Error(result.thongDiep);
@@ -254,7 +254,7 @@ export function AdminDoctorPanel() {
     )
       return;
     try {
-      const result = await catalogService.xoaAnhBacSi(selectedDoctor.id, idAnh);
+      const result = await doctorService.xoaAnhBacSi(selectedDoctor.id, idAnh);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       await client.invalidateQueries({
         queryKey: ["catalog", "admin-doctor-detail", selectedDoctor.id],

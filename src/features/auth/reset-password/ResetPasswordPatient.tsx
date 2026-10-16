@@ -6,7 +6,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 import { notifyAuth } from "@/utils/authNotification";
 import styles from "../login-patient/LoginPagePatient.module.css";
 import pageStyles from "./ResetPasswordPatient.module.css";
@@ -40,7 +40,7 @@ export function ResetPasswordPatient() {
 
     setIsSubmitting(true);
     try {
-      const response = await identityService.datLaiMatKhau({
+      const response = await authService.datLaiMatKhau({
         token,
         matKhauMoi: newPassword,
       });
@@ -49,7 +49,9 @@ export function ResetPasswordPatient() {
         setSubmitted(true);
         notifyAuth(
           "success",
-          lang === "vi" ? "Đổi mật khẩu thành công" : "Password Reset Successfully",
+          lang === "vi"
+            ? "Đổi mật khẩu thành công"
+            : "Password Reset Successfully",
           lang === "vi"
             ? "Mật khẩu của bạn đã được cập nhật. Đang chuyển tới trang đăng nhập..."
             : "Your password has been updated. Redirecting to login...",
@@ -218,7 +220,9 @@ export function ResetPasswordPatient() {
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{lang === "vi" ? "Đang cập nhật..." : "Updating..."}</span>
+                        <span>
+                          {lang === "vi" ? "Đang cập nhật..." : "Updating..."}
+                        </span>
                       </span>
                     ) : lang === "vi" ? (
                       "Xác nhận đổi mật khẩu"

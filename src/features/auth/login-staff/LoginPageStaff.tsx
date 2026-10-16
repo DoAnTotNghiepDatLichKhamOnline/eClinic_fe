@@ -6,7 +6,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 import { setAccessToken } from "@/utils/axiosClient";
 import { applyAccountLanguage } from "@/utils/languagePreference";
 import styles from "./LoginPageStaff.module.css";
@@ -30,7 +30,7 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
 
     setIsLoading(true);
     try {
-      const response = await identityService.dangNhap({
+      const response = await authService.dangNhap({
         email: email.trim(),
         matKhau: password,
       });
@@ -114,13 +114,13 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
     }
     setIsLoading(true);
     try {
-      const result = await identityService.datMatKhauLanDau({
+      const result = await authService.datMatKhauLanDau({
         email: email.trim(),
         matKhauHienTai: password,
         matKhauMoi: newPassword,
       });
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      const loginResponse = await identityService.dangNhap({
+      const loginResponse = await authService.dangNhap({
         email: email.trim(),
         matKhau: newPassword,
       });
@@ -161,7 +161,7 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
     }
 
     try {
-      await identityService.quenMatKhau({ email: email.trim() });
+      await authService.quenMatKhau({ email: email.trim() });
       notifyAuth(
         "info",
         lang === "vi"

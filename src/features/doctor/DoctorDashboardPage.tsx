@@ -16,7 +16,8 @@ import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
 import { DoctorSearchBar } from "./DoctorSearchBar";
 import { useQuery } from "@tanstack/react-query";
-import { patientBookingService as bookingService } from "@/services/booking/patientBooking.service";
+import { doctorBookingService } from "@/services/booking";
+import type { LichHenCuaToiResponse } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -44,12 +45,12 @@ export function DoctorDashboardPage({
   const today = localDateKey(new Date());
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
-    queryFn: () => bookingService.getTongQuanBacSi(),
+    queryFn: () => doctorBookingService.getTongQuanBacSi(),
   });
   const { data: appointmentsResponse, isLoading: isLoadingAppointments } =
     useQuery({
       queryKey: ["booking", "doctor-today", today],
-      queryFn: () => bookingService.getLichHenBacSiTheoNgay({ ngay: today }),
+      queryFn: () => doctorBookingService.getLichHenBacSiTheoNgay({ ngay: today }),
     });
   const summary = summaryResponse?.duLieu;
   const appointments = appointmentsResponse?.duLieu?.noiDung ?? [];
@@ -208,7 +209,7 @@ export function DoctorDashboardPage({
                         </td>
                       </tr>
                     ) : (
-                      appointments.map((apt) => (
+                      appointments.map((apt: LichHenCuaToiResponse) => (
                         <tr key={apt.maPhieuKham}>
                           <td>
                             <strong>{apt.maTraCuu}</strong>

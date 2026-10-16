@@ -1,7 +1,7 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { identityService } from "@/services/identityService";
+import { userProfileService } from "@/services/identity/userProfileService";
 import { cx } from "@/utils/cx";
 import styles from "./LanguageToggle.module.css";
 
@@ -16,7 +16,7 @@ export function LanguageToggle() {
     toggleLanguage();
     void queryClient.invalidateQueries();
     if (user) {
-      void identityService.capNhatNgonNgu(nextLanguage === "vi" ? "VI" : "EN");
+      void userProfileService.capNhatNgonNgu(nextLanguage === "vi" ? "VI" : "EN");
     }
   };
 
