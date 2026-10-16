@@ -29,7 +29,8 @@ export type TrangThaiLichHen =
   | "BI_TU_CHOI"
   | "DA_HOAN_THANH"
   | "DA_HUY"
-  | "DA_HUY_DO_DOI_LICH";
+  | "DA_HUY_DO_DOI_LICH"
+  | "KHONG_DEN";
 export type TrangThaiLichLamViec = "HOAT_DONG" | "DANG_HOAT_DONG" | "DA_HUY";
 export type TrangThaiYeuCau =
   | "CHO_DUYET"
