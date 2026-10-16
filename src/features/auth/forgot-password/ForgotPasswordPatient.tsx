@@ -6,7 +6,7 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 import styles from "../login-patient/LoginPagePatient.module.css";
 import pageStyles from "./ForgotPasswordPatient.module.css";
 
@@ -25,7 +25,7 @@ export function ForgotPasswordPatient() {
 
     setIsSubmitting(true);
     try {
-      await identityService.quenMatKhau({ email: email.trim() });
+      await authService.quenMatKhau({ email: email.trim() });
       setSubmitted(true);
     } catch {
       // Theo nguyên tắc bảo mật, hiển thị thông báo chung ngay cả khi email không tồn tại
@@ -134,7 +134,9 @@ export function ForgotPasswordPatient() {
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>{lang === "vi" ? "Đang gửi..." : "Sending..."}</span>
+                        <span>
+                          {lang === "vi" ? "Đang gửi..." : "Sending..."}
+                        </span>
                       </span>
                     ) : lang === "vi" ? (
                       "Gửi liên kết khôi phục"
