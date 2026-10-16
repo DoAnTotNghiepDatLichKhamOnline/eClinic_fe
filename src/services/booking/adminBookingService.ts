@@ -17,6 +17,7 @@ import type {
   DanhGiaQuanTriResponse,
   TongQuanQuanTriResponse,
   TrangThaiYeuCau,
+  LichSuSuaBenhAnResponse,
 } from "@/types/booking.type";
 
 export const adminBookingService = {
@@ -198,6 +199,31 @@ export const adminBookingService = {
     const response = await axiosClient.get<
       ApiResponse<TongQuanQuanTriResponse>
     >("/api/booking/quan-tri/tong-quan");
+    return response.data;
+  },
+
+  /** Get medical record edit history for admin */
+  getLichSuSuaBenhAnQuanTri: async (idLichHen: number) => {
+    const response = await axiosClient.get<ApiResponse<LichSuSuaBenhAnResponse>>(
+      `/api/medical/quan-tri/lich-hen/${idLichHen}/benh-an/lich-su`,
+    );
+    return response.data;
+  },
+
+  /** Lookup appointment by code for admin */
+  traCuuLichHenQuanTri: async (ma: string) => {
+    const response = await axiosClient.get<ApiResponse<LichHenCuaToiResponse>>(
+      "/api/booking/quan-tri/lich-hen/tra-cuu",
+      { params: { ma } },
+    );
+    return response.data;
+  },
+
+  /** Mark documents verified by admin */
+  danhDauDaDoiChieuQuanTri: async (id: number) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/quan-tri/lich-hen/${id}/da-doi-chieu`,
+    );
     return response.data;
   },
 };
