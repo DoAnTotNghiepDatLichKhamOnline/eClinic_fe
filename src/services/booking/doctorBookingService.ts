@@ -7,11 +7,15 @@ import type {
   GhiKetQuaKhamRequest,
   KetQuaKhamResponse,
   DanhGiaCuaBacSiResponse,
+  DanhGiaTongQuanResponse,
   YeuCauDoiLichResponse,
   GuiYeuCauDoiLichRequest,
   TongQuanBacSiResponse,
   SuaHoSoBenhNhanRequest,
   TrangThaiYeuCau,
+  HangDoiResponse,
+  Icd10GoiY,
+  LichSuSuaBenhAnResponse,
 } from "@/types/booking.type";
 
 export const doctorBookingService = {
@@ -108,22 +112,72 @@ export const doctorBookingService = {
     return response.data;
   },
 
-  /** Medication auto-complete suggestions */
+  /** Medication auto-complete suggestions (updated with active ingredient, strength, route) */
   getThuocGoiY: async (tuKhoa: string) => {
     const response = await axiosClient.get<
       ApiResponse<
         Array<{
           id: number;
           tenThuoc: string;
+          hoatChat?: string | null;
+          hamLuong?: string | null;
+          dangBaoChe?: string | null;
+          duongDung?: string | null;
           donVi: string | null;
-          daXacMinh: boolean;
         }>
       >
     >("/api/medical/bac-si/toi/thuoc", { params: { tuKhoa } });
     return response.data;
   },
 
-  /** Get pending appointment requests */
+  /** ICD-10 code auto-complete suggestions */
+  getIcd10GoiY: async (tuKhoa: string) => {
+    const response = await axiosClient.get<ApiResponse<Icd10GoiY[]>>(
+      "/api/medical/bac-si/toi/icd10",
+      { params: { tuKhoa } },
+    );
+    return response.data;
+  },
+
+  /** Update examination record with reason and version */
+  suaBenhAnBacSi: async (idLichHen: number, data: GhiKetQuaKhamRequest) => {
+    const response = await axiosClient.put<ApiResponse<KetQuaKhamResponse>>(
+      `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an`,
+      data,
+    );
+    return response.data;
+  },
+
+  /** Get medical record edit history */
+  getLichSuSuaBenhAn: async (idLichHen: number) => {
+    const response = await axiosClient.get<ApiResponse<LichSuSuaBenhAnResponse>>(
+      `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an/lich-su`,
+    );
+    return response.data;
+  },
+
+  /** Get upcoming appointments (replaces deprecated appointment requests route) */
+  getLichHenSapToiBacSi: async (params?: {
+    tuNgay?: string;
+    denNgay?: string;
+  }) => {
+    const today = new Date();
+    const tuNgay =
+      params?.tuNgay ||
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 41);
+    const denNgay =
+      params?.denNgay ||
+      `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`;
+
+    const response = await axiosClient.get<
+      ApiResponse<LichHenCuaToiResponse[]>
+    >("/api/booking/bac-si/toi/lich-hen/lich", { params: { tuNgay, denNgay } });
+    return response.data;
+  },
+
+  /** Get pending appointment requests (legacy compatibility) */
   getDanhSachYeuCauBacSi: async (params?: {
     trang?: number;
     kichThuoc?: number;
@@ -230,6 +284,49 @@ export const doctorBookingService = {
   getTongQuanBacSi: async () => {
     const response = await axiosClient.get<ApiResponse<TongQuanBacSiResponse>>(
       "/api/booking/bac-si/toi/tong-quan",
+    );
+    return response.data;
+  },
+
+  /** Get doctor queue for given date (defaults to today) */
+  getHangDoi: async (ngay?: string) => {
+    const response = await axiosClient.get<ApiResponse<HangDoiResponse>>(
+      "/api/booking/bac-si/toi/hang-doi",
+      { params: ngay ? { ngay } : undefined },
+    );
+    return response.data;
+  },
+
+  /** Call next waiting patient in shift */
+  goiTiepHangDoi: async (idLichLamViec: number) => {
+    const response = await axiosClient.post<ApiResponse<HangDoiResponse>>(
+      "/api/booking/bac-si/toi/hang-doi/goi-tiep",
+      null,
+      { params: { idLichLamViec } },
+    );
+    return response.data;
+  },
+
+  /** Call specific appointment into exam room */
+  goiKham: async (idLichHen: number) => {
+    const response = await axiosClient.post<ApiResponse<HangDoiResponse>>(
+      `/api/booking/bac-si/toi/lich-hen/${idLichHen}/goi-kham`,
+    );
+    return response.data;
+  },
+
+  /** Mark appointment patient as absent */
+  danhDauVangMat: async (idLichHen: number) => {
+    const response = await axiosClient.post<ApiResponse<HangDoiResponse>>(
+      `/api/booking/bac-si/toi/lich-hen/${idLichHen}/vang-mat`,
+    );
+    return response.data;
+  },
+
+  /** Get doctor ratings summary overview */
+  getTongQuanDanhGiaBacSi: async () => {
+    const response = await axiosClient.get<ApiResponse<DanhGiaTongQuanResponse>>(
+      "/api/booking/bac-si/toi/danh-gia/tong-quan",
     );
     return response.data;
   },
