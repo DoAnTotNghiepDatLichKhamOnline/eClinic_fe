@@ -159,6 +159,15 @@ export const doctorBookingService = {
     return response.data;
   },
 
+  /** Cancel upcoming appointment with mandatory reason (new API) */
+  huyLichHenBacSi: async (id: number, data: { lyDo: string }) => {
+    const response = await axiosClient.post<ApiResponse<LichHenCuaToiResponse>>(
+      `/api/booking/bac-si/toi/lich-hen/${id}/huy`,
+      data,
+    );
+    return response.data;
+  },
+
   /** Search appointment */
   traCuuLichHenBacSi: async (ma: string) => {
     const response = await axiosClient.get<ApiResponse<unknown>>(
