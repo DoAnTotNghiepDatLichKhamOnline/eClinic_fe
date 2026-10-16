@@ -162,15 +162,68 @@ export function PatientDetailModal({
             <h3 className="mb-2 font-semibold">
               {vi ? "Lịch sử lịch hẹn" : "Appointment history"}
             </h3>
-            {patientAppointmentsQuery.data.duLieu.noiDung.map((appointment) => (
-              <p
-                className="border-b border-slate-100 py-2 text-sm"
-                key={appointment.maPhieuKham}
-              >
-                {appointment.ngay} · {appointment.gioKhamDuKien} ·{" "}
-                {appointment.bacSi.hoTen} · {appointment.trangThai}
-              </p>
-            ))}
+            <div className="grid gap-2">
+              {patientAppointmentsQuery.data.duLieu.noiDung.map((appointment) => (
+                <div
+                  className="border-b border-slate-100 py-3 flex flex-wrap items-center justify-between gap-2 text-sm"
+                  key={appointment.maPhieuKham}
+                >
+                  <div>
+                    <strong>
+                      {appointment.ngay} · {appointment.gioKhamDuKien}
+                    </strong>
+                    <p className="text-xs text-slate-600 m-0">
+                      {appointment.bacSi.hoTen} · Mã: {appointment.maPhieuKham} · {appointment.trangThai}
+                    </p>
+                    {appointment.doiChieu?.canDoiChieu && (
+                      <span className="inline-block mt-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                        {vi
+                          ? "Cần đối chiếu giấy tờ (Họ tên / Ngày sinh)"
+                          : "Document verification needed"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {appointment.doiChieu?.canDoiChieu && appointment.id && (
+                      <button
+                        type="button"
+                        className={styles.actionBtn}
+                        onClick={async () => {
+                          if (!appointment.id) return;
+                          try {
+                            const res = await bookingService.danhDauDaDoiChieuQuanTri(
+                              appointment.id,
+                            );
+                            if (!res.thanhCong) throw new Error(res.thongDiep);
+                            setModalMessage(
+                              res.thongDiep ||
+                                (vi
+                                  ? "Đã xác nhận đối chiếu giấy tờ thành công"
+                                  : "Document verified"),
+                            );
+                            await client.invalidateQueries({
+                              queryKey: [
+                                "booking",
+                                "admin-patient-appointments",
+                                patientId,
+                              ],
+                            });
+                          } catch (err: any) {
+                            setModalError(
+                              err.response?.data?.thongDiep ||
+                                err.message ||
+                                "Error",
+                            );
+                          }
+                        }}
+                      >
+                        {vi ? "Đã đối chiếu" : "Mark Verified"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
