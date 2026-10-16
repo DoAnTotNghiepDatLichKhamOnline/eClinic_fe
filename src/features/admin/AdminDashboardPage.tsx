@@ -86,7 +86,7 @@ export function AdminDashboardPage({
   const { capNhatTrangThaiTaiKhoan, xoaTaiKhoan } = useIdentityActions();
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "admin-summary"],
-    queryFn: () => bookingService.getTongQuanQuanTri(),
+    queryFn: () => adminBookingService.getTongQuanQuanTri(),
     enabled: activeSection === "dashboard",
   });
   const summary = summaryResponse?.duLieu;
