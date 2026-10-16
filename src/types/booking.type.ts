@@ -168,6 +168,11 @@ export interface LichHenCuaToiResponse {
   duocHuyDoi: boolean;
   hanHuyDoi: string;
   canDoiLich: boolean;
+  doiChieu?: {
+    canDoiChieu: boolean;
+    hoTenDaNhap?: string;
+    ngaySinhDaNhap?: string;
+  };
 }
 
 export interface SinhHieu {
