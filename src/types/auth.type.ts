@@ -27,6 +27,7 @@ export interface TaiKhoanResponse {
   vaiTro: VaiTro;
   trangThai: TrangThaiTaiKhoan;
   ngonNgu?: "VI" | "EN";
+  phaiDoiMatKhau?: boolean;
 }
 
 export interface DangNhapResponse {
