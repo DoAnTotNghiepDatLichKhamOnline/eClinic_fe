@@ -15,9 +15,7 @@ import {
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { bookingService } from "@/services/bookingService";
-import { catalogService } from "@/services/catalogService";
-import { identityService } from "@/services/identityService";
+import { doctorBookingService as bookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
 import type { DoctorSection } from "./DoctorSidebar";
 import styles from "./DoctorWorkspace.module.css";
