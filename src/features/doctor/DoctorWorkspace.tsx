@@ -15,12 +15,13 @@ import {
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { doctorBookingService as bookingService } from "@/services/booking";
-import { userProfileService } from "@/services/identity";
-import { doctorService } from "@/services/catalog";
+import { doctorBookingService } from "@/services/booking/doctorBookingService";
+import { userProfileService } from "@/services/identity/userProfileService";
+import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
 import type { DoctorSection } from "./DoctorSidebar";
 import styles from "./DoctorWorkspace.module.css";
+import { patientBookingService } from "@/services/booking/patientBookingService";
 
 type AppointmentStatus = "pending" | "accepted" | "declined" | "completed";
 
@@ -122,7 +123,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const { data: shiftsResponse, isLoading: isLoadingShifts } = useQuery({
     queryKey: ["booking", "doctor-shifts", scheduleFrom, scheduleTo],
     queryFn: () =>
-      bookingService.getLichTuanBacSi({
+      doctorBookingService.getLichTuanBacSi({
         tuNgay: scheduleFrom,
         denNgay: scheduleTo,
       }),
@@ -136,7 +137,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
       scheduleTo,
     ],
     queryFn: () =>
-      bookingService.getLichHenLichBacSi({
+      doctorBookingService.getLichHenLichBacSi({
         tuNgay: scheduleFrom,
         denNgay: scheduleTo,
       }),
@@ -145,7 +146,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const { data: ownShiftRequestsResponse } = useQuery({
     queryKey: ["booking", "doctor-shift-requests"],
     queryFn: () =>
-      bookingService.getYeuCauDoiLichBacSi({ trang: 0, kichThuoc: 100 }),
+      doctorBookingService.getYeuCauDoiLichBacSi({ trang: 0, kichThuoc: 100 }),
     enabled: activeSection === "schedule",
   });
   const shifts = shiftsResponse?.duLieu ?? [];
@@ -153,7 +154,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const ownShiftRequests = ownShiftRequestsResponse?.duLieu?.noiDung ?? [];
   const medicationQuery = useQuery({
     queryKey: ["medical", "doctor-medications", medicationName],
-    queryFn: () => bookingService.getThuocGoiY(medicationName),
+    queryFn: () => doctorBookingService.getThuocGoiY(medicationName),
     enabled:
       activeSection === "consultation" && medicationName.trim().length >= 2,
   });
@@ -173,7 +174,10 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const { data: requestResponse } = useQuery({
     queryKey: ["booking", "doctor-appointment-requests"],
     queryFn: () =>
-      bookingService.getDanhSachYeuCauBacSi({ trang: 0, kichThuoc: 100 }),
+      doctorBookingService.getDanhSachYeuCauBacSi({
+        trang: 0,
+        kichThuoc: 100,
+      }),
     enabled: activeSection === "appointments",
   });
   const appointments: Appointment[] = (
@@ -247,7 +251,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
 
   const acceptAppointment = async (appointmentId: string) => {
     try {
-      await bookingService.xacNhanLichHenBacSi(Number(appointmentId));
+      await doctorBookingService.xacNhanLichHenBacSi(Number(appointmentId));
       await queryClient.invalidateQueries({
         queryKey: ["booking", "doctor-appointment-requests"],
       });
@@ -278,7 +282,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     const reason = String(formData.get("rejectionReason") || "").trim();
     if (!reason) return;
     try {
-      await bookingService.tuChoiLichHenBacSi(Number(appointmentId), {
+      await doctorBookingService.tuChoiLichHenBacSi(Number(appointmentId), {
         lyDo: reason,
       });
       await queryClient.invalidateQueries({
@@ -308,7 +312,8 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     const normalizedCode = patientCode.trim().toUpperCase();
     setConsultationError("");
     try {
-      const response = await bookingService.traCuuHoSoKhamBacSi(normalizedCode);
+      const response =
+        await doctorBookingService.traCuuHoSoKhamBacSi(normalizedCode);
       if (!response.thanhCong || !response.duLieu)
         throw new Error(response.thongDiep || "Visit not found");
       const details = response.duLieu as ConsultationLookup;
@@ -356,22 +361,20 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     if (!lookupDetails) return;
     const values = new FormData(event.currentTarget);
     try {
-      const response = await bookingService.capNhatBenhNhanKhamBacSi(
+      const response = await doctorBookingService.capNhatBenhNhanKhamBacSi(
         lookupDetails.lichHen.id,
         {
           hoTen: String(values.get("hoTen") || "").trim(),
           ngaySinh: String(values.get("ngaySinh") || ""),
           soDienThoai: String(values.get("soDienThoai") || "").trim(),
           gioiTinh: String(values.get("gioiTinh") || "NAM") as
-            | "NAM"
-            | "NU"
-            | "KHAC",
+            "NAM" | "NU" | "KHAC",
           diaChi: String(values.get("diaChi") || "").trim() || undefined,
           cccd: String(values.get("cccd") || "").trim() || undefined,
         },
       );
       if (!response.thanhCong) throw new Error(response.thongDiep);
-      await bookingService
+      await doctorBookingService
         .traCuuHoSoKhamBacSi(lookupDetails.lichHen.maTraCuu)
         .then((result) => {
           if (result.duLieu)
@@ -396,7 +399,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const markIdentityChecked = async () => {
     if (!lookupDetails) return;
     try {
-      const response = await bookingService.danhDauDaDoiChieuBacSi(
+      const response = await doctorBookingService.danhDauDaDoiChieuBacSi(
         lookupDetails.lichHen.id,
       );
       if (!response.thanhCong) throw new Error(response.thongDiep);
@@ -426,7 +429,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
       (medicine) => medicine.tenThuoc === medicationName.trim(),
     );
     try {
-      const response = await bookingService.ghiBenhAnBacSi(
+      const response = await doctorBookingService.ghiBenhAnBacSi(
         lookupDetails.lichHen.id,
         {
           chanDoan: diagnosis.trim(),
@@ -495,7 +498,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
 
   const withdrawShiftRequest = async (id: number) => {
     try {
-      await bookingService.rutYeuCauDoiLichBacSi(id);
+      await doctorBookingService.rutYeuCauDoiLichBacSi(id);
       await queryClient.invalidateQueries({
         queryKey: ["booking", "doctor-shift-requests"],
       });
@@ -551,8 +554,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
       const formData = new FormData(form);
       const shiftId = Number(formData.get("idLichLamViec"));
       const requestType = String(formData.get("loaiYeuCau")) as
-        | "XIN_NGHI"
-        | "DOI_CA";
+        "XIN_NGHI" | "DOI_CA";
       const reason = String(formData.get("reason") || "").trim();
       const currentShift = shifts.find((shift) => shift.id === shiftId);
       const shiftStart = currentShift
@@ -593,7 +595,7 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
         );
         return;
       }
-      void bookingService
+      void doctorBookingService
         .guiYeuCauDoiLich({
           idLichLamViec: shiftId,
           loaiYeuCau: requestType,

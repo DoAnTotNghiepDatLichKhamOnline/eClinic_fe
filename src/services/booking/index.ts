@@ -1,3 +1,3 @@
-export { adminBookingService } from "./adminBooking.service";
+export { adminBookingService } from "./adminBookingService";
 export { doctorBookingService } from "./doctorBooking.service";
 export { patientBookingService } from "./patientBooking.service";

@@ -30,7 +30,7 @@ import type {
   TaiKhoanQuanTriResponse,
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
-import { adminBookingService } from "@/services/booking/adminBooking.service";
+import { adminBookingService } from "@/services/booking/adminBookingService";
 import { AdminOperationsPanel } from "./AdminOperationsPanel";
 import { AdminDoctorPanel } from "./AdminDoctorPanel";
 
