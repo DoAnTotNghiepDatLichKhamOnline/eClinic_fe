@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { catalogService } from '@/services/catalogService';
+import {
+  specialtyService,
+  doctorService,
+  clinicService,
+} from '@/services/catalog';
 
 import type {
   GetChuyenKhoaParams,
@@ -15,7 +19,7 @@ export type { GetChuyenKhoaParams, GetBacSiParams, GetPhongKhamParams };
 export function useDanhSachChuyenKhoa(params?: GetChuyenKhoaParams) {
   const query = useQuery({
     queryKey: ['catalog', 'chuyen-khoa', params],
-    queryFn: () => catalogService.getDanhSachChuyenKhoa(params),
+    queryFn: () => specialtyService.getDanhSachChuyenKhoa(params),
   });
 
   return {
@@ -34,7 +38,7 @@ export function useDanhSachChuyenKhoa(params?: GetChuyenKhoaParams) {
 export function useChiTietChuyenKhoa(id?: number) {
   const query = useQuery({
     queryKey: ['catalog', 'chuyen-khoa-detail', id],
-    queryFn: () => catalogService.getChiTietChuyenKhoa(id!),
+    queryFn: () => specialtyService.getChiTietChuyenKhoa(id!),
     enabled: typeof id === 'number' && !Number.isNaN(id),
   });
 
@@ -50,7 +54,7 @@ export function useChiTietChuyenKhoa(id?: number) {
 export function useDanhSachBacSi(params?: GetBacSiParams) {
   const query = useQuery({
     queryKey: ['catalog', 'bac-si', params],
-    queryFn: () => catalogService.getDanhSachBacSi(params),
+    queryFn: () => doctorService.getDanhSachBacSi(params),
   });
 
   return {
@@ -69,7 +73,7 @@ export function useDanhSachBacSi(params?: GetBacSiParams) {
 export function useChiTietBacSi(id?: number) {
   const query = useQuery({
     queryKey: ['catalog', 'bac-si-detail', id],
-    queryFn: () => catalogService.getChiTietBacSi(id!),
+    queryFn: () => doctorService.getChiTietBacSi(id!),
     enabled: typeof id === 'number' && !Number.isNaN(id),
   });
 
@@ -85,7 +89,7 @@ export function useChiTietBacSi(id?: number) {
 export function useDanhSachPhongKham(params?: GetPhongKhamParams) {
   const query = useQuery({
     queryKey: ['catalog', 'phong-kham', params],
-    queryFn: () => catalogService.getDanhSachPhongKham(params),
+    queryFn: () => clinicService.getDanhSachPhongKham(params),
   });
 
   return {
@@ -93,4 +97,3 @@ export function useDanhSachPhongKham(params?: GetPhongKhamParams) {
     danhSach: query.data?.duLieu ?? [],
   };
 }
-
