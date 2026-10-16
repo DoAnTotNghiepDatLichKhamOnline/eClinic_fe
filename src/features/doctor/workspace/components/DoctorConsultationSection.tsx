@@ -23,7 +23,7 @@ import type {
   GhiKetQuaKhamRequest,
   DongThuocRequest,
 } from "@/types/booking.type";
-import styles from "../DoctorWorkspace.module.css";
+import styles from "../../DoctorWorkspace.module.css";
 
 export interface DoctorConsultationSectionProps {
   patientCode: string;
@@ -226,9 +226,7 @@ export function DoctorConsultationSection({
           ngaySinh: String(values.get("ngaySinh") || ""),
           soDienThoai: String(values.get("soDienThoai") || "").trim(),
           gioiTinh: String(values.get("gioiTinh") || "NAM") as
-            | "NAM"
-            | "NU"
-            | "KHAC",
+            "NAM" | "NU" | "KHAC",
           diaChi: String(values.get("diaChi") || "").trim() || undefined,
           cccd: String(values.get("cccd") || "").trim() || undefined,
         },
@@ -303,7 +301,9 @@ export function DoctorConsultationSection({
 
     // Rule: max days check (30 days normally, 90 days if chronic disease)
     const maxDaysAllowed = selectedIcd?.manTinh ? 90 : 30;
-    const overDaysRow = prescriptionRows.find((r) => r.soNgayDung > maxDaysAllowed);
+    const overDaysRow = prescriptionRows.find(
+      (r) => r.soNgayDung > maxDaysAllowed,
+    );
     if (overDaysRow) {
       notifyAuth(
         "error",
@@ -385,7 +385,9 @@ export function DoctorConsultationSection({
         diagnosis: response.duLieu.chanDoan,
         prescription:
           prescriptionRows
-            .map((r) => `${r.tenThuoc}: ${r.lieuDung} (${r.soLuong} ${r.donVi})`)
+            .map(
+              (r) => `${r.tenThuoc}: ${r.lieuDung} (${r.soLuong} ${r.donVi})`,
+            )
             .join("; ") ||
           response.duLieu.ghiChu ||
           "",
@@ -448,9 +450,7 @@ export function DoctorConsultationSection({
         </div>
         <form className={styles.lookupForm} onSubmit={lookupPatient}>
           <label htmlFor="patient-visit-code">
-            {lang === "vi"
-              ? "Mã phiếu khám điện tử"
-              : "Electronic visit code"}
+            {lang === "vi" ? "Mã phiếu khám điện tử" : "Electronic visit code"}
           </label>
           <div className={styles.lookupControls}>
             <input
@@ -508,7 +508,9 @@ export function DoctorConsultationSection({
                   {lang === "vi" ? "tuổi" : "years"} · {patientLookup.phone}
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div
+                style={{ display: "flex", gap: "8px", alignItems: "center" }}
+              >
                 {lookupDetails?.ketQua?.ngaySuaCuoi && (
                   <span className={styles.eyebrow} style={{ color: "#d97706" }}>
                     {lang === "vi" ? "Đã sửa lúc:" : "Edited at:"}{" "}
@@ -575,9 +577,15 @@ export function DoctorConsultationSection({
                       name="gioiTinh"
                       defaultValue={lookupDetails.hoSoBenhNhan.gioiTinh}
                     >
-                      <option value="NAM">{lang === "vi" ? "Nam" : "Male"}</option>
-                      <option value="NU">{lang === "vi" ? "Nữ" : "Female"}</option>
-                      <option value="KHAC">{lang === "vi" ? "Khác" : "Other"}</option>
+                      <option value="NAM">
+                        {lang === "vi" ? "Nam" : "Male"}
+                      </option>
+                      <option value="NU">
+                        {lang === "vi" ? "Nữ" : "Female"}
+                      </option>
+                      <option value="KHAC">
+                        {lang === "vi" ? "Khác" : "Other"}
+                      </option>
                     </select>
                   </label>
                   <label>
@@ -597,14 +605,18 @@ export function DoctorConsultationSection({
                   )}
                   <div className={styles.fullWidth}>
                     <button type="submit" className={styles.primaryButton}>
-                      {lang === "vi" ? "Cập nhật hồ sơ" : "Update patient record"}
+                      {lang === "vi"
+                        ? "Cập nhật hồ sơ"
+                        : "Update patient record"}
                     </button>{" "}
                     <button
                       type="button"
                       className={styles.secondaryButton}
                       onClick={() => void markIdentityChecked()}
                     >
-                      {lang === "vi" ? "Đã đối chiếu giấy tờ" : "Mark documents verified"}
+                      {lang === "vi"
+                        ? "Đã đối chiếu giấy tờ"
+                        : "Mark documents verified"}
                     </button>
                   </div>
                 </form>
@@ -620,25 +632,52 @@ export function DoctorConsultationSection({
             {/* Lịch sử sửa bệnh án (nếu mở) */}
             {showHistory && (
               <div className={styles.historyBox}>
-                <strong>{lang === "vi" ? "Lịch sử chỉnh sửa bệnh án" : "EMR Audit Log"}</strong>
+                <strong>
+                  {lang === "vi"
+                    ? "Lịch sử chỉnh sửa bệnh án"
+                    : "EMR Audit Log"}
+                </strong>
                 {historyQuery.isLoading ? (
-                  <p>{lang === "vi" ? "Đang tải lịch sử..." : "Loading history..."}</p>
-                ) : (historyQuery.data?.duLieu?.cacLanSua ?? []).length === 0 ? (
-                  <p>{lang === "vi" ? "Chưa có lần chỉnh sửa nào." : "No edit history."}</p>
+                  <p>
+                    {lang === "vi"
+                      ? "Đang tải lịch sử..."
+                      : "Loading history..."}
+                  </p>
+                ) : (historyQuery.data?.duLieu?.cacLanSua ?? []).length ===
+                  0 ? (
+                  <p>
+                    {lang === "vi"
+                      ? "Chưa có lần chỉnh sửa nào."
+                      : "No edit history."}
+                  </p>
                 ) : (
-                  (historyQuery.data?.duLieu?.cacLanSua ?? []).map((lan, idx) => (
-                    <div key={idx} style={{ marginTop: "10px", paddingBottom: "10px", borderBottom: "1px dashed var(--line)" }}>
-                      <span>
-                        <strong>Phiên bản {lan.phienBan}</strong> · {lan.ngaySua} · BS: {lan.bacSi.hoTen}
-                      </span>
-                      <p style={{ margin: "4px 0" }}>
-                        <em>{lang === "vi" ? "Lý do sửa:" : "Reason:"}</em> {lan.lyDo}
-                      </p>
-                      <span className={styles.eyebrow}>
-                        {lang === "vi" ? "Trường thay đổi:" : "Fields changed:"} {lan.cacTruongDoi.join(", ")}
-                      </span>
-                    </div>
-                  ))
+                  (historyQuery.data?.duLieu?.cacLanSua ?? []).map(
+                    (lan, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          marginTop: "10px",
+                          paddingBottom: "10px",
+                          borderBottom: "1px dashed var(--line)",
+                        }}
+                      >
+                        <span>
+                          <strong>Phiên bản {lan.phienBan}</strong> ·{" "}
+                          {lan.ngaySua} · BS: {lan.bacSi.hoTen}
+                        </span>
+                        <p style={{ margin: "4px 0" }}>
+                          <em>{lang === "vi" ? "Lý do sửa:" : "Reason:"}</em>{" "}
+                          {lan.lyDo}
+                        </p>
+                        <span className={styles.eyebrow}>
+                          {lang === "vi"
+                            ? "Trường thay đổi:"
+                            : "Fields changed:"}{" "}
+                          {lan.cacTruongDoi.join(", ")}
+                        </span>
+                      </div>
+                    ),
+                  )
                 )}
               </div>
             )}
@@ -646,7 +685,9 @@ export function DoctorConsultationSection({
             {/* TIỀN SỬ BỆNH */}
             <div className={styles.historyBox}>
               <strong>
-                {lang === "vi" ? "Hồ sơ và tiền sử khám" : "Patient record and visit history"}
+                {lang === "vi"
+                  ? "Hồ sơ và tiền sử khám"
+                  : "Patient record and visit history"}
               </strong>
               <p>
                 {lookupDetails?.hoSoBenhNhan.tienSuBenhLy ||
@@ -669,29 +710,56 @@ export function DoctorConsultationSection({
             {/* FORM KHÁM BỆNH VÀ KÊ ĐƠN */}
             <form className={styles.formGrid} onSubmit={completeConsultation}>
               <label className={styles.fullWidth}>
-                {lang === "vi" ? "Lý do khám (bác sĩ ghi nhận)" : "Reason for visit"}
+                {lang === "vi"
+                  ? "Lý do khám (bác sĩ ghi nhận)"
+                  : "Reason for visit"}
                 <textarea
                   rows={2}
                   value={visitReason}
                   onChange={(e) => setVisitReason(e.target.value)}
-                  placeholder={lang === "vi" ? "Nhập lý do khám..." : "Enter reason..."}
+                  placeholder={
+                    lang === "vi" ? "Nhập lý do khám..." : "Enter reason..."
+                  }
                 />
               </label>
 
               {/* SINH HIỆU */}
-              <div className={styles.fullWidth} style={{ borderTop: "1px solid var(--line)", paddingTop: "14px" }}>
-                <strong style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+              <div
+                className={styles.fullWidth}
+                style={{
+                  borderTop: "1px solid var(--line)",
+                  paddingTop: "14px",
+                }}
+              >
+                <strong
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    marginBottom: "10px",
+                  }}
+                >
                   <Activity size={16} color="var(--teal)" />
-                  {lang === "vi" ? "Chỉ số sinh hiệu (không bắt buộc, trừ cân nặng trẻ em)" : "Vital Signs"}
+                  {lang === "vi"
+                    ? "Chỉ số sinh hiệu (không bắt buộc, trừ cân nặng trẻ em)"
+                    : "Vital Signs"}
                 </strong>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                    gap: "10px",
+                  }}
+                >
                   <label>
                     {lang === "vi" ? "Mạch (l/ph)" : "Pulse (bpm)"}
                     <input
                       type="number"
                       placeholder="75"
                       value={vitals.mach}
-                      onChange={(e) => setVitals({ ...vitals, mach: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({ ...vitals, mach: e.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -701,7 +769,9 @@ export function DoctorConsultationSection({
                       step="0.1"
                       placeholder="37.0"
                       value={vitals.nhietDo}
-                      onChange={(e) => setVitals({ ...vitals, nhietDo: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({ ...vitals, nhietDo: e.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -710,7 +780,9 @@ export function DoctorConsultationSection({
                       type="number"
                       placeholder="120"
                       value={vitals.huyetApTamThu}
-                      onChange={(e) => setVitals({ ...vitals, huyetApTamThu: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({ ...vitals, huyetApTamThu: e.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -719,7 +791,12 @@ export function DoctorConsultationSection({
                       type="number"
                       placeholder="80"
                       value={vitals.huyetApTamTruong}
-                      onChange={(e) => setVitals({ ...vitals, huyetApTamTruong: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({
+                          ...vitals,
+                          huyetApTamTruong: e.target.value,
+                        })
+                      }
                     />
                   </label>
                   <label>
@@ -729,7 +806,9 @@ export function DoctorConsultationSection({
                       step="0.1"
                       placeholder="60"
                       value={vitals.canNang}
-                      onChange={(e) => setVitals({ ...vitals, canNang: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({ ...vitals, canNang: e.target.value })
+                      }
                     />
                   </label>
                   <label>
@@ -738,7 +817,9 @@ export function DoctorConsultationSection({
                       type="number"
                       placeholder="170"
                       value={vitals.chieuCao}
-                      onChange={(e) => setVitals({ ...vitals, chieuCao: e.target.value })}
+                      onChange={(e) =>
+                        setVitals({ ...vitals, chieuCao: e.target.value })
+                      }
                     />
                   </label>
                 </div>
@@ -751,7 +832,11 @@ export function DoctorConsultationSection({
                   rows={2}
                   value={clinicalNotes}
                   onChange={(e) => setClinicalNotes(e.target.value)}
-                  placeholder={lang === "vi" ? "Mô tả triệu chứng lâm sàng..." : "Describe clinical signs..."}
+                  placeholder={
+                    lang === "vi"
+                      ? "Mô tả triệu chứng lâm sàng..."
+                      : "Describe clinical signs..."
+                  }
                 />
               </label>
 
@@ -763,7 +848,9 @@ export function DoctorConsultationSection({
                   required
                   value={diagnosis}
                   onChange={(event) => setDiagnosis(event.target.value)}
-                  placeholder={lang === "vi" ? "Nhập chẩn đoán..." : "Enter diagnosis..."}
+                  placeholder={
+                    lang === "vi" ? "Nhập chẩn đoán..." : "Enter diagnosis..."
+                  }
                 />
               </label>
 
@@ -776,41 +863,68 @@ export function DoctorConsultationSection({
                       setIcdKeyword(e.target.value);
                       setSelectedIcd(null);
                     }}
-                    placeholder={lang === "vi" ? "Tìm mã hoặc tên bệnh (vd J06)..." : "Search code/name..."}
+                    placeholder={
+                      lang === "vi"
+                        ? "Tìm mã hoặc tên bệnh (vd J06)..."
+                        : "Search code/name..."
+                    }
                   />
                   {selectedIcd && (
-                    <span style={{ fontSize: "11px", color: "var(--teal)", fontWeight: 700, display: "block", marginTop: "4px" }}>
-                      ✓ {selectedIcd.ma}: {selectedIcd.ten} {selectedIcd.manTinh && "(Bệnh mạn tính - kê tối đa 90 ngày)"}
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--teal)",
+                        fontWeight: 700,
+                        display: "block",
+                        marginTop: "4px",
+                      }}
+                    >
+                      ✓ {selectedIcd.ma}: {selectedIcd.ten}{" "}
+                      {selectedIcd.manTinh &&
+                        "(Bệnh mạn tính - kê tối đa 90 ngày)"}
                     </span>
                   )}
-                  {icdKeyword && !selectedIcd && (icdQuery.data?.duLieu ?? []).length > 0 && (
-                    <div style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "#fff",
-                      border: "1px solid var(--line)",
-                      borderRadius: "6px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      maxHeight: "180px",
-                      overflowY: "auto",
-                      zIndex: 10,
-                    }}>
-                      {(icdQuery.data?.duLieu ?? []).map((item) => (
-                        <div
-                          key={item.ma}
-                          style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f1f5f9" }}
-                          onClick={() => {
-                            setSelectedIcd(item);
-                            setIcdKeyword(item.ma);
-                          }}
-                        >
-                          <strong>{item.ma}</strong> - {item.ten} {item.manTinh && <span style={{ color: "#d97706" }}>(Mạn tính)</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {icdKeyword &&
+                    !selectedIcd &&
+                    (icdQuery.data?.duLieu ?? []).length > 0 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          left: 0,
+                          right: 0,
+                          background: "#fff",
+                          border: "1px solid var(--line)",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          maxHeight: "180px",
+                          overflowY: "auto",
+                          zIndex: 10,
+                        }}
+                      >
+                        {(icdQuery.data?.duLieu ?? []).map((item) => (
+                          <div
+                            key={item.ma}
+                            style={{
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #f1f5f9",
+                            }}
+                            onClick={() => {
+                              setSelectedIcd(item);
+                              setIcdKeyword(item.ma);
+                            }}
+                          >
+                            <strong>{item.ma}</strong> - {item.ten}{" "}
+                            {item.manTinh && (
+                              <span style={{ color: "#d97706" }}>
+                                (Mạn tính)
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </label>
 
@@ -819,15 +933,34 @@ export function DoctorConsultationSection({
                 <input
                   value={secondaryDiagnosis}
                   onChange={(e) => setSecondaryDiagnosis(e.target.value)}
-                  placeholder={lang === "vi" ? "Bệnh kèm theo (nếu có)..." : "Secondary diseases..."}
+                  placeholder={
+                    lang === "vi"
+                      ? "Bệnh kèm theo (nếu có)..."
+                      : "Secondary diseases..."
+                  }
                 />
               </label>
 
               {/* KÊ ĐƠN THUỐC */}
-              <div className={styles.fullWidth} style={{ borderTop: "1px solid var(--line)", paddingTop: "14px" }}>
-                <strong style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+              <div
+                className={styles.fullWidth}
+                style={{
+                  borderTop: "1px solid var(--line)",
+                  paddingTop: "14px",
+                }}
+              >
+                <strong
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    marginBottom: "10px",
+                  }}
+                >
                   <FileCheck size={16} color="var(--teal)" />
-                  {lang === "vi" ? "Đơn thuốc (chọn từ danh mục chuẩn)" : "Prescription"}
+                  {lang === "vi"
+                    ? "Đơn thuốc (chọn từ danh mục chuẩn)"
+                    : "Prescription"}
                 </strong>
 
                 {/* Tìm kiếm thuốc để thêm */}
@@ -835,43 +968,75 @@ export function DoctorConsultationSection({
                   <input
                     value={medicineKeyword}
                     onChange={(e) => setMedicineKeyword(e.target.value)}
-                    placeholder={lang === "vi" ? "Gõ tên hoặc hoạt chất thuốc để thêm vào đơn..." : "Search medicine name or active ingredient..."}
+                    placeholder={
+                      lang === "vi"
+                        ? "Gõ tên hoặc hoạt chất thuốc để thêm vào đơn..."
+                        : "Search medicine name or active ingredient..."
+                    }
                   />
-                  {medicineKeyword.trim().length >= 2 && (medicineQuery.data?.duLieu ?? []).length > 0 && (
-                    <div style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "#fff",
-                      border: "1px solid var(--line)",
-                      borderRadius: "6px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      maxHeight: "180px",
-                      overflowY: "auto",
-                      zIndex: 10,
-                    }}>
-                      {(medicineQuery.data?.duLieu ?? []).map((med) => (
-                        <div
-                          key={med.id}
-                          style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between" }}
-                          onClick={() => handleAddMedicine(med)}
-                        >
-                          <div>
-                            <strong>{med.tenThuoc}</strong> {med.hamLuong && `(${med.hamLuong})`} · {med.hoatChat || "—"}
+                  {medicineKeyword.trim().length >= 2 &&
+                    (medicineQuery.data?.duLieu ?? []).length > 0 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          left: 0,
+                          right: 0,
+                          background: "#fff",
+                          border: "1px solid var(--line)",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          maxHeight: "180px",
+                          overflowY: "auto",
+                          zIndex: 10,
+                        }}
+                      >
+                        {(medicineQuery.data?.duLieu ?? []).map((med) => (
+                          <div
+                            key={med.id}
+                            style={{
+                              padding: "8px 12px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #f1f5f9",
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                            onClick={() => handleAddMedicine(med)}
+                          >
+                            <div>
+                              <strong>{med.tenThuoc}</strong>{" "}
+                              {med.hamLuong && `(${med.hamLuong})`} ·{" "}
+                              {med.hoatChat || "—"}
+                            </div>
+                            <span
+                              style={{ color: "var(--teal)", fontWeight: 700 }}
+                            >
+                              + {lang === "vi" ? "Thêm" : "Add"}
+                            </span>
                           </div>
-                          <span style={{ color: "var(--teal)", fontWeight: 700 }}>+ {lang === "vi" ? "Thêm" : "Add"}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
                 </div>
 
                 {/* Bảng đơn thuốc */}
                 {prescriptionRows.length > 0 && (
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "12px" }}>
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "13px",
+                      marginBottom: "12px",
+                    }}
+                  >
                     <thead>
-                      <tr style={{ background: "#f8faf9", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
+                      <tr
+                        style={{
+                          background: "#f8faf9",
+                          borderBottom: "1px solid var(--line)",
+                          textAlign: "left",
+                        }}
+                      >
                         <th style={{ padding: "8px" }}>Tên thuốc</th>
                         <th style={{ padding: "8px" }}>Liều dùng</th>
                         <th style={{ padding: "8px" }}>Lần/ngày</th>
@@ -882,15 +1047,22 @@ export function DoctorConsultationSection({
                     </thead>
                     <tbody>
                       {prescriptionRows.map((row, idx) => (
-                        <tr key={row.idThuoc} style={{ borderBottom: "1px solid var(--line)" }}>
-                          <td style={{ padding: "8px" }}><strong>{row.tenThuoc}</strong></td>
+                        <tr
+                          key={row.idThuoc}
+                          style={{ borderBottom: "1px solid var(--line)" }}
+                        >
+                          <td style={{ padding: "8px" }}>
+                            <strong>{row.tenThuoc}</strong>
+                          </td>
                           <td style={{ padding: "8px" }}>
                             <input
                               value={row.lieuDung}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setPrescriptionRows((prev) =>
-                                  prev.map((r, i) => (i === idx ? { ...r, lieuDung: val } : r)),
+                                  prev.map((r, i) =>
+                                    i === idx ? { ...r, lieuDung: val } : r,
+                                  ),
                                 );
                               }}
                               style={{ width: "100%", padding: "4px" }}
@@ -906,7 +1078,11 @@ export function DoctorConsultationSection({
                                 setPrescriptionRows((prev) =>
                                   prev.map((r, i) =>
                                     i === idx
-                                      ? { ...r, soLanMoiNgay: val, soLuong: val * r.soNgayDung }
+                                      ? {
+                                          ...r,
+                                          soLanMoiNgay: val,
+                                          soLuong: val * r.soNgayDung,
+                                        }
                                       : r,
                                   ),
                                 );
@@ -925,7 +1101,11 @@ export function DoctorConsultationSection({
                                 setPrescriptionRows((prev) =>
                                   prev.map((r, i) =>
                                     i === idx
-                                      ? { ...r, soNgayDung: val, soLuong: val * (r.soLanMoiNgay || 1) }
+                                      ? {
+                                          ...r,
+                                          soNgayDung: val,
+                                          soLuong: val * (r.soLanMoiNgay || 1),
+                                        }
                                       : r,
                                   ),
                                 );
@@ -941,7 +1121,9 @@ export function DoctorConsultationSection({
                               onChange={(e) => {
                                 const val = Number(e.target.value);
                                 setPrescriptionRows((prev) =>
-                                  prev.map((r, i) => (i === idx ? { ...r, soLuong: val } : r)),
+                                  prev.map((r, i) =>
+                                    i === idx ? { ...r, soLuong: val } : r,
+                                  ),
                                 );
                               }}
                               style={{ width: "60px", padding: "4px" }}
@@ -952,7 +1134,12 @@ export function DoctorConsultationSection({
                             <button
                               type="button"
                               onClick={() => handleRemoveMedicine(row.idThuoc)}
-                              style={{ border: "none", background: "none", color: "#dc2626", cursor: "pointer" }}
+                              style={{
+                                border: "none",
+                                background: "none",
+                                color: "#dc2626",
+                                cursor: "pointer",
+                              }}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -966,17 +1153,23 @@ export function DoctorConsultationSection({
 
               {/* LỜI DẶN & TÁI KHÁM */}
               <label className={styles.fullWidth}>
-                {lang === "vi" ? "Lời dặn / hướng điều trị" : "Care instructions"}
+                {lang === "vi"
+                  ? "Lời dặn / hướng điều trị"
+                  : "Care instructions"}
                 <textarea
                   rows={2}
                   value={prescription}
                   onChange={(event) => setPrescription(event.target.value)}
-                  placeholder={lang === "vi" ? "Lời dặn của bác sĩ..." : "Instructions..."}
+                  placeholder={
+                    lang === "vi" ? "Lời dặn của bác sĩ..." : "Instructions..."
+                  }
                 />
               </label>
 
               <label>
-                {lang === "vi" ? "Ngày hẹn tái khám (nếu có)" : "Follow-up Date"}
+                {lang === "vi"
+                  ? "Ngày hẹn tái khám (nếu có)"
+                  : "Follow-up Date"}
                 <input
                   type="date"
                   value={followupDate}
@@ -986,16 +1179,29 @@ export function DoctorConsultationSection({
 
               {/* LÝ DO SỬA (KHI CẬP NHẬT) */}
               {lookupDetails?.ketQua && (
-                <label className={styles.fullWidth} style={{ background: "#fffbeb", padding: "12px", borderRadius: "8px" }}>
+                <label
+                  className={styles.fullWidth}
+                  style={{
+                    background: "#fffbeb",
+                    padding: "12px",
+                    borderRadius: "8px",
+                  }}
+                >
                   <strong style={{ color: "#b45309" }}>
-                    {lang === "vi" ? "Lý do chỉnh sửa bệnh án (bắt buộc):" : "Reason for editing (mandatory):"}
+                    {lang === "vi"
+                      ? "Lý do chỉnh sửa bệnh án (bắt buộc):"
+                      : "Reason for editing (mandatory):"}
                   </strong>
                   <textarea
                     rows={2}
                     required
                     value={editReason}
                     onChange={(e) => setEditReason(e.target.value)}
-                    placeholder={lang === "vi" ? "Nhập lý do thay đổi thông tin bệnh án đã lưu..." : "Enter reason for modification..."}
+                    placeholder={
+                      lang === "vi"
+                        ? "Nhập lý do thay đổi thông tin bệnh án đã lưu..."
+                        : "Enter reason for modification..."
+                    }
                   />
                 </label>
               )}

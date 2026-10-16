@@ -1,14 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { doctorBookingService } from "@/services/booking/doctorBookingService";
 import { notifyAuth } from "@/utils/authNotification";
-import styles from "../DoctorWorkspace.module.css";
+import styles from "../../DoctorWorkspace.module.css";
 
 function formatDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -88,9 +84,7 @@ export function DoctorScheduleSection() {
   const calendarDays = Array.from(
     { length: scheduleView === "day" ? 1 : 7 },
     (_, index) => {
-      const date = new Date(
-        scheduleView === "day" ? scheduleDate : weekStart,
-      );
+      const date = new Date(scheduleView === "day" ? scheduleDate : weekStart);
       if (scheduleView === "week") date.setDate(date.getDate() + index);
       return date;
     },
@@ -128,8 +122,7 @@ export function DoctorScheduleSection() {
     const formData = new FormData(form);
     const shiftId = Number(formData.get("idLichLamViec"));
     const requestType = String(formData.get("loaiYeuCau")) as
-      | "XIN_NGHI"
-      | "DOI_CA";
+      "XIN_NGHI" | "DOI_CA";
     const reason = String(formData.get("reason") || "").trim();
     const currentShift = shifts.find((shift) => shift.id === shiftId);
     const shiftStart = currentShift
@@ -146,10 +139,7 @@ export function DoctorScheduleSection() {
       );
       return;
     }
-    if (
-      shiftStart &&
-      shiftStart.getTime() < Date.now() + 24 * 60 * 60 * 1000
-    ) {
+    if (shiftStart && shiftStart.getTime() < Date.now() + 24 * 60 * 60 * 1000) {
       notifyAuth(
         "error",
         lang === "vi" ? "Quá hạn gửi yêu cầu" : "Request deadline passed",
@@ -203,8 +193,8 @@ export function DoctorScheduleSection() {
         notifyAuth(
           "error",
           lang === "vi" ? "Không thể gửi yêu cầu" : "Could not submit request",
-          (error as { response?: { data?: { thongDiep?: string } } })
-            .response?.data?.thongDiep ?? "Request failed",
+          (error as { response?: { data?: { thongDiep?: string } } }).response
+            ?.data?.thongDiep ?? "Request failed",
         );
       });
   };

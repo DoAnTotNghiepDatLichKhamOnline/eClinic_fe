@@ -5,7 +5,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { doctorBookingService } from "@/services/booking";
 import type { Appointment, AppointmentStatus } from "../doctor-workspace.types";
-import styles from "../DoctorWorkspace.module.css";
+import styles from "../../DoctorWorkspace.module.css";
 
 export interface DoctorUpcomingAppointmentsSectionProps {
   onSelectAppointment?: (appointment: Appointment) => void;
@@ -61,15 +61,20 @@ export function DoctorUpcomingAppointmentsSection({
       notifyAuth(
         "error",
         lang === "vi" ? "Thiếu lý do" : "Reason required",
-        lang === "vi" ? "Vui lòng nhập lý do hủy lịch khám." : "Please enter a reason for cancellation.",
+        lang === "vi"
+          ? "Vui lòng nhập lý do hủy lịch khám."
+          : "Please enter a reason for cancellation.",
       );
       return;
     }
 
     try {
-      const res = await doctorBookingService.huyLichHenBacSi(Number(appointmentId), {
-        lyDo: reason,
-      });
+      const res = await doctorBookingService.huyLichHenBacSi(
+        Number(appointmentId),
+        {
+          lyDo: reason,
+        },
+      );
       if (res.thanhCong) {
         await queryClient.invalidateQueries({
           queryKey: ["booking", "doctor-upcoming-appointments"],
@@ -100,7 +105,9 @@ export function DoctorUpcomingAppointmentsSection({
     <section className={styles.workspace}>
       <div className={styles.pageHeading}>
         <div>
-          <h1>{lang === "vi" ? "Lịch hẹn sắp tới" : "Upcoming Appointments"}</h1>
+          <h1>
+            {lang === "vi" ? "Lịch hẹn sắp tới" : "Upcoming Appointments"}
+          </h1>
           <p>
             {lang === "vi"
               ? "Danh sách lịch hẹn đã xác nhận sắp tới. Bác sĩ có thể hủy trước giờ khám nếu có sự cố."
@@ -114,15 +121,23 @@ export function DoctorUpcomingAppointmentsSection({
 
       <div className={styles.appointmentList}>
         {isLoading ? (
-          <p>{lang === "vi" ? "Đang tải lịch hẹn..." : "Loading appointments..."}</p>
+          <p>
+            {lang === "vi" ? "Đang tải lịch hẹn..." : "Loading appointments..."}
+          </p>
         ) : appointments.length === 0 ? (
-          <p>{lang === "vi" ? "Hiện không có lịch hẹn nào sắp tới." : "No upcoming appointments."}</p>
+          <p>
+            {lang === "vi"
+              ? "Hiện không có lịch hẹn nào sắp tới."
+              : "No upcoming appointments."}
+          </p>
         ) : (
           appointments.map((appointment) => (
             <article className={styles.appointmentCard} key={appointment.id}>
               <div className={styles.appointmentTop}>
                 <div>
-                  <span className={styles.appointmentCode}>{appointment.id}</span>
+                  <span className={styles.appointmentCode}>
+                    {appointment.id}
+                  </span>
                   <h2>{appointment.patientName}</h2>
                 </div>
                 <span className={`${styles.status} ${styles.status_accepted}`}>
@@ -166,10 +181,18 @@ export function DoctorUpcomingAppointmentsSection({
               {cancellingId === appointment.id && (
                 <form
                   className={styles.rejectForm}
-                  onSubmit={(event) => handleCancelAppointment(event, appointment.id)}
+                  onSubmit={(event) =>
+                    handleCancelAppointment(event, appointment.id)
+                  }
                 >
                   <label>
-                    <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
                       <AlertTriangle size={15} color="#dc2626" />
                       {lang === "vi"
                         ? "Lý do hủy lịch khám (bắt buộc, thông báo đến bệnh nhân):"
@@ -187,7 +210,9 @@ export function DoctorUpcomingAppointmentsSection({
                       }
                     />
                   </label>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                  <div
+                    style={{ display: "flex", gap: "8px", marginTop: "8px" }}
+                  >
                     <button type="submit" className={styles.dangerButton}>
                       {lang === "vi" ? "Xác nhận hủy lịch" : "Confirm Cancel"}
                     </button>

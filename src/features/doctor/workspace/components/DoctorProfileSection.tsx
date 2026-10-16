@@ -19,8 +19,11 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { userProfileService } from "@/services/identity/userProfileService";
 import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
-import type { HoSoBacSiQuanTriResponse, AnhBacSiResponse } from "@/types/catalog.type";
-import styles from "../DoctorWorkspace.module.css";
+import type {
+  HoSoBacSiQuanTriResponse,
+  AnhBacSiResponse,
+} from "@/types/catalog.type";
+import styles from "../../DoctorWorkspace.module.css";
 
 export function DoctorProfileSection() {
   const { lang } = useLanguage();
@@ -355,7 +358,9 @@ export function DoctorProfileSection() {
         <dl className={styles.profileGrid}>
           <div>
             <dt>{lang === "vi" ? "Email tài khoản" : "Account Email"}</dt>
-            <dd>{profile?.email || doctorAccount?.email || user?.email || "—"}</dd>
+            <dd>
+              {profile?.email || doctorAccount?.email || user?.email || "—"}
+            </dd>
           </div>
           <div>
             <dt>{lang === "vi" ? "Số điện thoại" : "Phone"}</dt>
@@ -385,7 +390,9 @@ export function DoctorProfileSection() {
             </dd>
           </div>
           <div>
-            <dt>{lang === "vi" ? "Chứng chỉ hành nghề" : "Practicing License"}</dt>
+            <dt>
+              {lang === "vi" ? "Chứng chỉ hành nghề" : "Practicing License"}
+            </dt>
             <dd>{profile?.soGiayPhep || "—"}</dd>
           </div>
           <div>
@@ -444,7 +451,9 @@ export function DoctorProfileSection() {
               >
                 {profile?.gioiThieuNgan || (
                   <em style={{ color: "var(--ink-soft)" }}>
-                    {lang === "vi" ? "Chưa có lời tự giới thiệu ngắn" : "No short bio provided"}
+                    {lang === "vi"
+                      ? "Chưa có lời tự giới thiệu ngắn"
+                      : "No short bio provided"}
                   </em>
                 )}
               </p>
@@ -465,7 +474,9 @@ export function DoctorProfileSection() {
               >
                 {profile?.tieuSu || (
                   <em style={{ color: "var(--ink-soft)" }}>
-                    {lang === "vi" ? "Chưa có thông tin tiểu sử chi tiết" : "No biography provided"}
+                    {lang === "vi"
+                      ? "Chưa có thông tin tiểu sử chi tiết"
+                      : "No biography provided"}
                   </em>
                 )}
               </p>
@@ -519,7 +530,9 @@ export function DoctorProfileSection() {
                 }}
               >
                 <Award size={14} aria-hidden="true" />
-                {lang === "vi" ? "Giải thưởng & Danh hiệu:" : "Awards & Honors:"}
+                {lang === "vi"
+                  ? "Giải thưởng & Danh hiệu:"
+                  : "Awards & Honors:"}
               </strong>
               {profile?.giaiThuong && profile.giaiThuong.length > 0 ? (
                 <ul
@@ -537,8 +550,18 @@ export function DoctorProfileSection() {
                   ))}
                 </ul>
               ) : (
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--ink-soft)" }}>
-                  <em>{lang === "vi" ? "Chưa có mục giải thưởng" : "No awards listed"}</em>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "13px",
+                    color: "var(--ink-soft)",
+                  }}
+                >
+                  <em>
+                    {lang === "vi"
+                      ? "Chưa có mục giải thưởng"
+                      : "No awards listed"}
+                  </em>
                 </p>
               )}
             </div>
@@ -555,7 +578,9 @@ export function DoctorProfileSection() {
                 }}
               >
                 <BookOpen size={14} aria-hidden="true" />
-                {lang === "vi" ? "Công trình nghiên cứu:" : "Research & Publications:"}
+                {lang === "vi"
+                  ? "Công trình nghiên cứu:"
+                  : "Research & Publications:"}
               </strong>
               {profile?.congTrinhNghienCuu &&
               profile.congTrinhNghienCuu.length > 0 ? (
@@ -574,8 +599,18 @@ export function DoctorProfileSection() {
                   ))}
                 </ul>
               ) : (
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--ink-soft)" }}>
-                  <em>{lang === "vi" ? "Chưa có công trình nghiên cứu" : "No research listed"}</em>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "13px",
+                    color: "var(--ink-soft)",
+                  }}
+                >
+                  <em>
+                    {lang === "vi"
+                      ? "Chưa có công trình nghiên cứu"
+                      : "No research listed"}
+                  </em>
                 </p>
               )}
             </div>
@@ -584,7 +619,9 @@ export function DoctorProfileSection() {
           <div style={{ display: "grid", gap: "16px", marginTop: "14px" }}>
             <label className={styles.field}>
               <span>
-                {lang === "vi" ? "Giới thiệu ngắn (tối đa 255 ký tự):" : "Short Bio (max 255 chars):"}
+                {lang === "vi"
+                  ? "Giới thiệu ngắn (tối đa 255 ký tự):"
+                  : "Short Bio (max 255 chars):"}
               </span>
               <input
                 type="text"
@@ -600,7 +637,9 @@ export function DoctorProfileSection() {
             </label>
 
             <label className={styles.field}>
-              <span>{lang === "vi" ? "Tiểu sử chi tiết:" : "Full Biography:"}</span>
+              <span>
+                {lang === "vi" ? "Tiểu sử chi tiết:" : "Full Biography:"}
+              </span>
               <textarea
                 rows={4}
                 value={tieuSu}
@@ -648,7 +687,11 @@ export function DoctorProfileSection() {
                       ? "Nhập tên ngôn ngữ (VD: Tiếng Anh) rồi bấm Thêm"
                       : "Type language and press Add"
                   }
-                  style={{ maxWidth: "300px", padding: "6px 10px", fontSize: "13px" }}
+                  style={{
+                    maxWidth: "300px",
+                    padding: "6px 10px",
+                    fontSize: "13px",
+                  }}
                 />
                 <button
                   type="button"
@@ -704,7 +747,9 @@ export function DoctorProfileSection() {
                   marginBottom: "6px",
                 }}
               >
-                {lang === "vi" ? "Giải thưởng & Danh hiệu:" : "Awards & Honors:"}
+                {lang === "vi"
+                  ? "Giải thưởng & Danh hiệu:"
+                  : "Awards & Honors:"}
               </span>
               <div
                 style={{
@@ -994,7 +1039,8 @@ export function DoctorProfileSection() {
                       position: "absolute",
                       top: "6px",
                       left: "6px",
-                      background: photo.loai === "CHUNG_CHI" ? "#0369a1" : "#12634d",
+                      background:
+                        photo.loai === "CHUNG_CHI" ? "#0369a1" : "#12634d",
                       color: "#fff",
                       padding: "2px 6px",
                       borderRadius: "4px",
