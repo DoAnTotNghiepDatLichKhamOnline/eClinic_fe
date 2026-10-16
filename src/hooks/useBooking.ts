@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { patientBookingService } from "@/services/booking/patientBooking.service";
+import { patientBookingService } from "@/services/booking";
 import type {
   HoSoCuaToiRequest,
   GetLichHenParams,
@@ -16,7 +16,7 @@ import type {
 export function useHoSoBenhNhan() {
   const query = useQuery({
     queryKey: ["booking", "ho-so-benh-nhan"],
-    queryFn: () => bookingService.getHoSoCuaToi(),
+    queryFn: () => patientBookingService.getHoSoCuaToi(),
   });
 
   return {
@@ -31,7 +31,7 @@ export function useHoSoBenhNhan() {
 export function useTrangCaNhan() {
   const query = useQuery({
     queryKey: ["booking", "trang-ca-nhan"],
-    queryFn: () => bookingService.getTrangCaNhan(),
+    queryFn: () => patientBookingService.getTrangCaNhan(),
   });
 
   return {
@@ -46,7 +46,7 @@ export function useTrangCaNhan() {
 export function useDanhSachLichHen(params?: GetLichHenParams) {
   const query = useQuery({
     queryKey: ["booking", "lich-hen", params],
-    queryFn: () => bookingService.getDanhSachLichHen(params),
+    queryFn: () => patientBookingService.getDanhSachLichHen(params),
   });
 
   return {
@@ -64,7 +64,7 @@ export function useDanhSachLichHen(params?: GetLichHenParams) {
 export function useChiTietLichHen(maPhieuKham?: string) {
   const query = useQuery({
     queryKey: ["booking", "lich-hen-detail", maPhieuKham],
-    queryFn: () => bookingService.getChiTietLichHen(maPhieuKham!),
+    queryFn: () => patientBookingService.getChiTietLichHen(maPhieuKham!),
     enabled: Boolean(maPhieuKham),
   });
 
@@ -80,7 +80,7 @@ export function useChiTietLichHen(maPhieuKham?: string) {
 export function useThongTinDatLich(enabled = true) {
   const query = useQuery({
     queryKey: ["booking", "thong-tin-dat-lich"],
-    queryFn: () => bookingService.getThongTinDatLich(),
+    queryFn: () => patientBookingService.getThongTinDatLich(),
     enabled,
   });
 
@@ -96,7 +96,7 @@ export function useThongTinDatLich(enabled = true) {
 export function useNgayConCho(params?: GetNgayConChoParams) {
   const query = useQuery({
     queryKey: ["booking", "ngay-con-cho", params],
-    queryFn: () => bookingService.getNgayConCho(params!),
+    queryFn: () => patientBookingService.getNgayConCho(params!),
     enabled: Boolean(params?.tuNgay && params?.denNgay),
   });
 
@@ -116,7 +116,7 @@ export function useCaKhamTheoNgay(params?: {
 }) {
   const query = useQuery({
     queryKey: ["booking", "ca-kham", params],
-    queryFn: () => bookingService.getCaKhamTheoNgay(params!),
+    queryFn: () => patientBookingService.getCaKhamTheoNgay(params!),
     enabled: Boolean(params?.ngay),
   });
 
@@ -135,7 +135,7 @@ export function useKhungGioGop(params?: {
 }) {
   const query = useQuery({
     queryKey: ["booking", "khung-gio-gop", params],
-    queryFn: () => bookingService.getKhungGioGop(params!),
+    queryFn: () => patientBookingService.getKhungGioGop(params!),
     enabled: Boolean(params?.idChuyenKhoa && params?.ngay),
   });
 
@@ -152,7 +152,7 @@ export function useBookingActions() {
   const queryClient = useQueryClient();
 
   const datLichMutation = useMutation({
-    mutationFn: (data: DatLichRequest) => bookingService.datLich(data),
+    mutationFn: (data: DatLichRequest) => patientBookingService.datLich(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
       queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
@@ -161,7 +161,7 @@ export function useBookingActions() {
 
   const capNhatHoSoMutation = useMutation({
     mutationFn: (data: HoSoCuaToiRequest) =>
-      bookingService.capNhatHoSoCuaToi(data),
+      patientBookingService.capNhatHoSoCuaToi(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["booking", "ho-so-benh-nhan"],
@@ -177,7 +177,7 @@ export function useBookingActions() {
     }: {
       maPhieuKham: string;
       data: HuyLichRequest;
-    }) => bookingService.huyLichHen(maPhieuKham, data),
+    }) => patientBookingService.huyLichHen(maPhieuKham, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
       queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
@@ -191,7 +191,7 @@ export function useBookingActions() {
     }: {
       maPhieuKham: string;
       data: DoiLichRequest;
-    }) => bookingService.doiLichHen(maPhieuKham, data),
+    }) => patientBookingService.doiLichHen(maPhieuKham, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
       queryClient.invalidateQueries({ queryKey: ["booking", "trang-ca-nhan"] });
@@ -205,7 +205,7 @@ export function useBookingActions() {
     }: {
       maPhieuKham: string;
       data: DanhGiaRequest;
-    }) => bookingService.taoDanhGia(maPhieuKham, data),
+    }) => patientBookingService.taoDanhGia(maPhieuKham, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
     },
@@ -218,7 +218,7 @@ export function useBookingActions() {
     }: {
       maPhieuKham: string;
       data: DanhGiaRequest;
-    }) => bookingService.suaDanhGia(maPhieuKham, data),
+    }) => patientBookingService.suaDanhGia(maPhieuKham, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
       queryClient.invalidateQueries({
