@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { identityService } from '@/services/identityService';
+import {
+  authService,
+  userProfileService,
+  userAdminService,
+} from '@/services/identity';
 import type {
   DangKyRequest,
   DangNhapRequest,
@@ -22,7 +26,7 @@ import type {
 export function useHoSoCaNhan() {
   const query = useQuery({
     queryKey: ['identity', 'ho-so-ca-nhan'],
-    queryFn: () => identityService.getHoSoCaNhan(),
+    queryFn: () => userProfileService.getHoSoCaNhan(),
   });
 
   return {
@@ -37,7 +41,7 @@ export function useHoSoCaNhan() {
 export function useDanhSachPhienDangNhap() {
   const query = useQuery({
     queryKey: ['identity', 'phien-dang-nhap'],
-    queryFn: () => identityService.getDanhSachPhienDangNhap(),
+    queryFn: () => userProfileService.getDanhSachPhienDangNhap(),
   });
 
   return {
@@ -52,7 +56,7 @@ export function useDanhSachPhienDangNhap() {
 export function useDanhSachTaiKhoanQuanTri(params?: GetTaiKhoanQuanTriParams) {
   const query = useQuery({
     queryKey: ['identity', 'admin-users', params],
-    queryFn: () => identityService.getDanhSachTaiKhoanQuanTri(params),
+    queryFn: () => userAdminService.getDanhSachTaiKhoanQuanTri(params),
   });
 
   return {
@@ -70,7 +74,7 @@ export function useDanhSachTaiKhoanQuanTri(params?: GetTaiKhoanQuanTriParams) {
 export function useChiTietTaiKhoan(id?: number) {
   const query = useQuery({
     queryKey: ['identity', 'admin-user-detail', id],
-    queryFn: () => identityService.getChiTietTaiKhoan(id!),
+    queryFn: () => userAdminService.getChiTietTaiKhoan(id!),
     enabled: typeof id === 'number' && !isNaN(id),
   });
 
@@ -87,75 +91,75 @@ export function useIdentityActions() {
   const queryClient = useQueryClient();
 
   const dangNhapMutation = useMutation({
-    mutationFn: (data: DangNhapRequest) => identityService.dangNhap(data),
+    mutationFn: (data: DangNhapRequest) => authService.dangNhap(data),
   });
 
   const dangKyMutation = useMutation({
-    mutationFn: (data: DangKyRequest) => identityService.dangKy(data),
+    mutationFn: (data: DangKyRequest) => authService.dangKy(data),
   });
 
   const quenMatKhauMutation = useMutation({
-    mutationFn: (data: QuenMatKhauRequest) => identityService.quenMatKhau(data),
+    mutationFn: (data: QuenMatKhauRequest) => authService.quenMatKhau(data),
   });
 
   const datLaiMatKhauMutation = useMutation({
-    mutationFn: (data: DatLaiMatKhauRequest) => identityService.datLaiMatKhau(data),
+    mutationFn: (data: DatLaiMatKhauRequest) => authService.datLaiMatKhau(data),
   });
 
   const xacThucEmailMutation = useMutation({
-    mutationFn: (data: XacThucEmailRequest) => identityService.xacThucEmail(data),
+    mutationFn: (data: XacThucEmailRequest) => authService.xacThucEmail(data),
   });
 
   const guiLaiXacThucMutation = useMutation({
-    mutationFn: (data: GuiLaiXacThucRequest) => identityService.guiLaiXacThuc(data),
+    mutationFn: (data: GuiLaiXacThucRequest) => authService.guiLaiXacThuc(data),
   });
 
   const datMatKhauLanDauMutation = useMutation({
-    mutationFn: (data: DatMatKhauLanDauRequest) => identityService.datMatKhauLanDau(data),
+    mutationFn: (data: DatMatKhauLanDauRequest) => authService.datMatKhauLanDau(data),
   });
 
   const dangNhapGoogleMutation = useMutation({
-    mutationFn: (data: DangNhapGoogleRequest) => identityService.dangNhapGoogle(data),
+    mutationFn: (data: DangNhapGoogleRequest) => authService.dangNhapGoogle(data),
   });
 
   const capNhatHoSoMutation = useMutation({
-    mutationFn: (data: CapNhatHoSoRequest) => identityService.capNhatHoSo(data),
+    mutationFn: (data: CapNhatHoSoRequest) => userProfileService.capNhatHoSo(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'ho-so-ca-nhan'] });
     },
   });
 
   const doiMatKhauMutation = useMutation({
-    mutationFn: (data: DoiMatKhauRequest) => identityService.doiMatKhau(data),
+    mutationFn: (data: DoiMatKhauRequest) => userProfileService.doiMatKhau(data),
   });
 
   const doiEmailMutation = useMutation({
-    mutationFn: (data: DoiEmailRequest) => identityService.yeuCauDoiEmail(data),
+    mutationFn: (data: DoiEmailRequest) => userProfileService.yeuCauDoiEmail(data),
   });
 
   const xoaPhienMutation = useMutation({
-    mutationFn: (id: string) => identityService.xoaPhienDangNhap(id),
+    mutationFn: (id: string) => userProfileService.xoaPhienDangNhap(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'phien-dang-nhap'] });
     },
   });
 
   const xoaTatCaPhienKhacMutation = useMutation({
-    mutationFn: () => identityService.xoaTatCaPhienKhac(),
+    mutationFn: () => userProfileService.xoaTatCaPhienKhac(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'phien-dang-nhap'] });
     },
   });
 
   const taiLenAnhMutation = useMutation({
-    mutationFn: (file: File | Blob) => identityService.taiLenAnhDaiDien(file),
+    mutationFn: (file: File | Blob) => userProfileService.taiLenAnhDaiDien(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'ho-so-ca-nhan'] });
     },
   });
 
   const xoaAnhMutation = useMutation({
-    mutationFn: () => identityService.xoaAnhDaiDien(),
+    mutationFn: () => userProfileService.xoaAnhDaiDien(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'ho-so-ca-nhan'] });
     },
@@ -163,7 +167,7 @@ export function useIdentityActions() {
 
   const capNhatTrangThaiTaiKhoanMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: CapNhatTrangThaiTaiKhoanRequest }) =>
-      identityService.capNhatTrangThaiTaiKhoan(id, data),
+      userAdminService.capNhatTrangThaiTaiKhoan(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['identity', 'admin-user-detail'] });
@@ -171,7 +175,7 @@ export function useIdentityActions() {
   });
 
   const xoaTaiKhoanMutation = useMutation({
-    mutationFn: (id: number) => identityService.xoaTaiKhoan(id),
+    mutationFn: (id: number) => userAdminService.xoaTaiKhoan(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['identity', 'admin-users'] });
     },
