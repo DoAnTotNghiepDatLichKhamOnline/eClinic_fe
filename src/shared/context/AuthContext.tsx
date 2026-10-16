@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { identityService } from "@/services/identityService";
+import { authService } from "@/services/identity/authService";
 import { setAccessToken } from "@/utils/axiosClient";
 import { applyAccountLanguage } from "@/utils/languagePreference";
 import type {
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
     const restoreSession = async () => {
       try {
-        const response = await identityService.lamMoiToken();
+        const response = await authService.lamMoiToken();
         if (response.thanhCong && response.duLieu && isMounted) {
           setAccessToken(response.duLieu.accessToken);
           const tk = response.duLieu.taiKhoan;
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithCredentials = async (
     data: DangNhapRequest,
   ): Promise<DangNhapResponse> => {
-    const response = await identityService.dangNhap(data);
+    const response = await authService.dangNhap(data);
     if (!response.thanhCong || !response.duLieu) {
       throw new Error(response.thongDiep || "Đăng nhập không thành công");
     }
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await identityService.dangXuat();
+      await authService.dangXuat();
     } catch {
       // Bỏ qua lỗi mạng khi logout
     } finally {
