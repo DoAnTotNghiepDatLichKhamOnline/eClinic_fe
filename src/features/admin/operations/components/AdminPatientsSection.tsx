@@ -55,21 +55,23 @@ export function AdminPatientsSection() {
     );
   };
 
-  const handlePatientLink = async (id: number, approve: boolean) => {
+  const [rejectingLinkId, setRejectingLinkId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const handlePatientLink = async (id: number, approve: boolean, reason?: string) => {
     try {
       const response = approve
         ? await bookingService.xacMinhLienKetHoSo(id)
         : await bookingService.tuChoiLienKetHoSo(id, {
-            lyDo:
-              window
-                .prompt(vi ? "Lý do từ chối:" : "Rejection reason:")
-                ?.trim() || "",
+            lyDo: reason?.trim() || "",
           });
       if (!response.thanhCong) throw new Error(response.thongDiep);
       await finish(response.thongDiep, [
         "booking|admin-patient-verification",
         "booking|admin-patients",
       ]);
+      setRejectingLinkId(null);
+      setRejectReason("");
     } catch (cause) {
       showFailure(cause);
     }
@@ -129,9 +131,10 @@ export function AdminPatientsSection() {
             <button
               className={styles.actionBtnDanger}
               type="button"
-              onClick={() =>
-                void handlePatientLink(item.hoSo?.id ?? item.id ?? 0, false)
-              }
+              onClick={() => {
+                setRejectingLinkId(item.hoSo?.id ?? item.id ?? 0);
+                setRejectReason("");
+              }}
             >
               {vi ? "Từ chối" : "Reject"}
             </button>
@@ -219,6 +222,51 @@ export function AdminPatientsSection() {
           onSaved={(msg) => setMessage(msg)}
           onError={showFailure}
         />
+      )}
+
+      {/* REJECTION MODAL */}
+      {rejectingLinkId !== null && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-rose-700 mb-2">
+              {vi ? "Từ chối liên kết hồ sơ bệnh nhân" : "Reject Profile Linkage"}
+            </h3>
+            <p className="text-xs text-slate-600 mb-3">
+              {vi
+                ? "Vui lòng nhập lý do từ chối để thông báo cho người dùng."
+                : "Please enter a reason for rejection to notify the user."}
+            </p>
+            <textarea
+              rows={3}
+              required
+              className="w-full p-2 border rounded text-xs mb-4"
+              placeholder={
+                vi
+                  ? "Ví dụ: Thông tin CCCD không trùng khớp với hồ sơ lưu trữ..."
+                  : "e.g. Identity documents do not match archive..."
+              }
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setRejectingLinkId(null)}
+              >
+                {vi ? "Hủy" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className={styles.actionBtnDanger}
+                disabled={!rejectReason.trim()}
+                onClick={() => void handlePatientLink(rejectingLinkId, false, rejectReason)}
+              >
+                {vi ? "Xác nhận từ chối" : "Confirm Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
