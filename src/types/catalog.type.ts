@@ -53,6 +53,7 @@ export interface BacSiResponse {
   hocVi: string | null;
   chucVu: string | null;
   soNamKinhNghiem: number | null;
+  namBatDauHanhNghe?: number | null;
   gioiThieuNgan: string | null;
   idChuyenKhoa: number;
   tenChuyenKhoa: string;
@@ -72,9 +73,25 @@ export interface AnhBacSiResponse {
 
 export interface BacSiChiTietResponse extends BacSiResponse {
   tieuSu: string | null;
+  tieuSuEn?: string | null;
   quaTrinhDaoTao: string[];
+  quaTrinhDaoTaoEn?: string[];
   quaTrinhCongTac: string[];
+  quaTrinhCongTacEn?: string[];
   linhVucKhamChua: string[];
+  linhVucKhamChuaEn?: string[];
+  giaiThuong?: string[];
+  giaiThuongEn?: string[];
+  congTrinhNghienCuu?: string[];
+  congTrinhNghienCuuEn?: string[];
+  ngonNguKham?: string[];
+  soGiayPhep?: string | null;
+  ngayCapGiayPhep?: string | null;
+  noiCapGiayPhep?: string | null;
+  noiCapGiayPhepEn?: string | null;
+  phamViHanhNghe?: string | null;
+  phamViHanhNgheEn?: string | null;
+  phienBanHoSo?: number;
   anh: AnhBacSiResponse[];
 }
 
@@ -140,12 +157,19 @@ export interface HoSoBacSiQuanTriResponse {
   soDienThoai: string | null;
   anhDaiDien: string | null;
   soGiayPhep: string | null;
+  ngayCapGiayPhep?: string | null;
+  noiCapGiayPhep?: string | null;
+  noiCapGiayPhepEn?: string | null;
+  phamViHanhNghe?: string | null;
+  phamViHanhNgheEn?: string | null;
   trangThai: TrangThaiBacSi;
   trangThaiTaiKhoan: TrangThaiTaiKhoan;
   phaiDoiMatKhau: boolean;
   hocVi: string | null;
   chucVu: string | null;
   soNamKinhNghiem: number | null;
+  namBatDauHanhNghe?: number | null;
+  phienBanHoSo?: number;
   gioiThieuNgan: string | null;
   idChuyenKhoa: number;
   tenChuyenKhoa: string;
@@ -153,6 +177,11 @@ export interface HoSoBacSiQuanTriResponse {
   quaTrinhDaoTao: string[];
   quaTrinhCongTac: string[];
   linhVucKhamChua: string[];
+  giaiThuong?: string[];
+  giaiThuongEn?: string[];
+  congTrinhNghienCuu?: string[];
+  congTrinhNghienCuuEn?: string[];
+  ngonNguKham?: string[];
   anh: AnhBacSiResponse[];
   chucVuEn?: string | null;
   gioiThieuNganEn?: string | null;
@@ -171,6 +200,7 @@ export interface ThemBacSiRequest {
   hocVi?: string | null;
   chucVu?: string | null;
   soNamKinhNghiem?: number | null;
+  namBatDauHanhNghe?: number | null;
 }
 
 export interface SuaBacSiRequest {
@@ -181,20 +211,46 @@ export interface SuaBacSiRequest {
 }
 
 export interface CapNhatHoSoBacSiRequest {
+  phienBan?: number;
   hocVi?: string | null;
   chucVu?: string | null;
   soNamKinhNghiem?: number | null;
+  namBatDauHanhNghe?: number | null;
   gioiThieuNgan?: string | null;
   tieuSu?: string | null;
   quaTrinhDaoTao?: string[];
   quaTrinhCongTac?: string[];
   linhVucKhamChua?: string[];
+  giaiThuong?: string[];
+  giaiThuongEn?: string[];
+  congTrinhNghienCuu?: string[];
+  congTrinhNghienCuuEn?: string[];
+  ngonNguKham?: string[];
+  soGiayPhep?: string | null;
+  ngayCapGiayPhep?: string | null;
+  noiCapGiayPhep?: string | null;
+  noiCapGiayPhepEn?: string | null;
+  phamViHanhNghe?: string | null;
+  phamViHanhNgheEn?: string | null;
   chucVuEn?: string | null;
   gioiThieuNganEn?: string | null;
   tieuSuEn?: string | null;
   quaTrinhDaoTaoEn?: string[];
   quaTrinhCongTacEn?: string[];
   linhVucKhamChuaEn?: string[];
+}
+
+export interface CapNhatHoSoBacSiToiRequest {
+  phienBan: number;
+  gioiThieuNgan?: string | null;
+  gioiThieuNganEn?: string | null;
+  tieuSu?: string | null;
+  tieuSuEn?: string | null;
+  ngonNguKham?: string[];
+  giaiThuong?: string[];
+  giaiThuongEn?: string[];
+  congTrinhNghienCuu?: string[];
+  congTrinhNghienCuuEn?: string[];
 }
 
 export interface CapNhatAnhBacSiRequest {
@@ -257,6 +313,11 @@ export interface GetPhongKhamQuanTriParams {
 export interface ThuocResponse {
   id: number;
   tenThuoc: string;
+  hoatChat?: string | null;
+  hamLuong?: string | null;
+  dangBaoChe?: string | null;
+  dangBaoCheEn?: string | null;
+  duongDung?: string | null;
   donVi: string | null;
   moTa: string | null;
   daXacMinh: boolean;
@@ -269,6 +330,11 @@ export interface ThuocResponse {
 
 export interface ThuocRequest {
   tenThuoc: string;
+  hoatChat?: string | null;
+  hamLuong?: string | null;
+  dangBaoChe?: string | null;
+  dangBaoCheEn?: string | null;
+  duongDung?: string | null;
   donVi?: string | null;
   moTa?: string | null;
   donViEn?: string | null;
