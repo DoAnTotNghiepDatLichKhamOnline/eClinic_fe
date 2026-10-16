@@ -170,20 +170,59 @@ export interface LichHenCuaToiResponse {
   canDoiLich: boolean;
 }
 
+export interface SinhHieu {
+  mach?: number;
+  nhietDo?: number;
+  huyetApTamThu?: number;
+  huyetApTamTruong?: number;
+  nhipTho?: number;
+  canNang?: number;
+  chieuCao?: number;
+}
+
+export interface Icd10GoiY {
+  ma: string;
+  ten: string;
+  manTinh: boolean;
+}
+
 export interface DonThuoc {
+  idThuoc?: number;
   tenThuoc: string;
+  hoatChat?: string | null;
+  hamLuong?: string | null;
+  duongDung?: string | null;
   donVi: string;
   lieuDung: string;
   soLanMoiNgay: number | null;
   soNgayDung: number | null;
+  soLuong?: number | null;
   ghiChuSuDung: string | null;
 }
 
+export interface DongThuocRequest {
+  idThuoc: number;
+  lieuDung?: string;
+  soLanMoiNgay?: number;
+  soNgayDung: number;
+  soLuong: number;
+  ghiChuSuDung?: string | null;
+}
+
 export interface KetQuaKhamResponse {
+  lyDoKham?: string | null;
+  sinhHieu?: SinhHieu | null;
+  khamLamSang?: string | null;
   chanDoan: string;
+  maIcdChinh?: string | null;
+  icdChinh?: Icd10GoiY | null;
+  chanDoanKemTheo?: string | null;
   ghiChu: string | null;
   ngayTaiKhamDeXuat: string | null;
   donThuoc: DonThuoc[];
+  phienBan?: number;
+  ngaySuaCuoi?: string | null;
+  hanSua?: string;
 }
 
 export interface DanhGiaCuaToiResponse {
@@ -365,11 +404,69 @@ export interface YeuCauDoiLichResponse {
   ngayXuLy?: string | null;
 }
 
+export type TrangThaiHangDoi = "CHO_KHAM" | "DANG_KHAM" | "VANG_MAT" | "DA_KHAM";
+
+export interface HangDoiLuot {
+  trangThaiHangDoi: TrangThaiHangDoi;
+  goiLuc: string | null;
+  lichHen: LichHenCuaToiResponse;
+}
+
+export interface HangDoiCa {
+  idLichLamViec: number;
+  buoi: "SANG" | "CHIEU" | "TOI";
+  gioBatDau: string;
+  gioKetThuc: string;
+  phongKham: string;
+  soLuong: {
+    tong: number;
+    choKham: number;
+    dangKham: number;
+    vangMat: number;
+    daKham: number;
+  };
+  idDangKham: number | null;
+  idTiepTheo: number | null;
+  cacLuot: HangDoiLuot[];
+}
+
+export interface HangDoiResponse {
+  ngay: string;
+  idCaHienTai: number | null;
+  tinhLuc: string;
+  cacCa: HangDoiCa[];
+}
+
+export interface DanhGiaTongQuanResponse {
+  diemTrungBinh: number | null;
+  soDanhGia: number;
+  phanBo: Record<string, number>;
+}
+
+export interface LanSuaBenhAn {
+  phienBan: number;
+  ngaySua: string;
+  bacSi: { id: number; hoTen: string };
+  lyDo: string;
+  cacTruongDoi: string[];
+  truoc: KetQuaKhamResponse;
+  sau: KetQuaKhamResponse;
+}
+
+export interface LichSuSuaBenhAnResponse {
+  idLichHen: number;
+  maTraCuu: string;
+  phienBanHienTai: number;
+  ngayGhiNhan: string;
+  cacLanSua: LanSuaBenhAn[];
+}
+
 export interface TongQuanBacSiResponse {
   dangCho?: number;
   daKham?: number;
   diemDanhGia?: number | null;
   soDanhGia?: number;
+  lichHenSapToi?: number;
   yeuCauChoXacNhan?: number;
   tinhLuc?: string;
   caHomNay: number;
@@ -545,10 +642,17 @@ export interface XuLyYeuCauRequest {
 }
 
 export interface GhiKetQuaKhamRequest {
+  lyDoKham?: string;
+  sinhHieu?: SinhHieu;
+  khamLamSang?: string;
   chanDoan: string;
+  maIcdChinh?: string;
+  chanDoanKemTheo?: string;
   ghiChu?: string | null;
   ngayTaiKhamDeXuat?: string | null;
-  donThuoc?: DonThuoc[];
+  donThuoc?: DongThuocRequest[] | DonThuoc[];
+  lyDoSua?: string;
+  phienBan?: number;
 }
 
 export interface SuaHoSoBenhNhanRequest {
