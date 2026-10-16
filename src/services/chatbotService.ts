@@ -1,6 +1,7 @@
 import axiosClient from "@/utils/axiosClient";
 import type { ApiResponse } from "@/types/common.type";
 import type { ChatMessage, ChatSession } from "@/types/chatbot.type";
+export type { ChatMessage, ChatSession };
 
 
 export const chatbotService = {
