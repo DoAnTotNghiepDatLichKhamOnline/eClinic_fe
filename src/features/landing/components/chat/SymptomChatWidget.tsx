@@ -184,30 +184,53 @@ export function SymptomChatWidget() {
             {t({ en: "Book this specialty", vi: "Đặt lịch chuyên khoa này" })}
           </Link>
         )}
-        {suggestions.bacSi?.map((doctor) => (
-          <Link
-            key={doctor.id}
-            to={`/appointment?idBacSi=${doctor.id}`}
-            onClick={() => setOpen(false)}
-          >
-            {doctor.hocVi ? `${doctor.hocVi} ` : ""}
-            {doctor.hoTen} ·{" "}
-            {t({ en: "Book with this doctor", vi: "Đặt lịch với bác sĩ này" })}
-          </Link>
-        ))}
-        {suggestions.lichKham?.flatMap((schedule) =>
-          schedule.khungGio.map((slot) => (
+        {suggestions.bacSi?.map(
+          (doctor: {
+            id: number;
+            hoTen: string;
+            hocVi: string | null;
+          }) => (
             <Link
-              key={`${schedule.idLichLamViec}-${slot.gioBatDau}`}
-              to={`/appointment?idBacSi=${schedule.idBacSi}&ngay=${schedule.ngay}&idLichLamViec=${schedule.idLichLamViec}&gioBatDauKhung=${encodeURIComponent(slot.gioBatDau)}`}
+              key={doctor.id}
+              to={`/appointment?idBacSi=${doctor.id}`}
               onClick={() => setOpen(false)}
             >
-              {schedule.hoTenBacSi} · {schedule.ngay} {slot.gioBatDau}
+              {doctor.hocVi ? `${doctor.hocVi} ` : ""}
+              {doctor.hoTen} ·{" "}
+              {t({ en: "Book with this doctor", vi: "Đặt lịch với bác sĩ này" })}
             </Link>
-          )),
+          ),
         )}
-        {suggestions.lichHenCuaToi?.map((visit, index) => {
-          const ticket = (visit as { maPhieuKham?: string }).maPhieuKham;
+        {suggestions.lichKham?.flatMap(
+          (schedule: {
+            idBacSi: number;
+            hoTenBacSi: string;
+            idLichLamViec: number;
+            ngay: string;
+            khungGio: Array<{
+              gioBatDau: string;
+              gioKetThuc: string;
+              soChoConLai: number;
+            }>;
+          }) =>
+            schedule.khungGio.map(
+              (slot: {
+                gioBatDau: string;
+                gioKetThuc: string;
+                soChoConLai: number;
+              }) => (
+                <Link
+                  key={`${schedule.idLichLamViec}-${slot.gioBatDau}`}
+                  to={`/appointment?idBacSi=${schedule.idBacSi}&ngay=${schedule.ngay}&idLichLamViec=${schedule.idLichLamViec}&gioBatDauKhung=${encodeURIComponent(slot.gioBatDau)}`}
+                  onClick={() => setOpen(false)}
+                >
+                  {schedule.hoTenBacSi} · {schedule.ngay} {slot.gioBatDau}
+                </Link>
+              ),
+            ),
+        )}
+        {suggestions.lichHenCuaToi?.map((visit: unknown, index: number) => {
+          const ticket = (visit as { maPhieuKham?: string })?.maPhieuKham;
           return ticket ? (
             <Link
               key={`${ticket}-${index}`}
@@ -218,8 +241,8 @@ export function SymptomChatWidget() {
             </Link>
           ) : null;
         })}
-        {suggestions.lanKham?.map((visit, index) => {
-          const ticket = (visit as { maPhieuKham?: string }).maPhieuKham;
+        {suggestions.lanKham?.map((visit: unknown, index: number) => {
+          const ticket = (visit as { maPhieuKham?: string })?.maPhieuKham;
           return ticket ? (
             <Link
               key={`${ticket}-${index}`}
