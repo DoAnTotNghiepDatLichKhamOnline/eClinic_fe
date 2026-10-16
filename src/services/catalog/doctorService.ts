@@ -9,6 +9,7 @@ import type {
   ThemBacSiRequest,
   SuaBacSiRequest,
   CapNhatHoSoBacSiRequest,
+  CapNhatHoSoBacSiToiRequest,
   CapNhatAnhBacSiRequest,
   SapXepAnhBacSiRequest,
   NgungCongTacRequest,
@@ -145,6 +146,60 @@ export const doctorService = {
   xoaAnhBacSi: async (id: number, idAnh: number) => {
     const res = await axiosClient.delete<ApiResponse<void>>(
       `/api/catalog/quan-tri/bac-si/${id}/anh/${idAnh}`,
+    );
+    return res.data;
+  },
+
+  // ================= Bác sĩ tự xem & sửa hồ sơ của mình =================
+  getHoSoBacSiToi: async () => {
+    const res = await axiosClient.get<ApiResponse<HoSoBacSiQuanTriResponse>>(
+      "/api/catalog/bac-si/toi/ho-so",
+    );
+    return res.data;
+  },
+
+  capNhatHoSoBacSiToi: async (data: CapNhatHoSoBacSiToiRequest) => {
+    const res = await axiosClient.put<ApiResponse<HoSoBacSiQuanTriResponse>>(
+      "/api/catalog/bac-si/toi/ho-so",
+      data,
+    );
+    return res.data;
+  },
+
+  themAnhCongViecToi: async (
+    file: File | Blob,
+    chuThich?: string,
+    chuThichEn?: string,
+  ) => {
+    const formData = new FormData();
+    formData.append("anh", file);
+    const res = await axiosClient.post<ApiResponse<AnhBacSiResponse>>(
+      "/api/catalog/bac-si/toi/anh",
+      formData,
+      {
+        params: {
+          ...(chuThich ? { chuThich } : {}),
+          ...(chuThichEn ? { chuThichEn } : {}),
+        },
+      },
+    );
+    return res.data;
+  },
+
+  suaChuThichAnhToi: async (
+    idAnh: number,
+    data: { chuThich?: string; chuThichEn?: string },
+  ) => {
+    const res = await axiosClient.put<ApiResponse<AnhBacSiResponse>>(
+      `/api/catalog/bac-si/toi/anh/${idAnh}`,
+      data,
+    );
+    return res.data;
+  },
+
+  xoaAnhToi: async (idAnh: number) => {
+    const res = await axiosClient.delete<ApiResponse<void>>(
+      `/api/catalog/bac-si/toi/anh/${idAnh}`,
     );
     return res.data;
   },
