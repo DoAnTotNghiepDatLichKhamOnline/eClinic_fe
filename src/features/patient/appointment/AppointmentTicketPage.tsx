@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
-import { patientBookingService } from "@/services/booking/patientBooking.service";
+import { patientBookingService } from "@/services/booking";
 import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
 
 export function AppointmentTicketPage() {
@@ -35,7 +35,7 @@ export function AppointmentTicketPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await bookingService.traCuuPhieuKham(maPhieuKham);
+      const response = await patientBookingService.traCuuPhieuKham(maPhieuKham);
       if (!response.thanhCong || !response.duLieu)
         throw new Error(response.thongDiep);
       setTicket(response.duLieu);
@@ -56,7 +56,7 @@ export function AppointmentTicketPage() {
 
   useEffect(() => {
     let url = "";
-    void bookingService
+    void patientBookingService
       .getQrPhieuKham(maPhieuKham)
       .then((blob) => {
         url = URL.createObjectURL(blob);
@@ -77,10 +77,10 @@ export function AppointmentTicketPage() {
       if (mode === "cancel") {
         const response =
           user?.role === "patient"
-            ? await bookingService.huyLichHen(maPhieuKham, {
+            ? await patientBookingService.huyLichHen(maPhieuKham, {
                 lyDo: reason || undefined,
               })
-            : await bookingService.huyPhieuKhamKhach(maPhieuKham, {
+            : await patientBookingService.huyPhieuKhamKhach(maPhieuKham, {
                 soDienThoai: phone,
                 lyDo: reason || undefined,
               });
@@ -99,8 +99,8 @@ export function AppointmentTicketPage() {
         };
         const response =
           user?.role === "patient"
-            ? await bookingService.doiLichHen(maPhieuKham, body)
-            : await bookingService.doiPhieuKhamKhach(maPhieuKham, body);
+            ? await patientBookingService.doiLichHen(maPhieuKham, body)
+            : await patientBookingService.doiPhieuKhamKhach(maPhieuKham, body);
         if (!response.thanhCong || !response.duLieu)
           throw new Error(response.thongDiep);
         navigate(
