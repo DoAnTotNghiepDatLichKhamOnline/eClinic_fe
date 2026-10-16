@@ -16,6 +16,8 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctorBookingService as bookingService } from "@/services/booking";
+import { userProfileService } from "@/services/identity";
+import { doctorService } from "@/services/catalog";
 import { notifyAuth } from "@/utils/authNotification";
 import type { DoctorSection } from "./DoctorSidebar";
 import styles from "./DoctorWorkspace.module.css";
@@ -157,13 +159,13 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   });
   const doctorAccountQuery = useQuery({
     queryKey: ["identity", "doctor-profile"],
-    queryFn: () => identityService.getHoSoCaNhan(),
+    queryFn: () => userProfileService.getHoSoCaNhan(),
     enabled: activeSection === "profile",
   });
   const doctorId = doctorAccountQuery.data?.duLieu?.bacSi?.id;
   const doctorProfileQuery = useQuery({
     queryKey: ["catalog", "doctor-profile", doctorId],
-    queryFn: () => catalogService.getChiTietBacSi(doctorId!),
+    queryFn: () => doctorService.getChiTietBacSi(doctorId!),
     enabled: activeSection === "profile" && Boolean(doctorId),
   });
   const doctorProfile = doctorProfileQuery.data?.duLieu;
