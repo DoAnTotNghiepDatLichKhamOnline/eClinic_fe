@@ -22,6 +22,7 @@
 
 ## 3. Kiến trúc Code & File (React / TypeScript)
 - **Single Responsibility Principle:** Mỗi file service hoặc type chỉ quản lý một domain entity cụ thể (ví dụ: `specialty`, `doctor`, `clinic`, `auth`).
+- Mọi cấu trúc thư mục, phân cấp component và ranh giới module bắt buộc phải tuân thủ nghiêm ngặt theo tài liệu ARCHITECTURE.md.
 - **Imports:** Luôn ưu tiên dùng alias `@/...` thay vì relative path dài (`../../`).
 - **Clean Code:** Đảm bảo TypeScript types chặt chẽ, không dùng `any` bừa bãi.
 
