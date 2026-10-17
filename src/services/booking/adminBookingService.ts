@@ -177,20 +177,19 @@ export const adminBookingService = {
     return response.data;
   },
 
+  /** Get appointments booked in a specific shift */
+  getLichHenTheoCa: async (idCa: number) => {
+    const response = await axiosClient.get<
+      ApiResponse<LichHenCuaToiResponse[]>
+    >(`/api/booking/quan-tri/lich-lam-viec/${idCa}/lich-hen`);
+    return response.data;
+  },
+
   /** Get patient reviews for moderation */
   getDanhGiaQuanTri: async (params?: GetDanhGiaQuanTriParams) => {
     const response = await axiosClient.get<
       ApiResponse<PageResponse<DanhGiaQuanTriResponse>>
     >("/api/booking/quan-tri/danh-gia", { params });
-    return response.data;
-  },
-
-  /** Toggle review visibility */
-  anHienDanhGia: async (id: number, an: boolean) => {
-    const response = await axiosClient.put<ApiResponse<void>>(
-      `/api/booking/quan-tri/danh-gia/${id}/an`,
-      { an },
-    );
     return response.data;
   },
 

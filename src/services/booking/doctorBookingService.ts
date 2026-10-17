@@ -3,7 +3,6 @@ import type { ApiResponse, PageResponse } from "@/types/common.type";
 import type {
   LichHenCuaToiResponse,
   CaLamViecResponse,
-  ChiTietCaLamViecResponse,
   GhiKetQuaKhamRequest,
   KetQuaKhamResponse,
   DanhGiaCuaBacSiResponse,
@@ -196,19 +195,10 @@ export const doctorBookingService = {
     return response.data;
   },
 
-  /** Accept appointment request */
-  xacNhanLichHenBacSi: async (id: number) => {
-    const response = await axiosClient.post<ApiResponse<LichHenCuaToiResponse>>(
-      `/api/booking/bac-si/toi/lich-hen/${id}/xac-nhan`,
-    );
-    return response.data;
-  },
-
-  /** Reject appointment request */
-  tuChoiLichHenBacSi: async (id: number, data: { lyDo: string }) => {
-    const response = await axiosClient.post<ApiResponse<LichHenCuaToiResponse>>(
-      `/api/booking/bac-si/toi/lich-hen/${id}/tu-choi`,
-      data,
+  /** Get medical record edit audit history for doctor */
+  getLichSuSuaBenhAnBacSi: async (idLichHen: number) => {
+    const response = await axiosClient.get<ApiResponse<LichSuSuaBenhAnResponse>>(
+      `/api/medical/bac-si/toi/lich-hen/${idLichHen}/benh-an/lich-su`,
     );
     return response.data;
   },
@@ -228,14 +218,6 @@ export const doctorBookingService = {
       "/api/booking/bac-si/toi/lich-hen/tra-cuu",
       { params: { ma } },
     );
-    return response.data;
-  },
-
-  /** Get shift details and assigned patients */
-  getChiTietCaLamViec: async (id: number) => {
-    const response = await axiosClient.get<
-      ApiResponse<ChiTietCaLamViecResponse>
-    >(`/api/booking/bac-si/lich/ca/${id}`);
     return response.data;
   },
 

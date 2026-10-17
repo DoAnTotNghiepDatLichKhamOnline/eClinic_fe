@@ -181,7 +181,12 @@ export function DashboardPage() {
           ) : (
             <div className={styles.upcomingList}>
               {dashboard.lanKhamGanDay.map((v) => (
-                <div className={styles.recentItem} key={v.lichHen.maPhieuKham}>
+                <Link
+                  to="/patient/my-appointments"
+                  className={styles.recentItem}
+                  key={v.lichHen.maPhieuKham}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <div className={styles.recentDot} />
                   <div className={styles.recentInfo}>
                     <div className={styles.recentDoctor}>{v.lichHen.bacSi.hoTen}</div>
@@ -189,9 +194,14 @@ export function DashboardPage() {
                       {new Date(v.lichHen.ngay).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
                       {" · "}{v.lichHen.tenChuyenKhoa}
                     </div>
+                    {v.ketQua?.chanDoan && (
+                      <div style={{ fontSize: "11px", color: "#0f766e", marginTop: "2px", fontWeight: 500 }}>
+                        {vi ? "Chẩn đoán: " : "Diagnosis: "}{v.ketQua.chanDoan}
+                      </div>
+                    )}
                   </div>
                   <span className={styles.recentBadge}>{vi ? "Đã khám" : "Done"}</span>
-                </div>
+                </Link>
               ))}
             </div>
           )}

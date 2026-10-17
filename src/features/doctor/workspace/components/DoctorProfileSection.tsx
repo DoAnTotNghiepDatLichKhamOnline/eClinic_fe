@@ -13,6 +13,8 @@ import {
   BookOpen,
   Image as ImageIcon,
   CheckCircle2,
+  Pencil,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
@@ -43,6 +45,12 @@ export function DoctorProfileSection() {
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageCaption, setImageCaption] = useState("");
+
+  // State chỉnh sửa chú thích ảnh
+  const [editingPhoto, setEditingPhoto] = useState<AnhBacSiResponse | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editCaptionEn, setEditCaptionEn] = useState("");
+  const [savingCaption, setSavingCaption] = useState(false);
 
   const doctorAccountQuery = useQuery({
     queryKey: ["identity", "doctor-profile"],
@@ -246,6 +254,49 @@ export function DoctorProfileSection() {
           (lang === "vi" ? "Lỗi xóa ảnh" : "Failed to delete photo"),
         "",
       );
+    }
+  };
+
+  // Handle edit image caption
+  const handleStartEditPhoto = (photo: AnhBacSiResponse) => {
+    setEditingPhoto(photo);
+    setEditCaption(photo.chuThich || "");
+    setEditCaptionEn(photo.chuThichEn || "");
+  };
+
+  const handleSavePhotoCaption = async () => {
+    if (!editingPhoto) return;
+    try {
+      setSavingCaption(true);
+      const res = await doctorService.suaChuThichAnhToi(editingPhoto.id, {
+        chuThich: editCaption.trim() || undefined,
+        chuThichEn: editCaptionEn.trim() || undefined,
+      });
+      if (res.thanhCong) {
+        notifyAuth(
+          "success",
+          lang === "vi"
+            ? "Cập nhật chú thích ảnh thành công"
+            : "Photo caption updated successfully",
+          "",
+        );
+        setEditingPhoto(null);
+        queryClient.invalidateQueries({
+          queryKey: ["catalog", "doctor-self-profile"],
+        });
+      } else {
+        notifyAuth("error", res.thongDiep || "Failed to update caption", "");
+      }
+    } catch (err: any) {
+      notifyAuth(
+        "error",
+        err.response?.data?.thongDiep ||
+          err.message ||
+          (lang === "vi" ? "Lỗi cập nhật chú thích" : "Failed to update caption"),
+        "",
+      );
+    } finally {
+      setSavingCaption(false);
     }
   };
 
@@ -1083,20 +1134,36 @@ export function DoctorProfileSection() {
                     {photo.chuThich ||
                       (lang === "vi" ? "Ảnh hoạt động" : "Work photo")}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteImage(photo.id)}
-                    title={lang === "vi" ? "Xóa ảnh" : "Delete photo"}
-                    style={{
-                      background: "transparent",
-                      border: 0,
-                      color: "#9e2e25",
-                      cursor: "pointer",
-                      padding: "2px",
-                    }}
-                  >
-                    <Trash2 size={13} aria-hidden="true" />
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => handleStartEditPhoto(photo)}
+                      title={lang === "vi" ? "Sửa chú thích" : "Edit caption"}
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        color: "#0369a1",
+                        cursor: "pointer",
+                        padding: "2px",
+                      }}
+                    >
+                      <Pencil size={13} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(photo.id)}
+                      title={lang === "vi" ? "Xóa ảnh" : "Delete photo"}
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        color: "#9e2e25",
+                        cursor: "pointer",
+                        padding: "2px",
+                      }}
+                    >
+                      <Trash2 size={13} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1125,6 +1192,95 @@ export function DoctorProfileSection() {
           </div>
         )}
       </section>
+
+      {/* Modal sửa chú thích ảnh */}
+      {editingPhoto && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !savingCaption) setEditingPhoto(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Pencil size={16} className="text-blue-600" />
+                {lang === "vi" ? "Sửa chú thích ảnh" : "Edit Photo Caption"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingPhoto(null)}
+                disabled={savingCaption}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <div className="h-32 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <img
+                  src={editingPhoto.url}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {lang === "vi" ? "Chú thích (Tiếng Việt)" : "Caption (Vietnamese)"}
+                </label>
+                <input
+                  type="text"
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value)}
+                  placeholder={lang === "vi" ? "Ví dụ: Phòng khám chuyên khoa..." : "E.g. Examination room..."}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none"
+                  disabled={savingCaption}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {lang === "vi" ? "Chú thích (Tiếng Anh - Tùy chọn)" : "Caption (English - Optional)"}
+                </label>
+                <input
+                  type="text"
+                  value={editCaptionEn}
+                  onChange={(e) => setEditCaptionEn(e.target.value)}
+                  placeholder="E.g. Clinical consultation room..."
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none"
+                  disabled={savingCaption}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingPhoto(null)}
+                  disabled={savingCaption}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  {lang === "vi" ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePhotoCaption}
+                  disabled={savingCaption}
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition"
+                >
+                  {savingCaption && <Loader2 size={13} className="animate-spin" />}
+                  {lang === "vi" ? "Lưu thay đổi" : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

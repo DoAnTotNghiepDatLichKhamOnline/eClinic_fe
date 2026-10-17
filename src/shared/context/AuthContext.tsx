@@ -25,6 +25,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
   loginWithCredentials: (data: DangNhapRequest) => Promise<DangNhapResponse>;
+  loginWithGoogle: (idToken: string) => Promise<DangNhapResponse>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
 }
@@ -120,6 +121,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return response.duLieu;
   };
 
+  const loginWithGoogle = async (
+    idToken: string,
+  ): Promise<DangNhapResponse> => {
+    const response = await authService.dangNhapGoogle({ idToken });
+    if (!response.thanhCong || !response.duLieu) {
+      throw new Error(response.thongDiep || "Đăng nhập Google không thành công");
+    }
+
+    const { accessToken, taiKhoan } = response.duLieu;
+    applyAccountLanguage(taiKhoan.ngonNgu);
+    setAccessToken(accessToken);
+
+    const mappedUser: User = {
+      id: String(taiKhoan.id),
+      name: taiKhoan.hoTen,
+      email: taiKhoan.email,
+      phone: taiKhoan.soDienThoai || undefined,
+      role: mapVaiTroToRole(taiKhoan.vaiTro),
+    };
+
+    setUser(mappedUser);
+    return response.duLieu;
+  };
+
   const logout = async () => {
     try {
       await authService.dangXuat();
@@ -138,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         loginWithCredentials,
+        loginWithGoogle,
         logout,
         setUser,
       }}

@@ -15,6 +15,10 @@ import {
   Clock3,
   Ban,
   Loader2,
+  Activity,
+  Pill,
+  FileText,
+  CalendarClock,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
@@ -741,27 +745,205 @@ export function MyAppointmentsPage() {
                     </p>
                   </div>
                   {chiTiet.ketQua && (
-                    <section className="border-t border-slate-200 pt-4">
-                      <h3 className="font-semibold">
-                        {vi ? "Kết quả khám" : "Visit result"}
-                      </h3>
-                      <p className="mt-2 text-sm">
-                        <b>{vi ? "Chẩn đoán" : "Diagnosis"}:</b>{" "}
-                        {chiTiet.ketQua.chanDoan}
-                      </p>
-                      {chiTiet.ketQua.ghiChu && (
-                        <p className="mt-1 text-sm">{chiTiet.ketQua.ghiChu}</p>
+                    <section className="border-t border-slate-200 pt-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                          <FileText size={18} className="text-emerald-700" />
+                          {vi ? "Hồ sơ kết quả khám & Bệnh án" : "Medical Examination Record"}
+                        </h3>
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {vi ? "Đã có kết luận" : "Completed Record"}
+                        </span>
+                      </div>
+
+                      {/* Lý do & Khám lâm sàng */}
+                      {(chiTiet.ketQua.lyDoKham || chiTiet.ketQua.khamLamSang) && (
+                        <div className="rounded-xl bg-slate-50 p-3.5 text-xs text-slate-700 space-y-1.5 border border-slate-200/70">
+                          {chiTiet.ketQua.lyDoKham && (
+                            <p>
+                              <b className="text-slate-900">{vi ? "Lý do khám:" : "Chief complaint:"} </b>
+                              {chiTiet.ketQua.lyDoKham}
+                            </p>
+                          )}
+                          {chiTiet.ketQua.khamLamSang && (
+                            <p>
+                              <b className="text-slate-900">{vi ? "Khám lâm sàng:" : "Clinical notes:"} </b>
+                              {chiTiet.ketQua.khamLamSang}
+                            </p>
+                          )}
+                        </div>
                       )}
-                      {chiTiet.ketQua.donThuoc.map((medicine, index) => (
-                        <p
-                          className="mt-2 text-sm"
-                          key={`${medicine.tenThuoc}-${index}`}
-                        >
-                          {medicine.tenThuoc} · {medicine.lieuDung} ·{" "}
-                          {medicine.soLanMoiNgay ?? "-"}{" "}
-                          {vi ? "lần/ngày" : "times/day"}
-                        </p>
-                      ))}
+
+                      {/* Chẩn đoán & ICD-10 */}
+                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 space-y-2">
+                        <div className="flex items-start gap-2 text-xs">
+                          <span className="font-bold text-emerald-900 shrink-0 mt-0.5">
+                            {vi ? "Chẩn đoán xác định:" : "Primary diagnosis:"}
+                          </span>
+                          <span className="font-semibold text-slate-900 text-sm">
+                            {chiTiet.ketQua.chanDoan}
+                          </span>
+                        </div>
+                        {(chiTiet.ketQua.icdChinh || chiTiet.ketQua.maIcdChinh) && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="font-bold text-emerald-900 shrink-0">
+                              {vi ? "Mã bệnh (ICD-10):" : "ICD-10 Code:"}
+                            </span>
+                            <span className="inline-block px-2 py-0.5 rounded bg-emerald-200/70 text-emerald-900 font-mono font-bold text-xs">
+                              {chiTiet.ketQua.icdChinh ? `${chiTiet.ketQua.icdChinh.ma} - ${chiTiet.ketQua.icdChinh.ten}` : chiTiet.ketQua.maIcdChinh}
+                            </span>
+                          </div>
+                        )}
+                        {chiTiet.ketQua.chanDoanKemTheo && (
+                          <div className="flex items-start gap-2 text-xs text-slate-600">
+                            <span className="font-medium shrink-0">{vi ? "Chẩn đoán kèm theo:" : "Secondary diagnosis:"}</span>
+                            <span>{chiTiet.ketQua.chanDoanKemTheo}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Chỉ số sinh hiệu */}
+                      {chiTiet.ketQua.sinhHieu && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                            <Activity size={14} className="text-rose-500" />
+                            {vi ? "Chỉ số sinh hiệu đo được" : "Vital Signs"}
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            {(chiTiet.ketQua.sinhHieu.huyetApTamThu || chiTiet.ketQua.sinhHieu.huyetApTamTruong) && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Huyết áp" : "Blood pressure"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.huyetApTamThu ?? "—"} / {chiTiet.ketQua.sinhHieu.huyetApTamTruong ?? "—"}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">mmHg</span>
+                                </strong>
+                              </div>
+                            )}
+                            {chiTiet.ketQua.sinhHieu.mach !== undefined && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Mạch" : "Pulse"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.mach}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">{vi ? "nhịp/phút" : "bpm"}</span>
+                                </strong>
+                              </div>
+                            )}
+                            {chiTiet.ketQua.sinhHieu.nhietDo !== undefined && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Thân nhiệt" : "Temp"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.nhietDo}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">°C</span>
+                                </strong>
+                              </div>
+                            )}
+                            {chiTiet.ketQua.sinhHieu.nhipTho !== undefined && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Nhịp thở" : "Respiration"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.nhipTho}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">{vi ? "lần/phút" : "bpm"}</span>
+                                </strong>
+                              </div>
+                            )}
+                            {chiTiet.ketQua.sinhHieu.canNang !== undefined && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Cân nặng" : "Weight"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.canNang}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">kg</span>
+                                </strong>
+                              </div>
+                            )}
+                            {chiTiet.ketQua.sinhHieu.chieuCao !== undefined && (
+                              <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
+                                <span className="text-slate-400 block text-[11px]">{vi ? "Chiều cao" : "Height"}</span>
+                                <strong className="text-slate-800 text-sm">
+                                  {chiTiet.ketQua.sinhHieu.chieuCao}{" "}
+                                  <span className="text-[11px] font-normal text-slate-500">cm</span>
+                                </strong>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Đơn thuốc */}
+                      {chiTiet.ketQua.donThuoc && chiTiet.ketQua.donThuoc.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                            <Pill size={14} className="text-blue-500" />
+                            {vi ? "Đơn thuốc được kê" : "Prescription"}
+                          </h4>
+                          <div className="overflow-x-auto rounded-xl border border-slate-200">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-semibold">
+                                <tr>
+                                  <th className="p-2.5">#</th>
+                                  <th className="p-2.5">{vi ? "Tên thuốc / Hoạt chất" : "Medication"}</th>
+                                  <th className="p-2.5">{vi ? "Liều dùng & Cách dùng" : "Dosage & Usage"}</th>
+                                  <th className="p-2.5">{vi ? "Số ngày" : "Days"}</th>
+                                  <th className="p-2.5">{vi ? "Số lượng" : "Qty"}</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {chiTiet.ketQua.donThuoc.map((medicine, index) => (
+                                  <tr key={`${medicine.tenThuoc}-${index}`} className="hover:bg-slate-50/50">
+                                    <td className="p-2.5 font-medium text-slate-400">{index + 1}</td>
+                                    <td className="p-2.5">
+                                      <strong className="text-slate-800 block">{medicine.tenThuoc}</strong>
+                                      {medicine.hamLuong && (
+                                        <span className="text-[11px] text-slate-500">{medicine.hamLuong}</span>
+                                      )}
+                                      {medicine.hoatChat && (
+                                        <span className="text-[11px] text-slate-400 block italic">({medicine.hoatChat})</span>
+                                      )}
+                                    </td>
+                                    <td className="p-2.5">
+                                      <span className="font-medium text-slate-700">{medicine.lieuDung}</span>
+                                      {medicine.soLanMoiNgay && (
+                                        <span className="text-[11px] text-slate-500 block">
+                                          {medicine.soLanMoiNgay} {vi ? "lần/ngày" : "times/day"}
+                                        </span>
+                                      )}
+                                      {medicine.ghiChuSuDung && (
+                                        <span className="text-[11px] text-blue-600 block mt-0.5">
+                                          {medicine.ghiChuSuDung}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="p-2.5 font-medium text-slate-700">
+                                      {medicine.soNgayDung ? `${medicine.soNgayDung} ${vi ? "ngày" : "days"}` : "—"}
+                                    </td>
+                                    <td className="p-2.5 font-bold text-slate-800">
+                                      {medicine.soLuong ?? "—"} {medicine.donVi || ""}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Lời dặn & Tái khám */}
+                      {(chiTiet.ketQua.ghiChu || chiTiet.ketQua.ngayTaiKhamDeXuat) && (
+                        <div className="rounded-xl bg-amber-50/60 border border-amber-200/80 p-3.5 text-xs text-amber-900 space-y-1.5">
+                          {chiTiet.ketQua.ghiChu && (
+                            <p>
+                              <b className="text-amber-950">{vi ? "Lời dặn của bác sĩ:" : "Doctor's instructions:"} </b>
+                              {chiTiet.ketQua.ghiChu}
+                            </p>
+                          )}
+                          {chiTiet.ketQua.ngayTaiKhamDeXuat && (
+                            <p className="flex items-center gap-1.5 font-semibold text-amber-950">
+                              <CalendarClock size={14} className="text-amber-700" />
+                              {vi ? "Hẹn tái khám đề xuất:" : "Suggested follow-up:"}{" "}
+                              {new Date(chiTiet.ketQua.ngayTaiKhamDeXuat).toLocaleDateString("vi-VN")}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </section>
                   )}
                   {chiTiet.lichHen.duocHuyDoi && (

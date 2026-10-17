@@ -12,7 +12,7 @@ import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
   const { lang } = useLanguage();
-  const { loginWithCredentials } = useAuth();
+  const { loginWithCredentials, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const requestedPath = (location.state as { from?: unknown } | null)?.from;
@@ -65,6 +65,36 @@ export function LoginPagePatient() {
 
   const handleForgotPassword = () => {
     navigate("/forgot-password");
+  };
+
+  const handleGoogleLogin = async () => {
+    const token = window.prompt(
+      lang === "vi"
+        ? "Nhập Google ID Token để đăng nhập:"
+        : "Enter Google ID Token to sign in:",
+    );
+    if (!token?.trim()) return;
+
+    setIsLoading(true);
+    try {
+      await loginWithGoogle(token.trim());
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đăng nhập Google thành công" : "Google sign-in successful",
+        lang === "vi" ? "Chào mừng bạn đến với eClinic." : "Welcome to eClinic.",
+      );
+      setTimeout(() => {
+        navigate(redirectTo, { replace: true });
+      }, 400);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.thongDiep ||
+        err?.message ||
+        (lang === "vi" ? "Đăng nhập Google thất bại." : "Google login failed.");
+      notifyAuth("error", "Google Sign-in", msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -158,6 +188,7 @@ export function LoginPagePatient() {
                 onEmailChange={setLoginEmail}
                 onSubmit={handleLoginSubmit}
                 onForgotPassword={handleForgotPassword}
+                onGoogleLogin={handleGoogleLogin}
                 isLoading={isLoading}
               />
 

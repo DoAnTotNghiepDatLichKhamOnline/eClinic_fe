@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { MedicalRecordHistoryModal } from "@/shared/components/medical/MedicalRecordHistoryModal";
 import styles from "../../AdminDashboardPage.module.css";
 
 interface PatientDetailModalProps {
@@ -22,6 +23,7 @@ export function PatientDetailModal({
   const client = useQueryClient();
   const [modalMessage, setModalMessage] = useState("");
   const [modalError, setModalError] = useState("");
+  const [viewHistoryAppointmentId, setViewHistoryAppointmentId] = useState<number | null>(null);
 
   const patientDetailQuery = useQuery({
     queryKey: ["booking", "admin-patient-detail", patientId],
@@ -183,7 +185,16 @@ export function PatientDetailModal({
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    {appointment.id && appointment.trangThai === "DA_HOAN_THANH" && (
+                      <button
+                        type="button"
+                        className={`${styles.actionBtn} text-teal-700 bg-teal-50 hover:bg-teal-100 border-teal-200`}
+                        onClick={() => setViewHistoryAppointmentId(appointment.id ?? null)}
+                      >
+                        {vi ? "Lịch sử sửa bệnh án" : "Record History"}
+                      </button>
+                    )}
                     {appointment.doiChieu?.canDoiChieu && appointment.id && (
                       <button
                         type="button"
@@ -225,6 +236,14 @@ export function PatientDetailModal({
               ))}
             </div>
           </div>
+        )}
+
+        {viewHistoryAppointmentId && (
+          <MedicalRecordHistoryModal
+            idLichHen={viewHistoryAppointmentId}
+            role="admin"
+            onClose={() => setViewHistoryAppointmentId(null)}
+          />
         )}
       </section>
     </div>
