@@ -220,6 +220,18 @@ export const patientBookingService = {
     return response.data;
   },
 
+  /** Get unpaginated calendar appointments within max 42 days */
+  getLichHenCalendar: async (params: {
+    tuNgay: string;
+    denNgay: string;
+    cuaAi?: "TAT_CA" | "BAN_THAN" | "NGUOI_KHAC";
+  }) => {
+    const response = await axiosClient.get<
+      ApiResponse<LichHenCuaToiResponse[]>
+    >("/api/booking/lich-hen/cua-toi/lich", { params });
+    return response.data;
+  },
+
   /** Get patient dashboard summary */
   getTrangCaNhan: async () => {
     const response = await axiosClient.get<ApiResponse<TrangCaNhanResponse>>(

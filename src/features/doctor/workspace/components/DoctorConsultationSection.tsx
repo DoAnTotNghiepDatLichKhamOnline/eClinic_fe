@@ -13,6 +13,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { doctorBookingService } from "@/services/booking";
 import { useQrScanner } from "../hooks/useQrScanner";
+import { MedicalRecordHistoryModal } from "@/shared/components/medical/MedicalRecordHistoryModal";
 import type {
   Appointment,
   ConsultationLookup,
@@ -1264,6 +1265,14 @@ export function DoctorConsultationSection({
                 {lang === "vi" ? "In / lưu sổ khám" : "Print / save record"}
               </button>
             </section>
+          )}
+
+          {showHistory && lookupDetails?.lichHen?.id && (
+            <MedicalRecordHistoryModal
+              idLichHen={lookupDetails.lichHen.id}
+              role="doctor"
+              onClose={() => setShowHistory(false)}
+            />
           )}
         </>
       )}

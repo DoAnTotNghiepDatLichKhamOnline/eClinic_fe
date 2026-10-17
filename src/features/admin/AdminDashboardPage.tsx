@@ -13,6 +13,7 @@ import {
   AlertCircle,
   User,
   Trash2,
+  Eye,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -20,6 +21,8 @@ import { LanguageToggle } from "@/features/landing/components/header/LanguageTog
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminSection } from "./AdminSidebar";
 import { AdminNotificationCenter } from "./AdminNotificationCenter";
+import { AccountDetailModal } from "./components/AccountDetailModal";
+import { DisableAccountModal } from "./components/DisableAccountModal";
 import {
   useDanhSachTaiKhoanQuanTri,
   useIdentityActions,
@@ -67,6 +70,9 @@ export function AdminDashboardPage({
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(0);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+  const [viewingAccountUserId, setViewingAccountUserId] = useState<number | null>(null);
+  const [disablingUser, setDisablingUser] = useState<TaiKhoanQuanTriResponse | null>(null);
+  const [isDisabling, setIsDisabling] = useState(false);
 
   // Lấy danh sách người dùng cho Quản trị viên
   const {
@@ -99,16 +105,16 @@ export function AdminDashboardPage({
     if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN")
       return;
     const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
-    const nextStatus: TrangThaiTaiKhoan = isCurrentlyActive
-      ? "VO_HIEU_HOA"
-      : "DA_KICH_HOAT";
-    const confirmMsg = isCurrentlyActive
-      ? vi
-        ? `Bạn có chắc chắn muốn vô hiệu hóa tài khoản "${user.hoTen}" (${user.email})?`
-        : `Are you sure you want to disable account "${user.hoTen}" (${user.email})?`
-      : vi
-        ? `Bạn có chắc chắn muốn kích hoạt lại tài khoản "${user.hoTen}" (${user.email})?`
-        : `Are you sure you want to activate account "${user.hoTen}" (${user.email})?`;
+
+    if (isCurrentlyActive) {
+      // Mở modal nhập lý do vô hiệu hóa (tối đa 500 ký tự)
+      setDisablingUser(user);
+      return;
+    }
+
+    const confirmMsg = vi
+      ? `Bạn có chắc chắn muốn kích hoạt lại tài khoản "${user.hoTen}" (${user.email})?`
+      : `Are you sure you want to activate account "${user.hoTen}" (${user.email})?`;
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -117,10 +123,7 @@ export function AdminDashboardPage({
       await capNhatTrangThaiTaiKhoan({
         id: user.id,
         data: {
-          trangThai: nextStatus,
-          lyDoVoHieuHoa: isCurrentlyActive
-            ? "Vô hiệu hóa bởi Quản trị viên"
-            : undefined,
+          trangThai: "DA_KICH_HOAT",
         },
       });
     } catch (err: any) {
@@ -132,6 +135,30 @@ export function AdminDashboardPage({
       );
     } finally {
       setUpdatingUserId(null);
+    }
+  };
+
+  const handleConfirmDisable = async (reason: string) => {
+    if (!disablingUser) return;
+    try {
+      setIsDisabling(true);
+      await capNhatTrangThaiTaiKhoan({
+        id: disablingUser.id,
+        data: {
+          trangThai: "VO_HIEU_HOA",
+          lyDoVoHieuHoa: reason,
+        },
+      });
+      setDisablingUser(null);
+    } catch (err: any) {
+      alert(
+        err?.response?.data?.thongDiep ||
+          (vi
+            ? "Không thể vô hiệu hóa tài khoản."
+            : "Failed to disable account."),
+      );
+    } finally {
+      setIsDisabling(false);
     }
   };
 
@@ -452,50 +479,61 @@ export function AdminDashboardPage({
                             </td>
                             <td>{renderStatusBadge(u.trangThai)}</td>
                             <td>
-                              {u.trangThai === "CHO_XAC_NHAN" ? (
+                              <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
                                 <button
                                   type="button"
-                                  className={styles.actionBtnDanger}
-                                  disabled={isUpdating}
-                                  onClick={() =>
-                                    void handleDeletePendingAccount(u)
-                                  }
+                                  className={styles.actionBtnOutline}
+                                  onClick={() => setViewingAccountUserId(u.id)}
+                                  title={vi ? "Xem chi tiết tài khoản" : "View account details"}
                                 >
-                                  <Trash2 size={13} />
-                                  {vi ? "Xóa" : "Delete"}
+                                  <Eye size={13} />
+                                  {vi ? "Chi tiết" : "Detail"}
                                 </button>
-                              ) : (
-                                u.vaiTro !== "QUAN_TRI_VIEN" && (
+                                {u.trangThai === "CHO_XAC_NHAN" ? (
                                   <button
                                     type="button"
-                                    className={
-                                      isHoatDong
-                                        ? styles.actionBtnDanger
-                                        : styles.actionBtnOutline
-                                    }
+                                    className={styles.actionBtnDanger}
                                     disabled={isUpdating}
-                                    onClick={() => handleToggleStatus(u)}
+                                    onClick={() =>
+                                      void handleDeletePendingAccount(u)
+                                    }
                                   >
-                                    {isUpdating ? (
-                                      <Loader2
-                                        size={13}
-                                        className="animate-spin"
-                                      />
-                                    ) : isHoatDong ? (
-                                      <Lock size={13} />
-                                    ) : (
-                                      <Unlock size={13} />
-                                    )}
-                                    {isHoatDong
-                                      ? vi
-                                        ? "Khóa"
-                                        : "Disable"
-                                      : vi
-                                        ? "Kích hoạt"
-                                        : "Activate"}
+                                    <Trash2 size={13} />
+                                    {vi ? "Xóa" : "Delete"}
                                   </button>
-                                )
-                              )}
+                                ) : (
+                                  u.vaiTro !== "QUAN_TRI_VIEN" && (
+                                    <button
+                                      type="button"
+                                      className={
+                                        isHoatDong
+                                          ? styles.actionBtnDanger
+                                          : styles.actionBtnOutline
+                                      }
+                                      disabled={isUpdating}
+                                      onClick={() => handleToggleStatus(u)}
+                                    >
+                                      {isUpdating ? (
+                                        <Loader2
+                                          size={13}
+                                          className="animate-spin"
+                                        />
+                                      ) : isHoatDong ? (
+                                        <Lock size={13} />
+                                      ) : (
+                                        <Unlock size={13} />
+                                      )}
+                                      {isHoatDong
+                                        ? vi
+                                          ? "Khóa"
+                                          : "Disable"
+                                        : vi
+                                          ? "Kích hoạt"
+                                          : "Activate"}
+                                    </button>
+                                  )
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -545,6 +583,24 @@ export function AdminDashboardPage({
             )}
         </div>
       </main>
+
+      {/* Modal chi tiết tài khoản */}
+      {viewingAccountUserId !== null && (
+        <AccountDetailModal
+          userId={viewingAccountUserId}
+          onClose={() => setViewingAccountUserId(null)}
+        />
+      )}
+
+      {/* Modal vô hiệu hóa tài khoản */}
+      {disablingUser !== null && (
+        <DisableAccountModal
+          user={disablingUser}
+          isLoading={isDisabling}
+          onClose={() => setDisablingUser(null)}
+          onConfirm={handleConfirmDisable}
+        />
+      )}
     </div>
   );
 }
