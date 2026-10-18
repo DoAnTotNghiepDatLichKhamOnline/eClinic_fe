@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { doctorBookingService } from "@/services/booking/doctorBookingService";
 import { notifyAuth } from "@/utils/authNotification";
@@ -15,6 +15,9 @@ export function DoctorScheduleSection() {
   const queryClient = useQueryClient();
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
   const [scheduleDate, setScheduleDate] = useState(() => new Date());
+  const [requestType, setRequestType] = useState<"XIN_NGHI" | "DOI_CA">("XIN_NGHI");
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestError, setRequestError] = useState("");
 
   const scheduleFrom = formatDateKey(
     new Date(scheduleDate.getTime() - 7 * 86_400_000),
@@ -109,94 +112,150 @@ export function DoctorScheduleSection() {
   const isToday = (date: Date) =>
     date.toDateString() === new Date().toDateString();
 
-  const minimumNotice = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const minimumRequestTime = new Date(
-    minimumNotice.getTime() - minimumNotice.getTimezoneOffset() * 60_000,
-  )
-    .toISOString()
-    .slice(0, 16);
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const minDateStr = formatDateKey(tomorrow);
+  const maxDateLimit = new Date();
+  maxDateLimit.setDate(maxDateLimit.getDate() + 42);
+  const maxDateStr = formatDateKey(maxDateLimit);
 
-  const submitShiftRequest = (event: FormEvent<HTMLFormElement>) => {
+  const submitShiftRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setRequestError("");
     const form = event.currentTarget;
     const formData = new FormData(form);
     const shiftId = Number(formData.get("idLichLamViec"));
-    const requestType = String(formData.get("loaiYeuCau")) as
-      "XIN_NGHI" | "DOI_CA";
     const reason = String(formData.get("reason") || "").trim();
     const currentShift = shifts.find((shift) => shift.id === shiftId);
-    const shiftStart = currentShift
-      ? new Date(`${currentShift.ngay}T${currentShift.gioBatDau}`)
-      : null;
 
-    if (!currentShift || !reason) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Thiếu thông tin" : "Missing information",
-        lang === "vi"
-          ? "Vui lòng chọn ca và nhập lý do."
-          : "Choose a shift and enter a reason.",
-      );
-      return;
-    }
-    if (shiftStart && shiftStart.getTime() < Date.now() + 24 * 60 * 60 * 1000) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Quá hạn gửi yêu cầu" : "Request deadline passed",
-        lang === "vi"
-          ? "Yêu cầu phải được gửi trước ca ít nhất 24 giờ."
-          : "Requests must be submitted at least 24 hours before the shift.",
+    if (!currentShift) {
+      setRequestError(
+        lang === "vi" ? "Vui lòng chọn ca làm việc." : "Please choose a shift.",
       );
       return;
     }
 
-    const requestedStart = String(formData.get("requestedStart") || "");
-    const requestedEnd = String(formData.get("requestedEnd") || "");
-    if (requestType === "DOI_CA" && (!requestedStart || !requestedEnd)) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Thiếu thời gian đổi ca" : "New shift time required",
-        lang === "vi"
-          ? "Hãy nhập giờ bắt đầu và kết thúc mong muốn."
-          : "Enter the requested start and end times.",
+    if (!reason) {
+      setRequestError(
+        lang === "vi" ? "Vui lòng nhập lý do." : "Please enter a reason.",
       );
       return;
     }
 
-    void doctorBookingService
-      .guiYeuCauDoiLich({
+    if (reason.length > 1000) {
+      setRequestError(
+        lang === "vi"
+          ? "Lý do không được vượt quá 1000 ký tự."
+          : "Reason must not exceed 1000 characters.",
+      );
+      return;
+    }
+
+    const shiftStart = new Date(`${currentShift.ngay}T${currentShift.gioBatDau}`);
+    const now = Date.now();
+    if (shiftStart.getTime() < now + 24 * 60 * 60 * 1000) {
+      setRequestError(
+        lang === "vi"
+          ? "Ca làm việc này bắt đầu trong vòng 24 giờ tới, đã quá hạn gửi yêu cầu (theo quy định bệnh viện)."
+          : "This shift starts within 24 hours. Request submission deadline has passed.",
+      );
+      return;
+    }
+
+    let ngayMongMuon: string | undefined;
+    let gioBatDauMongMuon: string | undefined;
+    let gioKetThucMongMuon: string | undefined;
+    let idPhongKhamMongMuon: number | undefined;
+
+    if (requestType === "DOI_CA") {
+      ngayMongMuon = String(formData.get("ngayMongMuon") || "");
+      gioBatDauMongMuon = String(formData.get("gioBatDauMongMuon") || "");
+      gioKetThucMongMuon = String(formData.get("gioKetThucMongMuon") || "");
+      const phongVal = formData.get("idPhongKhamMongMuon");
+      idPhongKhamMongMuon = phongVal ? Number(phongVal) : undefined;
+
+      if (!ngayMongMuon || !gioBatDauMongMuon || !gioKetThucMongMuon) {
+        setRequestError(
+          lang === "vi"
+            ? "Vui lòng điền đầy đủ ngày và khung giờ mong muốn khi đổi ca."
+            : "Please fill in date and hours when requesting a shift change.",
+        );
+        return;
+      }
+
+      if (gioKetThucMongMuon <= gioBatDauMongMuon) {
+        setRequestError(
+          lang === "vi"
+            ? "Giờ kết thúc mong muốn phải sau giờ bắt đầu mong muốn."
+            : "Requested end time must be after start time.",
+        );
+        return;
+      }
+
+      const targetStart = new Date(`${ngayMongMuon}T${gioBatDauMongMuon}`);
+      if (targetStart.getTime() < now + 24 * 60 * 60 * 1000) {
+        setRequestError(
+          lang === "vi"
+            ? "Ca mong muốn phải cách hiện tại ít nhất 24 giờ."
+            : "Requested shift must be at least 24 hours in the future.",
+        );
+        return;
+      }
+
+      const sameDate = ngayMongMuon === currentShift.ngay;
+      const sameStart =
+        gioBatDauMongMuon === currentShift.gioBatDau.slice(0, 5);
+      const sameEnd =
+        gioKetThucMongMuon === currentShift.gioKetThuc.slice(0, 5);
+      const sameRoom =
+        !idPhongKhamMongMuon || idPhongKhamMongMuon === currentShift.idPhongKham;
+
+      if (sameDate && sameStart && sameEnd && sameRoom) {
+        setRequestError(
+          lang === "vi"
+            ? "Ca mong muốn trùng hoàn toàn với ca hiện tại."
+            : "Requested shift matches the current shift.",
+        );
+        return;
+      }
+    }
+
+    try {
+      setIsSubmittingRequest(true);
+      const response = await doctorBookingService.guiYeuCauDoiLich({
         idLichLamViec: shiftId,
         loaiYeuCau: requestType,
         lyDo: reason,
         ...(requestType === "DOI_CA"
           ? {
-              ngayMongMuon: requestedStart.slice(0, 10),
-              gioBatDauMongMuon: requestedStart.slice(11, 16),
-              gioKetThucMongMuon: requestedEnd.slice(11, 16),
-              idPhongKhamMongMuon:
-                Number(formData.get("idPhongKhamMongMuon")) || undefined,
+              ngayMongMuon,
+              gioBatDauMongMuon,
+              gioKetThucMongMuon,
+              idPhongKhamMongMuon,
             }
           : {}),
-      })
-      .then(async (response) => {
-        form.reset();
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-shift-requests"],
-        });
-        notifyAuth(
-          "success",
-          lang === "vi" ? "Đã gửi yêu cầu" : "Request submitted",
-          response.thongDiep,
-        );
-      })
-      .catch((error) => {
-        notifyAuth(
-          "error",
-          lang === "vi" ? "Không thể gửi yêu cầu" : "Could not submit request",
-          (error as { response?: { data?: { thongDiep?: string } } }).response
-            ?.data?.thongDiep ?? "Request failed",
-        );
       });
+
+      form.reset();
+      setRequestType("XIN_NGHI");
+      await queryClient.invalidateQueries({
+        queryKey: ["booking", "doctor-shift-requests"],
+      });
+      notifyAuth(
+        "success",
+        lang === "vi" ? "Đã gửi yêu cầu" : "Request submitted",
+        response.thongDiep ||
+          (lang === "vi"
+            ? "Yêu cầu đã được gửi đến ban quản trị."
+            : "Request has been submitted for review."),
+      );
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.thongDiep ||
+        (error instanceof Error ? error.message : "Request failed");
+      setRequestError(msg);
+    } finally {
+      setIsSubmittingRequest(false);
+    }
   };
 
   return (
@@ -403,7 +462,18 @@ export function DoctorScheduleSection() {
             ? "Yêu cầu phải được gửi trước ca trực ít nhất 24 giờ để Quản trị viên kịp phê duyệt."
             : "Requests must be submitted at least 24 hours in advance for admin approval."}
         </p>
-        <form className={styles.formGrid} onSubmit={submitShiftRequest}>
+
+        {requestError && (
+          <div
+            role="alert"
+            className="mb-4 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700"
+          >
+            <AlertCircle size={15} />
+            <span>{requestError}</span>
+          </div>
+        )}
+
+        <form className={styles.formGrid} onSubmit={(e) => void submitShiftRequest(e)}>
           <div className={styles.formRowThree}>
             <label>
               {lang === "vi" ? "Chọn ca cần đổi/nghỉ" : "Choose shift"}
@@ -415,7 +485,7 @@ export function DoctorScheduleSection() {
                   .filter((shift) => shift.trangThai === "HOAT_DONG")
                   .map((shift) => (
                     <option key={shift.id} value={shift.id}>
-                      {shift.ngay} · {shift.gioBatDau}-{shift.gioKetThuc} ·{" "}
+                      {shift.ngay} · {shift.gioBatDau.slice(0, 5)}-{shift.gioKetThuc.slice(0, 5)} ·{" "}
                       {shift.tenPhongKham}
                     </option>
                   ))}
@@ -423,7 +493,13 @@ export function DoctorScheduleSection() {
             </label>
             <label>
               {lang === "vi" ? "Loại yêu cầu" : "Request type"}
-              <select name="loaiYeuCau" defaultValue="XIN_NGHI">
+              <select
+                name="loaiYeuCau"
+                value={requestType}
+                onChange={(e) =>
+                  setRequestType(e.target.value as "XIN_NGHI" | "DOI_CA")
+                }
+              >
                 <option value="XIN_NGHI">
                   {lang === "vi" ? "Xin nghỉ" : "Leave"}
                 </option>
@@ -432,36 +508,87 @@ export function DoctorScheduleSection() {
                 </option>
               </select>
             </label>
-            <label>
-              {lang === "vi"
-                ? "Giờ bắt đầu mong muốn (khi đổi ca)"
-                : "Requested start (shift change)"}
-              <input
-                name="requestedStart"
-                type="datetime-local"
-                min={minimumRequestTime}
-              />
-            </label>
-            <label>
-              {lang === "vi" ? "Giờ kết thúc mong muốn" : "Requested end"}
-              <input
-                name="requestedEnd"
-                type="datetime-local"
-                min={minimumRequestTime}
-              />
-            </label>
-            <label>
-              {lang === "vi"
-                ? "Mã phòng mong muốn (không bắt buộc)"
-                : "Requested clinic ID (optional)"}
-              <input name="idPhongKhamMongMuon" inputMode="numeric" />
-            </label>
+
+            {requestType === "DOI_CA" && (
+              <>
+                <label>
+                  {lang === "vi" ? "Ngày mong muốn" : "Requested date"}
+                  <input
+                    name="ngayMongMuon"
+                    type="date"
+                    required
+                    min={minDateStr}
+                    max={maxDateStr}
+                    defaultValue={minDateStr}
+                  />
+                </label>
+                <label>
+                  {lang === "vi"
+                    ? "Giờ bắt đầu mong muốn"
+                    : "Requested start time"}
+                  <input
+                    name="gioBatDauMongMuon"
+                    type="time"
+                    required
+                    defaultValue="08:00"
+                  />
+                </label>
+                <label>
+                  {lang === "vi"
+                    ? "Giờ kết thúc mong muốn"
+                    : "Requested end time"}
+                  <input
+                    name="gioKetThucMongMuon"
+                    type="time"
+                    required
+                    defaultValue="11:30"
+                  />
+                </label>
+                <label>
+                  {lang === "vi"
+                    ? "Mã phòng mong muốn (tùy chọn)"
+                    : "Requested clinic ID (optional)"}
+                  <input
+                    name="idPhongKhamMongMuon"
+                    type="number"
+                    min={1}
+                    placeholder={
+                      lang === "vi" ? "Giữ phòng hiện tại" : "Keep current"
+                    }
+                  />
+                </label>
+              </>
+            )}
+
             <label className={styles.fullWidth}>
-              {lang === "vi" ? "Lý do" : "Reason"}
-              <textarea name="reason" rows={3} required />
+              {lang === "vi" ? "Lý do (bắt buộc)" : "Reason (required)"}
+              <textarea
+                name="reason"
+                rows={3}
+                required
+                maxLength={1000}
+                placeholder={
+                  lang === "vi"
+                    ? "Nhập lý do xin nghỉ hoặc đổi ca..."
+                    : "Enter reason..."
+                }
+              />
             </label>
-            <button type="submit" className={styles.primaryButton}>
-              {lang === "vi" ? "Gửi yêu cầu" : "Submit request"}
+            <button
+              type="submit"
+              disabled={isSubmittingRequest}
+              className={styles.primaryButton}
+            >
+              {isSubmittingRequest ? (
+                <>
+                  <Loader2 size={14} className="animate-spin inline mr-1" />
+                  <span>{lang === "vi" ? "Đang gửi..." : "Sending..."}</span>
+                </>
+              ) : (
+                <span>
+                  {lang === "vi" ? "Gửi yêu cầu" : "Submit request"}
+                </span>
+              )}
             </button>
           </div>
         </form>
