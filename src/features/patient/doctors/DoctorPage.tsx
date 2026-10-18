@@ -65,7 +65,7 @@ export function DoctorPage() {
     }
   }, [searchParams, tuKhoa, inputValue]);
 
-  // Debounce search input (350ms) and sync with URL searchParams
+  // Debounce search input (400ms) and sync with URL searchParams
   useEffect(() => {
     const timer = setTimeout(() => {
       const trimmed = inputValue.trim();
@@ -85,7 +85,7 @@ export function DoctorPage() {
         },
         { replace: true },
       );
-    }, 350);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [inputValue, setSearchParams]);
