@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, Filter, RotateCcw, AlertTriangle } from "lucide-react";
+import { CalendarPlus, RotateCcw, AlertTriangle } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
