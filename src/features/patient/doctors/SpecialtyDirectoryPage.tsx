@@ -70,7 +70,7 @@ export function SpecialtyDirectoryPage() {
         },
         { replace: true },
       );
-    }, 350);
+    }, 400);
     return () => clearTimeout(timer);
   }, [searchTerm, setSearchParams]);
 
