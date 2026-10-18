@@ -511,34 +511,35 @@ export function AdminDoctorPanel() {
                           {doctor.trangThai}
                         </span>
                       </td>
-                    <td className="flex flex-wrap gap-1">
-                      <button
-                        type="button"
-                        className={styles.actionBtn}
-                        onClick={() => setSelectedDoctor(doctor)}
-                      >
-                        {vi ? "Hồ sơ" : "Profile"}
-                      </button>
-                      <button
-                        type="button"
-                        className={
-                          doctor.trangThai === "DANG_CONG_TAC"
-                            ? styles.actionBtnDanger
-                            : styles.actionBtn
-                        }
-                        onClick={() => void toggleWorkStatus(doctor)}
-                      >
-                        {doctor.trangThai === "DANG_CONG_TAC"
-                          ? vi
-                            ? "Ngừng"
-                            : "Deactivate"
-                          : vi
-                            ? "Công tác lại"
-                            : "Reactivate"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="flex flex-wrap gap-1">
+                        <button
+                          type="button"
+                          className={styles.actionBtn}
+                          onClick={() => setSelectedDoctor(doctor)}
+                        >
+                          {vi ? "Hồ sơ" : "Profile"}
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            doctor.trangThai === "DANG_CONG_TAC"
+                              ? styles.actionBtnDanger
+                              : styles.actionBtn
+                          }
+                          onClick={() => void toggleWorkStatus(doctor)}
+                        >
+                          {doctor.trangThai === "DANG_CONG_TAC"
+                            ? vi
+                              ? "Ngừng"
+                              : "Deactivate"
+                            : vi
+                              ? "Công tác lại"
+                              : "Reactivate"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
