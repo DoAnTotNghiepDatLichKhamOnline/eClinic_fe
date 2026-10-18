@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarPlus } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { TaoCaRequest, CaLamViecResponse } from "@/types/booking.type";
+import type { CaLamViecResponse } from "@/types/booking.type";
+import { CreateShiftModal } from "./CreateShiftModal";
 import styles from "../../AdminDashboardPage.module.css";
 
 function currentDateKey(date: Date) {
@@ -16,6 +18,7 @@ export function AdminScheduleSection() {
   const client = useQueryClient();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
 
   const from = currentDateKey(new Date());
   const throughDate = new Date();
@@ -89,37 +92,6 @@ export function AdminScheduleSection() {
     );
   };
 
-  const createShift = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const values = new FormData(form);
-    const weekDays = values.getAll("repeatDay").map(Number);
-    const request: TaoCaRequest = {
-      idBacSi: Number(values.get("idBacSi")),
-      idPhongKham: Number(values.get("idPhongKham")),
-      ngay: String(values.get("ngay")),
-      gioBatDau: String(values.get("gioBatDau")),
-      gioKetThuc: String(values.get("gioKetThuc")),
-      soLuotToiDaMoiGio: Number(values.get("soLuotToiDaMoiGio")),
-      thoiLuongLuotPhut: Number(values.get("thoiLuongLuotPhut")),
-      ...(weekDays.length
-        ? {
-            lapLai: {
-              cacThu: weekDays,
-              denNgay: String(values.get("denNgay")),
-            },
-          }
-        : {}),
-    };
-    try {
-      const result = await bookingService.taoCaLamViec(request);
-      if (!result.thanhCong) throw new Error(result.thongDiep);
-      await finish(result.thongDiep, ["booking|admin-shifts"]);
-      form.reset();
-    } catch (cause) {
-      showFailure(cause);
-    }
-  };
 
   const cancelShift = async (id: number) => {
     const lyDo = window
@@ -186,12 +158,22 @@ export function AdminScheduleSection() {
   return (
     <section className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>
-          {vi ? "Ca làm việc sắp tới" : "Upcoming shifts"}
-        </h2>
-        <span>
-          {from} — {through}
-        </span>
+        <div>
+          <h2 className={styles.sectionTitle}>
+            {vi ? "Ca làm việc sắp tới" : "Upcoming shifts"}
+          </h2>
+          <span className="text-xs text-slate-500">
+            {from} — {through}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsCreateShiftOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-900 transition-colors"
+        >
+          <CalendarPlus size={16} />
+          <span>{vi ? "Xếp ca làm" : "Schedule Shift"}</span>
+        </button>
       </div>
       {error && (
         <p role="alert" className="mb-3 text-sm text-rose-700">
@@ -203,97 +185,20 @@ export function AdminScheduleSection() {
           {message}
         </p>
       )}
-      <form
-        className="mb-6 grid gap-3 border-b border-slate-200 pb-6 sm:grid-cols-2 lg:grid-cols-4"
-        onSubmit={(event) => void createShift(event)}
-      >
-        <label className="grid gap-1 text-xs">
-          {vi ? "Bác sĩ" : "Doctor"}
-          <select name="idBacSi" required defaultValue="">
-            <option value="" disabled>
-              {vi ? "Chọn bác sĩ" : "Select doctor"}
-            </option>
-            {(doctorsQuery.data?.duLieu?.noiDung ?? [])
-              .filter((doctor) => doctor.trangThai === "DANG_CONG_TAC")
-              .map((doctor) => (
-                <option value={doctor.id} key={doctor.id}>
-                  {doctor.hoTen} · {doctor.tenChuyenKhoa}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Phòng khám" : "Clinic"}
-          <select name="idPhongKham" required defaultValue="">
-            <option value="" disabled>
-              {vi ? "Chọn phòng" : "Select clinic"}
-            </option>
-            {(clinicsQuery.data?.duLieu?.noiDung ?? [])
-              .filter((clinic) => clinic.trangThai === "HOAT_DONG")
-              .map((clinic) => (
-                <option value={clinic.id} key={clinic.id}>
-                  {clinic.tenPhong}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Ngày" : "Date"}
-          <input name="ngay" type="date" required min={from} max={through} />
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Bắt đầu" : "Start"}
-          <input name="gioBatDau" type="time" required />
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Kết thúc" : "End"}
-          <input name="gioKetThuc" type="time" required />
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Lượt/giờ" : "Visits/hour"}
-          <input
-            name="soLuotToiDaMoiGio"
-            type="number"
-            min={1}
-            max={60}
-            required
-            defaultValue={1}
-          />
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Thời lượng lượt (phút)" : "Visit duration (min)"}
-          <input
-            name="thoiLuongLuotPhut"
-            type="number"
-            min={1}
-            max={60}
-            required
-            defaultValue={30}
-          />
-        </label>
-        <label className="grid gap-1 text-xs">
-          {vi ? "Lặp đến ngày" : "Repeat through"}
-          <input name="denNgay" type="date" min={from} max={through} />
-        </label>
-        <fieldset className="flex flex-wrap gap-2 text-xs sm:col-span-2 lg:col-span-4">
-          <legend>
-            {vi
-              ? "Ngày lặp (để trống nếu không lặp)"
-              : "Repeat days (leave blank for one shift)"}
-          </legend>
-          {[1, 2, 3, 4, 5, 6, 7].map((day) => (
-            <label className="inline-flex items-center gap-1" key={day}>
-              <input type="checkbox" name="repeatDay" value={day} />
-              {vi
-                ? ["T2", "T3", "T4", "T5", "T6", "T7", "CN"][day - 1]
-                : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day - 1]}
-            </label>
-          ))}
-        </fieldset>
-        <button className={styles.actionBtn} type="submit">
-          {vi ? "Xếp ca" : "Create shifts"}
-        </button>
-      </form>
+      <CreateShiftModal
+        isOpen={isCreateShiftOpen}
+        onClose={() => setIsCreateShiftOpen(false)}
+        onSuccess={() =>
+          finish(
+            vi ? "Xếp ca thành công" : "Shift created successfully",
+            ["booking|admin-shifts"],
+          )
+        }
+        doctors={doctorsQuery.data?.duLieu?.noiDung ?? []}
+        clinics={clinicsQuery.data?.duLieu?.noiDung ?? []}
+        minDate={from}
+        maxDate={through}
+      />
       <div className={styles.tableScroll}>
         <table className={styles.adminTable}>
           <thead>
