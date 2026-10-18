@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +14,9 @@ import {
   User,
   Trash2,
   Eye,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -66,6 +69,7 @@ export function AdminDashboardPage({
 
   // State tìm kiếm & lọc tài khoản người dùng
   const [userSearch, setUserSearch] = useState("");
+  const [debouncedUserSearch, setDebouncedUserSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(0);
@@ -74,6 +78,19 @@ export function AdminDashboardPage({
   const [disablingUser, setDisablingUser] = useState<TaiKhoanQuanTriResponse | null>(null);
   const [isDisabling, setIsDisabling] = useState(false);
 
+  type AccountSortField = "id" | "hoTen" | "email" | "soDienThoai";
+  const [sortField, setSortField] = useState<AccountSortField>("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Debounce search 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUserSearch(userSearch.trim());
+      setCurrentPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [userSearch]);
+
   // Lấy danh sách người dùng cho Quản trị viên
   const {
     danhSach: danhSachTaiKhoan,
@@ -81,13 +98,47 @@ export function AdminDashboardPage({
     tongSoTrang,
     isLoading: isLoadingUsers,
   } = useDanhSachTaiKhoanQuanTri({
-    tuKhoa: userSearch.trim() || undefined,
+    tuKhoa: debouncedUserSearch || undefined,
     vaiTro: roleFilter !== "ALL" ? (roleFilter as VaiTro) : undefined,
     trangThai:
       statusFilter !== "ALL" ? (statusFilter as TrangThaiTaiKhoan) : undefined,
     trang: currentPage,
     kichThuoc: 10,
   });
+
+  const handleSort = (field: AccountSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIndicator = (field: AccountSortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown size={13} className="text-slate-400 opacity-60 group-hover:opacity-100" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp size={13} className="text-teal-700" />
+    ) : (
+      <ArrowDown size={13} className="text-teal-700" />
+    );
+  };
+
+  const sortedDanhSachTaiKhoan = useMemo(() => {
+    const list = [...danhSachTaiKhoan];
+    list.sort((a, b) => {
+      const aVal = a[sortField] ?? "";
+      const bVal = b[sortField] ?? "";
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", { sensitivity: "base" });
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [danhSachTaiKhoan, sortField, sortDirection, vi]);
 
   const { capNhatTrangThaiTaiKhoan, xoaTaiKhoan } = useIdentityActions();
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
@@ -406,10 +457,46 @@ export function AdminDashboardPage({
                 <table className={styles.adminTable}>
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>{vi ? "Người dùng" : "User"}</th>
-                      <th>Email</th>
-                      <th>{vi ? "Số điện thoại" : "Phone"}</th>
+                      <th>
+                        <button
+                          type="button"
+                          onClick={() => handleSort("id")}
+                          className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                        >
+                          <span>ID</span>
+                          {renderSortIndicator("id")}
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          type="button"
+                          onClick={() => handleSort("hoTen")}
+                          className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                        >
+                          <span>{vi ? "Người dùng" : "User"}</span>
+                          {renderSortIndicator("hoTen")}
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          type="button"
+                          onClick={() => handleSort("email")}
+                          className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                        >
+                          <span>Email</span>
+                          {renderSortIndicator("email")}
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          type="button"
+                          onClick={() => handleSort("soDienThoai")}
+                          className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                        >
+                          <span>{vi ? "Số điện thoại" : "Phone"}</span>
+                          {renderSortIndicator("soDienThoai")}
+                        </button>
+                      </th>
                       <th>{vi ? "Vai trò" : "Role"}</th>
                       <th>{vi ? "Trạng thái" : "Status"}</th>
                       <th>{vi ? "Thao tác" : "Action"}</th>
@@ -432,7 +519,7 @@ export function AdminDashboardPage({
                           </div>
                         </td>
                       </tr>
-                    ) : danhSachTaiKhoan.length === 0 ? (
+                    ) : sortedDanhSachTaiKhoan.length === 0 ? (
                       <tr>
                         <td
                           colSpan={7}
@@ -444,7 +531,7 @@ export function AdminDashboardPage({
                         </td>
                       </tr>
                     ) : (
-                      danhSachTaiKhoan.map((u) => {
+                      sortedDanhSachTaiKhoan.map((u) => {
                         const isUpdating = updatingUserId === u.id;
                         const isHoatDong = u.trangThai === "DA_KICH_HOAT";
                         return (
