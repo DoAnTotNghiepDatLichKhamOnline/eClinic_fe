@@ -1,4 +1,5 @@
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
@@ -122,9 +123,16 @@ export function DoctorConsultationSection({
     enabled: showHistory && Boolean(lookupDetails?.lichHen?.id),
   });
 
-  const lookupPatient = async (event?: FormEvent<HTMLFormElement>) => {
+  const [searchParams] = useSearchParams();
+
+  const lookupPatient = async (
+    event?: FormEvent<HTMLFormElement>,
+    overrideCode?: string,
+  ) => {
     if (event) event.preventDefault();
-    const normalizedCode = patientCode.trim().toUpperCase();
+    const targetCode = overrideCode || patientCode;
+    const normalizedCode = targetCode.trim().toUpperCase();
+    if (!normalizedCode) return;
     setConsultationError("");
     try {
       const response =
@@ -177,6 +185,14 @@ export function DoctorConsultationSection({
       );
     }
   };
+
+  useEffect(() => {
+    const searchParam = searchParams.get("search") || searchParams.get("ma");
+    if (searchParam) {
+      setPatientCode(searchParam);
+      lookupPatient(undefined, searchParam);
+    }
+  }, [searchParams]);
 
   const handleAddMedicine = (selectedMed: {
     id: number;
