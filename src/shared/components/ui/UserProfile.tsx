@@ -210,23 +210,6 @@ export function UserProfile({ className }: UserProfileProps) {
             </nav>
           ) : (
             <div className={styles.profileDetails}>
-              <Link to="/account" className={styles.item} onClick={closeMenu}>
-                <UserRound aria-hidden="true" />
-                {lang === "vi" ? "Thông tin tài khoản" : "Account information"}
-              </Link>
-              <Link
-                to="/account/sessions"
-                className={styles.item}
-                onClick={closeMenu}
-              >
-                <ShieldAlert aria-hidden="true" />
-                {lang === "vi" ? "Thiết bị đăng nhập" : "Login devices"}
-              </Link>
-              <div className={styles.divider} />
-              <div>
-                <span>{lang === "vi" ? "Vai trò" : "Role"}</span>
-                <strong>{roleLabel}</strong>
-              </div>
               {user.phone && (
                 <div>
                   <span>{lang === "vi" ? "Điện thoại" : "Phone"}</span>
@@ -242,55 +225,47 @@ export function UserProfile({ className }: UserProfileProps) {
                     <span>{lang === "vi" ? "Chuyên khoa" : "Specialty"}</span>
                     <strong>
                       {user.specialty ||
-                        (lang === "vi" ? "Chưa cập nhật" : "Not provided")}
+                        (lang === "vi" ? "Đa khoa" : "General")}
                     </strong>
                   </div>
                   <div>
-                    <span>
-                      {lang === "vi" ? "Trình độ / Học vị" : "Qualification"}
-                    </span>
+                    <span>{lang === "vi" ? "Học vị" : "Degree"}</span>
                     <strong>
                       {user.degree ||
-                        (lang === "vi" ? "Chưa cập nhật" : "Not provided")}
+                        (lang === "vi" ? "Bác sĩ" : "Doctor")}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>{lang === "vi" ? "Trình độ" : "Qualification"}</span>
+                    <strong>
+                      {lang === "vi" ? "Bác sĩ chuyên khoa" : "Specialist Doctor"}
                     </strong>
                   </div>
                   <div>
                     <span>{lang === "vi" ? "Phòng khám" : "Clinic"}</span>
                     <strong>
                       {user.clinic ||
-                        (lang === "vi" ? "Chưa cập nhật" : "Not provided")}
+                        (lang === "vi" ? "Phòng khám eClinic" : "eClinic Center")}
                     </strong>
                   </div>
+                  <button
+                    type="button"
+                    className={styles.item}
+                    onClick={() => {
+                      closeMenu();
+                      notifyAuth(
+                        "info",
+                        lang === "vi" ? "Đổi mật khẩu" : "Change password",
+                        lang === "vi"
+                          ? "Vui lòng liên hệ quản trị viên để cập nhật mật khẩu."
+                          : "Contact your administrator to update your password.",
+                      );
+                    }}
+                  >
+                    <KeyRound aria-hidden="true" />
+                    {lang === "vi" ? "Đổi mật khẩu" : "Change password"}
+                  </button>
                 </>
-              )}
-              {user.role === "admin" && (
-                <div>
-                  <span>{lang === "vi" ? "Phạm vi" : "Access"}</span>
-                  <strong>
-                    {lang === "vi"
-                      ? "Quản trị hệ thống"
-                      : "System administration"}
-                  </strong>
-                </div>
-              )}
-              {user.role === "doctor" && (
-                <button
-                  type="button"
-                  className={styles.item}
-                  onClick={() => {
-                    closeMenu();
-                    notifyAuth(
-                      "info",
-                      lang === "vi" ? "Đổi mật khẩu" : "Change password",
-                      lang === "vi"
-                        ? "Vui lòng liên hệ quản trị viên để cập nhật mật khẩu."
-                        : "Contact your administrator to update your password.",
-                    );
-                  }}
-                >
-                  <KeyRound aria-hidden="true" />
-                  {lang === "vi" ? "Đổi mật khẩu" : "Change password"}
-                </button>
               )}
             </div>
           )}
