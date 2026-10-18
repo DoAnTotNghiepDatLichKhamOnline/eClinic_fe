@@ -3,7 +3,7 @@ import { specialtyService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { getApiErrorMessage } from "@/utils/apiError";
 import type { ChuyenKhoaRequest, ChuyenKhoaResponse } from "@/types/catalog.type";
-import styles from "../../../AdminDashboardPage.module.css";
+import styles from "../../../../AdminDashboardPage.module.css";
 import { X } from "lucide-react";
 
 interface EditSpecialtyModalProps {
