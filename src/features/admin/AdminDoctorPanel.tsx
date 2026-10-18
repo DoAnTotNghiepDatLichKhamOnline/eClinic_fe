@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { UserPlus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { adminBookingService } from "@/services/booking";
 import { doctorService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -19,6 +20,7 @@ export function AdminDoctorPanel() {
   const client = useQueryClient();
   const [tab, setTab] = useState<DoctorTab>("directory");
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
@@ -33,20 +35,35 @@ export function AdminDoctorPanel() {
     impact: { soCaSapToi: number; soLichHenBiAnhHuong: number };
   } | null>(null);
   const [deactivateReason, setDeactivateReason] = useState("");
+  const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
+  const [isAddingDoctor, setIsAddingDoctor] = useState(false);
+
+  type DoctorSortField = "maBacSi" | "hoTen" | "email";
+  const [sortField, setSortField] = useState<DoctorSortField>("maBacSi");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Debounce search 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query.trim());
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const specialties = useDanhSachChuyenKhoa({ kichThuoc: 100 }).danhSach;
   const doctorsQuery = useQuery({
     queryKey: [
       "catalog",
       "admin-doctors",
-      query,
+      debouncedQuery,
       specialtyFilter,
       statusFilter,
       page,
     ],
     queryFn: () =>
       doctorService.getDanhSachBacSiQuanTri({
-        tuKhoa: query.trim() || undefined,
+        tuKhoa: debouncedQuery || undefined,
         idChuyenKhoa: specialtyFilter ? Number(specialtyFilter) : undefined,
         trangThai: statusFilter
           ? (statusFilter as "DANG_CONG_TAC" | "NGUNG_CONG_TAC")
@@ -93,6 +110,37 @@ export function AdminDoctorPanel() {
     setMessage("");
   };
 
+  const handleSort = (field: DoctorSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIndicator = (field: DoctorSortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown size={13} className="text-slate-400 opacity-60 group-hover:opacity-100" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp size={13} className="text-teal-700" />
+    ) : (
+      <ArrowDown size={13} className="text-teal-700" />
+    );
+  };
+
+  const sortedDoctors = useMemo(() => {
+    const list = [...doctors];
+    list.sort((a, b) => {
+      const aVal = a[sortField] ?? "";
+      const bVal = b[sortField] ?? "";
+      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", { sensitivity: "base" });
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [doctors, sortField, sortDirection, vi]);
+
   const addDoctor = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -111,15 +159,19 @@ export function AdminDoctorPanel() {
         ? new Date().getFullYear() - namBatDau
         : Number(values.get("soNamKinhNghiem")) || null,
     };
+    setIsAddingDoctor(true);
     try {
       const result = await doctorService.themBacSi(body);
       if (!result.thanhCong) throw new Error(result.thongDiep);
       setMessage(result.thongDiep);
       setError("");
       form.reset();
+      setIsAddDoctorOpen(false);
       await refreshDoctors();
     } catch (cause) {
       fail(cause);
+    } finally {
+      setIsAddingDoctor(false);
     }
   };
 
@@ -299,7 +351,7 @@ export function AdminDoctorPanel() {
         <h2 className={styles.sectionTitle}>
           {vi ? "Quản lý bác sĩ" : "Doctor management"}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button
             type="button"
             className={styles.actionBtn}
@@ -316,6 +368,14 @@ export function AdminDoctorPanel() {
           >
             {vi ? "Đánh giá" : "Reviews"}
           </button>
+          <button
+            type="button"
+            onClick={() => setIsAddDoctorOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-900 transition-colors"
+          >
+            <UserPlus size={14} />
+            <span>{vi ? "Thêm bác sĩ" : "Add Doctor"}</span>
+          </button>
         </div>
       </div>
       {error && (
@@ -330,69 +390,13 @@ export function AdminDoctorPanel() {
       )}
       {tab === "directory" ? (
         <>
-          <form
-            className="mb-5 grid gap-3 border-b border-slate-200 pb-5 sm:grid-cols-2 lg:grid-cols-4"
-            onSubmit={(event) => void addDoctor(event)}
-          >
-            <label className="grid gap-1 text-xs">
-              {vi ? "Họ tên" : "Full name"}
-              <input name="hoTen" required />
-            </label>
-            <label className="grid gap-1 text-xs">
-              Email
-              <input name="email" type="email" required />
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Điện thoại" : "Phone"}
-              <input name="soDienThoai" />
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Chuyên khoa" : "Specialty"}
-              <select name="idChuyenKhoa" required defaultValue="">
-                <option value="" disabled>
-                  {vi ? "Chọn" : "Select"}
-                </option>
-                {specialties.map((specialty) => (
-                  <option key={specialty.id} value={specialty.id}>
-                    {specialty.tenChuyenKhoa}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Số giấy phép" : "License number"}
-              <input name="soGiayPhep" />
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Học vị" : "Degree"}
-              <input name="hocVi" />
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Chức vụ" : "Title"}
-              <input name="chucVu" />
-            </label>
-            <label className="grid gap-1 text-xs">
-              {vi ? "Năm bắt đầu hành nghề" : "Practicing since (Year)"}
-              <input
-                name="namBatDauHanhNghe"
-                type="number"
-                min={1960}
-                max={new Date().getFullYear()}
-                placeholder="VD: 2015"
-              />
-            </label>
-            <button className={styles.actionBtn} type="submit">
-              {vi ? "Tạo tài khoản bác sĩ" : "Create doctor account"}
-            </button>
-          </form>
           <div className="mb-4 flex flex-wrap gap-2">
             <input
               className={styles.searchInput}
-              placeholder={vi ? "Tìm bác sĩ" : "Search doctors"}
+              placeholder={vi ? "Tìm bác sĩ theo tên, mã, email..." : "Search doctors..."}
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
-                setPage(0);
               }}
             />
             <select
@@ -433,8 +437,36 @@ export function AdminDoctorPanel() {
             <table className={styles.adminTable}>
               <thead>
                 <tr>
-                  <th>{vi ? "Mã" : "Code"}</th>
-                  <th>{vi ? "Bác sĩ" : "Doctor"}</th>
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("maBacSi")}
+                      className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                    >
+                      <span>{vi ? "Mã" : "Code"}</span>
+                      {renderSortIndicator("maBacSi")}
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("hoTen")}
+                      className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                    >
+                      <span>{vi ? "Bác sĩ" : "Doctor"}</span>
+                      {renderSortIndicator("hoTen")}
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("email")}
+                      className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                    >
+                      <span>Email</span>
+                      {renderSortIndicator("email")}
+                    </button>
+                  </th>
                   <th>{vi ? "Chuyên khoa" : "Specialty"}</th>
                   <th>{vi ? "Lượt khám" : "Visits"}</th>
                   <th>{vi ? "Trạng thái" : "Status"}</th>
@@ -442,16 +474,43 @@ export function AdminDoctorPanel() {
                 </tr>
               </thead>
               <tbody>
-                {doctors.map((doctor) => (
-                  <tr key={doctor.id}>
-                    <td>{doctor.maBacSi}</td>
-                    <td>
-                      {doctor.hoTen}
-                      <small className="block">{doctor.email}</small>
+                {sortedDoctors.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-xs text-slate-500">
+                      {doctorsQuery.isLoading
+                        ? (vi ? "Đang tải danh sách bác sĩ..." : "Loading doctors...")
+                        : (vi ? "Không có bác sĩ nào phù hợp." : "No doctors found.")}
                     </td>
-                    <td>{doctor.tenChuyenKhoa}</td>
-                    <td>{doctor.soLuotDaKham}</td>
-                    <td>{doctor.trangThai}</td>
+                  </tr>
+                ) : (
+                  sortedDoctors.map((doctor) => (
+                    <tr key={doctor.id}>
+                      <td className="font-mono text-xs">{doctor.maBacSi}</td>
+                      <td>
+                        <span className="font-semibold text-slate-800">
+                          {doctor.hocVi ? `${doctor.hocVi} ` : ""}
+                          {doctor.hoTen}
+                        </span>
+                        {doctor.chucVu && (
+                          <span className="block text-[11px] text-slate-500">
+                            {doctor.chucVu}
+                          </span>
+                        )}
+                      </td>
+                      <td className="font-mono text-xs text-slate-600">{doctor.email}</td>
+                      <td>{doctor.tenChuyenKhoa}</td>
+                      <td>{doctor.soLuotDaKham}</td>
+                      <td>
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            doctor.trangThai === "DANG_CONG_TAC"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {doctor.trangThai}
+                        </span>
+                      </td>
                     <td className="flex flex-wrap gap-1">
                       <button
                         type="button"
@@ -806,9 +865,166 @@ export function AdminDoctorPanel() {
                 {vi ? "Xác nhận ngưng công tác" : "Confirm Deactivation"}
               </button>
             </div>
+      {/* MODAL THÊM BÁC SĨ */}
+      {isAddDoctorOpen && (
+        <div
+          className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isAddingDoctor) setIsAddDoctorOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-xl rounded-2xl bg-white shadow-2xl p-6"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <UserPlus size={18} className="text-teal-700" />
+                <span>{vi ? "Thêm tài khoản bác sĩ" : "Add Doctor Account"}</span>
+              </h3>
+              <button
+                type="button"
+                disabled={isAddingDoctor}
+                onClick={() => setIsAddDoctorOpen(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="rounded-xl bg-teal-50 border border-teal-200/80 p-3 mb-4 text-xs text-teal-800">
+              <p className="font-semibold mb-1">
+                {vi ? "ℹ️ Thông tin cấp mật khẩu:" : "ℹ️ Account Credentials:"}
+              </p>
+              <p>
+                {vi
+                  ? "Mật khẩu mặc định sẽ được hệ thống tự động sinh và gửi qua email cho bác sĩ. Bác sĩ sẽ được yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên."
+                  : "Default password will be automatically generated by the backend and sent to the doctor. The doctor will be prompted to change password on first login."}
+              </p>
+            </div>
+
+            <form onSubmit={(e) => void addDoctor(e)} className="grid gap-3 text-xs sm:grid-cols-2">
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Họ và tên" : "Full name"} <span className="text-rose-500">*</span>
+                </span>
+                <input
+                  name="hoTen"
+                  required
+                  placeholder="BS. Nguyễn Văn A"
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  Email <span className="text-rose-500">*</span>
+                </span>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="doctor@eclinic.vn"
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Số điện thoại" : "Phone"}
+                </span>
+                <input
+                  name="soDienThoai"
+                  placeholder="0912345678"
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Chuyên khoa" : "Specialty"} <span className="text-rose-500">*</span>
+                </span>
+                <select
+                  name="idChuyenKhoa"
+                  required
+                  defaultValue=""
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                >
+                  <option value="" disabled>
+                    {vi ? "-- Chọn chuyên khoa --" : "-- Select specialty --"}
+                  </option>
+                  {specialties.map((specialty) => (
+                    <option key={specialty.id} value={specialty.id}>
+                      {specialty.tenChuyenKhoa}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Số giấy phép hành nghề" : "License number"}
+                </span>
+                <input
+                  name="soGiayPhep"
+                  placeholder="CCHN-12345"
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Học vị" : "Degree"}
+                </span>
+                <input
+                  name="hocVi"
+                  placeholder="BSCKII, ThS.BS, TS..."
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Chức vụ" : "Title / Position"}
+                </span>
+                <input
+                  name="chucVu"
+                  placeholder="Trưởng khoa, Bác sĩ điều trị..."
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="grid gap-1">
+                <span className="font-medium text-slate-700">
+                  {vi ? "Năm bắt đầu hành nghề" : "Practicing since (Year)"}
+                </span>
+                <input
+                  name="namBatDauHanhNghe"
+                  type="number"
+                  min={1960}
+                  max={new Date().getFullYear()}
+                  placeholder="VD: 2015"
+                  className="rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+
+              <div className="sm:col-span-2 flex justify-end gap-2 mt-4 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={isAddingDoctor}
+                  onClick={() => setIsAddDoctorOpen(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                >
+                  {vi ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAddingDoctor}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-teal-800 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-900 disabled:opacity-50"
+                >
+                  <UserPlus size={14} />
+                  <span>{isAddingDoctor ? (vi ? "Đang xử lý..." : "Creating...") : (vi ? "Tạo bác sĩ" : "Create doctor")}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </section>
   );
 }
+
