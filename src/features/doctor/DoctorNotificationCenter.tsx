@@ -46,7 +46,7 @@ export function DoctorNotificationCenter({ onNavigate }: DoctorNotificationCente
     if (notice.idYeuCau) {
       onNavigate('schedule')
     } else {
-      onNavigate('appointments')
+      onNavigate('dashboard')
     }
   }
 
