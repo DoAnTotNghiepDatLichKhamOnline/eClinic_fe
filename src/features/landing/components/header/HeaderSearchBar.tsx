@@ -14,11 +14,11 @@ export function HeaderSearchBar() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Debounce search input (300ms)
+  // Debounce search input (400ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(inputValue.trim());
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [inputValue]);
 
