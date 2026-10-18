@@ -122,7 +122,7 @@ export function AppointmentBookingPage() {
     if (doctorDetailRes?.duLieu?.idChuyenKhoa && !formValues.specialtyId) {
       setFormValues((prev) => ({
         ...prev,
-        specialtyId: String(doctorDetailRes.duLieu.idChuyenKhoa),
+        specialtyId: String(doctorDetailRes.duLieu?.idChuyenKhoa),
       }));
     }
   }, [doctorDetailRes, formValues.specialtyId]);
