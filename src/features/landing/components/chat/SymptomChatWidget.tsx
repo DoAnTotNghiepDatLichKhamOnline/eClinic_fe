@@ -271,7 +271,7 @@ export function SymptomChatWidget() {
           }) => (
             <Link
               key={doctor.id}
-              to={`/appointment?idBacSi=${doctor.id}`}
+              to={`/appointment?${suggestions.chuyenKhoa?.id ? `idChuyenKhoa=${suggestions.chuyenKhoa.id}&` : ""}idBacSi=${doctor.id}`}
               onClick={() => setOpen(false)}
             >
               {doctor.hocVi ? `${doctor.hocVi} ` : ""}
@@ -300,7 +300,7 @@ export function SymptomChatWidget() {
               }) => (
                 <Link
                   key={`${schedule.idLichLamViec}-${slot.gioBatDau}`}
-                  to={`/appointment?idBacSi=${schedule.idBacSi}&ngay=${schedule.ngay}&idLichLamViec=${schedule.idLichLamViec}&gioBatDauKhung=${encodeURIComponent(slot.gioBatDau)}`}
+                  to={`/appointment?${suggestions.chuyenKhoa?.id ? `idChuyenKhoa=${suggestions.chuyenKhoa.id}&` : ""}idBacSi=${schedule.idBacSi}&ngay=${schedule.ngay}&idLichLamViec=${schedule.idLichLamViec}&gioBatDauKhung=${encodeURIComponent(slot.gioBatDau)}`}
                   onClick={() => setOpen(false)}
                 >
                   {schedule.hoTenBacSi} · {schedule.ngay} {slot.gioBatDau}
