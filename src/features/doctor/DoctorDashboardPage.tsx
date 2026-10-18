@@ -31,7 +31,6 @@ function localDateKey(date: Date) {
 const sectionPaths: Record<DoctorSection, string> = {
   dashboard: "dashboard",
   schedule: "work-schedule",
-  appointments: "upcoming-appointments",
   consultation: "consultation",
   profile: "profile",
 };
