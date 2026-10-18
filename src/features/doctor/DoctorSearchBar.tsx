@@ -1,68 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Search, X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { doctorBookingService } from "@/services/booking";
+import type { LichHenCuaToiResponse, TrangThaiLichHen } from "@/types/booking.type";
 import styles from "./DoctorSearchBar.module.css";
-
-interface AppointmentRecord {
-  id: string;
-  time: string;
-  patientName: string;
-  age: number;
-  reason: string;
-  status: "waiting" | "progress" | "done";
-}
-
-const doctorAppointmentsData: AppointmentRecord[] = [
-  {
-    id: "AP-101",
-    time: "08:30 - 09:00",
-    patientName: "Nguyễn Thị Hoa",
-    age: 34,
-    reason: "Khám tim mạch định kỳ",
-    status: "waiting",
-  },
-  {
-    id: "AP-102",
-    time: "09:15 - 09:45",
-    patientName: "Trần Văn Minh",
-    age: 45,
-    reason: "Tái khám huyết áp",
-    status: "progress",
-  },
-  {
-    id: "AP-103",
-    time: "10:00 - 10:30",
-    patientName: "Lê Hoàng Nam",
-    age: 28,
-    reason: "Đau ngực nhẹ",
-    status: "done",
-  },
-  {
-    id: "AP-104",
-    time: "10:45 - 11:15",
-    patientName: "Phạm Thu Trang",
-    age: 52,
-    reason: "Tư vấn xét nghiệm máu",
-    status: "waiting",
-  },
-  {
-    id: "AP-105",
-    time: "14:00 - 14:30",
-    patientName: "Vũ Đình Trọng",
-    age: 60,
-    reason: "Đo điện tâm đồ",
-    status: "waiting",
-  },
-  {
-    id: "AP-106",
-    time: "15:00 - 15:30",
-    patientName: "Đỗ Mai Anh",
-    age: 22,
-    reason: "Tư vấn dinh dưỡng",
-    status: "waiting",
-  },
-];
 
 export function DoctorSearchBar() {
   const { lang } = useLanguage();
@@ -72,7 +15,7 @@ export function DoctorSearchBar() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Debounce 300ms
+  // Debounce 400ms
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(inputValue.trim());
@@ -99,20 +42,31 @@ export function DoctorSearchBar() {
     };
   }, []);
 
-  const results = useMemo(() => {
-    if (!debouncedQuery) return [];
-    const q = debouncedQuery.toLowerCase();
-    return doctorAppointmentsData.filter(
-      (item) =>
-        item.patientName.toLowerCase().includes(q) ||
-        item.id.toLowerCase().includes(q) ||
-        item.reason.toLowerCase().includes(q)
-    );
-  }, [debouncedQuery]);
+  const { data: results = [], isLoading } = useQuery({
+    queryKey: ["doctor-search-appointments", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const res = await doctorBookingService.getLichHenBacSiTheoNgay({
+        tuKhoa: debouncedQuery,
+      });
+      const data = res?.duLieu;
+      if (!data) return [];
+      if ("noiDung" in data && Array.isArray(data.noiDung)) {
+        return data.noiDung;
+      }
+      if (Array.isArray(data)) {
+        return data as LichHenCuaToiResponse[];
+      }
+      return [];
+    },
+    enabled: debouncedQuery.length > 0,
+    staleTime: 1000 * 30,
+  });
 
-  const handleSelect = (appointment: AppointmentRecord) => {
+  const handleSelect = (appointment: LichHenCuaToiResponse) => {
     setOpen(false);
-    navigate(`/doctor/appointment-requests?search=${appointment.id}`);
+    const code = appointment.maTraCuu || appointment.maPhieuKham;
+    navigate(`/doctor/consultation?search=${encodeURIComponent(code)}`);
   };
 
   const handleClear = () => {
@@ -120,10 +74,29 @@ export function DoctorSearchBar() {
     setDebouncedQuery("");
   };
 
-  const getStatusLabel = (status: AppointmentRecord["status"]) => {
-    if (status === "waiting") return lang === "vi" ? "Chờ khám" : "Waiting";
-    if (status === "progress") return lang === "vi" ? "Đang khám" : "In progress";
-    return lang === "vi" ? "Đã khám" : "Completed";
+  const getStatusLabel = (status: TrangThaiLichHen) => {
+    switch (status) {
+      case "CHO_XAC_NHAN":
+        return lang === "vi" ? "Chờ xác nhận" : "Pending";
+      case "DA_XAC_NHAN":
+        return lang === "vi" ? "Đã xác nhận" : "Confirmed";
+      case "DA_HOAN_THANH":
+        return lang === "vi" ? "Đã khám" : "Completed";
+      case "KHONG_DEN":
+        return lang === "vi" ? "Vắng mặt" : "Absent";
+      case "BI_TU_CHOI":
+      case "DA_HUY":
+      case "DA_HUY_DO_DOI_LICH":
+        return lang === "vi" ? "Đã hủy" : "Cancelled";
+      default:
+        return status;
+    }
+  };
+
+  const getStatusClass = (status: TrangThaiLichHen) => {
+    if (status === "DA_HOAN_THANH") return styles.statusDone;
+    if (status === "DA_XAC_NHAN" || status === "CHO_XAC_NHAN") return styles.statusWaiting;
+    return styles.statusProgress;
   };
 
   const isTyping = inputValue.trim().length > 0;
@@ -173,36 +146,39 @@ export function DoctorSearchBar() {
 
       {open && isTyping && (
         <div className={styles.resultsDropdown}>
-          {results.length > 0 ? (
+          {isLoading ? (
+            <div className={styles.emptyState}>
+              <Loader2 className="inline-block animate-spin mr-2" size={14} />
+              {lang === "vi" ? "Đang tìm kiếm..." : "Searching..."}
+            </div>
+          ) : results.length > 0 ? (
             <>
               <div className={styles.sectionHeader}>
                 {lang === "vi" ? "Bệnh nhân & Lịch khám" : "Patients & Appointments"}
               </div>
               {results.map((item) => (
                 <button
-                  key={item.id}
+                  key={item.id ?? item.maPhieuKham}
                   type="button"
                   className={styles.resultItem}
                   onClick={() => handleSelect(item)}
                 >
                   <div className={styles.patientMeta}>
                     <div className={styles.patientTop}>
-                      <span className={styles.patientName}>{item.patientName}</span>
-                      <span className={styles.patientCode}>{item.id}</span>
-                      <span className={styles.patientTime}>{item.age}t • {item.time}</span>
+                      <span className={styles.patientName}>{item.hoTenBenhNhan}</span>
+                      <span className={styles.patientCode}>{item.maTraCuu || item.maPhieuKham}</span>
+                      <span className={styles.patientTime}>
+                        {item.gioKhamDuKien || `${item.gioBatDauKhung} - ${item.gioKetThucKhung}`}
+                      </span>
                     </div>
-                    <span className={styles.patientSub}>{item.reason}</span>
+                    {item.lyDoKham && (
+                      <span className={styles.patientSub}>{item.lyDoKham}</span>
+                    )}
                   </div>
                   <span
-                    className={`${styles.statusTag} ${
-                      item.status === "waiting"
-                        ? styles.statusWaiting
-                        : item.status === "progress"
-                        ? styles.statusProgress
-                        : styles.statusDone
-                    }`}
+                    className={`${styles.statusTag} ${getStatusClass(item.trangThai)}`}
                   >
-                    {getStatusLabel(item.status)}
+                    {getStatusLabel(item.trangThai)}
                   </span>
                 </button>
               ))}
