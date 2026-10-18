@@ -865,6 +865,9 @@ export function AdminDoctorPanel() {
                 {vi ? "Xác nhận ngưng công tác" : "Confirm Deactivation"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
       {/* MODAL THÊM BÁC SĨ */}
       {isAddDoctorOpen && (
         <div
