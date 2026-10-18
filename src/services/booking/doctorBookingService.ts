@@ -28,8 +28,8 @@ export const doctorBookingService = {
   },
 
   /** Get appointments by date/shift */
-  getLichHenBacSiTheoNgay: async (params: {
-    ngay: string;
+  getLichHenBacSiTheoNgay: async (params?: {
+    ngay?: string;
     idLichLamViec?: number;
     soThuTu?: number;
     tuKhoa?: string;

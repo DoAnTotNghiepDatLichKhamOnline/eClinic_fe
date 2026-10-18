@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Heart,
   Baby,
@@ -49,20 +49,35 @@ function getSpecialtyVisual(tenChuyenKhoa: string) {
 
 export function SpecialtyDirectoryPage() {
   const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get("query") || searchParams.get("tuKhoa") || "";
+  const [searchTerm, setSearchTerm] = useState(initialQuery);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(initialQuery);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (searchTerm.trim()) {
+            next.set("query", searchTerm.trim());
+          } else {
+            next.delete("query");
+            next.delete("tuKhoa");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm, setSearchParams]);
 
   const { danhSach: specialties, isLoading, isError, refetch } = useDanhSachChuyenKhoa({
+    tuKhoa: debouncedSearchTerm.trim() || undefined,
     kichThuoc: 100,
   });
-
-  const filteredSpecialties = useMemo(() => {
-    if (!searchTerm.trim()) return specialties;
-    const q = searchTerm.trim().toLowerCase();
-    return specialties.filter((item) =>
-      item.tenChuyenKhoa.toLowerCase().includes(q) ||
-      (item.moTa && item.moTa.toLowerCase().includes(q))
-    );
-  }, [specialties, searchTerm]);
 
   return (
     <>
@@ -126,9 +141,9 @@ export function SpecialtyDirectoryPage() {
                 {t({ en: "Retry", vi: "Thử lại" })}
               </button>
             </div>
-          ) : filteredSpecialties.length > 0 ? (
+          ) : specialties.length > 0 ? (
             <div className={styles.specialtyGrid}>
-              {filteredSpecialties.map((specialty) => {
+              {specialties.map((specialty) => {
                 const visual = getSpecialtyVisual(specialty.tenChuyenKhoa);
                 const Icon = visual.icon;
                 return (

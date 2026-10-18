@@ -32,7 +32,8 @@
   - Tái sử dụng tối đa các Base UI components sẵn có trong dự án (ví dụ: Button, Input, Modal, Table trong thư mục `@/components/common` hoặc `@/components/ui`).
   - Chỉ sử dụng bộ icon hiện có của dự án (ví dụ: `lucide-react`, `react-icons`), không tự ý import thêm thư viện icon mới.
 - **Hệ màu & Design System:**
-  - Không hardcode mã màu hex ngẫu nhiên (ví dụ: `#1d4ed8`, `#ff4d4f`). Bắt buộc dùng class màu theo semantic/theme đã cấu hình 
+  - Không hardcode mã màu hex ngẫu nhiên 
+  -  Bắt buộc dùng class màu theo semantic/theme đã cấu hình 
 - **Responsive & Trạng thái UI (States):**
   - Mọi thành phần giao diện phải tính toán cho cả màn hình Mobile và Desktop (`sm:`, `md:`, `lg:`).
   - Luôn xử lý đầy đủ các trạng thái giao diện: **Loading** (Skeleton hoặc Spinner), **Empty State** (khi không có dữ liệu), **Error State**, và trạng thái tương tác (`hover:`, `focus-visible:`, `disabled:`).

@@ -140,6 +140,7 @@ export interface BacSiQuanTriResponse {
   soDienThoai: string | null;
   anhDaiDien: string | null;
   hocVi: string | null;
+  chucVu?: string | null;
   soGiayPhep: string | null;
   idChuyenKhoa: number;
   tenChuyenKhoa: string;

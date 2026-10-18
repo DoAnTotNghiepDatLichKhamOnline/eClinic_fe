@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { DoctorSection } from "./DoctorSidebar";
 import {
   DoctorScheduleSection,
-  DoctorUpcomingAppointmentsSection,
   DoctorConsultationSection,
   DoctorProfileSection,
   type Appointment,
@@ -16,7 +14,6 @@ export interface DoctorWorkspaceProps {
 }
 
 export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
-  const navigate = useNavigate();
   const [patientCode, setPatientCode] = useState("");
   const [patientLookup, setPatientLookup] = useState<Appointment | null>(null);
   const [lookupDetails, setLookupDetails] = useState<ConsultationLookup | null>(
@@ -27,25 +24,8 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
   const [completedRecord, setCompletedRecord] =
     useState<CompletedRecord | null>(null);
 
-  const handleSelectAppointment = (appointment: Appointment) => {
-    setPatientCode(appointment.id);
-    setPatientLookup(appointment);
-    setCompletedRecord(null);
-    setDiagnosis("");
-    setPrescription("");
-    navigate("/doctor/consultation");
-  };
-
   if (activeSection === "schedule") {
     return <DoctorScheduleSection />;
-  }
-
-  if (activeSection === "appointments") {
-    return (
-      <DoctorUpcomingAppointmentsSection
-        onSelectAppointment={handleSelectAppointment}
-      />
-    );
   }
 
   if (activeSection === "consultation") {

@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientDetailModal } from "./PatientDetailModal";
@@ -12,6 +13,7 @@ export function AdminPatientsSection() {
   const vi = lang === "vi";
   const client = useQueryClient();
   const [patientSearch, setPatientSearch] = useState("");
+  const [debouncedPatientSearch, setDebouncedPatientSearch] = useState("");
   const [patientPage, setPatientPage] = useState(0);
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null,
@@ -25,15 +27,62 @@ export function AdminPatientsSection() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupError, setLookupError] = useState("");
 
+  // Debounce search 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPatientSearch(patientSearch.trim());
+      setPatientPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [patientSearch]);
+
   const patientsQuery = useQuery({
-    queryKey: ["booking", "admin-patients", patientSearch, patientPage],
+    queryKey: ["booking", "admin-patients", debouncedPatientSearch, patientPage],
     queryFn: () =>
       bookingService.getHoSoBenhNhanQuanTri({
-        tuKhoa: patientSearch.trim() || undefined,
+        tuKhoa: debouncedPatientSearch || undefined,
         trang: patientPage,
         kichThuoc: 20,
       }),
   });
+
+  type PatientSortField = "id" | "hoTen" | "ngaySinh" | "soDienThoai";
+  const [sortField, setSortField] = useState<PatientSortField>("id");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (field: PatientSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIndicator = (field: PatientSortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown size={13} className="text-slate-400 opacity-60 group-hover:opacity-100" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp size={13} className="text-teal-700" />
+    ) : (
+      <ArrowDown size={13} className="text-teal-700" />
+    );
+  };
+
+  const sortedPatients = useMemo(() => {
+    const list = [...(patientsQuery.data?.duLieu?.noiDung ?? [])];
+    list.sort((a, b) => {
+      const aVal = a[sortField] ?? "";
+      const bVal = b[sortField] ?? "";
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", { sensitivity: "base" });
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [patientsQuery.data?.duLieu?.noiDung, sortField, sortDirection, vi]);
 
   const verificationQuery = useQuery({
     queryKey: ["booking", "admin-patient-verification"],
@@ -264,35 +313,81 @@ export function AdminPatientsSection() {
         <table className={styles.adminTable}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>{vi ? "Bệnh nhân" : "Patient"}</th>
-              <th>{vi ? "Ngày sinh" : "Birth date"}</th>
-              <th>{vi ? "Điện thoại" : "Phone"}</th>
+              <th>
+                <button
+                  type="button"
+                  onClick={() => handleSort("id")}
+                  className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                >
+                  <span>ID</span>
+                  {renderSortIndicator("id")}
+                </button>
+              </th>
+              <th>
+                <button
+                  type="button"
+                  onClick={() => handleSort("hoTen")}
+                  className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                >
+                  <span>{vi ? "Bệnh nhân" : "Patient"}</span>
+                  {renderSortIndicator("hoTen")}
+                </button>
+              </th>
+              <th>
+                <button
+                  type="button"
+                  onClick={() => handleSort("ngaySinh")}
+                  className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                >
+                  <span>{vi ? "Ngày sinh" : "Birth date"}</span>
+                  {renderSortIndicator("ngaySinh")}
+                </button>
+              </th>
+              <th>
+                <button
+                  type="button"
+                  onClick={() => handleSort("soDienThoai")}
+                  className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
+                >
+                  <span>{vi ? "Điện thoại" : "Phone"}</span>
+                  {renderSortIndicator("soDienThoai")}
+                </button>
+              </th>
               <th>{vi ? "CCCD" : "National ID"}</th>
               <th>{vi ? "Lịch hẹn" : "Appointments"}</th>
               <th />
             </tr>
           </thead>
           <tbody>
-            {(patients?.noiDung ?? []).map((patient) => (
-              <tr key={patient.id}>
-                <td>{patient.id}</td>
-                <td>{patient.hoTen}</td>
-                <td>{patient.ngaySinh ?? "—"}</td>
-                <td>{patient.soDienThoai ?? "—"}</td>
-                <td>{patient.cccdChe ?? "—"}</td>
-                <td>{patient.soLichHen ?? "—"}</td>
-                <td>
-                  <button
-                    className={styles.actionBtn}
-                    type="button"
-                    onClick={() => setSelectedPatientId(patient.id)}
-                  >
-                    {vi ? "Chi tiết" : "Details"}
-                  </button>
+            {sortedPatients.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-xs text-slate-500">
+                  {patientsQuery.isLoading
+                    ? (vi ? "Đang tải hồ sơ bệnh nhân..." : "Loading patients...")
+                    : (vi ? "Không tìm thấy hồ sơ nào." : "No patient records found.")}
                 </td>
               </tr>
-            ))}
+            ) : (
+              sortedPatients.map((patient) => (
+                <tr key={patient.id}>
+                  <td>{patient.id}</td>
+                  <td className="font-medium text-slate-800">{patient.hoTen}</td>
+                  <td>{patient.ngaySinh ?? "—"}</td>
+                  <td>{patient.soDienThoai ?? "—"}</td>
+                  <td>{patient.cccdChe ?? "—"}</td>
+                  <td>{patient.soLichHen ?? "—"}</td>
+                  <td>
+                    <button
+                      className={styles.actionBtn}
+                      type="button"
+                      onClick={() => setSelectedPatientId(patient.id)}
+                    >
+                      {vi ? "Chi tiết" : "Details"}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -23,7 +23,7 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
-import type { TrangThaiLichHen } from "@/types/common.type";
+import type { TrangThaiLichHen, LocLichHen } from "@/types/common.type";
 import {
   useBookingActions,
   useChiTietLichHen,
@@ -84,6 +84,7 @@ export function MyAppointmentsPage() {
   );
   const [activeTab, setActiveTab] = useState<TabStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [scope, setScope] = useState<"TAT_CA" | "BAN_THAN" | "NGUOI_KHAC">(
     "TAT_CA",
   );
@@ -95,9 +96,33 @@ export function MyAppointmentsPage() {
   const [reviewStars, setReviewStars] = useState(5);
   const [reviewText, setReviewText] = useState("");
 
-  const { danhSach: appointments } = useDanhSachLichHen({
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Overall appointments for tab counters
+  const { danhSach: allAppointments } = useDanhSachLichHen({
     loc: "TAT_CA",
     cuaAi: scope,
+    kichThuoc: 100,
+  });
+
+  const locParam: LocLichHen =
+    activeTab === "upcoming"
+      ? "SAP_TOI"
+      : activeTab === "done"
+      ? "LICH_SU"
+      : "TAT_CA";
+
+  // Filtered appointments from API
+  const { danhSach: appointments } = useDanhSachLichHen({
+    loc: locParam,
+    cuaAi: scope,
+    tuKhoa: debouncedSearch || undefined,
+    kichThuoc: 100,
   });
   const { chiTiet, isLoading: loadingDetail } = useChiTietLichHen(
     selectedTicket ?? undefined,
@@ -190,27 +215,20 @@ export function MyAppointmentsPage() {
   };
 
   const filtered: LichHenCuaToiResponse[] = appointments.filter((a) => {
-    const category = getApptCategory(a.trangThai);
-    const matchTab = activeTab === "all" || category === activeTab;
-    const q = search.toLowerCase();
-    const matchSearch =
-      !q ||
-      a.bacSi.hoTen.toLowerCase().includes(q) ||
-      a.tenChuyenKhoa.toLowerCase().includes(q) ||
-      a.hoTenBenhNhan.toLowerCase().includes(q) ||
-      a.phongKham.tenPhong.toLowerCase().includes(q) ||
-      a.maPhieuKham.toLowerCase().includes(q);
-    return matchTab && matchSearch;
+    if (activeTab === "cancelled") {
+      return getApptCategory(a.trangThai) === "cancelled";
+    }
+    return true;
   });
 
   const counts = {
-    all: appointments.length,
-    upcoming: appointments.filter(
+    all: allAppointments.length,
+    upcoming: allAppointments.filter(
       (a) => getApptCategory(a.trangThai) === "upcoming",
     ).length,
-    done: appointments.filter((a) => getApptCategory(a.trangThai) === "done")
+    done: allAppointments.filter((a) => getApptCategory(a.trangThai) === "done")
       .length,
-    cancelled: appointments.filter(
+    cancelled: allAppointments.filter(
       (a) => getApptCategory(a.trangThai) === "cancelled",
     ).length,
   };

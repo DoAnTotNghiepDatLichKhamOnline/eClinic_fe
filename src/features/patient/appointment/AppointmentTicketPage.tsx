@@ -119,203 +119,306 @@ export function AppointmentTicketPage() {
     }
   };
 
+  const formatDateVN = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "DA_XAC_NHAN":
+        return {
+          dot: "🟢",
+          text: vi ? "Đã xác nhận" : "Confirmed",
+          cls: "text-emerald-700 bg-emerald-50 border-emerald-200",
+        };
+      case "DA_HOAN_THANH":
+        return {
+          dot: "🔵",
+          text: vi ? "Đã hoàn thành" : "Completed",
+          cls: "text-blue-700 bg-blue-50 border-blue-200",
+        };
+      case "BI_TU_CHOI":
+        return {
+          dot: "🔴",
+          text: vi ? "Bác sĩ đã hủy" : "Cancelled by doctor",
+          cls: "text-rose-700 bg-rose-50 border-rose-200",
+        };
+      case "DA_HUY":
+      case "DA_HUY_DO_DOI_LICH":
+        return {
+          dot: "🔴",
+          text: vi ? "Đã hủy" : "Cancelled",
+          cls: "text-rose-700 bg-rose-50 border-rose-200",
+        };
+      case "KHONG_DEN":
+        return {
+          dot: "⚪",
+          text: vi ? "Không đến" : "No-show",
+          cls: "text-amber-700 bg-amber-50 border-amber-200",
+        };
+      default:
+        return {
+          dot: "🟡",
+          text: status.replaceAll("_", " "),
+          cls: "text-slate-700 bg-slate-50 border-slate-200",
+        };
+    }
+  };
+
   if (loading)
     return (
-      <main className="mx-auto max-w-4xl px-5 py-16 text-center">
-        {t({ en: "Loading ticket...", vi: "Đang tải phiếu khám..." })}
+      <main className="mx-auto max-w-lg px-5 py-20 text-center">
+        <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-emerald-800" />
+        <p className="text-sm font-medium text-slate-600">
+          {t({ en: "Loading ticket...", vi: "Đang tải phiếu khám..." })}
+        </p>
       </main>
     );
+
   if (!ticket)
     return (
-      <main className="mx-auto max-w-4xl px-5 py-16">
-        <p role="alert">{error}</p>
-        <Link to="/appointment">
+      <main className="mx-auto max-w-lg px-5 py-20 text-center">
+        <p role="alert" className="mb-4 font-semibold text-rose-700">
+          {error || (vi ? "Không tìm thấy phiếu khám." : "Ticket not found.")}
+        </p>
+        <Link
+          to="/appointment"
+          className="inline-flex rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-900"
+        >
           {t({ en: "Book an appointment", vi: "Đặt lịch khám" })}
         </Link>
       </main>
     );
 
+  const statusBadge = getStatusBadge(ticket.trangThai);
+
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 text-slate-800">
+    <main className="mx-auto max-w-xl px-4 py-8 text-slate-800">
       <Link
         to="/home"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-emerald-900"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-950 transition"
       >
         <ArrowLeft size={16} />
         {t({ en: "Home", vi: "Trang chủ" })}
       </Link>
-      <section className="grid gap-8 border-y border-slate-200 py-8 md:grid-cols-[1fr_220px]">
-        <div>
-          <p className="text-xs font-bold uppercase text-emerald-800">
-            {t({ en: "Appointment ticket", vi: "Phiếu khám" })}
+
+      {/* ─── E-Ticket Card Layout ─── */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        {/* Header section */}
+        <div className="p-6 pb-5">
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500">
+            {t({ en: "Electronic Appointment Ticket", vi: "PHIẾU KHÁM ĐIỆN TỬ" })}
           </p>
-          <h1 className="mt-2 text-3xl font-bold">{ticket.maTraCuu}</h1>
-          <p className="mt-2 text-sm font-medium">
-            <span
-              className={`inline-block rounded px-2.5 py-0.5 text-xs font-semibold ${
-                ticket.trangThai === "DA_XAC_NHAN"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : ticket.trangThai === "DA_HOAN_THANH"
-                    ? "bg-blue-100 text-blue-800"
-                    : ticket.trangThai === "BI_TU_CHOI" || ticket.trangThai === "DA_HUY"
-                      ? "bg-rose-100 text-rose-800"
-                      : ticket.trangThai === "KHONG_DEN"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-slate-100 text-slate-800"
-              }`}
-            >
-              {ticket.trangThai === "DA_XAC_NHAN"
-                ? vi
-                  ? "Đã xác nhận"
-                  : "Confirmed"
-                : ticket.trangThai === "BI_TU_CHOI"
-                  ? vi
-                    ? "Bác sĩ đã hủy"
-                    : "Cancelled by doctor"
-                  : ticket.trangThai === "DA_HUY"
-                    ? vi
-                      ? "Đã hủy"
-                      : "Cancelled"
-                    : ticket.trangThai === "DA_HOAN_THANH"
-                      ? vi
-                        ? "Đã hoàn thành"
-                        : "Completed"
-                      : ticket.trangThai === "KHONG_DEN"
-                        ? vi
-                          ? "Không đến"
-                          : "No-show"
-                        : ticket.trangThai.replaceAll("_", " ")}
+
+          <div className="mt-2.5 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-mono font-black text-slate-900 tracking-tight">
+                {ticket.maTraCuu}
+              </h1>
+              <div className="mt-3 flex items-center gap-2 text-sm font-medium">
+                <span className="text-slate-500">
+                  {vi ? "Trạng thái:" : "Status:"}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-bold ${statusBadge.cls}`}
+                >
+                  <span aria-hidden="true">{statusBadge.dot}</span>
+                  {statusBadge.text}
+                </span>
+              </div>
+            </div>
+
+            {/* QR Code */}
+            <div className="flex flex-col items-center flex-shrink-0">
+              {qrUrl ? (
+                <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+                  <img
+                    src={qrUrl}
+                    alt={t({ en: "Appointment QR code", vi: "Mã QR phiếu khám" })}
+                    className="h-24 w-24 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-[10px] text-slate-400">
+                  <QrCode size={24} className="mb-1 text-slate-300" />
+                  No QR
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-slate-200" />
+
+        {/* Middle Info Rows */}
+        <div className="divide-y divide-slate-100 bg-slate-50/50 px-6 py-2 text-sm">
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Bệnh nhân" : "Patient"}</span>
+            <span className="font-bold text-slate-900 text-right">
+              {ticket.benhNhan.hoTen}
             </span>
-          </p>
-          <dl className="mt-7 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Patient", vi: "Bệnh nhân" })}
-              </dt>
-              <dd className="mt-1 font-semibold">{ticket.benhNhan.hoTen}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Date and time", vi: "Ngày giờ khám" })}
-              </dt>
-              <dd className="mt-1 font-semibold">
-                {ticket.ngay} · {ticket.gioKhamDuKien}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Doctor", vi: "Bác sĩ" })}
-              </dt>
-              <dd className="mt-1 font-semibold">
-                {ticket.bacSi.hocVi ? `${ticket.bacSi.hocVi} ` : ""}
-                {ticket.bacSi.hoTen}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Clinic", vi: "Phòng khám" })}
-              </dt>
-              <dd className="mt-1 font-semibold">
-                {ticket.phongKham.tenPhong}
-                {ticket.phongKham.tang ? ` · ${ticket.phongKham.tang}` : ""}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Queue number", vi: "Số thứ tự" })}
-              </dt>
-              <dd className="mt-1 font-semibold">{ticket.soThuTu}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">
-                {t({ en: "Reason", vi: "Lý do khám" })}
-              </dt>
-              <dd className="mt-1 font-semibold">{ticket.lyDoKham}</dd>
-            </div>
-          </dl>
-          {ticket.lyDoHuy && (
-            <div className="mt-5 rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-              <strong>
-                {ticket.trangThai === "BI_TU_CHOI"
-                  ? vi
-                    ? "Lý do bác sĩ hủy lịch:"
-                    : "Doctor cancellation reason:"
-                  : vi
-                    ? "Lý do hủy:"
-                    : "Cancellation reason:"}{" "}
-              </strong>
-              {ticket.lyDoHuy}
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Bác sĩ" : "Doctor"}</span>
+            <span className="font-semibold text-slate-800 text-right">
+              {ticket.bacSi.hocVi ? `${ticket.bacSi.hocVi} ` : ""}
+              {ticket.bacSi.hoTen}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Chuyên khoa" : "Specialty"}</span>
+            <span className="font-semibold text-slate-800 text-right">
+              {ticket.tenChuyenKhoa}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Ngày khám" : "Date"}</span>
+            <span className="font-bold text-slate-900 text-right">
+              {formatDateVN(ticket.ngay)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Giờ khám" : "Time"}</span>
+            <span className="font-bold text-slate-900 text-right">
+              {ticket.gioKhamDuKien}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "Phòng khám" : "Clinic"}</span>
+            <span className="font-semibold text-slate-800 text-right">
+              {ticket.phongKham.tenPhong}
+              {ticket.phongKham.tang ? ` - ${ticket.phongKham.tang}` : ""}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2.5">
+            <span className="text-slate-500">{vi ? "STT" : "Queue #"}</span>
+            <span className="rounded-md bg-emerald-100 px-2.5 py-0.5 font-mono text-base font-black text-emerald-800">
+              {ticket.soThuTu}
+            </span>
+          </div>
+
+          {ticket.lyDoKham && (
+            <div className="flex items-start justify-between py-2.5">
+              <span className="text-slate-500">{vi ? "Lý do khám" : "Reason"}</span>
+              <span className="max-w-[60%] text-right text-xs text-slate-700 italic">
+                {ticket.lyDoKham}
+              </span>
             </div>
           )}
         </div>
-        <div className="flex flex-col items-center gap-3">
-          <QrCode size={18} />
-          {qrUrl ? (
-            <img
-              src={qrUrl}
-              alt={t({ en: "Appointment QR code", vi: "Mã QR phiếu khám" })}
-              className="h-44 w-44 border border-slate-200 p-2"
-            />
-          ) : (
-            <div className="grid h-44 w-44 place-items-center border border-slate-200 text-xs text-slate-500">
-              QR unavailable
-            </div>
-          )}
-          {qrUrl && (
-            <a
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-900"
-              href={qrUrl}
-              download={`${ticket.maTraCuu}.png`}
-            >
-              <Download size={15} />
-              {t({ en: "Download QR", vi: "Tải mã QR" })}
-            </a>
-          )}
-          <p className="text-center text-xs text-slate-500">
-            {ticket.maPhieuKham}
-          </p>
-        </div>
-      </section>
-      {ticket.duocHuyDoi && (
-        <section className="mt-8 border-b border-slate-200 pb-8">
+
+        {ticket.lyDoHuy && (
+          <div className="border-t border-rose-200 bg-rose-50/80 px-6 py-3 text-xs text-rose-800">
+            <strong>
+              {ticket.trangThai === "BI_TU_CHOI"
+                ? vi
+                  ? "Lý do bác sĩ hủy lịch: "
+                  : "Doctor cancellation reason: "
+                : vi
+                  ? "Lý do hủy: "
+                  : "Cancellation reason: "}
+            </strong>
+            {ticket.lyDoHuy}
+          </div>
+        )}
+
+        {/* Divider */}
+        <div className="border-t border-slate-200" />
+
+        {/* Bottom Actions section */}
+        <div className="p-6 pt-5 bg-white space-y-4">
           {!mode ? (
-            <div className="flex flex-wrap gap-3">
-              <button
-                className="inline-flex items-center gap-2 border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-800"
-                onClick={() => setMode("cancel")}
-              >
-                <XCircle size={16} />
-                {t({ en: "Cancel appointment", vi: "Hủy lịch" })}
-              </button>
-              <button
-                className="inline-flex items-center gap-2 border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900"
-                onClick={() => setMode("reschedule")}
-              >
-                <CalendarClock size={16} />
-                {t({ en: "Reschedule", vi: "Đổi lịch" })}
-              </button>
+            <div className="space-y-3">
+              {/* Primary action: Đổi lịch khám */}
+              {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" && (
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-900 transition"
+                  onClick={() => setMode("reschedule")}
+                >
+                  <CalendarClock size={17} />
+                  {vi ? "Đổi lịch khám" : "Reschedule Appointment"}
+                </button>
+              )}
+
+              {/* Secondary action buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" ? (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50/50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition"
+                    onClick={() => setMode("cancel")}
+                  >
+                    <XCircle size={15} />
+                    {vi ? "Hủy lịch khám" : "Cancel"}
+                  </button>
+                ) : <span />}
+
+                {qrUrl && (
+                  <a
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    href={qrUrl}
+                    download={`${ticket.maTraCuu}.png`}
+                  >
+                    <Download size={15} />
+                    {t({ en: "Download QR", vi: "Tải mã QR" })}
+                  </a>
+                )}
+              </div>
+
+              {ticket.hanHuyDoi && ticket.duocHuyDoi && (
+                <p className="text-center text-[11px] text-slate-400">
+                  {vi
+                    ? `Có thể đổi hoặc hủy trước: ${ticket.hanHuyDoi}`
+                    : `Can reschedule or cancel until: ${ticket.hanHuyDoi}`}
+                </p>
+              )}
             </div>
           ) : (
+            /* Mode Form (Cancel / Reschedule) */
             <form
-              className="grid max-w-2xl gap-4 sm:grid-cols-2"
+              className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4"
               onSubmit={(event) => void submitAction(event)}
             >
-              <h2 className="text-lg font-semibold sm:col-span-2">
-                {mode === "cancel"
-                  ? t({ en: "Cancel appointment", vi: "Hủy lịch khám" })
-                  : t({
-                      en: "Choose a new appointment slot",
-                      vi: "Chọn khung giờ mới",
-                    })}
-              </h2>
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h2 className="text-sm font-bold text-slate-900">
+                  {mode === "cancel"
+                    ? t({ en: "Cancel appointment", vi: "Hủy lịch khám" })
+                    : t({
+                        en: "Choose a new appointment slot",
+                        vi: "Chọn khung giờ mới để đổi lịch",
+                      })}
+                </h2>
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 hover:text-slate-800"
+                  onClick={() => setMode(null)}
+                >
+                  ✕
+                </button>
+              </div>
+
               {!user && (
-                <label className="grid gap-1 text-sm">
-                  {t({ en: "Contact phone", vi: "Số điện thoại liên hệ" })}
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  {t({ en: "Contact phone *", vi: "Số điện thoại liên hệ *" })}
                   <input
-                    className="border border-slate-300 px-3 py-2"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                     required
                     inputMode="numeric"
                     maxLength={10}
+                    placeholder="VD: 0912345678"
                     value={phone}
                     onChange={(event) =>
                       setPhone(event.target.value.replace(/\D/g, ""))
@@ -323,36 +426,42 @@ export function AppointmentTicketPage() {
                   />
                 </label>
               )}
+
               {mode === "cancel" ? (
-                <label className="grid gap-1 text-sm sm:col-span-2">
-                  {t({ en: "Reason (optional)", vi: "Lý do (không bắt buộc)" })}
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  {t({ en: "Reason (optional)", vi: "Lý do hủy (không bắt buộc)" })}
                   <textarea
-                    className="border border-slate-300 px-3 py-2"
+                    rows={3}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                    placeholder={vi ? "Nhập lý do nếu có..." : "Enter reason..."}
                     value={reason}
                     onChange={(event) => setReason(event.target.value)}
                   />
                 </label>
               ) : (
-                <>
-                  <label className="grid gap-1 text-sm">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-xs font-semibold text-slate-700">
                     {t({
-                      en: "Shift ID (or use specialty)",
-                      vi: "Mã ca (hoặc chọn chuyên khoa)",
+                      en: "Shift ID (optional)",
+                      vi: "Mã ca làm việc (nếu có)",
                     })}
                     <input
-                      className="border border-slate-300 px-3 py-2"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                       inputMode="numeric"
+                      placeholder="Mã ca mới"
                       value={idLichLamViec}
                       onChange={(event) => setIdLichLamViec(event.target.value)}
                     />
                   </label>
+
                   {!idLichLamViec && (
-                    <label className="grid gap-1 text-sm">
-                      {t({ en: "Specialty ID", vi: "Mã chuyên khoa" })}
+                    <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                      {t({ en: "Specialty ID *", vi: "Mã chuyên khoa *" })}
                       <input
-                        className="border border-slate-300 px-3 py-2"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                         inputMode="numeric"
                         required
+                        placeholder="Mã chuyên khoa"
                         value={idChuyenKhoa}
                         onChange={(event) =>
                           setIdChuyenKhoa(event.target.value)
@@ -360,10 +469,11 @@ export function AppointmentTicketPage() {
                       />
                     </label>
                   )}
-                  <label className="grid gap-1 text-sm">
-                    {t({ en: "Slot start", vi: "Giờ bắt đầu khung" })}
+
+                  <label className="grid gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
+                    {t({ en: "Slot start time *", vi: "Giờ bắt đầu khung *" })}
                     <input
-                      className="border border-slate-300 px-3 py-2"
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                       required
                       type="datetime-local"
                       value={gioBatDauKhung}
@@ -372,46 +482,38 @@ export function AppointmentTicketPage() {
                       }
                     />
                   </label>
-                </>
+                </div>
               )}
+
               {error && (
-                <p role="alert" className="text-sm text-rose-700 sm:col-span-2">
+                <p role="alert" className="text-xs font-semibold text-rose-700">
                   {error}
                 </p>
               )}
-              <div className="flex gap-3 sm:col-span-2">
-                <button
-                  className="bg-emerald-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                  disabled={busy}
-                >
-                  {busy ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    t({ en: "Confirm", vi: "Xác nhận" })
-                  )}
-                </button>
+
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm"
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   onClick={() => setMode(null)}
                 >
-                  {t({ en: "Back", vi: "Quay lại" })}
+                  {t({ en: "Cancel", vi: "Đóng" })}
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-900 disabled:opacity-60"
+                >
+                  {busy && <Loader2 size={13} className="animate-spin" />}
+                  {mode === "cancel"
+                    ? vi ? "Xác nhận hủy" : "Confirm Cancel"
+                    : vi ? "Xác nhận đổi lịch" : "Confirm Reschedule"}
                 </button>
               </div>
             </form>
           )}
-          {error && !mode && (
-            <p role="alert" className="mt-3 text-sm text-rose-700">
-              {error}
-            </p>
-          )}
-          <p className="mt-3 text-xs text-slate-500">
-            {vi
-              ? `Có thể hủy/đổi đến ${ticket.hanHuyDoi}.`
-              : `Cancellation/rescheduling deadline: ${ticket.hanHuyDoi}.`}
-          </p>
-        </section>
-      )}
+        </div>
+      </div>
     </main>
   );
 }

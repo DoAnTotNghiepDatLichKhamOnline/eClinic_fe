@@ -1,6 +1,5 @@
 import {
   CalendarClock,
-  ClipboardList,
   LayoutDashboard,
   Stethoscope,
   UserRound,
@@ -12,7 +11,6 @@ import styles from "./DoctorSidebar.module.css";
 export type DoctorSection =
   | "dashboard"
   | "schedule"
-  | "appointments"
   | "consultation"
   | "profile";
 
@@ -29,13 +27,6 @@ const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
       en: "Work Schedule",
       vi: "Lịch làm việc cá nhân",
       icon: CalendarClock,
-    },
-    
-    {
-      id: "appointments",
-      en: "Upcoming Appointments",
-      vi: "Lịch hẹn sắp tới",
-      icon: ClipboardList,
     },
     {
       id: "consultation",
