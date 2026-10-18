@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, ShieldCheck, Clock, Sparkles } from "lucide-react";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
@@ -109,15 +110,36 @@ export function AppointmentBookingPage() {
     kichThuoc: 50,
   });
 
-  // Tự động chọn chuyên khoa đầu tiên nếu chưa có
+  // Nếu người dùng chọn bác sĩ từ Chatbot hoặc URL mà chưa có chuyên khoa, tự động tra cứu chuyên khoa của bác sĩ
+  const preselectedDoctorId = formValues.doctorId ? Number(formValues.doctorId) : undefined;
+  const { data: doctorDetailRes } = useQuery({
+    queryKey: ["catalog", "doctor-public-detail", preselectedDoctorId],
+    queryFn: () => doctorService.getChiTietBacSi(preselectedDoctorId!),
+    enabled: Boolean(preselectedDoctorId && !formValues.specialtyId),
+  });
+
   useEffect(() => {
-    if (!formValues.specialtyId && danhSachChuyenKhoa.length > 0) {
+    if (doctorDetailRes?.duLieu?.idChuyenKhoa && !formValues.specialtyId) {
+      setFormValues((prev) => ({
+        ...prev,
+        specialtyId: String(doctorDetailRes.duLieu.idChuyenKhoa),
+      }));
+    }
+  }, [doctorDetailRes, formValues.specialtyId]);
+
+  // Tự động chọn chuyên khoa đầu tiên nếu người dùng không chọn trước chuyên khoa lẫn bác sĩ
+  useEffect(() => {
+    if (
+      !formValues.specialtyId &&
+      !formValues.doctorId &&
+      danhSachChuyenKhoa.length > 0
+    ) {
       setFormValues((prev) => ({
         ...prev,
         specialtyId: String(danhSachChuyenKhoa[0].id),
       }));
     }
-  }, [danhSachChuyenKhoa, formValues.specialtyId]);
+  }, [danhSachChuyenKhoa, formValues.specialtyId, formValues.doctorId]);
 
   // Fetch danh sách bác sĩ của chuyên khoa
   const idChuyenKhoaNum = formValues.specialtyId
