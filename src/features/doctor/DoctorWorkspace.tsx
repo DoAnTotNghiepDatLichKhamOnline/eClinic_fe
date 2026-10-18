@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import type { DoctorSection } from "./DoctorSidebar";
 import {
   DoctorScheduleSection,
-  DoctorUpcomingAppointmentsSection,
   DoctorConsultationSection,
   DoctorProfileSection,
   type Appointment,
@@ -38,14 +37,6 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
 
   if (activeSection === "schedule") {
     return <DoctorScheduleSection />;
-  }
-
-  if (activeSection === "appointments") {
-    return (
-      <DoctorUpcomingAppointmentsSection
-        onSelectAppointment={handleSelectAppointment}
-      />
-    );
   }
 
   if (activeSection === "consultation") {
