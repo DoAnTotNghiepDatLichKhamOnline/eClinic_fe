@@ -13,8 +13,6 @@ const DoctorWorkspace = lazy(() =>
 const sections: { path: string; section: DoctorSection | null }[] = [
   { path: "dashboard", section: null },
   { path: "work-schedule", section: "schedule" },
-  { path: "appointment-requests", section: "appointments" },
-  { path: "upcoming-appointments", section: "appointments" },
   { path: "consultation", section: "consultation" },
   { path: "profile", section: "profile" },
 ];
@@ -24,6 +22,14 @@ export function DoctorRoutes() {
     <Routes>
       <Route path="login" element={<LoginPageDoctor />} />
       <Route index element={<Navigate to="dashboard" replace />} />
+      <Route
+        path="upcoming-appointments"
+        element={<Navigate to="../work-schedule" replace />}
+      />
+      <Route
+        path="appointment-requests"
+        element={<Navigate to="../work-schedule" replace />}
+      />
       {sections.map(({ path, section }) => (
         <Route
           key={path}
