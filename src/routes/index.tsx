@@ -15,9 +15,7 @@ function GlobalChatWidget() {
     location.pathname.startsWith("/doctor");
   const isExcludedRole =
     user?.role === "admin" ||
-    user?.role === "doctor" ||
-    user?.role === "QUAN_TRI_VIEN" ||
-    user?.role === "BAC_SI";
+    user?.role === "doctor";
 
   if (isExcludedPath || isExcludedRole) {
     return null;
