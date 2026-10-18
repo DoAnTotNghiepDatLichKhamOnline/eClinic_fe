@@ -15,21 +15,22 @@ export function DoctorPage() {
   const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Read URL query params
+  const paramChuyenKhoa =
+    searchParams.get("chuyenKhoa") ||
+    searchParams.get("idChuyenKhoa") ||
+    searchParams.get("specialty");
+  const paramQuery = searchParams.get("query") || searchParams.get("tuKhoa") || "";
+
   // Search input state with debounce
-  const [inputValue, setInputValue] = useState("");
-  const [tuKhoa, setTuKhoa] = useState("");
+  const [inputValue, setInputValue] = useState(paramQuery);
+  const [tuKhoa, setTuKhoa] = useState(paramQuery);
 
   // Current page (1-based for UI display)
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch specialties for filter dropdown
   const { danhSach: danhSachChuyenKhoa } = useDanhSachChuyenKhoa({ kichThuoc: 100 });
-
-  // Read URL query params
-  const paramChuyenKhoa =
-    searchParams.get("chuyenKhoa") ||
-    searchParams.get("idChuyenKhoa") ||
-    searchParams.get("specialty");
 
   // Determine selected specialty ID
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | undefined>(() => {
@@ -55,15 +56,39 @@ export function DoctorPage() {
     }
   }, [paramChuyenKhoa, danhSachChuyenKhoa]);
 
-  // Debounce search input (300ms)
+  // Sync search input if query param changes externally
+  useEffect(() => {
+    const currentQuery = searchParams.get("query") || searchParams.get("tuKhoa") || "";
+    if (currentQuery !== tuKhoa && currentQuery !== inputValue) {
+      setInputValue(currentQuery);
+      setTuKhoa(currentQuery);
+    }
+  }, [searchParams, tuKhoa, inputValue]);
+
+  // Debounce search input (350ms) and sync with URL searchParams
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTuKhoa(inputValue.trim());
+      const trimmed = inputValue.trim();
+      setTuKhoa(trimmed);
       setCurrentPage(1);
-    }, 300);
+
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (trimmed) {
+            next.set("query", trimmed);
+          } else {
+            next.delete("query");
+            next.delete("tuKhoa");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    }, 350);
 
     return () => clearTimeout(timer);
-  }, [inputValue]);
+  }, [inputValue, setSearchParams]);
 
   // Handle specialty change
   const handleSpecialtyChange = (value: string) => {
