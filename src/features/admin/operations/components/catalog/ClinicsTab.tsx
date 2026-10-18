@@ -32,7 +32,7 @@ export function ClinicsTab({
         <button
           type="button"
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-900 transition-colors"
+          className={styles.actionBtn}
         >
           <Plus size={14} />
           <span>{vi ? "Thêm phòng khám" : "Add Clinic"}</span>
@@ -54,7 +54,10 @@ export function ClinicsTab({
           <tbody>
             {clinics.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-xs text-slate-500">
+                <td
+                  colSpan={6}
+                  className="text-center py-8 text-xs text-slate-500"
+                >
                   {isLoading
                     ? vi
                       ? "Đang tải dữ liệu..."

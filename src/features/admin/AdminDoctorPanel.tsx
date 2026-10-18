@@ -371,7 +371,7 @@ export function AdminDoctorPanel() {
           <button
             type="button"
             onClick={() => setIsAddDoctorOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-900 transition-colors"
+           className={styles.actionBtn}
           >
             <UserPlus size={14} />
             <span>{vi ? "Thêm bác sĩ" : "Add Doctor"}</span>

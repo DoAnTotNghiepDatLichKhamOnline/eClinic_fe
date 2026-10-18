@@ -80,10 +80,7 @@ export function AdminCatalogSection() {
     setMessage("");
   };
 
-  const finish = async (
-    text: string,
-    keys: readonly (readonly string[])[],
-  ) => {
+  const finish = async (text: string, keys: readonly (readonly string[])[]) => {
     setError("");
     setMessage(text);
     await Promise.all(
@@ -162,9 +159,7 @@ export function AdminCatalogSection() {
               .ngungHoatDongPhongKham(id)
               .then(() =>
                 finish(
-                  vi
-                    ? "Đã ngừng hoạt động phòng khám"
-                    : "Clinic deactivated",
+                  vi ? "Đã ngừng hoạt động phòng khám" : "Clinic deactivated",
                   [
                     CATALOG_QUERY_KEYS.adminClinics,
                     CATALOG_QUERY_KEYS.publicClinics,
@@ -178,9 +173,7 @@ export function AdminCatalogSection() {
               .hoatDongLaiPhongKham(id)
               .then(() =>
                 finish(
-                  vi
-                    ? "Đã kích hoạt lại phòng khám"
-                    : "Clinic activated",
+                  vi ? "Đã kích hoạt lại phòng khám" : "Clinic activated",
                   [
                     CATALOG_QUERY_KEYS.adminClinics,
                     CATALOG_QUERY_KEYS.publicClinics,
@@ -216,10 +209,9 @@ export function AdminCatalogSection() {
             void medicineService
               .ngungDungThuoc(id)
               .then(() =>
-                finish(
-                  vi ? "Đã ngừng dùng thuốc" : "Medicine disabled",
-                  [CATALOG_QUERY_KEYS.adminMedicines],
-                ),
+                finish(vi ? "Đã ngừng dùng thuốc" : "Medicine disabled", [
+                  CATALOG_QUERY_KEYS.adminMedicines,
+                ]),
               )
               .catch(showFailure);
           }}
@@ -228,9 +220,7 @@ export function AdminCatalogSection() {
               .dungLaiThuoc(id)
               .then(() =>
                 finish(
-                  vi
-                    ? "Đã kích hoạt dùng lại thuốc"
-                    : "Medicine reactivated",
+                  vi ? "Đã kích hoạt dùng lại thuốc" : "Medicine reactivated",
                   [CATALOG_QUERY_KEYS.adminMedicines],
                 ),
               )

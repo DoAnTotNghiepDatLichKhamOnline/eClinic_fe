@@ -1,7 +1,13 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ThuocResponse } from "@/types/catalog.type";
 import styles from "../../../AdminDashboardPage.module.css";
-import { Plus, Edit3, ShieldCheck, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Edit3,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 
 interface MedicinesTabProps {
   medicines: ThuocResponse[];
@@ -34,7 +40,7 @@ export function MedicinesTab({
         <button
           type="button"
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-900 transition-colors"
+          className={styles.actionBtn}
         >
           <Plus size={14} />
           <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
@@ -57,7 +63,10 @@ export function MedicinesTab({
           <tbody>
             {medicines.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-xs text-slate-500">
+                <td
+                  colSpan={7}
+                  className="text-center py-8 text-xs text-slate-500"
+                >
                   {isLoading
                     ? vi
                       ? "Đang tải dữ liệu..."
@@ -74,7 +83,8 @@ export function MedicinesTab({
                     {medicine.tenThuoc}
                     {medicine.tenBacSiTao && (
                       <div className="text-[11px] text-slate-500 font-normal">
-                        {vi ? "Bác sĩ tạo:" : "Created by:"} {medicine.tenBacSiTao}
+                        {vi ? "Bác sĩ tạo:" : "Created by:"}{" "}
+                        {medicine.tenBacSiTao}
                       </div>
                     )}
                   </td>
