@@ -435,26 +435,26 @@ export function ServiceTimeStep({
                   onChange("slotTime", "");
                   onChange("gioBatDauKhung", "");
                 }}
-                className={`flex flex-col items-center py-2.5 px-1.5 rounded-xl border text-center transition-all ${
+                className={`flex flex-col items-center py-2.5 px-1.5 rounded-xl text-center transition-all ${
                   isSelected
-                    ? "border-[#0f4d3a] bg-[#0f4d3a] text-white shadow-sm"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800"
+                    ? "border-2 border-emerald-800 bg-white text-slate-900 shadow-sm ring-2 ring-emerald-600/20"
+                    : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800"
                 }`}
               >
                 <span
-                  className={`text-xs font-semibold ${
-                    isSelected ? "text-emerald-100" : "text-slate-500"
+                  className={`text-xs ${
+                    isSelected ? "font-bold text-emerald-800" : "font-semibold text-slate-500"
                   }`}
                 >
                   {lang === "vi" ? item.dayNameVi : item.dayNameEn}
                 </span>
-                <span className="text-base font-extrabold mt-0.5">
+                <span className="text-base font-extrabold mt-0.5 text-slate-900">
                   {item.displayDate}
                 </span>
                 <span
-                  className={`text-[10px] mt-1 px-1.5 py-0.2 rounded font-medium ${
+                  className={`text-[10px] mt-1 px-1.5 py-0.5 rounded font-semibold ${
                     isSelected
-                      ? "bg-emerald-800 text-emerald-100"
+                      ? "bg-emerald-100 text-emerald-900"
                       : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
@@ -597,16 +597,16 @@ export function ServiceTimeStep({
                             onChange("idLichLamViec", undefined);
                           }
                         }}
-                        className={`py-2.5 px-2 rounded-xl border text-center transition-all ${
+                        className={`py-2.5 px-2 rounded-xl text-center transition-all ${
                           isSelected
-                            ? "border-[#0f4d3a] bg-emerald-700 text-white font-bold shadow-sm"
-                            : "border-slate-200 bg-white hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-medium"
+                            ? "border-2 border-emerald-800 bg-white text-slate-900 font-bold shadow-sm ring-2 ring-emerald-600/20"
+                            : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800 font-medium"
                         }`}
                       >
-                        <span className="text-xs block">{slot.timeLabel}</span>
+                        <span className="text-xs block text-slate-900 font-semibold">{slot.timeLabel}</span>
                         <span
-                          className={`text-[10px] ${
-                            isSelected ? "text-emerald-100" : "text-emerald-600"
+                          className={`text-[10px] inline-block mt-0.5 px-1.5 py-0.5 rounded font-semibold ${
+                            isSelected ? "text-emerald-900 bg-emerald-100" : "text-emerald-700 bg-emerald-50"
                           }`}
                         >
                           {lang === "vi"
@@ -667,16 +667,16 @@ export function ServiceTimeStep({
                             onChange("idLichLamViec", undefined);
                           }
                         }}
-                        className={`py-2.5 px-2 rounded-xl border text-center transition-all ${
+                        className={`py-2.5 px-2 rounded-xl text-center transition-all ${
                           isSelected
-                            ? "border-[#0f4d3a] bg-emerald-700 text-white font-bold shadow-sm"
-                            : "border-slate-200 bg-white hover:border-emerald-600 hover:text-emerald-700 text-slate-700 font-medium"
+                            ? "border-2 border-emerald-800 bg-white text-slate-900 font-bold shadow-sm ring-2 ring-emerald-600/20"
+                            : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800 font-medium"
                         }`}
                       >
-                        <span className="text-xs block">{slot.timeLabel}</span>
+                        <span className="text-xs block text-slate-900 font-semibold">{slot.timeLabel}</span>
                         <span
-                          className={`text-[10px] ${
-                            isSelected ? "text-emerald-100" : "text-emerald-600"
+                          className={`text-[10px] inline-block mt-0.5 px-1.5 py-0.5 rounded font-semibold ${
+                            isSelected ? "text-emerald-900 bg-emerald-100" : "text-emerald-700 bg-emerald-50"
                           }`}
                         >
                           {lang === "vi"
