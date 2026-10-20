@@ -49,7 +49,7 @@ export function UserProfile({ className }: UserProfileProps) {
 
   if (!user) return null;
 
-  const currentRole = user.vaiTro || user.role || "patient";
+  const currentRole = user.role || "patient";
 
   const roleLabel =
     currentRole === "doctor"
