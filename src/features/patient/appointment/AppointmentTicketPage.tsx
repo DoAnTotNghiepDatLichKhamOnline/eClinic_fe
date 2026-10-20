@@ -212,7 +212,10 @@ export function AppointmentTicketPage() {
         {/* Header section */}
         <div className="p-6 pb-5">
           <p className="text-xs font-black uppercase tracking-wider text-slate-500">
-            {t({ en: "Electronic Appointment Ticket", vi: "PHIẾU KHÁM ĐIỆN TỬ" })}
+            {t({
+              en: "Electronic Appointment Ticket",
+              vi: "PHIẾU KHÁM ĐIỆN TỬ",
+            })}
           </p>
 
           <div className="mt-2.5 flex items-start justify-between gap-4">
@@ -239,7 +242,10 @@ export function AppointmentTicketPage() {
                 <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
                   <img
                     src={qrUrl}
-                    alt={t({ en: "Appointment QR code", vi: "Mã QR phiếu khám" })}
+                    alt={t({
+                      en: "Appointment QR code",
+                      vi: "Mã QR phiếu khám",
+                    })}
                     className="h-24 w-24 object-contain"
                   />
                 </div>
@@ -259,7 +265,9 @@ export function AppointmentTicketPage() {
         {/* Middle Info Rows */}
         <div className="divide-y divide-slate-100 bg-slate-50/50 px-6 py-2 text-sm">
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Bệnh nhân" : "Patient"}</span>
+            <span className="text-slate-500">
+              {vi ? "Bệnh nhân" : "Patient"}
+            </span>
             <span className="font-bold text-slate-900 text-right">
               {ticket.benhNhan.hoTen}
             </span>
@@ -274,7 +282,9 @@ export function AppointmentTicketPage() {
           </div>
 
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Chuyên khoa" : "Specialty"}</span>
+            <span className="text-slate-500">
+              {vi ? "Chuyên khoa" : "Specialty"}
+            </span>
             <span className="font-semibold text-slate-800 text-right">
               {ticket.tenChuyenKhoa}
             </span>
@@ -295,7 +305,9 @@ export function AppointmentTicketPage() {
           </div>
 
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Phòng khám" : "Clinic"}</span>
+            <span className="text-slate-500">
+              {vi ? "Phòng khám" : "Clinic"}
+            </span>
             <span className="font-semibold text-slate-800 text-right">
               {ticket.phongKham.tenPhong}
               {ticket.phongKham.tang ? ` - ${ticket.phongKham.tang}` : ""}
@@ -311,7 +323,9 @@ export function AppointmentTicketPage() {
 
           {ticket.lyDoKham && (
             <div className="flex items-start justify-between py-2.5">
-              <span className="text-slate-500">{vi ? "Lý do khám" : "Reason"}</span>
+              <span className="text-slate-500">
+                {vi ? "Lý do khám" : "Reason"}
+              </span>
               <span className="max-w-[60%] text-right text-xs text-slate-700 italic">
                 {ticket.lyDoKham}
               </span>
@@ -345,7 +359,7 @@ export function AppointmentTicketPage() {
               {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" && (
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-900 transition"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800! py-3 text-sm font-bold text-white! shadow-sm hover:bg-emerald-900! transition"
                   onClick={() => setMode("reschedule")}
                 >
                   <CalendarClock size={17} />
@@ -364,7 +378,9 @@ export function AppointmentTicketPage() {
                     <XCircle size={15} />
                     {vi ? "Hủy lịch khám" : "Cancel"}
                   </button>
-                ) : <span />}
+                ) : (
+                  <span />
+                )}
 
                 {qrUrl && (
                   <a
@@ -414,7 +430,7 @@ export function AppointmentTicketPage() {
                 <label className="grid gap-1 text-xs font-semibold text-slate-700">
                   {t({ en: "Contact phone *", vi: "Số điện thoại liên hệ *" })}
                   <input
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                    className="rounded-lg border bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                     required
                     inputMode="numeric"
                     maxLength={10}
@@ -429,11 +445,16 @@ export function AppointmentTicketPage() {
 
               {mode === "cancel" ? (
                 <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                  {t({ en: "Reason (optional)", vi: "Lý do hủy (không bắt buộc)" })}
+                  {t({
+                    en: "Reason (optional)",
+                    vi: "Lý do hủy (không bắt buộc)",
+                  })}
                   <textarea
                     rows={3}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                    placeholder={vi ? "Nhập lý do nếu có..." : "Enter reason..."}
+                    className="rounded-lg border  bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                    placeholder={
+                      vi ? "Nhập lý do nếu có..." : "Enter reason..."
+                    }
                     value={reason}
                     onChange={(event) => setReason(event.target.value)}
                   />
@@ -502,12 +523,16 @@ export function AppointmentTicketPage() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-900 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800! px-4 py-2 text-xs font-bold text-white! shadow-sm hover:bg-emerald-900! disabled:opacity-60"
                 >
                   {busy && <Loader2 size={13} className="animate-spin" />}
                   {mode === "cancel"
-                    ? vi ? "Xác nhận hủy" : "Confirm Cancel"
-                    : vi ? "Xác nhận đổi lịch" : "Confirm Reschedule"}
+                    ? vi
+                      ? "Xác nhận hủy"
+                      : "Confirm Cancel"
+                    : vi
+                      ? "Xác nhận đổi lịch"
+                      : "Confirm Reschedule"}
                 </button>
               </div>
             </form>

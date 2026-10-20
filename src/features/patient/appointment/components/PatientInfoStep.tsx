@@ -193,10 +193,10 @@ export function PatientInfoStep({
                         onChange("childGender", g.value);
                       }
                     }}
-                    className={`h-full rounded-xl border text-xs font-bold transition-all ${
+                    className={`h-full rounded-xl text-xs transition-all ${
                       isSelected
-                        ? "border-[#0f4d3a] bg-[#0f4d3a] text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-2 border-emerald-800 bg-white text-slate-900 font-bold shadow-sm ring-2 ring-emerald-600/20"
+                        : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800 font-medium"
                     }`}
                   >
                     {lang === "vi" ? g.vi : g.en}

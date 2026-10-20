@@ -330,7 +330,9 @@ export function DoctorDashboardPage({
                           ({ca.gioBatDau.slice(0, 5)} - {ca.gioKetThuc.slice(0, 5)})
                         </span>
                         <span className={styles.shiftStats}>
-                          {ca.phongKham} · {ca.soLuong.choKham} {lang === "vi" ? "chờ" : "waiting"} ·{" "}
+                          {typeof ca.phongKham === "object" && ca.phongKham !== null
+                            ? (ca.phongKham as any).tenPhong
+                            : ca.phongKham} · {ca.soLuong.choKham} {lang === "vi" ? "chờ" : "waiting"} ·{" "}
                           {ca.soLuong.dangKham} {lang === "vi" ? "đang khám" : "in room"} ·{" "}
                           {ca.soLuong.daKham} {lang === "vi" ? "xong" : "done"}
                         </span>
