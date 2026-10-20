@@ -23,6 +23,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  isLoadingSession: boolean;
   login: (userData: User) => void;
   loginWithCredentials: (data: DangNhapRequest) => Promise<DangNhapResponse>;
   loginWithGoogle: (idToken: string) => Promise<DangNhapResponse>;
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
 
   // Tự động khôi phục access token khi ứng dụng khởi động lại nếu có cookie refresh token
   useEffect(() => {
@@ -73,9 +75,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: tk.soDienThoai || undefined,
             role: mapVaiTroToRole(tk.vaiTro),
           });
+        } else if (isMounted) {
+          setAccessToken(null);
+          setUser(null);
         }
       } catch {
-        // Nếu không có cookie hoặc cookie hết hạn, giữ user hiện tại hoặc xóa nếu cần
+        if (isMounted) {
+          setAccessToken(null);
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSession(false);
+        }
       }
     };
 
@@ -161,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        isLoadingSession,
         login,
         loginWithCredentials,
         loginWithGoogle,
