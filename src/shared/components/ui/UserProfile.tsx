@@ -5,10 +5,12 @@ import {
   ChevronDown,
   ClipboardList,
   KeyRound,
+  LayoutDashboard,
   LogOut,
   Mail,
   Phone,
   ShieldAlert,
+  Stethoscope,
   UserRound,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -47,12 +49,14 @@ export function UserProfile({ className }: UserProfileProps) {
 
   if (!user) return null;
 
+  const currentRole = user.vaiTro || user.role || "patient";
+
   const roleLabel =
-    user.role === "doctor"
+    currentRole === "doctor"
       ? lang === "vi"
         ? "Bác sĩ"
         : "Doctor"
-      : user.role === "admin"
+      : currentRole === "admin"
         ? lang === "vi"
           ? "Quản trị viên"
           : "Administrator"
@@ -129,7 +133,7 @@ export function UserProfile({ className }: UserProfileProps) {
             )}
           </div>
 
-          {user.role === "patient" ? (
+          {currentRole === "patient" && (
             <nav
               className={styles.links}
               aria-label={
@@ -208,66 +212,118 @@ export function UserProfile({ className }: UserProfileProps) {
                 </span>
               </Link>
             </nav>
-          ) : (
-            <div className={styles.profileDetails}>
-              {user.phone && (
+          )}
+
+          {currentRole === "doctor" && (
+            <>
+              <nav
+                className={styles.links}
+                aria-label={
+                  lang === "vi" ? "Liên kết bác sĩ" : "Doctor links"
+                }
+              >
+                <Link
+                  to="/doctor/dashboard"
+                  className={styles.item}
+                  onClick={closeMenu}
+                >
+                  <Stethoscope aria-hidden="true" />
+                  <span className={styles.itemTextBlock}>
+                    <span className={styles.itemTitle}>
+                      {lang === "vi" ? "Bàn làm việc Bác sĩ" : "Doctor Workspace"}
+                    </span>
+                    <span className={styles.itemDesc}>
+                      {lang === "vi"
+                        ? "Hàng đợi khám & lịch làm việc"
+                        : "Consultation queue & schedule"}
+                    </span>
+                  </span>
+                </Link>
+              </nav>
+              <div className={styles.divider} />
+              <div className={styles.profileDetails}>
+                {user.phone && (
+                  <div>
+                    <span>{lang === "vi" ? "Điện thoại" : "Phone"}</span>
+                    <strong>
+                      <Phone size={13} aria-hidden="true" />
+                      {user.phone}
+                    </strong>
+                  </div>
+                )}
                 <div>
-                  <span>{lang === "vi" ? "Điện thoại" : "Phone"}</span>
+                  <span>{lang === "vi" ? "Chuyên khoa" : "Specialty"}</span>
                   <strong>
-                    <Phone size={13} aria-hidden="true" />
-                    {user.phone}
+                    {user.specialty ||
+                      (lang === "vi" ? "Đa khoa" : "General")}
                   </strong>
                 </div>
-              )}
-              {user.role === "doctor" && (
-                <>
-                  <div>
-                    <span>{lang === "vi" ? "Chuyên khoa" : "Specialty"}</span>
-                    <strong>
-                      {user.specialty ||
-                        (lang === "vi" ? "Đa khoa" : "General")}
-                    </strong>
-                  </div>
-                  <div>
-                    <span>{lang === "vi" ? "Học vị" : "Degree"}</span>
-                    <strong>
-                      {user.degree ||
-                        (lang === "vi" ? "Bác sĩ" : "Doctor")}
-                    </strong>
-                  </div>
-                  <div>
-                    <span>{lang === "vi" ? "Trình độ" : "Qualification"}</span>
-                    <strong>
-                      {lang === "vi" ? "Bác sĩ chuyên khoa" : "Specialist Doctor"}
-                    </strong>
-                  </div>
-                  <div>
-                    <span>{lang === "vi" ? "Phòng khám" : "Clinic"}</span>
-                    <strong>
-                      {user.clinic ||
-                        (lang === "vi" ? "Phòng khám eClinic" : "eClinic Center")}
-                    </strong>
-                  </div>
-                  <button
-                    type="button"
-                    className={styles.item}
-                    onClick={() => {
-                      closeMenu();
-                      notifyAuth(
-                        "info",
-                        lang === "vi" ? "Đổi mật khẩu" : "Change password",
-                        lang === "vi"
-                          ? "Vui lòng liên hệ quản trị viên để cập nhật mật khẩu."
-                          : "Contact your administrator to update your password.",
-                      );
-                    }}
-                  >
-                    <KeyRound aria-hidden="true" />
-                    {lang === "vi" ? "Đổi mật khẩu" : "Change password"}
-                  </button>
-                </>
-              )}
-            </div>
+                <div>
+                  <span>{lang === "vi" ? "Học vị" : "Degree"}</span>
+                  <strong>
+                    {user.degree ||
+                      (lang === "vi" ? "Bác sĩ" : "Doctor")}
+                  </strong>
+                </div>
+                <div>
+                  <span>{lang === "vi" ? "Trình độ" : "Qualification"}</span>
+                  <strong>
+                    {lang === "vi" ? "Bác sĩ chuyên khoa" : "Specialist Doctor"}
+                  </strong>
+                </div>
+                <div>
+                  <span>{lang === "vi" ? "Phòng khám" : "Clinic"}</span>
+                  <strong>
+                    {user.clinic ||
+                      (lang === "vi" ? "Phòng khám eClinic" : "eClinic Center")}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  className={styles.item}
+                  onClick={() => {
+                    closeMenu();
+                    notifyAuth(
+                      "info",
+                      lang === "vi" ? "Đổi mật khẩu" : "Change password",
+                      lang === "vi"
+                        ? "Vui lòng liên hệ quản trị viên để cập nhật mật khẩu."
+                        : "Contact your administrator to update your password.",
+                    );
+                  }}
+                >
+                  <KeyRound aria-hidden="true" />
+                  {lang === "vi" ? "Đổi mật khẩu" : "Change password"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {currentRole === "admin" && (
+            <nav
+              className={styles.links}
+              aria-label={
+                lang === "vi" ? "Liên kết quản trị" : "Admin links"
+              }
+            >
+              <Link
+                to="/admin/dashboard"
+                className={styles.item}
+                onClick={closeMenu}
+              >
+                <LayoutDashboard aria-hidden="true" />
+                <span className={styles.itemTextBlock}>
+                  <span className={styles.itemTitle}>
+                    {lang === "vi" ? "Trang Quản trị Admin" : "Admin Dashboard"}
+                  </span>
+                  <span className={styles.itemDesc}>
+                    {lang === "vi"
+                      ? "Quản lý lịch, danh mục & tài khoản"
+                      : "Manage schedules, catalogs & accounts"}
+                  </span>
+                </span>
+              </Link>
+            </nav>
           )}
 
           <div className={styles.divider} />
