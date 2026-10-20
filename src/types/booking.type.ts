@@ -422,7 +422,7 @@ export interface HangDoiCa {
   buoi: "SANG" | "CHIEU" | "TOI";
   gioBatDau: string;
   gioKetThuc: string;
-  phongKham: string;
+  phongKham: string | PhongKhamTomTatResponse | { id: number; tenPhong: string; tang?: string | null };
   soLuong: {
     tong: number;
     choKham: number;
