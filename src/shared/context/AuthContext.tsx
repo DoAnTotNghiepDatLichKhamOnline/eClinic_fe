@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { authService } from "@/services/identity/authService";
-import { setAccessToken } from "@/utils/axiosClient";
+import { setAccessToken, getAccessToken } from "@/utils/axiosClient";
 import { applyAccountLanguage } from "@/utils/languagePreference";
 import type {
   DangNhapRequest,
@@ -37,6 +37,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "eclinic_user_session";
 
+function isTokenValid(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return true;
+    return payload.exp * 1000 > Date.now() + 30000;
+  } catch {
+    return false;
+  }
+}
+
 function mapVaiTroToRole(vaiTro: VaiTro): "patient" | "doctor" | "admin" {
   switch (vaiTro) {
     case "BAC_SI":
@@ -64,6 +84,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     const restoreSession = async () => {
+      const currentToken = getAccessToken();
+      const savedUserStr = localStorage.getItem(STORAGE_KEY);
+      const hasSavedUser = Boolean(savedUserStr);
+
+      // 1. Chưa đăng nhập (khách vãng lai): không gọi refresh-token tránh lỗi 401
+      if (!hasSavedUser && !currentToken) {
+        if (isMounted) {
+          setIsLoadingSession(false);
+        }
+        return;
+      }
+
+      // 2. Đã có user và access token vẫn còn hạn sử dụng: giữ nguyên session
+      if (hasSavedUser && isTokenValid(currentToken)) {
+        if (isMounted) {
+          setIsLoadingSession(false);
+        }
+        return;
+      }
+
+      // 3. Có user nhưng token hết hạn hoặc chưa nạp: dùng refresh-token để khôi phục
       try {
         const response = await authService.lamMoiToken();
         if (response.thanhCong && response.duLieu && isMounted) {
