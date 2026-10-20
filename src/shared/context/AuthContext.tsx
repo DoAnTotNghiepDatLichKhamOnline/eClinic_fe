@@ -15,6 +15,7 @@ export interface User {
   phone?: string;
   email?: string;
   role: "patient" | "doctor" | "admin";
+  vaiTro?: "patient" | "doctor" | "admin" | "BENH_NHAN" | "BAC_SI" | "QUAN_TRI_VIEN";
   avatarUrl?: string;
   specialty?: string;
   degree?: string;
@@ -23,6 +24,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  isAuthenticated: boolean;
   isLoadingSession: boolean;
   login: (userData: User) => void;
   loginWithCredentials: (data: DangNhapRequest) => Promise<DangNhapResponse>;
@@ -173,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: Boolean(user),
         isLoadingSession,
         login,
         loginWithCredentials,
