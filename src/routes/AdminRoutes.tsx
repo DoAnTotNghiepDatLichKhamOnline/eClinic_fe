@@ -23,7 +23,7 @@ function AdminLoginRoute() {
       </div>
     );
   }
-  if (isAuthenticated && user?.vaiTro === "admin") {
+  if (isAuthenticated && user?.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
   }
   return <LoginPageAdmin />;
