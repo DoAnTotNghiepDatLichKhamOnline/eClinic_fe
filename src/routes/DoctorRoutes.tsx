@@ -28,7 +28,7 @@ function DoctorLoginRoute() {
       </div>
     );
   }
-  if (isAuthenticated && user?.vaiTro === "doctor") {
+  if (isAuthenticated && user?.role === "doctor") {
     return <Navigate to="/doctor/dashboard" replace />;
   }
   return <LoginPageDoctor />;
