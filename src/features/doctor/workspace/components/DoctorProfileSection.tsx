@@ -21,6 +21,7 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { userProfileService } from "@/services/identity/userProfileService";
 import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import type {
   HoSoBacSiQuanTriResponse,
   AnhBacSiResponse,
@@ -51,6 +52,10 @@ export function DoctorProfileSection() {
   const [editCaption, setEditCaption] = useState("");
   const [editCaptionEn, setEditCaptionEn] = useState("");
   const [savingCaption, setSavingCaption] = useState(false);
+
+  // State xác nhận xóa ảnh
+  const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | null>(null);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
 
   const doctorAccountQuery = useQuery({
     queryKey: ["identity", "doctor-profile"],
@@ -222,20 +227,13 @@ export function DoctorProfileSection() {
     }
   };
 
-  // Handle delete image
-  const handleDeleteImage = async (idAnh: number) => {
-    if (
-      !window.confirm(
-        lang === "vi"
-          ? "Bạn có chắc chắn muốn xóa ảnh này?"
-          : "Are you sure you want to delete this photo?",
-      )
-    ) {
-      return;
-    }
+  // Execute delete image
+  const executeDeleteImage = async () => {
+    if (!confirmDeletePhotoId) return;
 
     try {
-      const res = await doctorService.xoaAnhToi(idAnh);
+      setIsDeletingPhoto(true);
+      const res = await doctorService.xoaAnhToi(confirmDeletePhotoId);
       if (res.thanhCong) {
         notifyAuth(
           "success",
@@ -254,6 +252,9 @@ export function DoctorProfileSection() {
           (lang === "vi" ? "Lỗi xóa ảnh" : "Failed to delete photo"),
         "",
       );
+    } finally {
+      setIsDeletingPhoto(false);
+      setConfirmDeletePhotoId(null);
     }
   };
 
@@ -1151,7 +1152,7 @@ export function DoctorProfileSection() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteImage(photo.id)}
+                      onClick={() => setConfirmDeletePhotoId(photo.id)}
                       title={lang === "vi" ? "Xóa ảnh" : "Delete photo"}
                       style={{
                         background: "transparent",
@@ -1281,6 +1282,22 @@ export function DoctorProfileSection() {
           </div>
         </div>
       )}
+      {/* Confirm Dialog for Photo Deletion */}
+      <ConfirmDialog
+        isOpen={confirmDeletePhotoId !== null}
+        title={lang === "vi" ? "Xác nhận xóa ảnh" : "Confirm Delete Photo"}
+        message={
+          lang === "vi"
+            ? "Bạn có chắc chắn muốn xóa ảnh hoạt động này khỏi hồ sơ làm việc? Thao tác này không thể hoàn tác."
+            : "Are you sure you want to delete this photo from your professional profile? This action cannot be undone."
+        }
+        confirmLabel={lang === "vi" ? "Xóa ảnh" : "Delete Photo"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeletingPhoto}
+        onConfirm={() => void executeDeleteImage()}
+        onCancel={() => setConfirmDeletePhotoId(null)}
+      />
     </section>
   );
 }
