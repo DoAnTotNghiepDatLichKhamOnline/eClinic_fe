@@ -37,6 +37,8 @@ import type {
 } from "@/types/auth.type";
 import styles from "./AdminDashboardPage.module.css";
 import { adminBookingService } from "@/services/booking/adminBookingService";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { notifyAuth } from "@/utils/authNotification";
 import { AdminOperationsPanel } from "./AdminOperationsPanel";
 import { AdminDoctorPanel } from "./AdminDoctorPanel";
 
@@ -77,6 +79,10 @@ export function AdminDashboardPage({
   const [viewingAccountUserId, setViewingAccountUserId] = useState<number | null>(null);
   const [disablingUser, setDisablingUser] = useState<TaiKhoanQuanTriResponse | null>(null);
   const [isDisabling, setIsDisabling] = useState(false);
+  const [activatingUser, setActivatingUser] = useState<TaiKhoanQuanTriResponse | null>(null);
+  const [isActivating, setIsActivating] = useState(false);
+  const [deletingPendingUser, setDeletingPendingUser] = useState<TaiKhoanQuanTriResponse | null>(null);
+  const [isDeletingPending, setIsDeletingPending] = useState(false);
 
   type AccountSortField = "id" | "hoTen" | "email" | "soDienThoai";
   const [sortField, setSortField] = useState<AccountSortField>("id");
@@ -152,7 +158,7 @@ export function AdminDashboardPage({
     navigate(`/admin/${sectionPaths[section]}`);
 
   // Chuyển đổi trạng thái tài khoản (Kích hoạt lại hoặc Vô hiệu hóa)
-  const handleToggleStatus = async (user: TaiKhoanQuanTriResponse) => {
+  const handleToggleStatus = (user: TaiKhoanQuanTriResponse) => {
     if (user.vaiTro === "QUAN_TRI_VIEN" || user.trangThai === "CHO_XAC_NHAN")
       return;
     const isCurrentlyActive = user.trangThai === "DA_KICH_HOAT";
@@ -160,31 +166,41 @@ export function AdminDashboardPage({
     if (isCurrentlyActive) {
       // Mở modal nhập lý do vô hiệu hóa (tối đa 500 ký tự)
       setDisablingUser(user);
-      return;
+    } else {
+      setActivatingUser(user);
     }
+  };
 
-    const confirmMsg = vi
-      ? `Bạn có chắc chắn muốn kích hoạt lại tài khoản "${user.hoTen}" (${user.email})?`
-      : `Are you sure you want to activate account "${user.hoTen}" (${user.email})?`;
-
-    if (!window.confirm(confirmMsg)) return;
-
+  const handleConfirmActivate = async () => {
+    if (!activatingUser) return;
     try {
-      setUpdatingUserId(user.id);
+      setIsActivating(true);
+      setUpdatingUserId(activatingUser.id);
       await capNhatTrangThaiTaiKhoan({
-        id: user.id,
+        id: activatingUser.id,
         data: {
           trangThai: "DA_KICH_HOAT",
         },
       });
+      notifyAuth(
+        "success",
+        vi ? "Kích hoạt thành công" : "Activation successful",
+        vi
+          ? `Tài khoản "${activatingUser.hoTen}" đã được kích hoạt lại.`
+          : `Account "${activatingUser.hoTen}" has been reactivated.`,
+      );
+      setActivatingUser(null);
     } catch (err: any) {
-      alert(
+      notifyAuth(
+        "error",
+        vi ? "Kích hoạt thất bại" : "Activation failed",
         err?.response?.data?.thongDiep ||
           (vi
             ? "Không thể cập nhật trạng thái tài khoản."
             : "Failed to update account status."),
       );
     } finally {
+      setIsActivating(false);
       setUpdatingUserId(null);
     }
   };
@@ -200,9 +216,18 @@ export function AdminDashboardPage({
           lyDoVoHieuHoa: reason,
         },
       });
+      notifyAuth(
+        "success",
+        vi ? "Vô hiệu hóa thành công" : "Disabled successfully",
+        vi
+          ? `Tài khoản "${disablingUser.hoTen}" đã được chuyển sang trạng thái vô hiệu hóa.`
+          : `Account "${disablingUser.hoTen}" has been disabled.`,
+      );
       setDisablingUser(null);
     } catch (err: any) {
-      alert(
+      notifyAuth(
+        "error",
+        vi ? "Vô hiệu hóa thất bại" : "Disabling failed",
         err?.response?.data?.thongDiep ||
           (vi
             ? "Không thể vô hiệu hóa tài khoản."
@@ -213,23 +238,33 @@ export function AdminDashboardPage({
     }
   };
 
-  const handleDeletePendingAccount = async (user: TaiKhoanQuanTriResponse) => {
-    if (
-      user.trangThai !== "CHO_XAC_NHAN" ||
-      !window.confirm(
-        vi
-          ? `Xóa tài khoản đang chờ của ${user.email}?`
-          : `Delete pending account ${user.email}?`,
-      )
-    )
-      return;
+  const handleDeletePendingAccount = (user: TaiKhoanQuanTriResponse) => {
+    if (user.trangThai !== "CHO_XAC_NHAN") return;
+    setDeletingPendingUser(user);
+  };
+
+  const handleConfirmDeletePending = async () => {
+    if (!deletingPendingUser) return;
     try {
-      await xoaTaiKhoan(user.id);
+      setIsDeletingPending(true);
+      await xoaTaiKhoan(deletingPendingUser.id);
+      notifyAuth(
+        "success",
+        vi ? "Xóa tài khoản thành công" : "Deleted successfully",
+        vi
+          ? `Đã xóa tài khoản đang chờ "${deletingPendingUser.email}".`
+          : `Pending account "${deletingPendingUser.email}" has been deleted.`,
+      );
+      setDeletingPendingUser(null);
     } catch (error: any) {
-      alert(
+      notifyAuth(
+        "error",
+        vi ? "Xóa tài khoản thất bại" : "Deletion failed",
         error?.response?.data?.thongDiep ||
           (vi ? "Không thể xóa tài khoản." : "Could not delete account."),
       );
+    } finally {
+      setIsDeletingPending(false);
     }
   };
 
@@ -688,6 +723,45 @@ export function AdminDashboardPage({
           onConfirm={handleConfirmDisable}
         />
       )}
+
+      {/* Confirm dialog kích hoạt lại tài khoản */}
+      <ConfirmDialog
+        isOpen={activatingUser !== null}
+        title={vi ? "Kích hoạt lại tài khoản" : "Reactivate Account"}
+        message={
+          activatingUser
+            ? vi
+              ? `Bạn có chắc chắn muốn kích hoạt lại tài khoản "${activatingUser.hoTen}" (${activatingUser.email})?`
+              : `Are you sure you want to reactivate account "${activatingUser.hoTen}" (${activatingUser.email})?`
+            : ""
+        }
+        confirmLabel={vi ? "Kích hoạt" : "Reactivate"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="primary"
+        isLoading={isActivating}
+        onConfirm={handleConfirmActivate}
+        onCancel={() => setActivatingUser(null)}
+      />
+
+      {/* Confirm dialog xóa tài khoản đang chờ */}
+      <ConfirmDialog
+        isOpen={deletingPendingUser !== null}
+        title={vi ? "Xóa tài khoản đang chờ" : "Delete Pending Account"}
+        message={
+          deletingPendingUser
+            ? vi
+              ? `Bạn có chắc chắn muốn xóa tài khoản đang chờ của "${deletingPendingUser.email}"? Thao tác này không thể hoàn tác.`
+              : `Are you sure you want to delete pending account "${deletingPendingUser.email}"? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel={vi ? "Xóa tài khoản" : "Delete Account"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeletingPending}
+        onConfirm={handleConfirmDeletePending}
+        onCancel={() => setDeletingPendingUser(null)}
+      />
     </div>
   );
 }
+
