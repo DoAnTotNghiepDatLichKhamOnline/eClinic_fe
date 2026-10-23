@@ -2,15 +2,20 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Calendar,
   CalendarClock,
+  CheckCircle2,
   Download,
   Loader2,
+  Mail,
   QrCode,
+  X,
   XCircle,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { patientBookingService } from "@/services/booking";
+import { taiTepLichIcs } from "@/utils/calendarGenerator";
 import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
 
 export function AppointmentTicketPage() {
@@ -30,6 +35,15 @@ export function AppointmentTicketPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Gửi lại link phiếu khám qua email
+  const [showResendModal, setShowResendModal] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendPhone, setResendPhone] = useState("");
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState("");
+  const [resendError, setResendError] = useState("");
+
 
   const loadTicket = async () => {
     setLoading(true);
@@ -116,6 +130,55 @@ export function AppointmentTicketPage() {
       );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleDownloadIcs = async () => {
+    if (!ticket) return;
+    try {
+      const blob = await patientBookingService.taiFileLichIcs(ticket.maPhieuKham);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lich-kham-${ticket.maPhieuKham}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      taiTepLichIcs(ticket);
+    }
+  };
+
+  const handleResendLink = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!resendEmail || !resendPhone) return;
+    setResendBusy(true);
+    setResendError("");
+    setResendSuccess("");
+    try {
+      const res = await patientBookingService.capLaiLienKet({
+        email: resendEmail,
+        soDienThoai: resendPhone,
+      });
+      if (!res.thanhCong) throw new Error(res.thongDiep);
+      setResendSuccess(
+        vi
+          ? "Đã gửi liên kết phiếu khám tới email của bạn! Vui lòng kiểm tra hộp thư (kể cả thư mục Spam)."
+          : "Appointment link resent to your email! Please check your inbox (including Spam folder)."
+      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ||
+        (err instanceof Error
+          ? err.message
+          : vi
+            ? "Không thể gửi lại liên kết. Vui lòng kiểm tra lại email và số điện thoại."
+            : "Failed to resend link. Please check your email and phone.");
+      setResendError(msg);
+    } finally {
+      setResendBusy(false);
     }
   };
 
@@ -382,16 +445,42 @@ export function AppointmentTicketPage() {
                   <span />
                 )}
 
-                {qrUrl && (
-                  <a
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                    href={qrUrl}
-                    download={`${ticket.maTraCuu}.png`}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    onClick={() => void handleDownloadIcs()}
+                    title={vi ? "Thêm vào lịch Google/Apple Calendar (.ics)" : "Add to calendar (.ics)"}
                   >
-                    <Download size={15} />
-                    {t({ en: "Download QR", vi: "Tải mã QR" })}
-                  </a>
-                )}
+                    <Calendar size={14} className="text-emerald-700" />
+                    {vi ? "Thêm vào lịch" : "Add to Calendar"}
+                  </button>
+
+                  {qrUrl && (
+                    <a
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                      href={qrUrl}
+                      download={`${ticket.maTraCuu}.png`}
+                    >
+                      <Download size={14} />
+                      {t({ en: "QR", vi: "Tải QR" })}
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    onClick={() => {
+                      setResendSuccess("");
+                      setResendError("");
+                      setShowResendModal(true);
+                    }}
+                    title={vi ? "Nhận lại link phiếu khám qua email" : "Resend ticket link to email"}
+                  >
+                    <Mail size={14} className="text-sky-700" />
+                    {vi ? "Gửi lại link" : "Email link"}
+                  </button>
+                </div>
               </div>
 
               {ticket.hanHuyDoi && ticket.duocHuyDoi && (
@@ -539,6 +628,99 @@ export function AppointmentTicketPage() {
           )}
         </div>
       </div>
+
+      {/* ─── Modal Cấp lại liên kết qua Email ─── */}
+      {showResendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-sky-100 p-2 text-sky-700">
+                  <Mail size={18} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {vi ? "Gửi lại liên kết phiếu khám" : "Resend ticket link"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                onClick={() => setShowResendModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {vi
+                ? "Nhập email và số điện thoại đã sử dụng khi đặt lịch. Hệ thống sẽ gửi lại liên kết truy cập phiếu khám điện tử."
+                : "Enter the email and phone number used during booking. We will resend the ticket link to your email."}
+            </p>
+
+            {resendSuccess ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 flex items-start gap-2.5">
+                <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                <p>{resendSuccess}</p>
+              </div>
+            ) : (
+              <form onSubmit={(e) => void handleResendLink(e)} className="space-y-3.5">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    {vi ? "Số điện thoại đặt lịch" : "Booking Phone Number"}
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={resendPhone}
+                    onChange={(e) => setResendPhone(e.target.value)}
+                    placeholder="0912345678"
+                    pattern="^0\d{9}$"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-900 focus:border-sky-500 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    {vi ? "Địa chỉ Email nhận liên kết" : "Email Address"}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    placeholder="example@gmail.com"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-900 focus:border-sky-500 focus:outline-hidden"
+                  />
+                </div>
+
+                {resendError && (
+                  <p role="alert" className="text-xs font-semibold text-rose-700">
+                    {resendError}
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                    onClick={() => setShowResendModal(false)}
+                  >
+                    {vi ? "Hủy bỏ" : "Cancel"}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resendBusy}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-800 disabled:opacity-60 transition"
+                  >
+                    {resendBusy && <Loader2 size={13} className="animate-spin" />}
+                    {vi ? "Gửi liên kết" : "Send link"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
