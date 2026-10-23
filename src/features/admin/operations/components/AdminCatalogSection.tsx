@@ -24,6 +24,8 @@ import { AddClinicModal } from "./catalog/modals/AddClinicModal";
 import { EditClinicModal } from "./catalog/modals/EditClinicModal";
 import { AddMedicineModal } from "./catalog/modals/AddMedicineModal";
 import { EditMedicineModal } from "./catalog/modals/EditMedicineModal";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { notifyAuth } from "@/utils/authNotification";
 
 export function AdminCatalogSection() {
   const { lang } = useLanguage();
@@ -46,6 +48,14 @@ export function AdminCatalogSection() {
   const [isAddSpecialtyOpen, setIsAddSpecialtyOpen] = useState(false);
   const [isAddClinicOpen, setIsAddClinicOpen] = useState(false);
   const [isAddMedicineOpen, setIsAddMedicineOpen] = useState(false);
+
+  // Confirm dialog states
+  const [deletingSpecialty, setDeletingSpecialty] = useState<ChuyenKhoaResponse | null>(null);
+  const [isDeletingSpecialty, setIsDeletingSpecialty] = useState(false);
+  const [deactivatingClinicId, setDeactivatingClinicId] = useState<number | null>(null);
+  const [isDeactivatingClinic, setIsDeactivatingClinic] = useState(false);
+  const [disablingMedicineId, setDisablingMedicineId] = useState<number | null>(null);
+  const [isDisablingMedicine, setIsDisablingMedicine] = useState(false);
 
   const specialtiesQuery = useQuery({
     queryKey: CATALOG_QUERY_KEYS.adminSpecialties,
@@ -71,21 +81,73 @@ export function AdminCatalogSection() {
   });
 
   const showFailure = (cause: unknown) => {
-    setError(
-      getApiErrorMessage(
-        cause,
-        vi ? "Thao tác thất bại." : "The operation failed.",
-      ),
+    const errorMsg = getApiErrorMessage(
+      cause,
+      vi ? "Thao tác thất bại." : "The operation failed.",
     );
+    setError(errorMsg);
     setMessage("");
+    notifyAuth("error", vi ? "Thao tác thất bại" : "Operation failed", errorMsg);
   };
 
   const finish = async (text: string, keys: readonly (readonly string[])[]) => {
     setError("");
     setMessage(text);
+    notifyAuth("success", vi ? "Thành công" : "Success", text);
     await Promise.all(
       keys.map((queryKey) => client.invalidateQueries({ queryKey })),
     );
+  };
+
+  const handleConfirmDeleteSpecialty = async () => {
+    if (!deletingSpecialty) return;
+    try {
+      setIsDeletingSpecialty(true);
+      await specialtyService.xoaChuyenKhoa(deletingSpecialty.id);
+      await finish(
+        vi ? "Đã xóa chuyên khoa thành công" : "Specialty deleted successfully",
+        [CATALOG_QUERY_KEYS.adminSpecialties, CATALOG_QUERY_KEYS.publicSpecialties],
+      );
+      setDeletingSpecialty(null);
+    } catch (cause) {
+      showFailure(cause);
+    } finally {
+      setIsDeletingSpecialty(false);
+    }
+  };
+
+  const handleConfirmDeactivateClinic = async () => {
+    if (deactivatingClinicId === null) return;
+    try {
+      setIsDeactivatingClinic(true);
+      await clinicService.ngungHoatDongPhongKham(deactivatingClinicId);
+      await finish(
+        vi ? "Đã ngừng hoạt động phòng khám" : "Clinic deactivated",
+        [CATALOG_QUERY_KEYS.adminClinics, CATALOG_QUERY_KEYS.publicClinics],
+      );
+      setDeactivatingClinicId(null);
+    } catch (cause) {
+      showFailure(cause);
+    } finally {
+      setIsDeactivatingClinic(false);
+    }
+  };
+
+  const handleConfirmDisableMedicine = async () => {
+    if (disablingMedicineId === null) return;
+    try {
+      setIsDisablingMedicine(true);
+      await medicineService.ngungDungThuoc(disablingMedicineId);
+      await finish(
+        vi ? "Đã ngừng dùng thuốc" : "Medicine disabled",
+        [CATALOG_QUERY_KEYS.adminMedicines],
+      );
+      setDisablingMedicineId(null);
+    } catch (cause) {
+      showFailure(cause);
+    } finally {
+      setIsDisablingMedicine(false);
+    }
   };
 
   const specialtiesList = specialtiesQuery.data?.duLieu?.noiDung ?? [];
@@ -144,6 +206,7 @@ export function AdminCatalogSection() {
           isLoading={specialtiesQuery.isLoading}
           onOpenAddModal={() => setIsAddSpecialtyOpen(true)}
           onSelectEdit={(item) => setEditingSpecialty(item)}
+          onDeleteSpecialty={(item) => setDeletingSpecialty(item)}
         />
       )}
 
@@ -154,20 +217,7 @@ export function AdminCatalogSection() {
           isLoading={clinicsQuery.isLoading}
           onOpenAddModal={() => setIsAddClinicOpen(true)}
           onSelectEdit={(clinic) => setEditingClinic(clinic)}
-          onDeactivate={(id) => {
-            void clinicService
-              .ngungHoatDongPhongKham(id)
-              .then(() =>
-                finish(
-                  vi ? "Đã ngừng hoạt động phòng khám" : "Clinic deactivated",
-                  [
-                    CATALOG_QUERY_KEYS.adminClinics,
-                    CATALOG_QUERY_KEYS.publicClinics,
-                  ],
-                ),
-              )
-              .catch(showFailure);
-          }}
+          onDeactivate={(id) => setDeactivatingClinicId(id)}
           onActivate={(id) => {
             void clinicService
               .hoatDongLaiPhongKham(id)
@@ -205,16 +255,7 @@ export function AdminCatalogSection() {
               )
               .catch(showFailure);
           }}
-          onDisable={(id) => {
-            void medicineService
-              .ngungDungThuoc(id)
-              .then(() =>
-                finish(vi ? "Đã ngừng dùng thuốc" : "Medicine disabled", [
-                  CATALOG_QUERY_KEYS.adminMedicines,
-                ]),
-              )
-              .catch(showFailure);
-          }}
+          onDisable={(id) => setDisablingMedicineId(id)}
           onReactivate={(id) => {
             void medicineService
               .dungLaiThuoc(id)
@@ -313,6 +354,59 @@ export function AdminCatalogSection() {
           setError(err);
           setMessage("");
         }}
+      />
+
+      {/* Confirm dialog xóa chuyên khoa */}
+      <ConfirmDialog
+        isOpen={deletingSpecialty !== null}
+        title={vi ? "Xóa chuyên khoa" : "Delete Specialty"}
+        message={
+          deletingSpecialty
+            ? vi
+              ? `Bạn có chắc chắn muốn xóa chuyên khoa "${deletingSpecialty.tenChuyenKhoa}"? Thao tác này không thể hoàn tác.`
+              : `Are you sure you want to delete specialty "${deletingSpecialty.tenChuyenKhoa}"? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel={vi ? "Xóa chuyên khoa" : "Delete Specialty"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeletingSpecialty}
+        onConfirm={handleConfirmDeleteSpecialty}
+        onCancel={() => setDeletingSpecialty(null)}
+      />
+
+      {/* Confirm dialog ngừng hoạt động phòng khám */}
+      <ConfirmDialog
+        isOpen={deactivatingClinicId !== null}
+        title={vi ? "Ngừng hoạt động phòng khám" : "Deactivate Clinic"}
+        message={
+          vi
+            ? "Bạn có chắc chắn muốn chuyển phòng khám này sang trạng thái ngừng hoạt động?"
+            : "Are you sure you want to deactivate this clinic?"
+        }
+        confirmLabel={vi ? "Ngừng hoạt động" : "Deactivate"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeactivatingClinic}
+        onConfirm={handleConfirmDeactivateClinic}
+        onCancel={() => setDeactivatingClinicId(null)}
+      />
+
+      {/* Confirm dialog ngừng dùng thuốc */}
+      <ConfirmDialog
+        isOpen={disablingMedicineId !== null}
+        title={vi ? "Ngừng sử dụng thuốc" : "Disable Medicine"}
+        message={
+          vi
+            ? "Bạn có chắc chắn muốn ngừng sử dụng thuốc này trong danh mục kê đơn?"
+            : "Are you sure you want to disable this medicine from the catalog?"
+        }
+        confirmLabel={vi ? "Ngừng sử dụng" : "Disable"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDisablingMedicine}
+        onConfirm={handleConfirmDisableMedicine}
+        onCancel={() => setDisablingMedicineId(null)}
       />
     </section>
   );
