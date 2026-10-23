@@ -68,6 +68,11 @@ const SessionsPage = lazy(() =>
     default: m.SessionsPage,
   }))
 );
+const MedicalBookPublicPage = lazy(() =>
+  import("@/features/patient/so-kham/MedicalBookPublicPage").then((m) => ({
+    default: m.MedicalBookPublicPage,
+  }))
+);
 
 function PageLoadingFallback() {
   return (
@@ -94,6 +99,11 @@ export const PublicRoutes = () => {
         <Route
           path="/phieu-kham/:maPhieuKham"
           element={<AppointmentTicketPage />}
+        />
+        <Route path="/so-kham" element={<MedicalBookPublicPage />} />
+        <Route
+          path="/so-kham/:maSoKham"
+          element={<MedicalBookPublicPage />}
         />
         <Route path="/doctors" element={<DoctorPage />} />
         <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
