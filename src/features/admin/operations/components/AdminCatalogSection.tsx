@@ -32,6 +32,9 @@ export function AdminCatalogSection() {
   const vi = lang === "vi";
   const client = useQueryClient();
   const [tab, setTab] = useState<CatalogTab>("specialties");
+  const [specialtiesPage, setSpecialtiesPage] = useState(0);
+  const [clinicsPage, setClinicsPage] = useState(0);
+  const [medicinesPage, setMedicinesPage] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -58,26 +61,33 @@ export function AdminCatalogSection() {
   const [isDisablingMedicine, setIsDisablingMedicine] = useState(false);
 
   const specialtiesQuery = useQuery({
-    queryKey: CATALOG_QUERY_KEYS.adminSpecialties,
+    queryKey: [...CATALOG_QUERY_KEYS.adminSpecialties, specialtiesPage],
     queryFn: () =>
       specialtyService.getDanhSachChuyenKhoaQuanTri({
-        trang: 0,
-        kichThuoc: 100,
+        trang: specialtiesPage,
+        kichThuoc: 10,
       }),
   });
 
   const clinicsQuery = useQuery({
-    queryKey: [...CATALOG_QUERY_KEYS.adminClinics, tab],
+    queryKey: [...CATALOG_QUERY_KEYS.adminClinics, tab, clinicsPage],
     queryFn: () =>
-      clinicService.getDanhSachPhongKhamQuanTri({ trang: 0, kichThuoc: 100 }),
+      clinicService.getDanhSachPhongKhamQuanTri({ trang: clinicsPage, kichThuoc: 10 }),
     enabled: tab === "clinics",
   });
 
   const medicinesQuery = useQuery({
-    queryKey: CATALOG_QUERY_KEYS.adminMedicines,
+    queryKey: [...CATALOG_QUERY_KEYS.adminMedicines, medicinesPage],
     queryFn: () =>
-      medicineService.getDanhSachThuocQuanTri({ trang: 0, kichThuoc: 100 }),
+      medicineService.getDanhSachThuocQuanTri({ trang: medicinesPage, kichThuoc: 10 }),
     enabled: tab === "medicines",
+  });
+
+  const allSpecialtiesQuery = useQuery({
+    queryKey: ["catalog", "all-specialties-dropdown"],
+    queryFn: () =>
+      specialtyService.getDanhSachChuyenKhoaQuanTri({ trang: 0, kichThuoc: 100 }),
+    enabled: isAddClinicOpen || Boolean(editingClinic),
   });
 
   const showFailure = (cause: unknown) => {
@@ -202,7 +212,7 @@ export function AdminCatalogSection() {
       {/* TAB 1: SPECIALTIES */}
       {tab === "specialties" && (
         <SpecialtiesTab
-          specialties={specialtiesList}
+          specialties={allSpecialtiesQuery.data?.duLieu?.noiDung ?? specialtiesList}
           isLoading={specialtiesQuery.isLoading}
           onOpenAddModal={() => setIsAddSpecialtyOpen(true)}
           onSelectEdit={(item) => setEditingSpecialty(item)}
@@ -240,6 +250,10 @@ export function AdminCatalogSection() {
         <MedicinesTab
           medicines={medicinesList}
           isLoading={medicinesQuery.isLoading}
+          currentPage={medicinesPage}
+          totalPages={medicinesQuery.data?.duLieu?.tongSoTrang ?? 1}
+          totalElements={medicinesQuery.data?.duLieu?.tongSoPhanTu}
+          onPageChange={setMedicinesPage}
           onOpenAddModal={() => setIsAddMedicineOpen(true)}
           onSelectEdit={(medicine) => setEditingMedicine(medicine)}
           onVerify={(id) => {
@@ -303,7 +317,7 @@ export function AdminCatalogSection() {
       {/* CLINIC MODALS */}
       <AddClinicModal
         isOpen={isAddClinicOpen}
-        specialties={specialtiesList}
+        specialties={allSpecialtiesQuery.data?.duLieu?.noiDung ?? specialtiesList}
         onClose={() => setIsAddClinicOpen(false)}
         onSuccess={async (text) => {
           await finish(text, [
