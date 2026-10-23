@@ -323,7 +323,8 @@ export function DoctorScheduleSection() {
 
     const shiftId = Number(formData.get("idLichLamViec"));
     const currentShift = shifts.find(
-      (shift) => (shift.idLichLamViec ?? (shift as any).id) === shiftId,
+      (shift) =>
+        Number((shift as any).idLichLamViec ?? shift.id) === shiftId,
     );
 
     if (!shiftId || !currentShift) {
@@ -607,7 +608,8 @@ export function DoctorScheduleSection() {
                 ) : dayShifts.length ? (
                   <span className={styles.calendarShift}>
                     {dayShifts.map((shift) => {
-                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const sid =
+                        Number((shift as any).idLichLamViec ?? shift.id);
                       const roomName =
                         shift.phongKham?.tenPhong ||
                         (shift as any).tenPhongKham ||
@@ -800,7 +802,8 @@ export function DoctorScheduleSection() {
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
                     .map((shift) => {
-                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const sid =
+                        Number((shift as any).idLichLamViec ?? shift.id);
                       const roomName =
                         shift.phongKham?.tenPhong ||
                         (shift as any).tenPhongKham ||
@@ -985,7 +988,8 @@ export function DoctorScheduleSection() {
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
                     .map((shift) => {
-                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const sid =
+                        Number((shift as any).idLichLamViec ?? shift.id);
                       const isChecked = selectedMultiShifts.includes(sid);
                       const roomName =
                         shift.phongKham?.tenPhong ||
