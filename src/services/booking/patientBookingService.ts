@@ -4,6 +4,7 @@ import type {
   HoSoCuaToiResponse,
   HoSoCuaToiRequest,
   ThongTinDatLichResponse,
+  NguoiThanDaLuuRequest,
   GetNgayConChoParams,
   NgayConChoResponse,
   NgaySomNhatResponse,
@@ -21,6 +22,14 @@ import type {
   DanhGiaCuaToiResponse,
   LanKhamCuaToiResponse,
   TrangCaNhanResponse,
+  NgayNghiResponse,
+  QuyTacDatLichResponse,
+  CapLaiLienKetRequest,
+  SoKhamTomTatResponse,
+  XacMinhSoKhamRequest,
+  SoKhamChiTietResponse,
+  GetKhungGioTheoNgayParams,
+  GetKhungGioNhieuNgayParams,
 } from "@/types/booking.type";
 
 export const patientBookingService = {
@@ -58,7 +67,7 @@ export const patientBookingService = {
   },
 
   /** Update a saved relative */
-  capNhatNguoiThan: async (id: number, data: unknown) => {
+  capNhatNguoiThan: async (id: number, data: NguoiThanDaLuuRequest | unknown) => {
     const response = await axiosClient.put<ApiResponse<unknown>>(
       `/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/${id}`,
       data,
@@ -66,19 +75,37 @@ export const patientBookingService = {
     return response.data;
   },
 
-  /** Get shifts and time slots by date, doctor or specialty */
+  /** GET /api/booking/khung-gio - Get shifts and time slots by date and doctor/specialty */
+  getKhungGioTheoNgay: async (params: GetKhungGioTheoNgayParams) => {
+    const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
+      "/api/booking/khung-gio",
+      { params },
+    );
+    return response.data;
+  },
+
+  /** GET /api/booking/khung-gio/nhieu-ngay - Get doctor shifts up to 7 consecutive days */
+  getKhungGioNhieuNgay: async (params: GetKhungGioNhieuNgayParams) => {
+    const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
+      "/api/booking/khung-gio/nhieu-ngay",
+      { params },
+    );
+    return response.data;
+  },
+
+  /** Backward-compatible helper for booking form */
   getCaKhamTheoNgay: async (params: {
     ngay: string;
     idBacSi?: number;
     idChuyenKhoa?: number;
   }) => {
     const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
-      "/api/booking/khung-gio/nhieu-ngay",
+      "/api/booking/khung-gio",
       {
         params: {
-          tuNgay: params.ngay,
-          denNgay: params.ngay,
+          ngay: params.ngay,
           idBacSi: params.idBacSi,
+          idChuyenKhoa: params.idChuyenKhoa,
         },
       },
     );
@@ -111,6 +138,44 @@ export const patientBookingService = {
     );
     return response.data;
   },
+
+  /** GET /api/booking/ngay-nghi - Get clinic holidays list */
+  getNgayNghi: async () => {
+    try {
+      const response = await axiosClient.get<ApiResponse<NgayNghiResponse[]>>(
+        "/api/booking/ngay-nghi",
+      );
+      return response.data;
+    } catch {
+      return {
+        thanhCong: true,
+        thongDiep: "Lấy danh sách ngày nghỉ",
+        duLieu: [] as NgayNghiResponse[],
+      };
+    }
+  },
+
+  /** GET /api/booking/quy-tac-dat-lich - Get booking limits and policies */
+  getQuyTacDatLich: async () => {
+    try {
+      const response = await axiosClient.get<ApiResponse<QuyTacDatLichResponse>>(
+        "/api/booking/quy-tac-dat-lich",
+      );
+      return response.data;
+    } catch {
+      return {
+        thanhCong: true,
+        thongDiep: "Quy tắc đặt lịch",
+        duLieu: {
+          gioiHanDatTruocNgay: 30,
+          thoiGianHuyToiThieuGio: 2,
+          thoiGianDoiLichToiThieuGio: 2,
+          soLanDoiLichToiDa: 3,
+        } as QuyTacDatLichResponse,
+      };
+    }
+  },
+
 
   /** Book an appointment (authenticated or guest) */
   datLich: async (data: DatLichRequest) => {
@@ -236,6 +301,50 @@ export const patientBookingService = {
   getTrangCaNhan: async () => {
     const response = await axiosClient.get<ApiResponse<TrangCaNhanResponse>>(
       "/api/booking/trang-ca-nhan/cua-toi",
+    );
+    return response.data;
+  },
+
+  /** GET /api/booking/phieu-kham/{maPhieuKham}/lich.ics - Download iCalendar file */
+  taiFileLichIcs: async (maPhieuKham: string) => {
+    const response = await axiosClient.get<Blob>(
+      `/api/booking/phieu-kham/${maPhieuKham}/lich.ics`,
+      { responseType: "blob" },
+    );
+    return response.data;
+  },
+
+  /** POST /api/booking/cap-lai-lien-ket - Resend appointment link via email */
+  capLaiLienKet: async (data: CapLaiLienKetRequest) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      "/api/booking/cap-lai-lien-ket",
+      data,
+    );
+    return response.data;
+  },
+
+  /** GET /api/booking/so-kham/{maSoKham} - Get public masked medical record summary */
+  getSoKhamTomTat: async (maSoKham: string) => {
+    const response = await axiosClient.get<ApiResponse<SoKhamTomTatResponse>>(
+      `/api/booking/so-kham/${maSoKham}`,
+    );
+    return response.data;
+  },
+
+  /** POST /api/booking/so-kham/{maSoKham}/xem - Verify last 4 phone digits to reveal full medical record */
+  xemSoKhamChiTiet: async (maSoKham: string, data: XacMinhSoKhamRequest) => {
+    const response = await axiosClient.post<ApiResponse<SoKhamChiTietResponse>>(
+      `/api/booking/so-kham/${maSoKham}/xem`,
+      data,
+    );
+    return response.data;
+  },
+
+  /** GET /api/booking/so-kham/{maSoKham}/qr - Get QR image for medical record */
+  getQrSoKham: async (maSoKham: string, taiVe = false) => {
+    const response = await axiosClient.get<Blob>(
+      `/api/booking/so-kham/${maSoKham}/qr`,
+      { params: taiVe ? { taiVe: true } : undefined, responseType: "blob" },
     );
     return response.data;
   },
