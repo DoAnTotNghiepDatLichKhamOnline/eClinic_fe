@@ -17,10 +17,18 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Building2,
+  Pill,
+  BookOpen,
+  ExternalLink,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
 import { LanguageToggle } from "@/features/landing/components/header/LanguageToggle";
+import { Pagination } from "@/shared/components/ui/Pagination";
+import { specialtyService } from "@/services/catalog/specialtyService";
+import { clinicService } from "@/services/catalog/clinicService";
+import { medicineService } from "@/services/catalog/medicineService";
 import { AdminSidebar } from "./AdminSidebar";
 import type { AdminSection } from "./AdminSidebar";
 import { AdminNotificationCenter } from "./AdminNotificationCenter";
@@ -153,6 +161,26 @@ export function AdminDashboardPage({
     enabled: activeSection === "dashboard",
   });
   const summary = summaryResponse?.duLieu;
+
+  const { data: specialtiesRes, isLoading: isLoadingSpecialties } = useQuery({
+    queryKey: ["catalog", "admin-specialties-count"],
+    queryFn: () => specialtyService.getDanhSachChuyenKhoaQuanTri({ trang: 0, kichThuoc: 1 }),
+    enabled: activeSection === "dashboard",
+  });
+  const { data: clinicsRes, isLoading: isLoadingClinics } = useQuery({
+    queryKey: ["catalog", "admin-clinics-count"],
+    queryFn: () => clinicService.getDanhSachPhongKhamQuanTri({ trang: 0, kichThuoc: 1 }),
+    enabled: activeSection === "dashboard",
+  });
+  const { data: medicinesRes, isLoading: isLoadingMedicines } = useQuery({
+    queryKey: ["catalog", "admin-medicines-count"],
+    queryFn: () => medicineService.getDanhSachThuocQuanTri({ trang: 0, kichThuoc: 1 }),
+    enabled: activeSection === "dashboard",
+  });
+
+  const totalSpecialties = specialtiesRes?.duLieu?.tongSoPhanTu ?? 0;
+  const totalClinics = clinicsRes?.duLieu?.tongSoPhanTu ?? 0;
+  const totalMedicines = medicinesRes?.duLieu?.tongSoPhanTu ?? 0;
 
   const navigateToSection = (section: AdminSection) =>
     navigate(`/admin/${sectionPaths[section]}`);
@@ -363,53 +391,273 @@ export function AdminDashboardPage({
           </div>
 
           {activeSection === "dashboard" && (
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <Stethoscope aria-hidden="true" />
+            <>
+              <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Stethoscope aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.bacSiDangCongTac ?? 0)}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
+                    </span>
+                  </div>
                 </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>
-                    {isLoadingSummary
-                      ? "..."
-                      : (summary?.bacSiDangCongTac ?? 0)}
-                  </span>
-                  <span className={styles.statLabel}>
-                    {vi ? "Bác sĩ hoạt động" : "Active Doctors"}
-                  </span>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <UsersRound aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <CalendarDays aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.luotDatTrongThang ?? 0)}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon} style={{ background: "#ede9fe", color: "#6d28d9" }}>
+                    <BookOpen aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingSpecialties ? "..." : totalSpecialties}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Chuyên khoa khám" : "Medical Specialties"}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon} style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                    <Building2 aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingClinics ? "..." : totalClinics}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Phòng khám hoạt động" : "Active Clinics"}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon} style={{ background: "#ffedd5", color: "#c2410c" }}>
+                    <Pill aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMedicines ? "..." : totalMedicines}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {vi ? "Thuốc trong danh mục" : "Medicines in Catalog"}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <UsersRound aria-hidden="true" />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>
-                    {isLoadingSummary
-                      ? "..."
-                      : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
-                  </span>
+
+              {/* Bảng Thống Kê Tổng Hợp Quản Trị Hệ Thống */}
+              <div className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>
+                    {vi ? "Bảng Thống Kê Tổng Quan Hệ Thống" : "System Overview Statistics"}
+                  </h2>
                   <span className={styles.statLabel}>
-                    {vi ? "Tài khoản hệ thống" : "Registered Accounts"}
+                    {vi ? "Cập nhật dữ liệu thời gian thực" : "Real-time system figures"}
                   </span>
+                </div>
+
+                <div className={styles.tableScroll}>
+                  <table className={styles.summaryTable}>
+                    <thead>
+                      <tr>
+                        <th>{vi ? "Phân nhóm" : "Category"}</th>
+                        <th>{vi ? "Chỉ số tài nguyên" : "Resource Metric"}</th>
+                        <th style={{ textAlign: "right" }}>{vi ? "Số lượng hiện tại" : "Current Count"}</th>
+                        <th>{vi ? "Đơn vị" : "Unit"}</th>
+                        <th>{vi ? "Tình trạng" : "Status"}</th>
+                        <th style={{ textAlign: "center" }}>{vi ? "Thao tác nhanh" : "Quick Action"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Nhân lực y tế" : "Healthcare Staff"}</strong>
+                        </td>
+                        <td>{vi ? "Bác sĩ đang công tác toàn viện" : "Active practicing doctors"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingSummary ? "..." : (summary?.bacSiDangCongTac ?? 0)}
+                        </td>
+                        <td>{vi ? "Bác sĩ" : "Doctors"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Sẵn sàng nhận ca" : "Available"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("doctors")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Quản lý Bác sĩ" : "Manage Doctors"}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Cơ sở hạ tầng" : "Infrastructure"}</strong>
+                        </td>
+                        <td>{vi ? "Phòng khám lâm sàng & chuyên khoa" : "Clinical & specialty rooms"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingClinics ? "..." : totalClinics}
+                        </td>
+                        <td>{vi ? "Phòng" : "Rooms"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Tiếp nhận bệnh nhân" : "Operational"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("catalog")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Xem Phòng khám" : "Manage Clinics"}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Chuyên môn" : "Specialization"}</strong>
+                        </td>
+                        <td>{vi ? "Chuyên khoa điều trị và thăm khám" : "Medical specialties offered"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingSpecialties ? "..." : totalSpecialties}
+                        </td>
+                        <td>{vi ? "Chuyên khoa" : "Specialties"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Đang mở đặt lịch" : "Active"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("catalog")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Xem Chuyên khoa" : "Manage Specialties"}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Dược phẩm" : "Pharmacy"}</strong>
+                        </td>
+                        <td>{vi ? "Danh mục thuốc và biệt dược chuẩn" : "Standard medicines in formulary"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingMedicines ? "..." : totalMedicines}
+                        </td>
+                        <td>{vi ? "Mặt hàng thuốc" : "Medicines"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Chuẩn hóa theo BYT" : "Standardized"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("catalog")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Xem Danh mục thuốc" : "Manage Medicines"}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Người dùng" : "User Accounts"}</strong>
+                        </td>
+                        <td>{vi ? "Tổng số tài khoản đã tạo trên hệ thống" : "Total registered user accounts"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingSummary ? "..." : (summary?.benhNhanDaDangKy ?? 0).toLocaleString()}
+                        </td>
+                        <td>{vi ? "Tài khoản" : "Accounts"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Hoạt động" : "Normal"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("accounts")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Quản lý Tài khoản" : "Manage Accounts"}
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>{vi ? "Lịch & Hẹn khám" : "Appointments"}</strong>
+                        </td>
+                        <td>{vi ? "Tổng số lượt đăng ký khám trong tháng" : "Bookings registered this month"}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "#1e1b4b" }}>
+                          {isLoadingSummary ? "..." : (summary?.luotDatTrongThang ?? 0)}
+                        </td>
+                        <td>{vi ? "Lượt khám" : "Bookings"}</td>
+                        <td>
+                          <span className={`${styles.badge} ${styles.badgeActive}`}>
+                            {vi ? "Theo dõi liên tục" : "Updated"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => navigateToSection("schedule")}
+                          >
+                            <ExternalLink size={13} />
+                            {vi ? "Quản lý Lịch khám" : "Manage Schedule"}
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>
-                  <CalendarDays aria-hidden="true" />
-                </div>
-                <div className={styles.statInfo}>
-                  <span className={styles.statValue}>
-                    {isLoadingSummary
-                      ? "..."
-                      : (summary?.luotDatTrongThang ?? 0)}
-                  </span>
-                  <span className={styles.statLabel}>
-                    {vi ? "Lượt khám tháng này" : "Monthly Bookings"}
-                  </span>
-                </div>
-              </div>
-            </div>
+            </>
           )}
 
           {activeSection === "accounts" && (
@@ -666,33 +914,13 @@ export function AdminDashboardPage({
               </div>
 
               {/* Phân trang */}
-              {tongSoTrang > 1 && (
-                <div className={styles.paginationBar}>
-                  <span>
-                    {vi
-                      ? `Trang ${currentPage + 1} / ${tongSoTrang}`
-                      : `Page ${currentPage + 1} of ${tongSoTrang}`}
-                  </span>
-                  <div className={styles.paginationActions}>
-                    <button
-                      type="button"
-                      className={styles.pageBtn}
-                      disabled={currentPage === 0}
-                      onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                    >
-                      {vi ? "Trang trước" : "Previous"}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.pageBtn}
-                      disabled={currentPage >= tongSoTrang - 1}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                    >
-                      {vi ? "Trang sau" : "Next"}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={tongSoTrang}
+                totalElements={tongSoPhanTu}
+                pageSize={10}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
 
