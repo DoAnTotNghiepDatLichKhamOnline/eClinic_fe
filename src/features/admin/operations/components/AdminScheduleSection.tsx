@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarPlus, RotateCcw, AlertTriangle } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
@@ -7,6 +7,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import type { CaLamViecResponse } from "@/types/booking.type";
 import { CreateShiftModal } from "./CreateShiftModal";
 import { notifyAuth } from "@/utils/authNotification";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../AdminDashboardPage.module.css";
 
 function currentDateKey(date: Date) {
@@ -48,6 +49,13 @@ export function AdminScheduleSection() {
   const [rejectNote, setRejectNote] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
 
+  const [shiftPage, setShiftPage] = useState(0);
+  const shiftPageSize = 10;
+
+  useEffect(() => {
+    setShiftPage(0);
+  }, [filterFromDate, filterThroughDate, filterDoctorId, filterClinicId]);
+
   const shiftQuery = useQuery({
     queryKey: [
       "booking",
@@ -65,6 +73,13 @@ export function AdminScheduleSection() {
         idPhongKham: filterClinicId,
       }),
   });
+
+  const allShifts = shiftQuery.data?.duLieu ?? [];
+  const totalShiftPages = Math.ceil(allShifts.length / shiftPageSize);
+  const paginatedShifts = allShifts.slice(
+    shiftPage * shiftPageSize,
+    (shiftPage + 1) * shiftPageSize,
+  );
 
   const shiftPatientsQuery = useQuery({
     queryKey: ["booking", "admin-shift-patients", selectedShiftForPatients?.id],
@@ -262,10 +277,10 @@ export function AdminScheduleSection() {
         <button
           type="button"
           onClick={() => setIsCreateShiftOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-900 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all hover:shadow-lg"
         >
           <CalendarPlus size={16} />
-          <span>{vi ? "Xếp ca làm" : "Schedule Shift"}</span>
+          <span>{vi ? "Xếp ca lịch mới" : "Schedule New Shift"}</span>
         </button>
       </div>
 
@@ -372,6 +387,7 @@ export function AdminScheduleSection() {
             <tr>
               <th>{vi ? "Ngày" : "Date"}</th>
               <th>{vi ? "Bác sĩ" : "Doctor"}</th>
+              <th>{vi ? "Chuyên khoa" : "Specialty"}</th>
               <th>{vi ? "Ca" : "Shift"}</th>
               <th>{vi ? "Phòng" : "Clinic"}</th>
               <th>{vi ? "Đã đặt" : "Booked"}</th>
@@ -380,10 +396,10 @@ export function AdminScheduleSection() {
             </tr>
           </thead>
           <tbody>
-            {(shiftQuery.data?.duLieu ?? []).length === 0 ? (
+            {allShifts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="py-8 text-center text-xs text-slate-500"
                 >
                   {shiftQuery.isLoading
@@ -396,32 +412,46 @@ export function AdminScheduleSection() {
                 </td>
               </tr>
             ) : (
-              (shiftQuery.data?.duLieu ?? []).map((shift) => (
+              paginatedShifts.map((shift) => (
                 <tr key={shift.id}>
                   <td>{shift.ngay}</td>
                   <td className="font-medium text-slate-800">
-                    {shift.hoTenBacSi}
+                    <div>{shift.bacSi?.hoTen ?? shift.hoTenBacSi ?? "—"}</div>
+                    {shift.bacSi?.hocVi && (
+                      <span className="text-[11px] text-slate-500 font-normal">
+                        {shift.bacSi.hocVi}
+                      </span>
+                    )}
+                  </td>
+                  <td className="text-slate-600">
+                    {shift.tenChuyenKhoa ?? shift.bacSi?.tenChuyenKhoa ?? "—"}
                   </td>
                   <td>
-                    {shift.gioBatDau} - {shift.gioKetThuc}
-                  </td>
-                  <td>{shift.tenPhongKham}</td>
-                  <td>
-                    {shift.soLuotDaDat ?? shift.soChoDaDat ?? 0}/
-                    {shift.tongSoLuot ?? shift.tongSoCho ?? 0}
+                    {shift.gioBatDau?.slice(0, 5)} - {shift.gioKetThuc?.slice(0, 5)}
                   </td>
                   <td>
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        shift.trangThai === "HOAT_DONG"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : shift.trangThai === "DA_HUY"
-                            ? "bg-rose-50 text-rose-700 border border-rose-200"
-                            : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {shift.trangThai}
-                    </span>
+                    {shift.phongKham?.tenPhong ?? shift.tenPhongKham ?? "—"}
+                  </td>
+                  <td>
+                    <span className="font-semibold text-slate-700">
+                      {shift.soLuotDaDat ?? shift.soChoDaDat ?? 0}
+                    </span>{" "}
+                    / {shift.tongSoLuot ?? shift.tongSoCho ?? 0}
+                  </td>
+                  <td>
+                    {shift.trangThai === "HOAT_DONG" ? (
+                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {vi ? "Hoạt động" : "Active"}
+                      </span>
+                    ) : shift.trangThai === "DA_HUY" ? (
+                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                        {vi ? "Đã hủy" : "Cancelled"}
+                      </span>
+                    ) : (
+                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-600">
+                        {shift.trangThai}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <button
@@ -459,6 +489,14 @@ export function AdminScheduleSection() {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={shiftPage}
+        totalPages={totalShiftPages}
+        totalElements={allShifts.length}
+        pageSize={shiftPageSize}
+        onPageChange={setShiftPage}
+      />
 
       <h3 className="mb-3 mt-8 font-semibold">
         {vi ? "Yêu cầu đổi ca / xin nghỉ" : "Shift change and leave requests"}
@@ -538,11 +576,11 @@ export function AdminScheduleSection() {
                   {vi ? "Bệnh nhân trong ca khám" : "Patients in Shift"}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {selectedShiftForPatients.hoTenBacSi} ·{" "}
+                  {selectedShiftForPatients.bacSi?.hoTen ?? selectedShiftForPatients.hoTenBacSi ?? "—"} ·{" "}
                   {selectedShiftForPatients.ngay} (
-                  {selectedShiftForPatients.gioBatDau} -{" "}
-                  {selectedShiftForPatients.gioKetThuc}) ·{" "}
-                  {selectedShiftForPatients.tenPhongKham}
+                  {selectedShiftForPatients.gioBatDau?.slice(0, 5)} -{" "}
+                  {selectedShiftForPatients.gioKetThuc?.slice(0, 5)}) ·{" "}
+                  {selectedShiftForPatients.phongKham?.tenPhong ?? selectedShiftForPatients.tenPhongKham ?? "—"}
                 </p>
               </div>
               <button
