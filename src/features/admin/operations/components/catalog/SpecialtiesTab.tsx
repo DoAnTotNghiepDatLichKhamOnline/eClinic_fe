@@ -1,11 +1,16 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ChuyenKhoaResponse } from "@/types/catalog.type";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
 import { Plus, Edit3, Trash2 } from "lucide-react";
 
 interface SpecialtiesTabProps {
   specialties: ChuyenKhoaResponse[];
   isLoading: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalElements?: number;
+  onPageChange: (page: number) => void;
   onOpenAddModal: () => void;
   onSelectEdit: (specialty: ChuyenKhoaResponse) => void;
   onDeleteSpecialty?: (specialty: ChuyenKhoaResponse) => void;
@@ -14,6 +19,10 @@ interface SpecialtiesTabProps {
 export function SpecialtiesTab({
   specialties,
   isLoading,
+  currentPage,
+  totalPages,
+  totalElements,
+  onPageChange,
   onOpenAddModal,
   onSelectEdit,
   onDeleteSpecialty,
@@ -109,6 +118,14 @@ export function SpecialtiesTab({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        pageSize={10}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }
