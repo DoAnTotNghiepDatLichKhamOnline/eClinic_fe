@@ -828,4 +828,145 @@ export interface YeuCauNhuongCaResponse {
   ghiChu?: string | null;
 }
 
+// ==========================================
+// CÁC TYPES BỔ SUNG CHO QUẢN TRỊ VIÊN (QUAN_TRI_VIEN)
+// ==========================================
+
+export interface CauHinhDatLichResponse {
+  soNgayDatTruocToiDa: number;
+  gioDongDatLichTruocCa: number;
+  choPhepDoiLichTruocGio: number;
+  soLuotKhamToiDaMoiGio: number;
+  thoiLuongKhamMacDinhPhut: number;
+  tuDongHuyLichTrePhut?: number;
+  apDungTu?: string;
+}
+
+export interface CapNhatCauHinhDatLichRequest {
+  soNgayDatTruocToiDa?: number;
+  gioDongDatLichTruocCa?: number;
+  choPhepDoiLichTruocGio?: number;
+  soLuotKhamToiDaMoiGio?: number;
+  thoiLuongKhamMacDinhPhut?: number;
+  tuDongHuyLichTrePhut?: number;
+  ghiChu?: string;
+}
+
+export interface LichSuCauHinhDatLichResponse {
+  id: number;
+  nguoiThayDoi: string;
+  thoiGian: string;
+  ghiChu?: string | null;
+  noiDungThayDoi: Record<string, { cu: unknown; moi: unknown }>;
+}
+
+export interface NgayNghiResponse {
+  ngay: string;
+  lyDo: string;
+  nguoiTao?: string;
+  ngayTao?: string;
+  soCaBiHuy?: number;
+}
+
+export interface KhaiBaoNgayNghiRequest {
+  ngay: string;
+  lyDo: string;
+}
+
+export interface XemTruocNgayNghiResponse {
+  ngay: string;
+  soCaBiHuy: number;
+  soLichHenBiAnhHuong: number;
+  danhSachCa: CaLamViecResponse[];
+}
+
+export interface LichSuCaLamViecResponse {
+  id: number;
+  idCa: number;
+  hanhDong: "TAO" | "SUA" | "HUY";
+  thoiGian: string;
+  nguoiThucHien: string;
+  chiTiet?: string | null;
+}
+
+export interface ThongKeGioLamBacSiResponse {
+  idBacSi: number;
+  maBacSi: string;
+  hoTen: string;
+  chuyenKhoa: string;
+  tongSoGio: number;
+  soCaLam: number;
+  tuan: string;
+}
+
+export interface SaoChepLichRequest {
+  tuNgayNguon: string;
+  denNgayNguon: string;
+  ngayBatDauDich: string;
+  ghiDe?: boolean;
+}
+
+export interface XemTruocSaoChepLichResponse {
+  soCaSeTao: number;
+  soCaBiTrung: number;
+  chiTietTrung?: string[];
+}
+
+export interface XemTruocNhapExcelResponse {
+  tongSoDong: number;
+  soDongHopLe: number;
+  soDongLoi: number;
+  danhSachLoi?: { dong: number; loi: string }[];
+}
+
+export interface GuiLichLamViecRequest {
+  tuNgay: string;
+  denNgay: string;
+  idBacSi?: number;
+  guiEmail?: boolean;
+  guiThongBao?: boolean;
+}
+
+export interface DatLichThayRequest {
+  idCa: number;
+  idHoSoBenhNhan?: number;
+  hoTen: string;
+  soDienThoai: string;
+  soCccd?: string;
+  ngaySinh: string;
+  gioiTinh: "NAM" | "NU";
+  diaChi?: string;
+  lyDoKham?: string;
+  ghiChu?: string;
+}
+
+export interface DoiLichThayRequest {
+  idCaMoi: number;
+  lyDo?: string;
+}
+
+export interface HuyLichThayRequest {
+  lyDo: string;
+}
+
+export interface ThongKeBaoCaoResponse {
+  tongLuotDat: number;
+  tongLuotKham: number;
+  tongLuotHuy: number;
+  tyLeLapDayTrungBinh: number;
+  doanhThuUocTinh?: number;
+  theoChuyenKhoa: { idChuyenKhoa: number; tenChuyenKhoa: string; soLuot: number; tyLe: number }[];
+  theoBacSi: { idBacSi: number; hoTen: string; soLuot: number; tyLeLapDay: number }[];
+  theoThoiGian: { mocThoiGian: string; soLuotDat: number; soLuotKham: number }[];
+}
+
+export interface GetThongKeBaoCaoParams {
+  tuNgay?: string;
+  denNgay?: string;
+  idChuyenKhoa?: number;
+  idBacSi?: number;
+  ky?: "NGAY" | "TUAN" | "THANG" | "NAM";
+}
+
+
 
