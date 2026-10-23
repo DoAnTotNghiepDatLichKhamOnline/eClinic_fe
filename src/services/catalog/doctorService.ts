@@ -177,6 +177,9 @@ export const doctorService = {
       "/api/catalog/bac-si/toi/anh",
       formData,
       {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
         params: {
           ...(chuThich ? { chuThich } : {}),
           ...(chuThichEn ? { chuThichEn } : {}),
