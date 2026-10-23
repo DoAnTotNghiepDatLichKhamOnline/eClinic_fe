@@ -22,6 +22,7 @@ import { DoctorSearchBar } from "./DoctorSearchBar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctorBookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import type { HangDoiLuot } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
@@ -50,6 +51,8 @@ export function DoctorDashboardPage({
   const today = localDateKey(new Date());
 
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
+  const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
+  const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
 
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
@@ -131,9 +134,11 @@ export function DoctorDashboardPage({
     }
   };
 
-  const handleMarkAbsent = async (idLichHen: number) => {
+  const executeMarkAbsent = async () => {
+    if (!confirmAbsentId) return;
     try {
-      const res = await doctorBookingService.danhDauVangMat(idLichHen);
+      setIsMarkingAbsent(true);
+      const res = await doctorBookingService.danhDauVangMat(confirmAbsentId);
       if (res.thanhCong) {
         await queryClient.invalidateQueries({
           queryKey: ["booking", "doctor-hang-doi"],
@@ -154,6 +159,9 @@ export function DoctorDashboardPage({
         (err as { response?: { data?: { thongDiep?: string } } }).response
           ?.data?.thongDiep || "Failed to mark absent",
       );
+    } finally {
+      setIsMarkingAbsent(false);
+      setConfirmAbsentId(null);
     }
   };
 
@@ -442,7 +450,7 @@ export function DoctorDashboardPage({
                                       type="button"
                                       className={styles.dangerBtn}
                                       onClick={() =>
-                                        handleMarkAbsent(Number(apt.id))
+                                        setConfirmAbsentId(Number(apt.id))
                                       }
                                     >
                                       <UserX size={14} aria-hidden="true" />
@@ -524,6 +532,23 @@ export function DoctorDashboardPage({
           )}
         </div>
       </main>
+
+      {/* Confirm Dialog for Marking Patient Absent */}
+      <ConfirmDialog
+        isOpen={confirmAbsentId !== null}
+        title={lang === "vi" ? "Xác nhận đánh dấu vắng mặt" : "Confirm Mark Absent"}
+        message={
+          lang === "vi"
+            ? `Bạn có chắc chắn muốn đánh dấu bệnh nhân #${confirmAbsentId} là vắng mặt cho ca khám này?`
+            : `Are you sure you want to mark patient #${confirmAbsentId} as absent for this queue?`
+        }
+        confirmLabel={lang === "vi" ? "Đánh dấu vắng mặt" : "Mark Absent"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isMarkingAbsent}
+        onConfirm={() => void executeMarkAbsent()}
+        onCancel={() => setConfirmAbsentId(null)}
+      />
     </div>
   );
 }
