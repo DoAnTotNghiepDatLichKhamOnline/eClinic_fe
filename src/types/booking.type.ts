@@ -713,3 +713,102 @@ export interface GetDanhGiaQuanTriParams {
   trang?: number;
   kichThuoc?: number;
 }
+
+// ==========================================
+// 8. ĐẶT LỊCH & SỔ KHÁM BỔ SUNG (PATIENT & GUEST)
+// ==========================================
+
+export interface NguoiGiamHoRequest {
+  hoTen: string;
+  quanHe: QuanHeGiamHo;
+  soDienThoai: string;
+  cccd: string;
+  ngaySinh?: string | null;
+}
+
+export interface NguoiThanDaLuuRequest {
+  hoTen: string;
+  ngaySinh: string;
+  gioiTinh: GioiTinh;
+  soDienThoai: string;
+  email?: string | null;
+  soBaoHiemYTe?: string | null;
+  diaChi?: string | null;
+  nguoiGiamHo?: NguoiGiamHoRequest | null;
+}
+
+export interface NgayNghiResponse {
+  ngay: string;
+  lyDo?: string | null;
+}
+
+export interface QuyTacDatLichResponse {
+  gioiHanDatTruocNgay: number;
+  thoiGianHuyToiThieuGio: number;
+  thoiGianDoiLichToiThieuGio: number;
+  soLanDoiLichToiDa: number;
+}
+
+export interface CapLaiLienKetRequest {
+  email: string;
+  soDienThoai: string;
+}
+
+export interface SoKhamTomTatResponse {
+  maSoKham: string;
+  maPhieuKham: string;
+  hoTenChe: string;
+  soDienThoaiChe: string;
+  ngayKham: string;
+  gioKham: string;
+  bacSi: BacSiTomTatResponse;
+  chuyenKhoa: string;
+  phongKham?: PhongKhamTomTatResponse | null;
+  trangThai: TrangThaiLichHen;
+  coKetQua: boolean;
+}
+
+export interface XacMinhSoKhamRequest {
+  soDienThoai4SoCuoi: string;
+}
+
+export interface SoKhamChiTietResponse {
+  maSoKham: string;
+  maPhieuKham: string;
+  maTraCuu: string;
+  hoTen: string;
+  ngaySinh: string;
+  gioiTinh: GioiTinh;
+  soDienThoai: string;
+  cccdChe?: string | null;
+  diaChi?: string | null;
+  ngayKham: string;
+  gioKham: string;
+  bacSi: BacSiTomTatResponse;
+  chuyenKhoa: string;
+  phongKham?: PhongKhamTomTatResponse | null;
+  trangThai: TrangThaiLichHen;
+  lyDoKham?: string | null;
+  sinhHieu?: SinhHieu | null;
+  khamLamSang?: string | null;
+  chanDoan: string;
+  maIcdChinh?: string | null;
+  chanDoanKemTheo?: string | null;
+  loiDanBacSi?: string | null;
+  ngayTaiKham?: string | null;
+  donThuoc?: DonThuoc[] | null;
+  ngayHoanThanh?: string | null;
+}
+
+export interface GetKhungGioTheoNgayParams {
+  ngay: string;
+  idBacSi?: number;
+  idChuyenKhoa?: number;
+}
+
+export interface GetKhungGioNhieuNgayParams {
+  idBacSi: number;
+  tuNgay?: string;
+  denNgay?: string;
+}
+
