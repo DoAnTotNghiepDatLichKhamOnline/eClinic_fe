@@ -269,24 +269,43 @@ export function DoctorScheduleSection() {
 
       try {
         setIsSubmittingRequest(true);
-        const res = await doctorBookingService.xinNghiNhieuCaBacSi({
-          danhSachCaId: selectedMultiShifts,
-          lyDo: reason,
-        });
+        const results = await Promise.allSettled(
+          selectedMultiShifts.map((sId) =>
+            doctorBookingService.guiYeuCauDoiLich({
+              idLichLamViec: sId,
+              loaiYeuCau: "XIN_NGHI",
+              lyDo: reason,
+            }),
+          ),
+        );
+
+        const succeeded = results.filter((r) => r.status === "fulfilled").length;
+        const failed = results.filter((r) => r.status === "rejected").length;
+
         form.reset();
         setSelectedMultiShifts([]);
         setFormErrors({});
         await queryClient.invalidateQueries({
           queryKey: ["booking", "doctor-shift-requests"],
         });
-        notifyAuth(
-          "success",
-          lang === "vi" ? "Đã gửi yêu cầu nghỉ" : "Leave request submitted",
-          res.thongDiep ||
-            (lang === "vi"
-              ? `Đã gửi yêu cầu xin nghỉ ${selectedMultiShifts.length} ca thành công.`
-              : `Successfully submitted leave request for ${selectedMultiShifts.length} shifts.`),
-        );
+
+        if (succeeded > 0) {
+          notifyAuth(
+            "success",
+            lang === "vi" ? "Đã gửi yêu cầu nghỉ" : "Leave request submitted",
+            lang === "vi"
+              ? `Đã gửi thành công yêu cầu xin nghỉ cho ${succeeded} ca.${failed > 0 ? ` (${failed} ca thất bại)` : ""}`
+              : `Successfully submitted leave request for ${succeeded} shifts.${failed > 0 ? ` (${failed} failed)` : ""}`,
+          );
+        } else {
+          notifyAuth(
+            "error",
+            lang === "vi" ? "Gửi yêu cầu thất bại" : "Request submission failed",
+            lang === "vi"
+              ? "Không thể gửi yêu cầu xin nghỉ cho các ca đã chọn."
+              : "Failed to submit leave request for selected shifts.",
+          );
+        }
       } catch (error: any) {
         const msg =
           error?.response?.data?.thongDiep ||
@@ -303,7 +322,9 @@ export function DoctorScheduleSection() {
     }
 
     const shiftId = Number(formData.get("idLichLamViec"));
-    const currentShift = shifts.find((shift) => shift.id === shiftId);
+    const currentShift = shifts.find(
+      (shift) => (shift.idLichLamViec ?? (shift as any).id) === shiftId,
+    );
 
     if (!shiftId || !currentShift) {
       newErrors.idLichLamViec =
@@ -325,8 +346,8 @@ export function DoctorScheduleSection() {
       }
       const hasPending = ownShiftRequests.some(
         (req: any) =>
-          ((req.lichLamViec && req.lichLamViec.id === shiftId) ||
-            (req.ca && req.ca.id === shiftId) ||
+          ((req.lichLamViec && ((req.lichLamViec.idLichLamViec === shiftId) || (req.lichLamViec.id === shiftId))) ||
+            (req.ca && ((req.ca.idLichLamViec === shiftId) || (req.ca.id === shiftId))) ||
             req.idLichLamViec === shiftId) &&
           req.trangThai === "CHO_DUYET",
       );
@@ -355,8 +376,10 @@ export function DoctorScheduleSection() {
 
     if (requestType === "DOI_CA") {
       ngayMongMuon = String(formData.get("ngayMongMuon") || "");
-      gioBatDauMongMuon = String(formData.get("gioBatDauMongMuon") || "");
-      gioKetThucMongMuon = String(formData.get("gioKetThucMongMuon") || "");
+      const rawStart = String(formData.get("gioBatDauMongMuon") || "");
+      const rawEnd = String(formData.get("gioKetThucMongMuon") || "");
+      gioBatDauMongMuon = rawStart ? (rawStart.length === 5 ? `${rawStart}:00` : rawStart) : undefined;
+      gioKetThucMongMuon = rawEnd ? (rawEnd.length === 5 ? `${rawEnd}:00` : rawEnd) : undefined;
       const phongVal = formData.get("idPhongKhamMongMuon");
       idPhongKhamMongMuon = phongVal ? Number(phongVal) : undefined;
 
@@ -394,11 +417,15 @@ export function DoctorScheduleSection() {
       if (currentShift && ngayMongMuon && gioBatDauMongMuon && gioKetThucMongMuon) {
         const sameDate = ngayMongMuon === currentShift.ngay;
         const sameStart =
-          gioBatDauMongMuon === currentShift.gioBatDau.slice(0, 5);
+          gioBatDauMongMuon.slice(0, 5) === currentShift.gioBatDau.slice(0, 5);
         const sameEnd =
-          gioKetThucMongMuon === currentShift.gioKetThuc.slice(0, 5);
+          gioKetThucMongMuon.slice(0, 5) === currentShift.gioKetThuc.slice(0, 5);
+        const currentRoomId =
+          (currentShift.phongKham as any)?.id ??
+          (currentShift.phongKham as any)?.idPhongKham ??
+          (currentShift as any).idPhongKham;
         const sameRoom =
-          !idPhongKhamMongMuon || idPhongKhamMongMuon === currentShift.idPhongKham;
+          !idPhongKhamMongMuon || idPhongKhamMongMuon === currentRoomId;
 
         if (sameDate && sameStart && sameEnd && sameRoom) {
           newErrors.ngayMongMuon =
@@ -579,17 +606,24 @@ export function DoctorScheduleSection() {
                   </span>
                 ) : dayShifts.length ? (
                   <span className={styles.calendarShift}>
-                    {dayShifts.map((shift) => (
-                      <span key={shift.id}>
-                        <Clock3 size={13} aria-hidden="true" />
-                        {shift.gioBatDau} - {shift.gioKetThuc}
-                        <small>
-                          {shift.tenPhongKham} ·{" "}
-                          {shift.soLuotDaDat ?? shift.soChoDaDat}/
-                          {shift.tongSoLuot ?? shift.tongSoCho}
-                        </small>
-                      </span>
-                    ))}
+                    {dayShifts.map((shift) => {
+                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const roomName =
+                        shift.phongKham?.tenPhong ||
+                        (shift as any).tenPhongKham ||
+                        shift.tenChuyenKhoa ||
+                        "";
+                      return (
+                        <span key={sid}>
+                          <Clock3 size={13} aria-hidden="true" />
+                          {shift.gioBatDau.slice(0, 5)} - {shift.gioKetThuc.slice(0, 5)}
+                          <small>
+                            {roomName ? `${roomName} · ` : ""}
+                            {shift.soLuotDaDat ?? 0}/{shift.tongSoLuot ?? 0}
+                          </small>
+                        </span>
+                      );
+                    })}
                     {dayAppointments.map((appointment) => (
                       <small key={appointment.maPhieuKham}>
                         {appointment.gioKhamDuKien} ·{" "}
@@ -765,12 +799,20 @@ export function DoctorScheduleSection() {
                   </option>
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
-                    .map((shift) => (
-                      <option key={shift.id} value={shift.id}>
-                        {shift.ngay} · {shift.gioBatDau.slice(0, 5)}-{shift.gioKetThuc.slice(0, 5)} ·{" "}
-                        {shift.tenPhongKham}
-                      </option>
-                    ))}
+                    .map((shift) => {
+                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const roomName =
+                        shift.phongKham?.tenPhong ||
+                        (shift as any).tenPhongKham ||
+                        shift.tenChuyenKhoa ||
+                        (lang === "vi" ? "Phòng khám" : "Clinic");
+                      return (
+                        <option key={sid} value={sid}>
+                          {shift.ngay} · {shift.gioBatDau.slice(0, 5)}-{shift.gioKetThuc.slice(0, 5)} ·{" "}
+                          {roomName}
+                        </option>
+                      );
+                    })}
                 </select>
                 {formErrors.idLichLamViec && (
                   <p className="text-xs text-rose-600 flex items-center gap-1 mt-1 font-medium">
@@ -943,10 +985,16 @@ export function DoctorScheduleSection() {
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
                     .map((shift) => {
-                      const isChecked = selectedMultiShifts.includes(shift.id);
+                      const sid = shift.idLichLamViec ?? (shift as any).id;
+                      const isChecked = selectedMultiShifts.includes(sid);
+                      const roomName =
+                        shift.phongKham?.tenPhong ||
+                        (shift as any).tenPhongKham ||
+                        shift.tenChuyenKhoa ||
+                        (lang === "vi" ? "Phòng khám" : "Clinic");
                       return (
                         <label
-                          key={shift.id}
+                          key={sid}
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -963,12 +1011,17 @@ export function DoctorScheduleSection() {
                             checked={isChecked}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedMultiShifts((prev) => [...prev, shift.id]);
+                                setSelectedMultiShifts((prev) => [...prev, sid]);
                               } else {
-                                setSelectedMultiShifts((prev) => prev.filter((id) => id !== shift.id));
+                                setSelectedMultiShifts((prev) =>
+                                  prev.filter((id) => id !== sid),
+                                );
                               }
                               if (formErrors.multiShifts) {
-                                setFormErrors((prev) => ({ ...prev, multiShifts: "" }));
+                                setFormErrors((prev) => ({
+                                  ...prev,
+                                  multiShifts: "",
+                                }));
                               }
                             }}
                           />
@@ -977,7 +1030,7 @@ export function DoctorScheduleSection() {
                               {shift.ngay} · {shift.gioBatDau.slice(0, 5)} - {shift.gioKetThuc.slice(0, 5)}
                             </div>
                             <div style={{ fontSize: "12px", color: "#64748b" }}>
-                              {shift.tenPhongKham}
+                              {roomName}
                             </div>
                           </div>
                         </label>
