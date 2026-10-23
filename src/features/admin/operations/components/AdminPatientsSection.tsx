@@ -4,6 +4,8 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientDetailModal } from "./PatientDetailModal";
+import { Pagination } from "@/shared/components/ui/Pagination";
+import { notifyAuth } from "@/utils/authNotification";
 import type { PendingVerificationItem } from "../operations.types";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import styles from "../../AdminDashboardPage.module.css";
@@ -91,21 +93,23 @@ export function AdminPatientsSection() {
   });
 
   const showFailure = (cause: unknown) => {
-    setError(
+    const errorMsg =
       (cause as { response?: { data?: { thongDiep?: string } } }).response?.data
         ?.thongDiep ??
         (cause instanceof Error
           ? cause.message
           : vi
             ? "Thao tác thất bại."
-            : "The operation failed."),
-    );
+            : "The operation failed.");
+    setError(errorMsg);
     setMessage("");
+    notifyAuth("error", vi ? "Thao tác thất bại" : "Operation failed", errorMsg);
   };
 
   const finish = async (text: string, keys: string[]) => {
     setError("");
     setMessage(text);
+    notifyAuth("success", vi ? "Thành công" : "Success", text);
     await Promise.all(
       keys.map((key) => client.invalidateQueries({ queryKey: key.split("|") })),
     );
@@ -238,7 +242,9 @@ export function AdminPatientsSection() {
                             ...lookupResult,
                             doiChieu: { ...lookupResult.doiChieu, canDoiChieu: false }
                           });
-                          setMessage(res.thongDiep);
+                          const successMsg = res.thongDiep || (vi ? "Đã đối chiếu giấy tờ thành công" : "Verified successfully");
+                          setMessage(successMsg);
+                          notifyAuth("success", vi ? "Thành công" : "Success", successMsg);
                         }
                       } catch (err: any) {
                         setError(err?.message || "Error");
@@ -391,29 +397,13 @@ export function AdminPatientsSection() {
           </tbody>
         </table>
       </div>
-      <div className={styles.paginationBar}>
-        <span>
-          {vi
-            ? `Trang ${patientPage + 1} / ${patients?.tongSoTrang ?? 1}`
-            : `Page ${patientPage + 1} / ${patients?.tongSoTrang ?? 1}`}
-        </span>
-        <div className={styles.paginationActions}>
-          <button
-            className={styles.pageBtn}
-            disabled={!patientPage}
-            onClick={() => setPatientPage((page) => page - 1)}
-          >
-            {vi ? "Trước" : "Previous"}
-          </button>
-          <button
-            className={styles.pageBtn}
-            disabled={patientPage + 1 >= (patients?.tongSoTrang ?? 1)}
-            onClick={() => setPatientPage((page) => page + 1)}
-          >
-            {vi ? "Sau" : "Next"}
-          </button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={patientPage}
+        totalPages={patients?.tongSoTrang ?? 1}
+        totalElements={patients?.tongSoPhanTu}
+        pageSize={20}
+        onPageChange={setPatientPage}
+      />
       {selectedPatientId !== null && (
         <PatientDetailModal
           patientId={selectedPatientId}

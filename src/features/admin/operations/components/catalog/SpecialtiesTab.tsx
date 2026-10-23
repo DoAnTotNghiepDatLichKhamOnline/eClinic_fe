@@ -1,20 +1,31 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ChuyenKhoaResponse } from "@/types/catalog.type";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
-import { Plus, Edit3 } from "lucide-react";
+import { Plus, Edit3, Trash2 } from "lucide-react";
 
 interface SpecialtiesTabProps {
   specialties: ChuyenKhoaResponse[];
   isLoading: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalElements?: number;
+  onPageChange: (page: number) => void;
   onOpenAddModal: () => void;
   onSelectEdit: (specialty: ChuyenKhoaResponse) => void;
+  onDeleteSpecialty?: (specialty: ChuyenKhoaResponse) => void;
 }
 
 export function SpecialtiesTab({
   specialties,
   isLoading,
+  currentPage,
+  totalPages,
+  totalElements,
+  onPageChange,
   onOpenAddModal,
   onSelectEdit,
+  onDeleteSpecialty,
 }: SpecialtiesTabProps) {
   const { lang } = useLanguage();
   const vi = lang === "vi";
@@ -79,14 +90,27 @@ export function SpecialtiesTab({
                     {item.trieuChung || "—"}
                   </td>
                   <td>
-                    <button
-                      className={styles.actionBtn}
-                      type="button"
-                      onClick={() => onSelectEdit(item)}
-                    >
-                      <Edit3 size={13} className="inline mr-1" />
-                      {vi ? "Sửa" : "Edit"}
-                    </button>
+                    <div className="flex gap-1.5 items-center">
+                      <button
+                        className={styles.actionBtn}
+                        type="button"
+                        onClick={() => onSelectEdit(item)}
+                      >
+                        <Edit3 size={13} className="inline mr-1" />
+                        {vi ? "Sửa" : "Edit"}
+                      </button>
+                      {onDeleteSpecialty && (
+                        <button
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                          type="button"
+                          onClick={() => onDeleteSpecialty(item)}
+                          title={vi ? "Xóa chuyên khoa" : "Delete specialty"}
+                        >
+                          <Trash2 size={13} />
+                          {vi ? "Xóa" : "Delete"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -94,6 +118,14 @@ export function SpecialtiesTab({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        pageSize={10}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }

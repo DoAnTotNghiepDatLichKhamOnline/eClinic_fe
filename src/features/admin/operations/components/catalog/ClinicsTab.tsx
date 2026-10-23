@@ -1,11 +1,16 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { PhongKhamQuanTriResponse } from "@/types/catalog.type";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
 import { Plus, Edit3 } from "lucide-react";
 
 interface ClinicsTabProps {
   clinics: PhongKhamQuanTriResponse[];
   isLoading: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  totalElements?: number;
+  onPageChange?: (page: number) => void;
   onOpenAddModal: () => void;
   onSelectEdit: (clinic: PhongKhamQuanTriResponse) => void;
   onDeactivate: (clinicId: number) => void;
@@ -15,6 +20,10 @@ interface ClinicsTabProps {
 export function ClinicsTab({
   clinics,
   isLoading,
+  currentPage = 0,
+  totalPages = 1,
+  totalElements,
+  onPageChange = () => {},
   onOpenAddModal,
   onSelectEdit,
   onDeactivate,
@@ -135,6 +144,14 @@ export function ClinicsTab({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        pageSize={10}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }

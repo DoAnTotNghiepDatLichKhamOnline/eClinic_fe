@@ -93,71 +93,144 @@ export function PatientDetailModal({
         aria-label={vi ? "Chi tiết hồ sơ bệnh nhân" : "Patient profile detail"}
         className="max-h-[90vh] w-full max-w-3xl overflow-y-auto bg-white p-6"
       >
-        <div className="mb-5 flex justify-between border-b border-slate-200 pb-3">
-          <h2 className="text-xl font-bold">
-            {patientDetailQuery.data?.duLieu?.hoSo.hoTen ??
-              (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
-          </h2>
-          <button type="button" onClick={onClose}>
-            {vi ? "Đóng" : "Close"}
-          </button>
-        </div>
+        {(() => {
+          const rawData = patientDetailQuery.data?.duLieu as any;
+          const patient = (rawData?.hoSo ?? rawData) || {};
 
-        {modalError && (
-          <p role="alert" className="mb-3 text-sm text-rose-700">
-            {modalError}
-          </p>
-        )}
-        {modalMessage && (
-          <p role="status" className="mb-3 text-sm text-emerald-800">
-            {modalMessage}
-          </p>
-        )}
+          return (
+            <>
+              <div className="mb-5 flex items-center justify-between border-b border-slate-200 pb-3">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    {patient.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {vi ? "Mã hồ sơ bệnh nhân:" : "Patient record ID:"} #{patientId}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
 
-        {patientDetailQuery.data?.duLieu && (
-          <form
-            className="grid gap-3 sm:grid-cols-2"
-            onSubmit={(event) => void savePatient(event)}
-          >
-            {(
-              [
-                "hoTen",
-                "ngaySinh",
-                "soDienThoai",
-                "cccd",
-                "diaChi",
-                "soBaoHiemYTe",
-              ] as const
-            ).map((field) => (
-              <label className="grid gap-1 text-xs" key={field}>
-                {field}
-                <input
-                  name={field}
-                  type={field === "ngaySinh" ? "date" : "text"}
-                  defaultValue={
-                    patientDetailQuery.data!.duLieu!.hoSo[field] ?? ""
-                  }
-                />
-              </label>
-            ))}
-            <label className="grid gap-1 text-xs">
-              {vi ? "Giới tính" : "Gender"}
-              <select
-                name="gioiTinh"
-                defaultValue={
-                  patientDetailQuery.data.duLieu.hoSo.gioiTinh ?? "NAM"
-                }
-              >
-                <option value="NAM">NAM</option>
-                <option value="NU">NU</option>
-                <option value="KHAC">KHAC</option>
-              </select>
-            </label>
-            <button className={styles.actionBtn} type="submit">
-              {vi ? "Lưu hồ sơ" : "Save profile"}
-            </button>
-          </form>
-        )}
+              {modalError && (
+                <p role="alert" className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">
+                  {modalError}
+                </p>
+              )}
+              {modalMessage && (
+                <p role="status" className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs font-medium text-emerald-800">
+                  {modalMessage}
+                </p>
+              )}
+
+              {patientDetailQuery.isLoading ? (
+                <div className="py-12 text-center text-xs text-slate-500">
+                  {vi ? "Đang tải thông tin hồ sơ..." : "Loading patient record..."}
+                </div>
+              ) : patientDetailQuery.data?.duLieu ? (
+                <form
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4"
+                  onSubmit={(event) => void savePatient(event)}
+                >
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Họ và tên bệnh nhân" : "Full Name"} <span className="text-rose-500">*</span></span>
+                    <input
+                      name="hoTen"
+                      type="text"
+                      required
+                      defaultValue={patient.hoTen ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Ngày sinh" : "Date of Birth"}</span>
+                    <input
+                      name="ngaySinh"
+                      type="date"
+                      defaultValue={patient.ngaySinh ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Giới tính" : "Gender"}</span>
+                    <select
+                      name="gioiTinh"
+                      defaultValue={patient.gioiTinh ?? "NAM"}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    >
+                      <option value="NAM">{vi ? "Nam" : "Male"}</option>
+                      <option value="NU">{vi ? "Nữ" : "Female"}</option>
+                      <option value="KHAC">{vi ? "Khác" : "Other"}</option>
+                    </select>
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Số điện thoại liên hệ" : "Phone Number"}</span>
+                    <input
+                      name="soDienThoai"
+                      type="tel"
+                      defaultValue={patient.soDienThoai ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Số CCCD / Định danh cá nhân" : "National ID / Citizen ID"}</span>
+                    <input
+                      name="cccd"
+                      type="text"
+                      defaultValue={patient.cccd ?? patient.soCccdGoc ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                    <span>{vi ? "Số thẻ Bảo hiểm y tế (BHYT)" : "Health Insurance Card"}</span>
+                    <input
+                      name="soBaoHiemYTe"
+                      type="text"
+                      defaultValue={patient.soBaoHiemYTe ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
+                    <span>{vi ? "Địa chỉ thường trú" : "Residential Address"}</span>
+                    <input
+                      name="diaChi"
+                      type="text"
+                      defaultValue={patient.diaChi ?? ""}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </label>
+
+                  <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      {vi ? "Đóng" : "Cancel"}
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+                    >
+                      {vi ? "Lưu thay đổi hồ sơ" : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </>
+          );
+        })()}
 
         {patientAppointmentsQuery.data?.duLieu?.noiDung && (
           <div className="mt-6">

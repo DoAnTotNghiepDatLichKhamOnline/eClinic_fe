@@ -21,11 +21,48 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { userProfileService } from "@/services/identity/userProfileService";
 import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import type {
   HoSoBacSiQuanTriResponse,
   AnhBacSiResponse,
 } from "@/types/catalog.type";
 import styles from "../../DoctorWorkspace.module.css";
+
+const AVAILABLE_LANGUAGES: { code: string; labelVi: string; labelEn: string }[] = [
+  { code: "vi", labelVi: "Tiếng Việt", labelEn: "Vietnamese" },
+  { code: "en", labelVi: "Tiếng Anh", labelEn: "English" },
+  { code: "fr", labelVi: "Tiếng Pháp", labelEn: "French" },
+  { code: "zh", labelVi: "Tiếng Trung", labelEn: "Chinese" },
+  { code: "ja", labelVi: "Tiếng Nhật", labelEn: "Japanese" },
+  { code: "ko", labelVi: "Tiếng Hàn", labelEn: "Korean" },
+  { code: "de", labelVi: "Tiếng Đức", labelEn: "German" },
+  { code: "ru", labelVi: "Tiếng Nga", labelEn: "Russian" },
+];
+
+function getLanguageLabel(code: string, lang: string) {
+  const found = AVAILABLE_LANGUAGES.find(
+    (l) => l.code.toLowerCase() === code.toLowerCase(),
+  );
+  if (found) {
+    return lang === "vi" ? found.labelVi : found.labelEn;
+  }
+  return code;
+}
+
+function normalizeLanguageCode(input: string): string {
+  const trimmed = input.trim();
+  const found = AVAILABLE_LANGUAGES.find(
+    (l) =>
+      l.code.toLowerCase() === trimmed.toLowerCase() ||
+      l.labelVi.toLowerCase() === trimmed.toLowerCase() ||
+      l.labelEn.toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (found) return found.code;
+  if (/^[A-Za-z]{2,3}$/.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+  return "vi";
+}
 
 export function DoctorProfileSection() {
   const { lang } = useLanguage();
@@ -51,6 +88,10 @@ export function DoctorProfileSection() {
   const [editCaption, setEditCaption] = useState("");
   const [editCaptionEn, setEditCaptionEn] = useState("");
   const [savingCaption, setSavingCaption] = useState(false);
+
+  // State xác nhận xóa ảnh
+  const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | null>(null);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
 
   const doctorAccountQuery = useQuery({
     queryKey: ["identity", "doctor-profile"],
@@ -84,7 +125,11 @@ export function DoctorProfileSection() {
     if (profile) {
       setGioiThieuNgan(profile.gioiThieuNgan || "");
       setTieuSu(profile.tieuSu || "");
-      setLanguages(profile.ngonNguKham || ["Tiếng Việt"]);
+      const currentLangs =
+        profile.ngonNguKham && profile.ngonNguKham.length > 0
+          ? profile.ngonNguKham.map(normalizeLanguageCode)
+          : ["vi"];
+      setLanguages(currentLangs);
       setAwards(profile.giaiThuong || []);
       setResearchList(profile.congTrinhNghienCuu || []);
     }
@@ -95,11 +140,12 @@ export function DoctorProfileSection() {
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       const phienBan = profile?.phienBanHoSo ?? 1;
+      const validLangs = languages.map(normalizeLanguageCode).filter(Boolean);
       return doctorService.capNhatHoSoBacSiToi({
         phienBan,
         gioiThieuNgan: gioiThieuNgan.trim() || null,
         tieuSu: tieuSu.trim() || null,
-        ngonNguKham: languages.length > 0 ? languages : undefined,
+        ngonNguKham: validLangs.length > 0 ? validLangs : undefined,
         giaiThuong: awards.length > 0 ? awards : undefined,
         congTrinhNghienCuu: researchList.length > 0 ? researchList : undefined,
       });
@@ -133,10 +179,10 @@ export function DoctorProfileSection() {
   });
 
   // Handle language chips
-  const handleAddLanguage = () => {
-    const trimmed = ngonNguInput.trim();
-    if (trimmed && !languages.includes(trimmed)) {
-      setLanguages([...languages, trimmed]);
+  const handleAddLanguage = (codeToAdd?: string) => {
+    const code = normalizeLanguageCode(codeToAdd || ngonNguInput);
+    if (code && !languages.includes(code)) {
+      setLanguages([...languages, code]);
       setNgonNguInput("");
     }
   };
@@ -222,20 +268,13 @@ export function DoctorProfileSection() {
     }
   };
 
-  // Handle delete image
-  const handleDeleteImage = async (idAnh: number) => {
-    if (
-      !window.confirm(
-        lang === "vi"
-          ? "Bạn có chắc chắn muốn xóa ảnh này?"
-          : "Are you sure you want to delete this photo?",
-      )
-    ) {
-      return;
-    }
+  // Execute delete image
+  const executeDeleteImage = async () => {
+    if (!confirmDeletePhotoId) return;
 
     try {
-      const res = await doctorService.xoaAnhToi(idAnh);
+      setIsDeletingPhoto(true);
+      const res = await doctorService.xoaAnhToi(confirmDeletePhotoId);
       if (res.thanhCong) {
         notifyAuth(
           "success",
@@ -254,6 +293,9 @@ export function DoctorProfileSection() {
           (lang === "vi" ? "Lỗi xóa ảnh" : "Failed to delete photo"),
         "",
       );
+    } finally {
+      setIsDeletingPhoto(false);
+      setConfirmDeletePhotoId(null);
     }
   };
 
@@ -315,11 +357,11 @@ export function DoctorProfileSection() {
           {!isEditing ? (
             <button
               type="button"
-              className={styles.primaryButton}
+              className={styles.secondaryButton}
               onClick={handleStartEdit}
             >
               <Edit3 size={15} aria-hidden="true" />
-              {lang === "vi" ? "Chỉnh sửa tự giới thiệu" : "Edit Bio & Intro"}
+              {lang === "vi" ? "Chỉnh sửa hồ sơ" : "Edit Profile"}
             </button>
           ) : (
             <div style={{ display: "flex", gap: "8px" }}>
@@ -486,243 +528,112 @@ export function DoctorProfileSection() {
           </div>
         </div>
 
-        {!isEditing ? (
-          <div style={{ display: "grid", gap: "16px", marginTop: "14px" }}>
-            <div>
-              <strong style={{ fontSize: "13px", color: "var(--navy)" }}>
-                {lang === "vi" ? "Giới thiệu ngắn:" : "Short Bio:"}
-              </strong>
-              <p
-                style={{
-                  margin: "6px 0 0",
-                  fontSize: "13px",
-                  color: "#33443d",
-                  lineHeight: 1.6,
-                }}
-              >
-                {profile?.gioiThieuNgan || (
-                  <em style={{ color: "var(--ink-soft)" }}>
-                    {lang === "vi"
+        <div style={{ display: "grid", gap: "16px", marginTop: "14px" }}>
+          <label className={styles.field}>
+            <span>
+              {lang === "vi"
+                ? "Giới thiệu ngắn (tối đa 255 ký tự):"
+                : "Short Bio (max 255 chars):"}
+            </span>
+            <input
+              type="text"
+              maxLength={255}
+              readOnly={!isEditing}
+              value={isEditing ? gioiThieuNgan : (profile?.gioiThieuNgan || "")}
+              onChange={(e) => setGioiThieuNgan(e.target.value)}
+              placeholder={
+                isEditing
+                  ? (lang === "vi"
+                      ? "Ví dụ: Hơn 10 năm kinh nghiệm điều trị tim mạch..."
+                      : "e.g. Over 10 years of experience...")
+                  : (lang === "vi"
                       ? "Chưa có lời tự giới thiệu ngắn"
-                      : "No short bio provided"}
-                  </em>
-                )}
-              </p>
-            </div>
+                      : "No short bio provided")
+              }
+              style={{
+                background: isEditing ? "#fff" : "#f8faf9",
+                borderColor: isEditing ? "var(--teal)" : "#e2e8f0",
+                cursor: isEditing ? "text" : "default",
+                color: isEditing ? "var(--navy)" : "#33443d",
+                transition: "all 0.2s ease",
+              }}
+            />
+          </label>
 
-            <div>
-              <strong style={{ fontSize: "13px", color: "var(--navy)" }}>
-                {lang === "vi" ? "Tiểu sử & Quá trình:" : "Full Biography:"}
-              </strong>
-              <p
-                style={{
-                  margin: "6px 0 0",
-                  fontSize: "13px",
-                  color: "#33443d",
-                  lineHeight: 1.6,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {profile?.tieuSu || (
-                  <em style={{ color: "var(--ink-soft)" }}>
-                    {lang === "vi"
+          <label className={styles.field}>
+            <span>
+              {lang === "vi" ? "Tiểu sử chi tiết & Quá trình công tác:" : "Full Biography:"}
+            </span>
+            <textarea
+              rows={4}
+              readOnly={!isEditing}
+              value={isEditing ? tieuSu : (profile?.tieuSu || "")}
+              onChange={(e) => setTieuSu(e.target.value)}
+              placeholder={
+                isEditing
+                  ? (lang === "vi"
+                      ? "Tóm tắt kinh nghiệm, triết lý chăm sóc bệnh nhân..."
+                      : "Summary of clinical philosophy and experience...")
+                  : (lang === "vi"
                       ? "Chưa có thông tin tiểu sử chi tiết"
-                      : "No biography provided"}
-                  </em>
-                )}
-              </p>
-            </div>
+                      : "No biography provided")
+              }
+              style={{
+                background: isEditing ? "#fff" : "#f8faf9",
+                borderColor: isEditing ? "var(--teal)" : "#e2e8f0",
+                cursor: isEditing ? "text" : "default",
+                color: isEditing ? "var(--navy)" : "#33443d",
+                lineHeight: 1.6,
+                transition: "all 0.2s ease",
+              }}
+            />
+          </label>
 
-            <div>
-              <strong
-                style={{
-                  fontSize: "13px",
-                  color: "var(--navy)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  marginBottom: "8px",
-                }}
-              >
-                <Globe size={14} aria-hidden="true" />
-                {lang === "vi" ? "Ngôn ngữ tư vấn:" : "Consultation Languages:"}
-              </strong>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {(profile?.ngonNguKham && profile.ngonNguKham.length > 0
-                  ? profile.ngonNguKham
-                  : ["Tiếng Việt"]
-                ).map((l: string, i: number) => (
-                  <span
-                    key={i}
-                    style={{
-                      background: "#e4f3ee",
-                      color: "#12634d",
-                      padding: "3px 10px",
-                      borderRadius: "12px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {l}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <strong
-                style={{
-                  fontSize: "13px",
-                  color: "var(--navy)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  marginBottom: "8px",
-                }}
-              >
-                <Award size={14} aria-hidden="true" />
-                {lang === "vi"
-                  ? "Giải thưởng & Danh hiệu:"
-                  : "Awards & Honors:"}
-              </strong>
-              {profile?.giaiThuong && profile.giaiThuong.length > 0 ? (
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "18px",
-                    display: "grid",
-                    gap: "4px",
-                    fontSize: "13px",
-                    color: "#33443d",
-                  }}
-                >
-                  {profile.giaiThuong.map((award: string, i: number) => (
-                    <li key={i}>{award}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "13px",
-                    color: "var(--ink-soft)",
-                  }}
-                >
-                  <em>
-                    {lang === "vi"
-                      ? "Chưa có mục giải thưởng"
-                      : "No awards listed"}
-                  </em>
-                </p>
-              )}
-            </div>
-
-            <div>
-              <strong
-                style={{
-                  fontSize: "13px",
-                  color: "var(--navy)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  marginBottom: "8px",
-                }}
-              >
-                <BookOpen size={14} aria-hidden="true" />
-                {lang === "vi"
-                  ? "Công trình nghiên cứu:"
-                  : "Research & Publications:"}
-              </strong>
-              {profile?.congTrinhNghienCuu &&
-              profile.congTrinhNghienCuu.length > 0 ? (
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "18px",
-                    display: "grid",
-                    gap: "4px",
-                    fontSize: "13px",
-                    color: "#33443d",
-                  }}
-                >
-                  {profile.congTrinhNghienCuu.map((item: string, i: number) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "13px",
-                    color: "var(--ink-soft)",
-                  }}
-                >
-                  <em>
-                    {lang === "vi"
-                      ? "Chưa có công trình nghiên cứu"
-                      : "No research listed"}
-                  </em>
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: "grid", gap: "16px", marginTop: "14px" }}>
-            <label className={styles.field}>
-              <span>
-                {lang === "vi"
-                  ? "Giới thiệu ngắn (tối đa 255 ký tự):"
-                  : "Short Bio (max 255 chars):"}
-              </span>
-              <input
-                type="text"
-                maxLength={255}
-                value={gioiThieuNgan}
-                onChange={(e) => setGioiThieuNgan(e.target.value)}
-                placeholder={
-                  lang === "vi"
-                    ? "Ví dụ: Hơn 10 năm kinh nghiệm điều trị tim mạch và huyết áp..."
-                    : "e.g. Over 10 years of experience in cardiology..."
-                }
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span>
-                {lang === "vi" ? "Tiểu sử chi tiết:" : "Full Biography:"}
-              </span>
-              <textarea
-                rows={4}
-                value={tieuSu}
-                onChange={(e) => setTieuSu(e.target.value)}
-                placeholder={
-                  lang === "vi"
-                    ? "Tóm tắt kinh nghiệm, triết lý chăm sóc bệnh nhân..."
-                    : "Summary of clinical philosophy and experience..."
-                }
-              />
-            </label>
-
-            <div>
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "var(--navy)",
-                  marginBottom: "6px",
-                }}
-              >
-                {lang === "vi" ? "Ngôn ngữ tư vấn:" : "Consultation Languages:"}
-              </span>
+          {/* Ngôn ngữ tư vấn */}
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--navy)",
+                marginBottom: "6px",
+              }}
+            >
+              {lang === "vi" ? "Ngôn ngữ tư vấn:" : "Consultation Languages:"}
+            </span>
+            {isEditing && (
               <div
                 style={{
                   display: "flex",
                   gap: "6px",
                   alignItems: "center",
                   marginBottom: "8px",
+                  flexWrap: "wrap",
                 }}
               >
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) handleAddLanguage(e.target.value);
+                  }}
+                  style={{
+                    maxWidth: "220px",
+                    padding: "6px 10px",
+                    fontSize: "13px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--line)",
+                  }}
+                >
+                  <option value="" disabled>
+                    {lang === "vi" ? "+ Chọn ngôn ngữ" : "+ Select language"}
+                  </option>
+                  {AVAILABLE_LANGUAGES.filter((al) => !languages.includes(al.code)).map((al) => (
+                    <option key={al.code} value={al.code}>
+                      {lang === "vi" ? al.labelVi : al.labelEn}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={ngonNguInput}
@@ -735,11 +646,11 @@ export function DoctorProfileSection() {
                   }}
                   placeholder={
                     lang === "vi"
-                      ? "Nhập tên ngôn ngữ (VD: Tiếng Anh) rồi bấm Thêm"
-                      : "Type language and press Add"
+                      ? "Hoặc nhập mã ISO / tên khác..."
+                      : "Or type code/name..."
                   }
                   style={{
-                    maxWidth: "300px",
+                    maxWidth: "200px",
                     padding: "6px 10px",
                     fontSize: "13px",
                   }}
@@ -747,14 +658,18 @@ export function DoctorProfileSection() {
                 <button
                   type="button"
                   className={styles.secondaryButton}
-                  onClick={handleAddLanguage}
+                  onClick={() => handleAddLanguage()}
                 >
                   <Plus size={14} aria-hidden="true" />
                   {lang === "vi" ? "Thêm" : "Add"}
                 </button>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {languages.map((l, i) => (
+            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {(isEditing ? languages : (profile?.ngonNguKham && profile.ngonNguKham.length > 0 ? profile.ngonNguKham : ["vi"])).map((l, i) => {
+                const norm = normalizeLanguageCode(l);
+                const label = getLanguageLabel(norm, lang);
+                return (
                   <span
                     key={i}
                     style={{
@@ -763,45 +678,51 @@ export function DoctorProfileSection() {
                       padding: "4px 10px",
                       borderRadius: "14px",
                       fontSize: "12px",
+                      fontWeight: 600,
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
                     }}
                   >
-                    {l}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLanguage(l)}
-                      style={{
-                        background: "transparent",
-                        border: 0,
-                        color: "#9e2e25",
-                        cursor: "pointer",
-                        padding: 0,
-                        display: "flex",
-                      }}
-                    >
-                      <X size={12} aria-hidden="true" />
-                    </button>
+                    {label}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLanguage(l)}
+                        style={{
+                          background: "transparent",
+                          border: 0,
+                          color: "#9e2e25",
+                          cursor: "pointer",
+                          padding: 0,
+                          display: "flex",
+                        }}
+                      >
+                        <X size={12} aria-hidden="true" />
+                      </button>
+                    )}
                   </span>
-                ))}
-              </div>
+                );
+              })}
             </div>
+          </div>
 
-            <div>
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "var(--navy)",
-                  marginBottom: "6px",
-                }}
-              >
-                {lang === "vi"
-                  ? "Giải thưởng & Danh hiệu:"
-                  : "Awards & Honors:"}
-              </span>
+          {/* Giải thưởng & Danh hiệu */}
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--navy)",
+                marginBottom: "6px",
+              }}
+            >
+              {lang === "vi"
+                ? "Giải thưởng & Danh hiệu:"
+                : "Awards & Honors:"}
+            </span>
+            {isEditing && (
               <div
                 style={{
                   display: "flex",
@@ -836,6 +757,8 @@ export function DoctorProfileSection() {
                   {lang === "vi" ? "Thêm" : "Add"}
                 </button>
               </div>
+            )}
+            {((isEditing ? awards : profile?.giaiThuong) || []).length > 0 ? (
               <ul
                 style={{
                   margin: 0,
@@ -845,7 +768,7 @@ export function DoctorProfileSection() {
                   gap: "6px",
                 }}
               >
-                {awards.map((a, i) => (
+                {((isEditing ? awards : profile?.giaiThuong) || []).map((a, i) => (
                   <li
                     key={i}
                     style={{
@@ -854,42 +777,53 @@ export function DoctorProfileSection() {
                       alignItems: "center",
                       padding: "6px 10px",
                       background: "#f9fafb",
+                      border: "1px solid #e2e8f0",
                       borderRadius: "6px",
                       fontSize: "13px",
                     }}
                   >
                     <span>{a}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAward(i)}
-                      style={{
-                        background: "transparent",
-                        border: 0,
-                        color: "#9e2e25",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Trash2 size={13} aria-hidden="true" />
-                    </button>
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAward(i)}
+                        style={{
+                          background: "transparent",
+                          border: 0,
+                          color: "#9e2e25",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
-            </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--ink-soft)" }}>
+                <em>{lang === "vi" ? "Chưa có mục giải thưởng" : "No awards listed"}</em>
+              </p>
+            )}
+          </div>
 
-            <div>
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "var(--navy)",
-                  marginBottom: "6px",
-                }}
-              >
-                {lang === "vi"
-                  ? "Công trình nghiên cứu & Xuất bản:"
-                  : "Research & Publications:"}
-              </span>
+          {/* Công trình nghiên cứu */}
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--navy)",
+                marginBottom: "6px",
+              }}
+            >
+              {lang === "vi"
+                ? "Công trình nghiên cứu & Xuất bản:"
+                : "Research & Publications:"}
+            </span>
+            {isEditing && (
               <div
                 style={{
                   display: "flex",
@@ -924,6 +858,8 @@ export function DoctorProfileSection() {
                   {lang === "vi" ? "Thêm" : "Add"}
                 </button>
               </div>
+            )}
+            {((isEditing ? researchList : profile?.congTrinhNghienCuu) || []).length > 0 ? (
               <ul
                 style={{
                   margin: 0,
@@ -933,7 +869,7 @@ export function DoctorProfileSection() {
                   gap: "6px",
                 }}
               >
-                {researchList.map((r, i) => (
+                {((isEditing ? researchList : profile?.congTrinhNghienCuu) || []).map((r, i) => (
                   <li
                     key={i}
                     style={{
@@ -942,29 +878,38 @@ export function DoctorProfileSection() {
                       alignItems: "center",
                       padding: "6px 10px",
                       background: "#f9fafb",
+                      border: "1px solid #e2e8f0",
                       borderRadius: "6px",
                       fontSize: "13px",
                     }}
                   >
                     <span>{r}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveResearch(i)}
-                      style={{
-                        background: "transparent",
-                        border: 0,
-                        color: "#9e2e25",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Trash2 size={13} aria-hidden="true" />
-                    </button>
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveResearch(i)}
+                        style={{
+                          background: "transparent",
+                          border: 0,
+                          color: "#9e2e25",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
-            </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--ink-soft)" }}>
+                <em>{lang === "vi" ? "Chưa có công trình nghiên cứu" : "No research listed"}</em>
+              </p>
+            )}
           </div>
-        )}
+        </div>
+        
       </section>
 
       {/* Card 3: Work & Activity Photos */}
@@ -1151,7 +1096,7 @@ export function DoctorProfileSection() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteImage(photo.id)}
+                      onClick={() => setConfirmDeletePhotoId(photo.id)}
                       title={lang === "vi" ? "Xóa ảnh" : "Delete photo"}
                       style={{
                         background: "transparent",
@@ -1281,6 +1226,22 @@ export function DoctorProfileSection() {
           </div>
         </div>
       )}
+      {/* Confirm Dialog for Photo Deletion */}
+      <ConfirmDialog
+        isOpen={confirmDeletePhotoId !== null}
+        title={lang === "vi" ? "Xác nhận xóa ảnh" : "Confirm Delete Photo"}
+        message={
+          lang === "vi"
+            ? "Bạn có chắc chắn muốn xóa ảnh hoạt động này khỏi hồ sơ làm việc? Thao tác này không thể hoàn tác."
+            : "Are you sure you want to delete this photo from your professional profile? This action cannot be undone."
+        }
+        confirmLabel={lang === "vi" ? "Xóa ảnh" : "Delete Photo"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeletingPhoto}
+        onConfirm={() => void executeDeleteImage()}
+        onCancel={() => setConfirmDeletePhotoId(null)}
+      />
     </section>
   );
 }

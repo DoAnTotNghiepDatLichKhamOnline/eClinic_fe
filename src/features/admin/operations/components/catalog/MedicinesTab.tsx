@@ -1,5 +1,6 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ThuocResponse } from "@/types/catalog.type";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
 import {
   Plus,
@@ -12,6 +13,10 @@ import {
 interface MedicinesTabProps {
   medicines: ThuocResponse[];
   isLoading: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  totalElements?: number;
+  onPageChange?: (page: number) => void;
   onOpenAddModal: () => void;
   onSelectEdit: (medicine: ThuocResponse) => void;
   onVerify: (medicineId: number) => void;
@@ -22,6 +27,10 @@ interface MedicinesTabProps {
 export function MedicinesTab({
   medicines,
   isLoading,
+  currentPage = 0,
+  totalPages = 1,
+  totalElements,
+  onPageChange = () => {},
   onOpenAddModal,
   onSelectEdit,
   onVerify,
@@ -181,6 +190,14 @@ export function MedicinesTab({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        pageSize={10}
+        onPageChange={onPageChange}
+      />
     </>
   );
 }

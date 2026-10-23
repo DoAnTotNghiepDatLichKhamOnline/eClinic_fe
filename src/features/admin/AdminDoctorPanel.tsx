@@ -10,6 +10,9 @@ import type {
   ThemBacSiRequest,
   CapNhatHoSoBacSiRequest,
 } from "@/types/catalog.type";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { Pagination } from "@/shared/components/ui/Pagination";
+import { notifyAuth } from "@/utils/authNotification";
 import styles from "./AdminDashboardPage.module.css";
 
 type DoctorTab = "directory" | "reviews";
@@ -37,6 +40,10 @@ export function AdminDoctorPanel() {
   const [deactivateReason, setDeactivateReason] = useState("");
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
   const [isAddingDoctor, setIsAddingDoctor] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
+  const [reactivatingDoctor, setReactivatingDoctor] = useState<BacSiQuanTriResponse | null>(null);
+  const [isReactivating, setIsReactivating] = useState(false);
 
   type DoctorSortField = "maBacSi" | "hoTen" | "email";
   const [sortField, setSortField] = useState<DoctorSortField>("maBacSi");
@@ -97,17 +104,24 @@ export function AdminDoctorPanel() {
       queryKey: ["catalog", "admin-doctor-detail"],
     });
   };
-  const fail = (cause: unknown) => {
-    setError(
+  const fail = (cause: unknown, customTitle?: string) => {
+    const errorMsg =
       (cause as { response?: { data?: { thongDiep?: string } } }).response?.data
         ?.thongDiep ??
-        (cause instanceof Error
-          ? cause.message
-          : vi
-            ? "Thao tác thất bại."
-            : "The operation failed."),
-    );
+      (cause instanceof Error
+        ? cause.message
+        : vi
+          ? "Thao tác thất bại."
+          : "The operation failed.");
+    setError(errorMsg);
     setMessage("");
+    notifyAuth("error", customTitle || (vi ? "Thất bại" : "Failed"), errorMsg);
+  };
+
+  const notifySuccess = (msg: string, title?: string) => {
+    setMessage(msg);
+    setError("");
+    notifyAuth("success", title || (vi ? "Thành công" : "Success"), msg);
   };
 
   const handleSort = (field: DoctorSortField) => {
@@ -163,13 +177,14 @@ export function AdminDoctorPanel() {
     try {
       const result = await doctorService.themBacSi(body);
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      setMessage(result.thongDiep);
-      setError("");
+      notifySuccess(
+        result.thongDiep || (vi ? "Thêm bác sĩ thành công" : "Doctor added successfully"),
+      );
       form.reset();
       setIsAddDoctorOpen(false);
       await refreshDoctors();
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Thêm bác sĩ thất bại" : "Failed to add doctor");
     } finally {
       setIsAddingDoctor(false);
     }
@@ -187,10 +202,12 @@ export function AdminDoctorPanel() {
         soGiayPhep: String(values.get("soGiayPhep") || "") || null,
       });
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      setMessage(result.thongDiep);
+      notifySuccess(
+        result.thongDiep || (vi ? "Cập nhật thông tin bác sĩ thành công" : "Doctor info updated"),
+      );
       await refreshDoctors();
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Cập nhật thất bại" : "Update failed");
     }
   };
 
@@ -229,10 +246,12 @@ export function AdminDoctorPanel() {
         body,
       );
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      setMessage(result.thongDiep);
+      notifySuccess(
+        result.thongDiep || (vi ? "Cập nhật hồ sơ bác sĩ thành công" : "Doctor profile updated"),
+      );
       await refreshDoctors();
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Cập nhật hồ sơ thất bại" : "Profile update failed");
     }
   };
 
@@ -245,22 +264,28 @@ export function AdminDoctorPanel() {
         setDeactivatingDoctor({ doctor, impact: impact.duLieu });
         setDeactivateReason("");
       } else {
-        if (
-          !window.confirm(
-            vi
-              ? `Kích hoạt lại trạng thái công tác cho bác sĩ ${doctor.hoTen}?`
-              : `Reactivate doctor ${doctor.hoTen}?`,
-          )
-        )
-          return;
-        const result = await doctorService.congTacLaiBacSi(doctor.id);
-        if (!result.thanhCong) throw new Error(result.thongDiep);
-        setMessage(result.thongDiep);
-        setError("");
-        await refreshDoctors();
+        setReactivatingDoctor(doctor);
       }
     } catch (cause) {
       fail(cause);
+    }
+  };
+
+  const handleConfirmReactivate = async () => {
+    if (!reactivatingDoctor) return;
+    try {
+      setIsReactivating(true);
+      const result = await doctorService.congTacLaiBacSi(reactivatingDoctor.id);
+      if (!result.thanhCong) throw new Error(result.thongDiep);
+      notifySuccess(
+        result.thongDiep || (vi ? "Bác sĩ đã công tác trở lại" : "Doctor reactivated"),
+      );
+      setReactivatingDoctor(null);
+      await refreshDoctors();
+    } catch (cause) {
+      fail(cause, vi ? "Kích hoạt lại thất bại" : "Reactivation failed");
+    } finally {
+      setIsReactivating(false);
     }
   };
 
@@ -274,12 +299,13 @@ export function AdminDoctorPanel() {
         },
       );
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      setMessage(result.thongDiep);
-      setError("");
+      notifySuccess(
+        result.thongDiep || (vi ? "Bác sĩ đã ngừng công tác" : "Doctor deactivated"),
+      );
       setDeactivatingDoctor(null);
       await refreshDoctors();
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Ngừng công tác thất bại" : "Deactivation failed");
     }
   };
 
@@ -299,13 +325,15 @@ export function AdminDoctorPanel() {
         String(values.get("chuThichEn") || "") || undefined,
       );
       if (!result.thanhCong) throw new Error(result.thongDiep);
-      setMessage(result.thongDiep);
+      notifySuccess(
+        result.thongDiep || (vi ? "Tải lên ảnh thành công" : "Photo uploaded successfully"),
+      );
       await client.invalidateQueries({
         queryKey: ["catalog", "admin-doctor-detail", selectedDoctor.id],
       });
       form.reset();
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Tải ảnh thất bại" : "Upload failed");
     }
   };
 
@@ -328,20 +356,28 @@ export function AdminDoctorPanel() {
     }
   };
 
-  const deletePhoto = async (idAnh: number) => {
-    if (
-      !selectedDoctor ||
-      !window.confirm(vi ? "Xóa ảnh này?" : "Delete this image?")
-    )
-      return;
+  const deletePhoto = (idAnh: number) => {
+    if (!selectedDoctor) return;
+    setDeletingPhotoId(idAnh);
+  };
+
+  const handleConfirmDeletePhoto = async () => {
+    if (!selectedDoctor || deletingPhotoId === null) return;
     try {
-      const result = await doctorService.xoaAnhBacSi(selectedDoctor.id, idAnh);
+      setIsDeletingPhoto(true);
+      const result = await doctorService.xoaAnhBacSi(selectedDoctor.id, deletingPhotoId);
       if (!result.thanhCong) throw new Error(result.thongDiep);
+      notifySuccess(
+        result.thongDiep || (vi ? "Xóa ảnh thành công" : "Photo deleted successfully"),
+      );
+      setDeletingPhotoId(null);
       await client.invalidateQueries({
         queryKey: ["catalog", "admin-doctor-detail", selectedDoctor.id],
       });
     } catch (cause) {
-      fail(cause);
+      fail(cause, vi ? "Xóa ảnh thất bại" : "Delete photo failed");
+    } finally {
+      setIsDeletingPhoto(false);
     }
   };
 
@@ -502,13 +538,21 @@ export function AdminDoctorPanel() {
                       <td>{doctor.soLuotDaKham}</td>
                       <td>
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                             doctor.trangThai === "DANG_CONG_TAC"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-slate-100 text-slate-600"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
                           }`}
                         >
-                          {doctor.trangThai}
+                          {doctor.trangThai === "DANG_CONG_TAC"
+                            ? vi
+                              ? "Đang công tác"
+                              : "Active"
+                            : doctor.trangThai === "NGUNG_CONG_TAC"
+                              ? vi
+                                ? "Ngừng công tác"
+                                : "Inactive"
+                              : doctor.trangThai}
                         </span>
                       </td>
                       <td className="flex flex-wrap gap-1">
@@ -543,33 +587,13 @@ export function AdminDoctorPanel() {
               </tbody>
             </table>
           </div>
-          <div className={styles.paginationBar}>
-            <span>
-              {vi
-                ? `Trang ${page + 1} / ${doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}`
-                : `Page ${page + 1} / ${doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}`}
-            </span>
-            <div className={styles.paginationActions}>
-              <button
-                className={styles.pageBtn}
-                type="button"
-                disabled={!page}
-                onClick={() => setPage((value) => value - 1)}
-              >
-                {vi ? "Trước" : "Previous"}
-              </button>
-              <button
-                className={styles.pageBtn}
-                type="button"
-                disabled={
-                  page + 1 >= (doctorsQuery.data?.duLieu?.tongSoTrang ?? 1)
-                }
-                onClick={() => setPage((value) => value + 1)}
-              >
-                {vi ? "Sau" : "Next"}
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}
+            totalElements={doctorsQuery.data?.duLieu?.tongSoPhanTu}
+            pageSize={20}
+            onPageChange={setPage}
+          />
         </>
       ) : (
         <>
@@ -1028,6 +1052,37 @@ export function AdminDoctorPanel() {
           </div>
         </div>
       )}
+      {/* Confirm dialog xóa ảnh bác sĩ */}
+      <ConfirmDialog
+        isOpen={deletingPhotoId !== null}
+        title={vi ? "Xóa ảnh bác sĩ" : "Delete Doctor Photo"}
+        message={vi ? "Bạn có chắc chắn muốn xóa ảnh này? Thao tác này không thể hoàn tác." : "Are you sure you want to delete this photo? This cannot be undone."}
+        confirmLabel={vi ? "Xóa ảnh" : "Delete Photo"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isDeletingPhoto}
+        onConfirm={handleConfirmDeletePhoto}
+        onCancel={() => setDeletingPhotoId(null)}
+      />
+
+      {/* Confirm dialog công tác lại */}
+      <ConfirmDialog
+        isOpen={reactivatingDoctor !== null}
+        title={vi ? "Tiếp nhận công tác lại" : "Reactivate Doctor"}
+        message={
+          reactivatingDoctor
+            ? vi
+              ? `Kích hoạt lại trạng thái công tác cho bác sĩ "${reactivatingDoctor.hoTen}"?`
+              : `Reactivate working status for doctor "${reactivatingDoctor.hoTen}"?`
+            : ""
+        }
+        confirmLabel={vi ? "Công tác lại" : "Reactivate"}
+        cancelLabel={vi ? "Hủy" : "Cancel"}
+        variant="primary"
+        isLoading={isReactivating}
+        onConfirm={handleConfirmReactivate}
+        onCancel={() => setReactivatingDoctor(null)}
+      />
     </section>
   );
 }

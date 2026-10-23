@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
+  CalendarRange,
   CircleCheck,
   Clock3,
   FolderOpen,
@@ -10,6 +11,7 @@ import {
   Star,
   Stethoscope,
   UserCheck,
+  Users,
   UserX,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -22,6 +24,7 @@ import { DoctorSearchBar } from "./DoctorSearchBar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctorBookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import type { HangDoiLuot } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
@@ -50,6 +53,8 @@ export function DoctorDashboardPage({
   const today = localDateKey(new Date());
 
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
+  const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
+  const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
 
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
@@ -69,6 +74,86 @@ export function DoctorDashboardPage({
       doctorBookingService.getDanhSachDanhGiaBacSi({ trang: 0, kichThuoc: 5 }),
     enabled: !activeSection,
   });
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfMonthStr = localDateKey(startOfMonth);
+  const endOfMonthStr = localDateKey(endOfMonth);
+
+  const currentDay = now.getDay();
+  const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() + diffToMonday);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const startOfWeekStr = localDateKey(startOfWeek);
+  const endOfWeekStr = localDateKey(endOfWeek);
+
+  const queryStartDate =
+    startOfWeek < startOfMonth ? startOfWeekStr : startOfMonthStr;
+  const queryEndDate = endOfWeek > endOfMonth ? endOfWeekStr : endOfMonthStr;
+
+  const { data: monthShiftsResponse, isLoading: isLoadingMonthShifts } = useQuery({
+    queryKey: ["booking", "doctor-month-shifts", queryStartDate, queryEndDate],
+    queryFn: () =>
+      doctorBookingService.getLichTuanBacSi({
+        tuNgay: queryStartDate,
+        denNgay: queryEndDate,
+      }),
+    enabled: !activeSection,
+  });
+
+  const { data: monthAppointmentsResponse, isLoading: isLoadingMonthAppointments } = useQuery({
+    queryKey: ["booking", "doctor-month-appointments", queryStartDate, queryEndDate],
+    queryFn: () =>
+      doctorBookingService.getLichHenLichBacSi({
+        tuNgay: queryStartDate,
+        denNgay: queryEndDate,
+      }),
+    enabled: !activeSection,
+  });
+
+  const monthShifts = monthShiftsResponse?.duLieu ?? [];
+  const monthAppointments = monthAppointmentsResponse?.duLieu ?? [];
+
+  const parseShiftHours = (gioBatDau: string, gioKetThuc: string) => {
+    if (!gioBatDau || !gioKetThuc) return 0;
+    const [h1, m1] = gioBatDau.split(":").map(Number);
+    const [h2, m2] = gioKetThuc.split(":").map(Number);
+    const diff = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0));
+    return Math.max(0, diff / 60);
+  };
+
+  const monthlyHours = monthShifts
+    .filter(
+      (ca) =>
+        ca.trangThai === "HOAT_DONG" &&
+        ca.ngay >= startOfMonthStr &&
+        ca.ngay <= endOfMonthStr,
+    )
+    .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
+
+  const weeklyHours = monthShifts
+    .filter((ca) => {
+      if (ca.trangThai !== "HOAT_DONG") return false;
+      return ca.ngay >= startOfWeekStr && ca.ngay <= endOfWeekStr;
+    })
+    .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
+
+  const completedInMonth = monthAppointments.filter(
+    (lh) =>
+      lh.trangThai === "DA_KHAM" &&
+      lh.ngay >= startOfMonthStr &&
+      lh.ngay <= endOfMonthStr,
+  ).length;
+  const totalBookedInMonth = monthShifts
+    .filter(
+      (ca) => ca.ngay >= startOfMonthStr && ca.ngay <= endOfMonthStr,
+    )
+    .reduce((sum, ca) => sum + (Number(ca.soLuotDaDat) || 0), 0);
+  const monthlyPatients =
+    completedInMonth > 0 ? completedInMonth : totalBookedInMonth;
 
   const summary = summaryResponse?.duLieu;
   const hangDoi = hangDoiResponse?.duLieu;
@@ -131,9 +216,11 @@ export function DoctorDashboardPage({
     }
   };
 
-  const handleMarkAbsent = async (idLichHen: number) => {
+  const executeMarkAbsent = async () => {
+    if (!confirmAbsentId) return;
     try {
-      const res = await doctorBookingService.danhDauVangMat(idLichHen);
+      setIsMarkingAbsent(true);
+      const res = await doctorBookingService.danhDauVangMat(confirmAbsentId);
       if (res.thanhCong) {
         await queryClient.invalidateQueries({
           queryKey: ["booking", "doctor-hang-doi"],
@@ -154,6 +241,9 @@ export function DoctorDashboardPage({
         (err as { response?: { data?: { thongDiep?: string } } }).response
           ?.data?.thongDiep || "Failed to mark absent",
       );
+    } finally {
+      setIsMarkingAbsent(false);
+      setConfirmAbsentId(null);
     }
   };
 
@@ -267,12 +357,66 @@ export function DoctorDashboardPage({
                     <span className={styles.statValue}>
                       {isLoadingSummary
                         ? "..."
-                        : summary?.diemDanhGia
-                          ? `${summary.diemDanhGia} ★ (${summary.soDanhGia ?? 0})`
+                        : (summary?.diemDanhGia ?? summary?.danhGiaTrungBinh)
+                          ? `${summary?.diemDanhGia ?? summary?.danhGiaTrungBinh} ★ (${summary?.soDanhGia ?? summary?.tongSoDanhGia ?? 0})`
                           : "—"}
                     </span>
                     <span className={styles.statLabel}>
                       {lang === "vi" ? "Đánh giá trung bình" : "Average Rating"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Users aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthAppointments || isLoadingMonthShifts
+                        ? "..."
+                        : monthlyPatients}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Bệnh nhân trong tháng"
+                        : "Monthly Patients"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Clock3 aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthShifts
+                        ? "..."
+                        : `${Math.round(weeklyHours * 10) / 10}h`}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Số giờ làm trong tuần"
+                        : "Weekly Work Hours"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <CalendarRange aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthShifts
+                        ? "..."
+                        : `${Math.round(monthlyHours * 10) / 10}h`}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Số giờ làm trong tháng"
+                        : "Monthly Work Hours"}
                     </span>
                   </div>
                 </div>
@@ -341,7 +485,8 @@ export function DoctorDashboardPage({
                   </div>
                 )}
 
-                <table className={styles.patientTable}>
+                <div className={styles.tableResponsive}>
+                  <table className={styles.patientTable}>
                   <thead>
                     <tr>
                       <th>STT</th>
@@ -442,7 +587,7 @@ export function DoctorDashboardPage({
                                       type="button"
                                       className={styles.dangerBtn}
                                       onClick={() =>
-                                        handleMarkAbsent(Number(apt.id))
+                                        setConfirmAbsentId(Number(apt.id))
                                       }
                                     >
                                       <UserX size={14} aria-hidden="true" />
@@ -489,6 +634,7 @@ export function DoctorDashboardPage({
                   </tbody>
                 </table>
               </div>
+              </div>
 
               {/* ĐÁNH GIÁ ẨN DANH CỦA BỆNH NHÂN */}
               {reviewsResponse?.duLieu?.noiDung &&
@@ -524,6 +670,23 @@ export function DoctorDashboardPage({
           )}
         </div>
       </main>
+
+      {/* Confirm Dialog for Marking Patient Absent */}
+      <ConfirmDialog
+        isOpen={confirmAbsentId !== null}
+        title={lang === "vi" ? "Xác nhận đánh dấu vắng mặt" : "Confirm Mark Absent"}
+        message={
+          lang === "vi"
+            ? `Bạn có chắc chắn muốn đánh dấu bệnh nhân #${confirmAbsentId} là vắng mặt cho ca khám này?`
+            : `Are you sure you want to mark patient #${confirmAbsentId} as absent for this queue?`
+        }
+        confirmLabel={lang === "vi" ? "Đánh dấu vắng mặt" : "Mark Absent"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
+        variant="danger"
+        isLoading={isMarkingAbsent}
+        onConfirm={() => void executeMarkAbsent()}
+        onCancel={() => setConfirmAbsentId(null)}
+      />
     </div>
   );
 }

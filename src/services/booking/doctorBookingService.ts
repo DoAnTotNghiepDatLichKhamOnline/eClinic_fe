@@ -15,6 +15,8 @@ import type {
   HangDoiResponse,
   Icd10GoiY,
   LichSuSuaBenhAnResponse,
+  XinNghiNhieuCaRequest,
+  YeuCauNhuongCaResponse,
 } from "@/types/booking.type";
 
 export const doctorBookingService = {
@@ -309,6 +311,79 @@ export const doctorBookingService = {
   getTongQuanDanhGiaBacSi: async () => {
     const response = await axiosClient.get<ApiResponse<DanhGiaTongQuanResponse>>(
       "/api/booking/bac-si/toi/danh-gia/tong-quan",
+    );
+    return response.data;
+  },
+
+  /** Export work schedule as PDF */
+  xuatPdfLichLamViecBacSi: async (params?: { tuNgay?: string; denNgay?: string }) => {
+    const response = await axiosClient.get("/api/booking/bac-si/toi/lich-lam-viec/pdf", {
+      params,
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
+  /** Search appointment by CCCD of patient or guardian */
+  traCuuLichHenTheoCccdBacSi: async (cccd: string) => {
+    try {
+      const response = await axiosClient.get<
+        ApiResponse<LichHenCuaToiResponse[] | PageResponse<LichHenCuaToiResponse>>
+      >("/api/booking/bac-si/toi/lich-hen/theo-cccd", { params: { cccd } });
+      return response.data;
+    } catch {
+      const fallback = await axiosClient.get<
+        ApiResponse<PageResponse<LichHenCuaToiResponse>>
+      >("/api/booking/bac-si/toi/lich-hen", { params: { tuKhoa: cccd } });
+      return fallback.data;
+    }
+  },
+
+  /** Re-issue appointment ticket link/code for front-desk patient */
+  capLaiLienKetPhieuKhamBacSi: async (idLichHen: number | string) => {
+    const response = await axiosClient.post<
+      ApiResponse<{ maPhieuKham?: string; maTraCuu?: string; linkPhieuKham?: string }>
+    >(`/api/booking/bac-si/toi/lich-hen/${idLichHen}/cap-lai-lien-ket`);
+    return response.data;
+  },
+
+  /** Request leave for multiple shifts at once */
+  xinNghiNhieuCaBacSi: async (data: XinNghiNhieuCaRequest) => {
+    const response = await axiosClient.post<
+      ApiResponse<{ maNhom?: string; soCaNghi: number }>
+    >("/api/booking/bac-si/toi/yeu-cau-doi-lich/xin-nghi-nhieu-ca", data);
+    return response.data;
+  },
+
+  /** Withdraw an entire group of leave requests */
+  rutNhomYeuCauDoiLichBacSi: async (maNhom: string) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/bac-si/toi/yeu-cau-doi-lich/nhom/${maNhom}/rut`,
+    );
+    return response.data;
+  },
+
+  /** View shifts transferred from colleagues to current doctor */
+  getYeuCauNhuongCaBacSi: async (params?: { trang?: number; kichThuoc?: number }) => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<YeuCauNhuongCaResponse>>
+    >("/api/booking/bac-si/toi/yeu-cau-nhuong-ca", { params });
+    return response.data;
+  },
+
+  /** Accept a shift transferred from colleague */
+  dongYNhuongCaBacSi: async (id: number | string) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/bac-si/toi/yeu-cau-nhuong-ca/${id}/dong-y`,
+    );
+    return response.data;
+  },
+
+  /** Decline a shift transferred from colleague */
+  tuChoiNhuongCaBacSi: async (id: number | string, lyDo?: string) => {
+    const response = await axiosClient.post<ApiResponse<void>>(
+      `/api/booking/bac-si/toi/yeu-cau-nhuong-ca/${id}/tu-choi`,
+      { lyDo },
     );
     return response.data;
   },
