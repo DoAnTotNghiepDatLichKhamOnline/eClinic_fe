@@ -812,3 +812,20 @@ export interface GetKhungGioNhieuNgayParams {
   denNgay?: string;
 }
 
+export interface XinNghiNhieuCaRequest {
+  danhSachCaId: number[];
+  lyDo: string;
+}
+
+export interface YeuCauNhuongCaResponse {
+  id: number;
+  maYeuCau?: string;
+  bacSiNhuong: BacSiTomTatResponse;
+  ca: CaLamViecResponse;
+  lyDo: string;
+  trangThai: TrangThaiYeuCau;
+  ngayTao: string;
+  ghiChu?: string | null;
+}
+
+
