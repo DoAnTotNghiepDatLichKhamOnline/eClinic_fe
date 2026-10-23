@@ -354,7 +354,180 @@ export function DoctorProfileSection() {
           </p>
         </div>
         <div>
-          (
+          {!isEditing ? (
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={handleStartEdit}
+            >
+              <Edit3 size={15} aria-hidden="true" />
+              {lang === "vi" ? "Chỉnh sửa hồ sơ" : "Edit Profile"}
+            </button>
+          ) : (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setIsEditing(false)}
+                disabled={updateProfileMutation.isPending}
+              >
+                <X size={15} aria-hidden="true" />
+                {lang === "vi" ? "Hủy" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => updateProfileMutation.mutate()}
+                disabled={updateProfileMutation.isPending}
+              >
+                <Save size={15} aria-hidden="true" />
+                {updateProfileMutation.isPending
+                  ? lang === "vi"
+                    ? "Đang lưu..."
+                    : "Saving..."
+                  : lang === "vi"
+                    ? "Lưu thay đổi"
+                    : "Save Changes"}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card 1: Admin Managed Credentials (Read-only) */}
+      <section className={styles.panel}>
+        <div className={styles.profileHeading}>
+          <span className={styles.profileAvatar}>
+            {(profile?.hoTen || doctorAccount?.hoTen || user?.name || "BS")
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((part: string) => part[0])
+              .join("")
+              .toUpperCase()}
+          </span>
+          <div>
+            <h2>
+              {profile?.hoTen ||
+                doctorAccount?.hoTen ||
+                user?.name ||
+                (lang === "vi" ? "Bác sĩ eClinic" : "eClinic Doctor")}
+            </h2>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span className={styles.statusBadge}>
+                {profile?.trangThai === "DANG_CONG_TAC" || !profile?.trangThai
+                  ? lang === "vi"
+                    ? "Đang công tác"
+                    : "Active"
+                  : lang === "vi"
+                    ? "Ngưng công tác"
+                    : "Inactive"}
+              </span>
+              <span style={{ fontSize: "12px", color: "var(--ink-soft)" }}>
+                Mã BS: {profile?.maBacSi || "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ margin: "14px 0 6px" }}>
+          <h3
+            style={{
+              fontSize: "13px",
+              color: "var(--ink-soft)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            <Lock size={13} aria-hidden="true" />
+            {lang === "vi"
+              ? "Thông tin thẩm định bởi Quản trị viên (Chỉ xem)"
+              : "Admin-Verified Credentials (Read-Only)"}
+          </h3>
+        </div>
+
+        <dl className={styles.profileGrid}>
+          <div>
+            <dt>{lang === "vi" ? "Email tài khoản" : "Account Email"}</dt>
+            <dd>
+              {profile?.email || doctorAccount?.email || user?.email || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt>{lang === "vi" ? "Số điện thoại" : "Phone"}</dt>
+            <dd>
+              {profile?.soDienThoai ||
+                doctorAccount?.soDienThoai ||
+                user?.phone ||
+                "—"}
+            </dd>
+          </div>
+          <div>
+            <dt>{lang === "vi" ? "Chuyên khoa" : "Specialty"}</dt>
+            <dd>
+              {profile?.tenChuyenKhoa ||
+                doctorAccount?.bacSi?.tenChuyenKhoa ||
+                user?.specialty ||
+                (lang === "vi" ? "Chưa cập nhật" : "Not specified")}
+            </dd>
+          </div>
+          <div>
+            <dt>{lang === "vi" ? "Học vị / Chức vụ" : "Degree / Title"}</dt>
+            <dd>
+              {[profile?.hocVi, profile?.chucVu].filter(Boolean).join(" · ") ||
+                doctorAccount?.bacSi?.hocVi ||
+                user?.degree ||
+                (lang === "vi" ? "Chưa cập nhật" : "Not specified")}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              {lang === "vi" ? "Chứng chỉ hành nghề" : "Practicing License"}
+            </dt>
+            <dd>{profile?.soGiayPhep || "—"}</dd>
+          </div>
+          <div>
+            <dt>
+              {lang === "vi" ? "Năm bắt đầu hành nghề" : "Practicing Since"}
+            </dt>
+            <dd>
+              {profile?.namBatDauHanhNghe
+                ? `${profile.namBatDauHanhNghe} (${new Date().getFullYear() - profile.namBatDauHanhNghe} ${lang === "vi" ? "năm kinh nghiệm" : "yrs experience"})`
+                : profile?.soNamKinhNghiem
+                  ? `${profile.soNamKinhNghiem} ${lang === "vi" ? "năm" : "years"}`
+                  : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt>{lang === "vi" ? "Nơi cấp giấy phép" : "License Issuer"}</dt>
+            <dd>{profile?.noiCapGiayPhep || "—"}</dd>
+          </div>
+          <div>
+            <dt>{lang === "vi" ? "Phạm vi hành nghề" : "Practicing Scope"}</dt>
+            <dd>{profile?.phamViHanhNghe || "—"}</dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* Card 2: Self-Editable Section */}
+      <section className={styles.panel}>
+        <div className={styles.panelHeading}>
+          <div>
+            <h2>
+              {lang === "vi"
+                ? "Giới thiệu & Chuyên môn cá nhân"
+                : "Biography & Expertise"}
+            </h2>
+            <p>
+              {lang === "vi"
+                ? "Thông tin này sẽ được hiển thị công khai tới bệnh nhân khi đặt lịch."
+                : "This information will be displayed to patients during appointment booking."}
+            </p>
+          </div>
+        </div>
+
         <div style={{ display: "grid", gap: "16px", marginTop: "14px" }}>
           <label className={styles.field}>
             <span>
@@ -736,6 +909,7 @@ export function DoctorProfileSection() {
             )}
           </div>
         </div>
+        
       </section>
 
       {/* Card 3: Work & Activity Photos */}
