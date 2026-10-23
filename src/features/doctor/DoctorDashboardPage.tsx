@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
+  CalendarRange,
   CircleCheck,
   Clock3,
   FolderOpen,
@@ -10,6 +11,7 @@ import {
   Star,
   Stethoscope,
   UserCheck,
+  Users,
   UserX,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -72,6 +74,73 @@ export function DoctorDashboardPage({
       doctorBookingService.getDanhSachDanhGiaBacSi({ trang: 0, kichThuoc: 5 }),
     enabled: !activeSection,
   });
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfMonthStr = localDateKey(startOfMonth);
+  const endOfMonthStr = localDateKey(endOfMonth);
+
+  const currentDay = now.getDay();
+  const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() + diffToMonday);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const startOfWeekStr = localDateKey(startOfWeek);
+  const endOfWeekStr = localDateKey(endOfWeek);
+
+  const { data: monthShiftsResponse, isLoading: isLoadingMonthShifts } = useQuery({
+    queryKey: ["booking", "doctor-month-shifts", startOfMonthStr, endOfMonthStr],
+    queryFn: () =>
+      doctorBookingService.getLichTuanBacSi({
+        tuNgay: startOfMonthStr,
+        denNgay: endOfMonthStr,
+      }),
+    enabled: !activeSection,
+  });
+
+  const { data: monthAppointmentsResponse, isLoading: isLoadingMonthAppointments } = useQuery({
+    queryKey: ["booking", "doctor-month-appointments", startOfMonthStr, endOfMonthStr],
+    queryFn: () =>
+      doctorBookingService.getLichHenLichBacSi({
+        tuNgay: startOfMonthStr,
+        denNgay: endOfMonthStr,
+      }),
+    enabled: !activeSection,
+  });
+
+  const monthShifts = monthShiftsResponse?.duLieu ?? [];
+  const monthAppointments = monthAppointmentsResponse?.duLieu ?? [];
+
+  const parseShiftHours = (gioBatDau: string, gioKetThuc: string) => {
+    if (!gioBatDau || !gioKetThuc) return 0;
+    const [h1, m1] = gioBatDau.split(":").map(Number);
+    const [h2, m2] = gioKetThuc.split(":").map(Number);
+    const diff = (h2 * 60 + (m2 || 0)) - (h1 * 60 + (m1 || 0));
+    return Math.max(0, diff / 60);
+  };
+
+  const monthlyHours = monthShifts
+    .filter((ca) => ca.trangThai === "HOAT_DONG")
+    .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
+
+  const weeklyHours = monthShifts
+    .filter((ca) => {
+      if (ca.trangThai !== "HOAT_DONG") return false;
+      return ca.ngay >= startOfWeekStr && ca.ngay <= endOfWeekStr;
+    })
+    .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
+
+  const completedInMonth = monthAppointments.filter(
+    (lh) => lh.trangThai === "DA_KHAM",
+  ).length;
+  const totalBookedInMonth = monthShifts.reduce(
+    (sum, ca) => sum + (Number(ca.soLuotDaDat) || 0),
+    0,
+  );
+  const monthlyPatients =
+    completedInMonth > 0 ? completedInMonth : totalBookedInMonth;
 
   const summary = summaryResponse?.duLieu;
   const hangDoi = hangDoiResponse?.duLieu;
@@ -284,6 +353,60 @@ export function DoctorDashboardPage({
                     </span>
                   </div>
                 </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Users aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthAppointments || isLoadingMonthShifts
+                        ? "..."
+                        : monthlyPatients}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Bệnh nhân trong tháng"
+                        : "Monthly Patients"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Clock3 aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthShifts
+                        ? "..."
+                        : `${Math.round(weeklyHours * 10) / 10}h`}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Số giờ làm trong tuần"
+                        : "Weekly Work Hours"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <CalendarRange aria-hidden="true" />
+                  </div>
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingMonthShifts
+                        ? "..."
+                        : `${Math.round(monthlyHours * 10) / 10}h`}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi"
+                        ? "Số giờ làm trong tháng"
+                        : "Monthly Work Hours"}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* HÀNG ĐỢI KHÁM THEO CA (QUEUE) */}
@@ -349,7 +472,8 @@ export function DoctorDashboardPage({
                   </div>
                 )}
 
-                <table className={styles.patientTable}>
+                <div className={styles.tableResponsive}>
+                  <table className={styles.patientTable}>
                   <thead>
                     <tr>
                       <th>STT</th>
@@ -496,6 +620,7 @@ export function DoctorDashboardPage({
                     )}
                   </tbody>
                 </table>
+              </div>
               </div>
 
               {/* ĐÁNH GIÁ ẨN DANH CỦA BỆNH NHÂN */}
