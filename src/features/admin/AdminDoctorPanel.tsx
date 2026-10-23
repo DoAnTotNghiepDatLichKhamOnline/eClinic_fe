@@ -11,6 +11,7 @@ import type {
   CapNhatHoSoBacSiRequest,
 } from "@/types/catalog.type";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { Pagination } from "@/shared/components/ui/Pagination";
 import { notifyAuth } from "@/utils/authNotification";
 import styles from "./AdminDashboardPage.module.css";
 
@@ -537,13 +538,21 @@ export function AdminDoctorPanel() {
                       <td>{doctor.soLuotDaKham}</td>
                       <td>
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                             doctor.trangThai === "DANG_CONG_TAC"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-slate-100 text-slate-600"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
                           }`}
                         >
-                          {doctor.trangThai}
+                          {doctor.trangThai === "DANG_CONG_TAC"
+                            ? vi
+                              ? "Đang công tác"
+                              : "Active"
+                            : doctor.trangThai === "NGUNG_CONG_TAC"
+                              ? vi
+                                ? "Ngừng công tác"
+                                : "Inactive"
+                              : doctor.trangThai}
                         </span>
                       </td>
                       <td className="flex flex-wrap gap-1">
@@ -578,33 +587,13 @@ export function AdminDoctorPanel() {
               </tbody>
             </table>
           </div>
-          <div className={styles.paginationBar}>
-            <span>
-              {vi
-                ? `Trang ${page + 1} / ${doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}`
-                : `Page ${page + 1} / ${doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}`}
-            </span>
-            <div className={styles.paginationActions}>
-              <button
-                className={styles.pageBtn}
-                type="button"
-                disabled={!page}
-                onClick={() => setPage((value) => value - 1)}
-              >
-                {vi ? "Trước" : "Previous"}
-              </button>
-              <button
-                className={styles.pageBtn}
-                type="button"
-                disabled={
-                  page + 1 >= (doctorsQuery.data?.duLieu?.tongSoTrang ?? 1)
-                }
-                onClick={() => setPage((value) => value + 1)}
-              >
-                {vi ? "Sau" : "Next"}
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}
+            totalElements={doctorsQuery.data?.duLieu?.tongSoPhanTu}
+            pageSize={20}
+            onPageChange={setPage}
+          />
         </>
       ) : (
         <>
