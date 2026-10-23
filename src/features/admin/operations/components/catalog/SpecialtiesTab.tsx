@@ -16,6 +16,7 @@ export function SpecialtiesTab({
   isLoading,
   onOpenAddModal,
   onSelectEdit,
+  onDeleteSpecialty,
 }: SpecialtiesTabProps) {
   const { lang } = useLanguage();
   const vi = lang === "vi";
@@ -79,26 +80,28 @@ export function SpecialtiesTab({
                   <td className="text-xs text-slate-600 max-w-xs truncate">
                     {item.trieuChung || "—"}
                   </td>
-                  <td className="flex gap-1.5 items-center">
-                    <button
-                      className={styles.actionBtn}
-                      type="button"
-                      onClick={() => onSelectEdit(item)}
-                    >
-                      <Edit3 size={13} className="inline mr-1" />
-                      {vi ? "Sửa" : "Edit"}
-                    </button>
-                    {onDeleteSpecialty && (
+                  <td>
+                    <div className="flex gap-1.5 items-center">
                       <button
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                        className={styles.actionBtn}
                         type="button"
-                        onClick={() => onDeleteSpecialty(item)}
-                        title={vi ? "Xóa chuyên khoa" : "Delete specialty"}
+                        onClick={() => onSelectEdit(item)}
                       >
-                        <Trash2 size={13} />
-                        {vi ? "Xóa" : "Delete"}
+                        <Edit3 size={13} className="inline mr-1" />
+                        {vi ? "Sửa" : "Edit"}
                       </button>
-                    )}
+                      {onDeleteSpecialty && (
+                        <button
+                          className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                          type="button"
+                          onClick={() => onDeleteSpecialty(item)}
+                          title={vi ? "Xóa chuyên khoa" : "Delete specialty"}
+                        >
+                          <Trash2 size={13} />
+                          {vi ? "Xóa" : "Delete"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
