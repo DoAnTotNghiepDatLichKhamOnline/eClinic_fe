@@ -90,22 +90,26 @@ export function DoctorDashboardPage({
   const startOfWeekStr = localDateKey(startOfWeek);
   const endOfWeekStr = localDateKey(endOfWeek);
 
+  const queryStartDate =
+    startOfWeek < startOfMonth ? startOfWeekStr : startOfMonthStr;
+  const queryEndDate = endOfWeek > endOfMonth ? endOfWeekStr : endOfMonthStr;
+
   const { data: monthShiftsResponse, isLoading: isLoadingMonthShifts } = useQuery({
-    queryKey: ["booking", "doctor-month-shifts", startOfMonthStr, endOfMonthStr],
+    queryKey: ["booking", "doctor-month-shifts", queryStartDate, queryEndDate],
     queryFn: () =>
       doctorBookingService.getLichTuanBacSi({
-        tuNgay: startOfMonthStr,
-        denNgay: endOfMonthStr,
+        tuNgay: queryStartDate,
+        denNgay: queryEndDate,
       }),
     enabled: !activeSection,
   });
 
   const { data: monthAppointmentsResponse, isLoading: isLoadingMonthAppointments } = useQuery({
-    queryKey: ["booking", "doctor-month-appointments", startOfMonthStr, endOfMonthStr],
+    queryKey: ["booking", "doctor-month-appointments", queryStartDate, queryEndDate],
     queryFn: () =>
       doctorBookingService.getLichHenLichBacSi({
-        tuNgay: startOfMonthStr,
-        denNgay: endOfMonthStr,
+        tuNgay: queryStartDate,
+        denNgay: queryEndDate,
       }),
     enabled: !activeSection,
   });
@@ -122,7 +126,12 @@ export function DoctorDashboardPage({
   };
 
   const monthlyHours = monthShifts
-    .filter((ca) => ca.trangThai === "HOAT_DONG")
+    .filter(
+      (ca) =>
+        ca.trangThai === "HOAT_DONG" &&
+        ca.ngay >= startOfMonthStr &&
+        ca.ngay <= endOfMonthStr,
+    )
     .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
 
   const weeklyHours = monthShifts
@@ -133,12 +142,16 @@ export function DoctorDashboardPage({
     .reduce((sum, ca) => sum + parseShiftHours(ca.gioBatDau, ca.gioKetThuc), 0);
 
   const completedInMonth = monthAppointments.filter(
-    (lh) => lh.trangThai === "DA_KHAM",
+    (lh) =>
+      lh.trangThai === "DA_KHAM" &&
+      lh.ngay >= startOfMonthStr &&
+      lh.ngay <= endOfMonthStr,
   ).length;
-  const totalBookedInMonth = monthShifts.reduce(
-    (sum, ca) => sum + (Number(ca.soLuotDaDat) || 0),
-    0,
-  );
+  const totalBookedInMonth = monthShifts
+    .filter(
+      (ca) => ca.ngay >= startOfMonthStr && ca.ngay <= endOfMonthStr,
+    )
+    .reduce((sum, ca) => sum + (Number(ca.soLuotDaDat) || 0), 0);
   const monthlyPatients =
     completedInMonth > 0 ? completedInMonth : totalBookedInMonth;
 
@@ -344,8 +357,8 @@ export function DoctorDashboardPage({
                     <span className={styles.statValue}>
                       {isLoadingSummary
                         ? "..."
-                        : summary?.diemDanhGia
-                          ? `${summary.diemDanhGia} ★ (${summary.soDanhGia ?? 0})`
+                        : (summary?.diemDanhGia ?? summary?.danhGiaTrungBinh)
+                          ? `${summary?.diemDanhGia ?? summary?.danhGiaTrungBinh} ★ (${summary?.soDanhGia ?? summary?.tongSoDanhGia ?? 0})`
                           : "—"}
                     </span>
                     <span className={styles.statLabel}>
