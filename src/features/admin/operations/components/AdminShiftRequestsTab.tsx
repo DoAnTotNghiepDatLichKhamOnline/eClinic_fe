@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, type FormEvent } from "react";
 import {
   Calendar,
   Clock,
-  User,
   AlertTriangle,
   CheckCircle2,
   XCircle,
@@ -14,13 +13,16 @@ import {
   Info,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { YeuCauDoiLichResponse, TrangThaiYeuCau } from "@/types/booking.type";
-import type { BacSiResponse } from "@/types/catalog.type";
+import type {
+  YeuCauDoiLichResponse,
+  TrangThaiYeuCau,
+} from "@/types/booking.type";
+import type { BacSiQuanTriResponse } from "@/types/catalog.type";
 
 interface AdminShiftRequestsTabProps {
   requests: YeuCauDoiLichResponse[];
   isLoading: boolean;
-  doctors: BacSiResponse[];
+  doctors: BacSiQuanTriResponse[];
   onApprove: (id: number) => Promise<void>;
   onReject: (id: number, reason: string) => Promise<void>;
   highlightId?: number | null;
@@ -202,9 +204,7 @@ export function AdminShiftRequestsTab({
                 <th className="py-3 px-3.5 min-w-[180px]">
                   {vi ? "Bác sĩ yêu cầu" : "Doctor"}
                 </th>
-                <th className="py-3 px-3.5 w-28">
-                  {vi ? "Loại đơn" : "Type"}
-                </th>
+                <th className="py-3 px-3.5 w-28">{vi ? "Loại đơn" : "Type"}</th>
                 <th className="py-3 px-3.5 min-w-[180px]">
                   {vi ? "Ca làm việc liên quan" : "Shift"}
                 </th>
@@ -255,7 +255,6 @@ export function AdminShiftRequestsTab({
                   const docName =
                     docInfo?.hoTen ?? r.ca?.hoTenBacSi ?? "Bác sĩ eClinic";
                   const specialty =
-                    docInfo?.tenChuyenKhoa ??
                     r.ca?.tenChuyenKhoa ??
                     "Chuyên khoa";
 
@@ -284,10 +283,8 @@ export function AdminShiftRequestsTab({
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs shrink-0">
-                              {docName
-                                .split(" ")
-                                .slice(-1)[0]
-                                ?.charAt(0) || "BS"}
+                              {docName.split(" ").slice(-1)[0]?.charAt(0) ||
+                                "BS"}
                             </div>
                           )}
                           <div className="min-w-0">
@@ -329,7 +326,9 @@ export function AdminShiftRequestsTab({
                           {r.ca?.gioKetThuc?.slice(0, 5) ??
                             r.gioKetThuc?.slice(0, 5)}
                           {" · "}
-                          {r.ca?.tenPhongKham ?? r.tenPhongHienTai ?? "Phòng khám"}
+                          {r.ca?.tenPhongKham ??
+                            r.tenPhongHienTai ??
+                            "Phòng khám"}
                         </div>
                       </td>
 
@@ -448,7 +447,8 @@ export function AdminShiftRequestsTab({
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Info className="w-5 h-5 text-teal-600" />
-                {vi ? "Chi tiết đơn yêu cầu" : "Request Details"} #{selectedRequestForDetail.id}
+                {vi ? "Chi tiết đơn yêu cầu" : "Request Details"} #
+                {selectedRequestForDetail.id}
               </h3>
               <button
                 type="button"
@@ -501,7 +501,9 @@ export function AdminShiftRequestsTab({
                   {vi ? "Ca làm việc liên quan:" : "Target Shift:"}
                 </span>
                 <p className="font-semibold text-slate-800 mt-0.5">
-                  {selectedRequestForDetail.ca?.ngay ?? selectedRequestForDetail.ngay} (
+                  {selectedRequestForDetail.ca?.ngay ??
+                    selectedRequestForDetail.ngay}{" "}
+                  (
                   {selectedRequestForDetail.ca?.gioBatDau?.slice(0, 5) ??
                     selectedRequestForDetail.gioBatDau?.slice(0, 5)}{" "}
                   -{" "}
@@ -516,12 +518,15 @@ export function AdminShiftRequestsTab({
               {selectedRequestForDetail.loaiYeuCau === "DOI_CA" && (
                 <div className="p-3 bg-purple-50 rounded-xl border border-purple-200/70 text-purple-900">
                   <span className="font-bold">
-                    {vi ? "Thông tin ca mong muốn đổi:" : "Desired Shift Details:"}
+                    {vi
+                      ? "Thông tin ca mong muốn đổi:"
+                      : "Desired Shift Details:"}
                   </span>
                   <p className="mt-1">
                     Ngày: {selectedRequestForDetail.ngayMongMuon || "—"} · Giờ:{" "}
                     {selectedRequestForDetail.gioBatDauMongMuon?.slice(0, 5)} -{" "}
-                    {selectedRequestForDetail.gioKetThucMongMuon?.slice(0, 5)} · Phòng:{" "}
+                    {selectedRequestForDetail.gioKetThucMongMuon?.slice(0, 5)} ·
+                    Phòng:{" "}
                     {selectedRequestForDetail.tenPhongMongMuon ||
                       selectedRequestForDetail.phongKhamMongMuon?.tenPhong ||
                       "—"}
