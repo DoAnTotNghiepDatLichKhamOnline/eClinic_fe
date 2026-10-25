@@ -1,30 +1,39 @@
 # ĐẶC TẢ GIAO DIỆN & TÍCH HỢP API — VAI TRÒ QUẢN TRỊ VIÊN (ADMIN)
 
-Tài liệu này đặc tả chi tiết toàn bộ các màn hình, quy trình vận hành và danh sách API tích hợp dành cho vai trò **Quản trị viên (Admin)** trong ứng dụng `eClinic_fe`, cập nhật toàn diện theo các thay đổi backend ngày 05/10/2026, 14/10/2026 và 15/10/2026.
+Tài liệu này đặc tả chi tiết toàn bộ các màn hình, quy trình vận hành và danh sách API tích hợp dành cho vai trò **Quản trị viên (Admin)** trong ứng dụng `eClinic_fe`, cập nhật toàn diện theo các thay đổi mã nguồn và nghiệp vụ tính đến cuối tháng 10/2026.
 
 ---
 
 ## 1. Tổng quan Kiến trúc Màn hình Quản trị viên
 
-Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân hệ vận hành chính:
+Thanh điều hướng bên (Sidebar - `AdminSidebar.tsx`) của Quản trị viên gồm 6 phân hệ vận hành chính:
 1. **Bảng điều khiển (Dashboard)** (`/admin/dashboard`)
 2. **Quản lý ca làm việc & Lịch trực (Schedule Management)** (`/admin/schedule-management`)
 3. **Danh mục y tế (Medical Catalog)** (`/admin/medical-catalog`): Chuyên khoa, Phòng khám, Danh mục Thuốc
 4. **Quản lý Bác sĩ (Doctor Management)** (`/admin/doctors`)
 5. **Quản lý Bệnh nhân & Hồ sơ (Patient Management)** (`/admin/patients`)
+6. **Quản lý Tài khoản (Account Management)** (`/admin/accounts`) *(Mới hoàn thiện)*
+
+Header tích hợp:
+- **Trung tâm thông báo Quản trị (`AdminNotificationCenter`)**: Chuông thông báo thời gian thực về yêu cầu đổi ca mới, lịch hẹn cần đổi lịch, liên kết hồ sơ chờ duyệt.
+- **Nút chuyển đổi ngôn ngữ (`LanguageToggle`)**: Hỗ trợ chuyển đổi nhanh Tiếng Việt (VI) và Tiếng Anh (EN).
+- **Menu thông tin cá nhân (`UserProfile`)**: Hiển thị avatar, tên quản trị viên, vai trò và nút Đăng xuất an toàn.
 
 ---
 
-## 2. Các Cập nhật Nghiệp vụ Backend Trọng tâm dành cho Admin
+## 2. Các Cập nhật Nghiệp vụ & Giao diện Trọng tâm
 
 | Phân hệ | Cập nhật mới | Yêu cầu Frontend Quản trị |
 |---|---|---|
-| **Danh mục Thuốc** | Bắt buộc nhập `hoatChat`, `hamLuong`. Trùng `tenThuoc + hamLuong` bị chặn lỗi 409. Bổ sung `dangBaoChe`, `duongDung` | Thêm các trường vào form thêm/sửa thuốc. Đường dùng là danh sách chọn (`UONG`, `TIEM_BAP`, `TIEM_TINH_MACH`, `BOI_NGOAI_DA`, `NHO_MAT`...). Xác minh thuốc thiếu thông tin sẽ báo lỗi 409 `THUOC_THIEU_THONG_TIN`. |
-| **Danh mục Chuyên khoa** | Bổ sung cặp trường triệu chứng thường gặp: `trieuChung` / `trieuChungEn` (tối đa 2000 ký tự) | Form chuyên khoa thêm ô nhập triệu chứng. Dữ liệu này dùng để trợ lý AI Chatbot gợi ý chuyên khoa chính xác cho bệnh nhân. |
+| **Quản lý Tài khoản (`/admin/accounts`)** | Quản lý toàn bộ tài khoản người dùng (Admin, Bác sĩ, Bệnh nhân) | Tìm kiếm debounce 400ms, lọc theo Vai trò & Trạng thái, sắp xếp cột đa chiều (asc/desc), modal xem chi tiết, modal vô hiệu hóa (nhập lý do bắt buộc tối đa 500 ký tự), kích hoạt lại, xóa tài khoản chưa xác minh, phân trang chuẩn 10 dòng/trang. |
+| **Danh mục Y tế (`/admin/medical-catalog`)** | Tích hợp phân trang và cuộn bảng nội bộ | Tích hợp component `<Pagination />` và class CSS `tableContainer` cuộn nội bộ cho cả 3 tab: Chuyên khoa, Phòng khám, Thuốc. |
+| **Danh mục Thuốc** | Bắt buộc nhập `hoatChat`, `hamLuong`. Trùng `tenThuoc + hamLuong` bị chặn lỗi 409. Bổ sung `dangBaoChe`, `duongDung` | Thêm các trường vào form thêm/sửa thuốc. Đường dùng là danh sách chọn (`UONG`, `TIEM_BAP`, `TIEM_TINH_MACH`, `BOI_NGOAI_DA`, `NHO_MAT`...). Nút xác minh thuốc vào danh mục kê đơn. |
+| **Danh mục Chuyên khoa** | Bổ sung cặp trường triệu chứng thường gặp: `trieuChung` / `trieuChungEn` (tối đa 2000 ký tự) | Form chuyên khoa thêm ô nhập triệu chứng song ngữ. Cung cấp tri thức cho Chatbot AI phân luồng người bệnh. |
 | **Danh mục Phòng khám** | Hỗ trợ trường tầng: `tang` / `tangEn` | Form phòng khám thêm ô nhập tầng cho cả tiếng Việt và tiếng Anh. |
-| **Quản lý Bác sĩ** | Đổi "Số năm kinh nghiệm" thành **"Năm bắt đầu hành nghề"** (`namBatDauHanhNghe`) | Form tạo và sửa bác sĩ nhập năm (từ 1950 đến năm hiện tại). Số năm kinh nghiệm được hệ thống tự tính toán động. |
-| **Quản lý Ca làm việc** | Tạo ca lặp theo thứ, hủy ca kèm lý do bắt buộc, xử lý lịch hẹn cần đổi lịch | Bảng ca trực hiển thị rõ số lượt đã đặt / tối đa. Hủy ca trực bắt buộc nhập lý do; các lịch hẹn bị ảnh hưởng sẽ đưa vào danh mục "Lịch hẹn cần đổi lịch". Duyệt đơn xin nghỉ/đổi ca của bác sĩ. |
+| **Quản lý Bác sĩ** | Đổi "Số năm kinh nghiệm" thành **"Năm bắt đầu hành nghề"** (`namBatDauHanhNghe`) | Form tạo và sửa bác sĩ nhập năm (từ 1950 đến năm hiện tại). Hệ thống tự tính toán số năm kinh nghiệm. Bộ sưu tập ảnh y khoa có chú thích song ngữ. |
+| **Quản lý Ca làm việc** | Tạo ca lặp theo thứ, hủy ca kèm lý do bắt buộc, xử lý lịch hẹn cần đổi lịch | Bảng ca trực hiển thị rõ số lượt đã đặt / tối đa. Hủy ca trực bắt buộc nhập lý do; duyệt đơn xin nghỉ/đổi ca của bác sĩ; danh sách lịch hẹn cần đổi lịch. |
 | **Quản lý Bệnh nhân** | Tìm kiếm CCCD đủ 12 số; Duyệt/từ chối liên kết tài khoản - hồ sơ | Ô tìm kiếm cho phép gõ đủ 12 số CCCD để tra cứu hồ sơ. Danh sách chờ xác minh hiển thị cờ khớp tên (`khopHoTen`) và khớp điện thoại (`khopSoDienThoai`). |
+| **Admin Dashboard** | Thống kê số lượng danh mục y tế song song với vận hành | Đếm tổng số chuyên khoa (`totalSpecialties`), phòng khám (`totalClinics`), thuốc (`totalMedicines`) bên cạnh các thống kê ca trực và lịch hẹn. |
 
 ---
 
@@ -35,13 +44,28 @@ Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân h�
 - **Đường dẫn**: `/admin/dashboard`
 - **Component**: `AdminDashboardPage.tsx`
 - **Khối chức năng trên UI**:
-  - Thống kê tổng số ca làm việc đang mở.
-  - Thống kê tổng số lịch hẹn khám bệnh trong ngày / tháng.
-  - Số lượng yêu cầu đổi ca / xin nghỉ của bác sĩ đang chờ duyệt.
-  - Số hồ sơ bệnh nhân đang chờ xác minh liên kết CCCD.
-  - Số lượng bác sĩ đang hoạt động và số chuyên khoa.
+  1. *Thẻ chỉ số vận hành khám chữa bệnh*:
+     - Tổng số ca làm việc đang mở (`tongCaDangMo`).
+     - Tổng số lịch hẹn khám bệnh trong ngày (`tongLichHenHomNay`).
+     - Tổng số lịch hẹn trong tháng (`tongLichHenTrongThang`).
+     - Số lượng yêu cầu đổi ca / xin nghỉ của bác sĩ đang chờ duyệt (`tongYeuCauDoiCaChoDuyet`).
+     - Số hồ sơ bệnh nhân đang chờ xác minh liên kết CCCD (`tongHoSoChoXacMinh`).
+     - Số lượng bác sĩ đang hoạt động (`tongBacSiHoatDong`).
+  2. *Thẻ chỉ số danh mục y tế*:
+     - Tổng số Chuyên khoa đang quản lý (`totalSpecialties`).
+     - Tổng số Phòng khám cơ sở (`totalClinics`).
+     - Tổng số Thuốc trong danh mục dược (`totalMedicines`).
+  3. *Lối tắt thao tác nhanh (Quick Actions)*:
+     - Dẫn trực tiếp đến tạo ca trực, thêm bác sĩ, thêm thuốc mới, xem đơn đổi ca chờ duyệt.
+  4. *Trung tâm thông báo (`AdminNotificationCenter`)*:
+     - Hiển thị danh sách thông báo hệ thống thời gian thực, đánh dấu đã đọc.
 - **API Mapping**:
   - `GET /api/booking/quan-tri/tong-quan`: Lấy số liệu thống kê tổng hợp toàn hệ thống.
+  - `GET /api/catalog/quan-tri/chuyen-khoa?trang=0&kichThuoc=1`: Lấy tổng số lượng chuyên khoa.
+  - `GET /api/catalog/quan-tri/phong-kham?trang=0&kichThuoc=1`: Lấy tổng số lượng phòng khám.
+  - `GET /api/medical/quan-tri/thuoc?trang=0&kichThuoc=1`: Lấy tổng số lượng thuốc.
+  - `GET /api/notifications`: Danh sách thông báo cho Admin.
+  - `PUT /api/notifications/{id}/read`: Đánh dấu đã đọc thông báo.
 
 ---
 
@@ -81,48 +105,51 @@ Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân h�
 
 - **Đường dẫn**: `/admin/medical-catalog`
 - **Component**: `AdminOperationsPanel.tsx` (`activeSection = "catalog"`)
-- **3 Tab Danh mục con**:
+- **3 Tab Danh mục con (Tích hợp phân trang `<Pagination />` và cuộn nội bộ)**:
 
-#### A. Quản lý Chuyên khoa (Specialties)
-- Danh sách chuyên khoa hiển thị cả tên tiếng Việt và tiếng Anh (`tenChuyenKhoa` / `tenChuyenKhoaEn`).
+#### A. Quản lý Chuyên khoa (SpecialtiesTab)
+- Danh sách chuyên khoa hiển thị cả tên tiếng Việt và tiếng Anh (`tenChuyenKhoa` / `tenChuyenKhoaEn`), mô tả, danh sách triệu chứng gợi ý.
+- Phân trang nội bộ với component `<Pagination />` và thanh cuộn bảng riêng biệt.
 - Form thêm/sửa chuyên khoa:
   - Tên chuyên khoa (VI / EN): Bắt buộc, không được trùng nhau.
   - Mô tả chuyên khoa (VI / EN).
-  - **Triệu chứng thường gặp (VI / EN)**: Trường text lớn (tối đa 2000 ký tự). Ví dụ: *"Đau thắt ngực, khó thở khi gắng sức, hồi hộp, đánh trống ngực, phù chân..."*. Trường này cung cấp tri thức cho Chatbot AI phân luồng người bệnh.
+  - **Triệu chứng thường gặp (VI / EN)**: Trường text lớn (tối đa 2000 ký tự). Ví dụ: *"Đau thắt ngực, khó thở khi gắng sức, hồi hộp, đánh trống ngực, phù chân..."*. Dữ liệu này cung cấp tri thức cho Chatbot AI phân luồng người bệnh.
 - **API**:
-  - `GET /api/catalog/quan-tri/chuyen-khoa`: Đọc đầy đủ chuyên khoa kèm cả 2 bản ngôn ngữ.
+  - `GET /api/catalog/quan-tri/chuyen-khoa?trang=...&kichThuoc=...`: Đọc danh sách chuyên khoa phân trang kèm 2 bản ngôn ngữ.
   - `POST /api/catalog/chuyen-khoa`: Thêm chuyên khoa mới.
   - `PUT /api/catalog/chuyen-khoa/{id}`: Cập nhật chuyên khoa.
   - `DELETE /api/catalog/chuyen-khoa/{id}`: Xóa chuyên khoa (nếu chưa có bác sĩ/phòng).
 
-#### B. Quản lý Phòng khám (Clinics)
-- Danh sách phòng khám: Tên phòng, chuyên khoa trực thuộc, tầng, trạng thái hoạt động (`HOAT_DONG` / `NGUNG_HOAT_DONG`).
+#### B. Quản lý Phòng khám (ClinicsTab)
+- Danh sách phòng khám: Tên phòng (VI/EN), chuyên khoa trực thuộc, tầng (VI/EN), trạng thái hoạt động (`HOAT_DONG` / `NGUNG_HOAT_DONG`).
+- Tích hợp component `<Pagination />` và cuộn nội bộ.
 - Form thêm/sửa phòng khám:
   - Tên phòng (VI / EN).
   - Tầng (VI / EN, ví dụ: "Tầng 2 - Khu A" / "Floor 2 - Block A").
   - Chuyên khoa quản lý (`idChuyenKhoa`).
 - Nút **"Ngừng hoạt động"** và **"Kích hoạt lại"**: Khóa hoặc mở lại phòng khám mà không làm mất lịch sử ca trực.
 - **API**:
-  - `GET /api/catalog/quan-tri/phong-kham`: Lấy danh sách phòng khám.
+  - `GET /api/catalog/quan-tri/phong-kham?trang=...&kichThuoc=...`: Lấy danh sách phòng khám phân trang.
   - `POST /api/catalog/quan-tri/phong-kham`: Thêm phòng khám mới.
   - `PUT /api/catalog/quan-tri/phong-kham/{id}`: Sửa phòng khám.
   - `POST /api/catalog/quan-tri/phong-kham/{id}/ngung-hoat-dong`: Dừng hoạt động phòng.
   - `POST /api/catalog/quan-tri/phong-kham/{id}/hoat-dong-lai`: Kích hoạt lại phòng.
 
-#### C. Quản lý Danh mục Thuốc (Medicines)
+#### C. Quản lý Danh mục Thuốc (MedicinesTab)
 - Danh sách thuốc: Tên thuốc, hoạt chất, hàm lượng, dạng bào chế, đường dùng, đơn vị, trạng thái xác minh (`daXacMinh`), trạng thái sử dụng (`DANG_DUNG` / `NGUNG_DUNG`).
+- Tích hợp component `<Pagination />` và cuộn nội bộ.
 - Form thêm/sửa thuốc:
   - Tên thuốc (`tenThuoc`, bắt buộc).
   - Hoạt chất (`hoatChat`, bắt buộc, ví dụ: *"Paracetamol"*).
   - Hàm lượng (`hamLuong`, bắt buộc, ví dụ: *"500mg"*).
   - Dạng bào chế (`dangBaoChe` / `dangBaoCheEn`, ví dụ: *"Viên nén"* / *"Tablet"*).
-  - Đường dùng (`duongDung`, chọn mã: `UONG`, `TIEM_BAP`, `TIEM_TINH_MACH`, `BOI_NGOAI_DA`, `NHO_MAT`, `DAT_DUOI_LUOI`, `HIT_KHI_DUNG`...).
+  - Đường dùng (`duongDung`, chọn mã chuẩn: `UONG`, `TIEM_BAP`, `TIEM_TINH_MACH`, `BOI_NGOAI_DA`, `NHO_MAT`, `DAT_DUOI_LUOI`, `HIT_KHI_DUNG`...).
   - Đơn vị tính (`donVi` / `donViEn`, ví dụ: *"Viên"* / *"Tablet"*, *"Gói"* / *"Sachet"*, *"Lọ"* / *"Vial"*).
   - Mô tả / Chỉ định (`moTa` / `moTaEn`).
 - **Nút Xác minh (`Xác minh`)**: Bác sĩ chỉ được kê các thuốc đã được xác minh (`daXacMinh = true`). Nếu thuốc thiếu hoạt chất hoặc hàm lượng, backend trả về lỗi 409 `THUOC_THIEU_THONG_TIN`.
 - Nút **"Ngừng dùng"** / **"Dùng lại"**: Tạm khóa hoặc mở lại quyền kê đơn của thuốc.
 - **API**:
-  - `GET /api/medical/quan-tri/thuoc`: Lấy danh sách thuốc quản trị (hỗ trợ phân trang, lọc).
+  - `GET /api/medical/quan-tri/thuoc?trang=...&kichThuoc=...`: Lấy danh sách thuốc quản trị (hỗ trợ phân trang, lọc).
   - `POST /api/medical/quan-tri/thuoc`: Tạo mới thuốc.
   - `PUT /api/medical/quan-tri/thuoc/{id}`: Sửa thông tin thuốc.
   - `POST /api/medical/quan-tri/thuoc/{id}/xac-minh`: Xác nhận thuốc hợp chuẩn vào danh mục kê đơn.
@@ -142,14 +169,14 @@ Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân h�
   2. *Thêm Bác sĩ mới*:
      - Nhập họ tên, email, số điện thoại, ngày sinh, giới tính.
      - Chọn Chuyên khoa (`idChuyenKhoa`), Học vị (`hocVi`: Thạc sĩ, Bác sĩ CK1, CK2, Tiến sĩ, PGS, GS...).
-     - **Năm bắt đầu hành nghề (`namBatDauHanhNghe`)**: Nhập năm (ví dụ: `2012`). Hệ thống tự tính ra số năm kinh nghiệm.
+     - **Năm bắt đầu hành nghề (`namBatDauHanhNghe`)**: Nhập năm (từ 1950 đến năm hiện tại). Hệ thống tự động tính ra số năm kinh nghiệm.
      - Số giấy phép hành nghề, nơi cấp, phạm vi hoạt động chuyên môn.
-     - *Hệ thống tự động tạo tài khoản bác sĩ*: Mật khẩu mặc định gửi qua email, bác sĩ đăng nhập lần đầu sẽ phải đổi mật khẩu.
+     - Hệ thống tự động tạo tài khoản bác sĩ, gửi mật khẩu mặc định qua email.
   3. *Chỉnh sửa Hồ sơ Bác sĩ*:
      - Hỗ trợ nhập thông tin song ngữ (VI/EN) cho: Quá trình đào tạo, Quá trình công tác, Lĩnh vực khám chữa, Giải thưởng, Công trình nghiên cứu.
      - Quản lý phiên bản (`phienBan`) để chống ghi đè đồng thời (Optimistic Locking).
   4. *Quản lý Bộ sưu tập Ảnh giới thiệu Bác sĩ*:
-     - Tải lên nhiều ảnh giới thiệu hoạt động khám chữa bệnh của bác sĩ.
+     - Tải lên nhiều ảnh giới thiệu hoạt động khám chữa bệnh của bác sĩ (hỗ trợ multipart/form-data).
      - Chỉnh sửa thứ tự hiển thị và chú thích ảnh (song ngữ `chuThich` / `chuThichEn`).
   5. *Xem Đánh giá của Bệnh nhân*:
      - Xem danh sách chi tiết các đánh giá, số sao và nhận xét của bệnh nhân dành cho từng bác sĩ.
@@ -176,15 +203,13 @@ Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân h�
      - Nút **"Chi tiết"**: Mở modal xem thông tin hành chính, thẻ BHYT, địa chỉ, và toàn bộ lịch sử lịch hẹn khám bệnh của hồ sơ này.
      - Cho phép quản trị viên chỉnh sửa thông tin hành chính nếu bệnh nhân cung cấp giấy tờ đính chính.
   2. *Xác minh Liên kết Tài khoản - Hồ sơ Bệnh nhân (Profile Linking Verification)*:
-     - Khi một bệnh nhân đăng ký tài khoản và yêu cầu liên kết với hồ sơ khám cũ qua CCCD, yêu cầu sẽ được chuyển vào mục **"Liên kết chờ xác minh"**.
-     - Giao diện hiển thị:
-       - Tên và email tài khoản yêu cầu.
-       - Tên và thông tin trên hồ sơ y tế cũ.
-       - Cờ kiểm tra tự động: **Khớp họ tên (`khopHoTen: true/false`)**, **Khớp số điện thoại (`khopSoDienThoai: true/false`)**.
-     - Nút **"Duyệt"**: Xác nhận liên kết thành công. Bệnh nhân có thể xem toàn bộ lịch sử khám cũ trên tài khoản mới.
-     - Nút **"Từ chối"**: Bắt buộc nhập lý do từ chối (ví dụ: *"Thông tin số điện thoại không trùng khớp với dữ liệu gốc"*).
+     - Khi bệnh nhân yêu cầu liên kết với hồ sơ khám cũ qua CCCD, yêu cầu chuyển vào mục **"Liên kết chờ xác minh"**.
+     - Giao diện hiển thị: Tên và email tài khoản yêu cầu, thông tin trên hồ sơ y tế cũ.
+     - Cờ kiểm tra tự động: **Khớp họ tên (`khopHoTen: true/false`)**, **Khớp số điện thoại (`khopSoDienThoai: true/false`)**.
+     - Nút **"Duyệt"**: Xác nhận liên kết thành công.
+     - Nút **"Từ chối"**: Bắt buộc nhập lý do từ chối.
   3. *Lịch sử Chỉnh sửa Bệnh án của Bác sĩ*:
-     - Quản trị viên có quyền tra cứu lịch sử sửa đổi bệnh án của bất kỳ lượt khám nào qua `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su` để giám sát tính minh bạch y tế.
+     - Tra cứu lịch sử sửa đổi bệnh án của bất kỳ lượt khám nào qua `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su` để giám sát tính minh bạch y tế.
 - **API Mapping**:
   - `GET /api/booking/quan-tri/ho-so-benh-nhan?tuKhoa=...&trang=...&kichThuoc=...`: Tra cứu danh sách hồ sơ bệnh nhân.
   - `GET /api/booking/quan-tri/ho-so-benh-nhan/cho-xac-minh`: Danh sách yêu cầu liên kết CCCD chờ duyệt.
@@ -194,3 +219,35 @@ Thanh điều hướng bên (Sidebar) của Quản trị viên gồm 5 phân h�
   - `PUT /api/booking/quan-tri/ho-so-benh-nhan/{id}`: Sửa hồ sơ bệnh nhân.
   - `GET /api/booking/quan-tri/ho-so-benh-nhan/{id}/lich-hen`: Xem danh sách lịch hẹn trong hồ sơ.
   - `GET /api/medical/quan-tri/lich-hen/{id}/benh-an/lich-su`: Lịch sử chỉnh sửa bệnh án.
+
+---
+
+### 3.6. Quản lý Tài khoản Người dùng (Account Management) *(Phân hệ mới)*
+
+- **Đường dẫn**: `/admin/accounts`
+- **Component**: `AdminDashboardPage.tsx` (`activeSection = "accounts"`)
+- **Khối chức năng trên UI**:
+  1. *Bộ lọc & Tìm kiếm Tài khoản*:
+     - Ô tìm kiếm từ khóa (Họ tên, Email, Số điện thoại) tích hợp **Debounce 400ms** để tối ưu hóa truy vấn mạng.
+     - Bộ lọc theo Vai trò (`vaiTro`): Tất cả (`ALL`), Quản trị viên (`QUAN_TRI_VIEN`), Bác sĩ (`BAC_SI`), Bệnh nhân (`BENH_NHAN`).
+     - Bộ lọc theo Trạng thái (`trangThai`): Tất cả (`ALL`), Chờ xác nhận (`CHO_XAC_NHAN`), Đã kích hoạt (`DA_KICH_HOAT`), Vô hiệu hóa (`VO_HIEU_HOA`).
+  2. *Bảng Dữ liệu & Sắp xếp Đa chiều*:
+     - Các cột: ID, Họ tên, Email, Số điện thoại, Vai trò (Badge màu riêng biệt), Trạng thái (Badge xanh/vàng/đỏ), Thao tác.
+     - Hỗ trợ click tiêu đề cột để **sắp xếp tăng/giảm** (`sortDirection: "asc" | "desc"`) kèm biểu tượng trực quan (`ArrowUp`, `ArrowDown`, `ArrowUpDown`) cho 4 trường: ID, Họ tên, Email, Số điện thoại (sử dụng localeCompare song ngữ chuẩn tiếng Việt/Anh).
+  3. *Xem Chi tiết Tài khoản (`AccountDetailModal`)*:
+     - Nút Xem (`Eye` icon): Mở modal xem toàn bộ thông tin chi tiết của tài khoản (ID, họ tên, email, SĐT, vai trò, trạng thái, ngày tạo, lần đăng nhập gần nhất, lý do vô hiệu hóa nếu có).
+  4. *Vô hiệu hóa Tài khoản (`DisableAccountModal`)*:
+     - Với tài khoản đang hoạt động (`DA_KICH_HOAT`), click icon Khóa (`Lock` icon) mở modal nhập **Lý do vô hiệu hóa bắt buộc** (textarea kiểm soát độ dài tối đa 500 ký tự).
+     - Không cho phép vô hiệu hóa chính tài khoản Quản trị viên (`QUAN_TRI_VIEN`).
+  5. *Kích hoạt lại Tài khoản*:
+     - Với tài khoản đang bị vô hiệu hóa (`VO_HIEU_HOA`), click icon Mở khóa (`Unlock` icon) mở dialog xác nhận (`ConfirmDialog`) để phục hồi trạng thái `DA_KICH_HOAT`.
+  6. *Xóa Tài khoản Chưa xác nhận*:
+     - Với tài khoản ở trạng thái `CHO_XAC_NHAN`, hiển thị icon Thùng rác (`Trash2` icon) cho phép Quản trị viên xóa vĩnh viễn tài khoản rác/sai sót khỏi hệ thống qua dialog xác nhận.
+  7. *Phân trang Chuẩn (`Pagination`)*:
+     - Hiển thị tổng số tài khoản tìm thấy, số trang hiện tại, hỗ trợ chuyển trang mượt mà (mặc định 10 dòng/trang).
+- **API Mapping**:
+  - `GET /api/identity/quan-tri/tai-khoan?tuKhoa=...&vaiTro=...&trangThai=...&trang=...&kichThuoc=10`: Lấy danh sách tài khoản phân trang và lọc.
+  - `PUT /api/identity/quan-tri/tai-khoan/{id}/trang-thai`: Cập nhật trạng thái tài khoản:
+    - Kích hoạt lại: `{ "trangThai": "DA_KICH_HOAT" }`
+    - Vô hiệu hóa: `{ "trangThai": "VO_HIEU_HOA", "lyDoVoHieuHoa": "Lý do vi phạm chính sách..." }`
+  - `DELETE /api/identity/quan-tri/tai-khoan/{id}`: Xóa tài khoản chưa xác minh email.
