@@ -334,20 +334,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  padding: 8px 14px;
+  gap: 6px;
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+  padding: 5px 11px;
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .actionBtn:hover {
-  opacity: 0.9;
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
 }
 
 .actionBtnOutline {
@@ -355,20 +358,22 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: transparent;
-  color: #4f46e5;
-  border: 1px solid #c7d2fe;
-  padding: 6px 12px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 5px 11px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .actionBtnOutline:hover {
-  background: #eef2ff;
-  border-color: #818cf8;
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .actionBtnDanger {
@@ -376,20 +381,91 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #fff;
-  color: #dc2626;
+  background: #fef2f2;
+  color: #b91c1c;
   border: 1px solid #fecaca;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .actionBtnDanger:hover {
-  background: #fef2f2;
+  background: #fee2e2;
   border-color: #f87171;
+  color: #991b1b;
+}
+
+.actionBtnSuccess {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.actionBtnSuccess:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.actionBtnTeal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.actionBtnTeal:hover {
+  background: #ccfbf1;
+  border-color: #5eead4;
+  color: #115e59;
+}
+
+.actionBtnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #0d9488;
+  color: #ffffff;
+  border: 1px solid #0d9488;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.actionBtnPrimary:hover {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
 }
 
 .filterBar {
