@@ -13,7 +13,6 @@ import {
   Loader2,
   Lock,
   Pill,
-  QrCode,
   Search,
   ShieldCheck,
   Stethoscope,
@@ -209,7 +208,9 @@ export function MedicalBookPublicPage() {
             tenThuoc: "Paracetamol 500mg",
             hoatChat: "Paracetamol",
             soLuong: 10,
+            donVi: "Viên",
             donViTinh: "Viên",
+            lieuDung: "Uống 1 viên khi đau đầu nhiều, cách nhau ít nhất 6 tiếng",
             cachDung: "Uống 1 viên khi đau đầu nhiều, cách nhau ít nhất 6 tiếng",
           },
           {
@@ -217,7 +218,9 @@ export function MedicalBookPublicPage() {
             tenThuoc: "Magnesium B6",
             hoatChat: "Magnesium lactate dihydrate, Pyridoxine hydrochloride",
             soLuong: 20,
+            donVi: "Viên",
             donViTinh: "Viên",
+            lieuDung: "Uống 1 viên vào buổi sáng và 1 viên vào buổi tối sau ăn",
             cachDung: "Uống 1 viên vào buổi sáng và 1 viên vào buổi tối sau ăn",
           },
         ],
@@ -610,9 +613,9 @@ export function MedicalBookPublicPage() {
                               )}
                             </td>
                             <td className="py-2.5 px-3 text-center font-bold">
-                              {thuoc.soLuong} {thuoc.donViTinh}
+                              {thuoc.soLuong} {thuoc.donVi || thuoc.donViTinh}
                             </td>
-                            <td className="py-2.5 px-3 text-slate-600">{thuoc.cachDung}</td>
+                            <td className="py-2.5 px-3 text-slate-600">{thuoc.lieuDung || thuoc.cachDung}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -646,6 +649,29 @@ export function MedicalBookPublicPage() {
                   </a>
                 </div>
               )}
+
+              {/* Guest Account Sync CTA Banner */}
+              <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 via-emerald-50/60 to-white p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-teal-950 flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-white text-xs">✓</span>
+                      {vi ? "Đồng bộ sổ khám này vào tài khoản của bạn" : "Sync this record into your eClinic account"}
+                    </h3>
+                    <p className="text-xs text-slate-600 max-w-xl">
+                      {vi
+                        ? "Quý khách đang xem sổ khám với tư cách Khách. Đăng ký tài khoản với cùng số điện thoại và CCCD để lưu vĩnh viễn kết quả khám, đơn thuốc và lịch sử điều trị vào hồ sơ sức khỏe cá nhân."
+                        : "You are viewing this record as a Guest. Register an account with your phone and ID to permanently sync your medical history."}
+                    </p>
+                  </div>
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-teal-800 transition flex-shrink-0"
+                  >
+                    {vi ? "Đăng ký tài khoản ngay" : "Register Account Now"}
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
         </div>
