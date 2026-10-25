@@ -1,4 +1,6 @@
+import { useParams } from "react-router-dom";
 import { DoctorConsultationPage } from "@/features/doctor/consultation/DoctorConsultationPage";
+import { DoctorExaminePage } from "@/features/doctor/consultation/DoctorExaminePage";
 import type {
   Appointment,
   ConsultationLookup,
@@ -23,5 +25,11 @@ export interface DoctorConsultationSectionProps {
 export function DoctorConsultationSection(
   _props: DoctorConsultationSectionProps,
 ) {
+  const { appointmentId } = useParams<{ appointmentId?: string }>();
+
+  if (appointmentId) {
+    return <DoctorExaminePage appointmentId={Number(appointmentId)} />;
+  }
+
   return <DoctorConsultationPage />;
 }
