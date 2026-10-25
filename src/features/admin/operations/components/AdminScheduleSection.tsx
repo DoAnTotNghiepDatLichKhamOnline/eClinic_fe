@@ -424,7 +424,7 @@ export function AdminScheduleSection() {
                     )}
                   </td>
                   <td className="text-slate-600">
-                    {shift.tenChuyenKhoa ?? shift.bacSi?.tenChuyenKhoa ?? "—"}
+                    {shift.tenChuyenKhoa ?? (shift.bacSi as { tenChuyenKhoa?: string })?.tenChuyenKhoa ?? "—"}
                   </td>
                   <td>
                     {shift.gioBatDau?.slice(0, 5)} - {shift.gioKetThuc?.slice(0, 5)}
