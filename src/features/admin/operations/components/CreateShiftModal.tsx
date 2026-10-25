@@ -142,7 +142,7 @@ export function CreateShiftModal({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2 text-slate-800 font-bold">
+        <div className="flex items-center gap-2 text-slate-800 font-bold ">
           <CalendarPlus size={20} className="text-teal-700" />
           <span>{vi ? "Xếp ca làm việc mới" : "Schedule New Shift"}</span>
         </div>
