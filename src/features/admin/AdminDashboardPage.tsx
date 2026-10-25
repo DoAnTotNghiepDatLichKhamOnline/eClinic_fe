@@ -20,7 +20,6 @@ import {
   Building2,
   Pill,
   BookOpen,
-  ExternalLink,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
