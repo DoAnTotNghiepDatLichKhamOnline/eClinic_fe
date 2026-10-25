@@ -55,6 +55,11 @@ const TRANG_THAI_LABELS: Record<
     en: "No Show",
     color: "bg-purple-50 text-purple-700 border-purple-200",
   },
+  DA_KHAM: {
+    vi: "Đã khám",
+    en: "Examined",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
 };
 
 export function TodayPatientsTable({
