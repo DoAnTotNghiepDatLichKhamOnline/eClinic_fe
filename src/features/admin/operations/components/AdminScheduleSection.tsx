@@ -1,11 +1,22 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, RotateCcw, AlertTriangle } from "lucide-react";
+import {
+  CalendarPlus,
+  RotateCcw,
+  AlertTriangle,
+  CalendarDays,
+  CalendarClock,
+  Users,
+  Edit3,
+  Trash2,
+} from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { CaLamViecResponse } from "@/types/booking.type";
+import type { CaLamViecResponse, TrangThaiYeuCau } from "@/types/booking.type";
 import { CreateShiftModal } from "./CreateShiftModal";
+import { AdminShiftRequestsTab } from "./AdminShiftRequestsTab";
 import { notifyAuth } from "@/utils/authNotification";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../AdminDashboardPage.module.css";
@@ -45,12 +56,51 @@ export function AdminScheduleSection() {
     useState<CaLamViecResponse | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
-  const [rejectingRequestId, setRejectingRequestId] = useState<number | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
-  const [isRejecting, setIsRejecting] = useState(false);
-
   const [shiftPage, setShiftPage] = useState(0);
   const shiftPageSize = 10;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const urlIdYeuCau = searchParams.get("idYeuCau")
+    ? Number(searchParams.get("idYeuCau"))
+    : null;
+
+  const [activeTab, setActiveTab] = useState<"shifts" | "requests">(
+    urlTab === "requests" ? "requests" : "shifts",
+  );
+
+  // Tab 2 filter states
+  const [requestStatusFilter, setRequestStatusFilter] = useState<
+    TrangThaiYeuCau | "ALL"
+  >(urlIdYeuCau ? "ALL" : "CHO_DUYET");
+  const [requestDoctorFilter, setRequestDoctorFilter] = useState<
+    number | undefined
+  >(undefined);
+  const [requestTypeFilter, setRequestTypeFilter] = useState<
+    "ALL" | "XIN_NGHI" | "DOI_CA"
+  >("ALL");
+
+  useEffect(() => {
+    if (urlTab === "requests") {
+      setActiveTab("requests");
+      if (urlIdYeuCau) {
+        setRequestStatusFilter("ALL");
+      }
+    } else if (urlTab === "shifts") {
+      setActiveTab("shifts");
+    }
+  }, [urlTab, urlIdYeuCau]);
+
+  const handleTabChange = (tab: "shifts" | "requests") => {
+    setActiveTab(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", tab);
+      if (tab === "shifts") {
+        next.delete("idYeuCau");
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     setShiftPage(0);
@@ -103,14 +153,29 @@ export function AdminScheduleSection() {
   });
 
   const requestsQuery = useQuery({
-    queryKey: ["booking", "admin-shift-requests"],
+    queryKey: ["booking", "admin-shift-requests", requestStatusFilter],
+    queryFn: () =>
+      bookingService.getYeuCauDoiLichQuanTri({
+        trangThai:
+          requestStatusFilter === "ALL" ? undefined : requestStatusFilter,
+        tatCa: requestStatusFilter === "ALL" ? true : undefined,
+        trang: 0,
+        kichThuoc: 100,
+      }),
+  });
+
+  const pendingRequestsQuery = useQuery({
+    queryKey: ["booking", "admin-shift-requests", "pending-count"],
     queryFn: () =>
       bookingService.getYeuCauDoiLichQuanTri({
         trangThai: "CHO_DUYET",
         trang: 0,
         kichThuoc: 100,
       }),
+    refetchInterval: 30000,
   });
+
+  const pendingCount = pendingRequestsQuery.data?.duLieu?.noiDung?.length ?? 0;
 
   const waitingAppointmentsQuery = useQuery({
     queryKey: ["booking", "admin-reschedule-needed"],
@@ -122,14 +187,18 @@ export function AdminScheduleSection() {
     const errorMsg =
       (cause as { response?: { data?: { thongDiep?: string } } }).response?.data
         ?.thongDiep ??
-        (cause instanceof Error
-          ? cause.message
-          : vi
-            ? "Thao tác thất bại."
-            : "The operation failed.");
+      (cause instanceof Error
+        ? cause.message
+        : vi
+          ? "Thao tác thất bại."
+          : "The operation failed.");
     setError(errorMsg);
     setMessage("");
-    notifyAuth("error", vi ? "Thao tác thất bại" : "Operation failed", errorMsg);
+    notifyAuth(
+      "error",
+      vi ? "Thao tác thất bại" : "Operation failed",
+      errorMsg,
+    );
   };
 
   const finish = async (text: string, keys: string[]) => {
@@ -202,12 +271,7 @@ export function AdminScheduleSection() {
     }
   };
 
-  const decideRequest = async (id: number, approve: boolean) => {
-    if (!approve) {
-      setRejectingRequestId(id);
-      setRejectNote("");
-      return;
-    }
+  const handleApproveRequest = async (id: number) => {
     try {
       const result = await bookingService.xuLyYeuCauDoiLich(
         id,
@@ -224,19 +288,11 @@ export function AdminScheduleSection() {
     }
   };
 
-  const handleConfirmRejectRequest = async (e: FormEvent) => {
-    e.preventDefault();
-    if (rejectingRequestId === null) return;
-    const note = rejectNote.trim();
-    if (!note) {
-      setError(vi ? "Vui lòng nhập lý do từ chối." : "Please enter rejection reason.");
-      return;
-    }
+  const handleRejectRequest = async (id: number, reason: string) => {
     try {
-      setIsRejecting(true);
       const result = await bookingService.xuLyYeuCauDoiLich(
-        rejectingRequestId,
-        { ghiChu: note },
+        id,
+        { ghiChu: reason },
         false,
       );
       if (!result.thanhCong) throw new Error(result.thongDiep);
@@ -244,12 +300,8 @@ export function AdminScheduleSection() {
         "booking|admin-shift-requests",
         "booking|admin-shifts",
       ]);
-      setRejectingRequestId(null);
-      setRejectNote("");
     } catch (cause) {
       showFailure(cause);
-    } finally {
-      setIsRejecting(false);
     }
   };
 
@@ -268,293 +320,323 @@ export function AdminScheduleSection() {
 
   return (
     <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <span className="text-xs text-slate-500">
-            {filterFromDate} — {filterThroughDate}
-          </span>
-        </div>
+      {/* 2 Dedicated Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
         <button
           type="button"
-          onClick={() => setIsCreateShiftOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all hover:shadow-lg"
+          onClick={() => handleTabChange("shifts")}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition ${
+            activeTab === "shifts"
+              ? "border-teal-600 text-teal-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
         >
-          <CalendarPlus size={16} />
-          <span>{vi ? "Xếp ca lịch mới" : "Schedule New Shift"}</span>
+          <CalendarDays size={16} />
+          <span>{vi ? "Lịch trực & Khám bệnh" : "Work Shifts & Schedule"}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("requests")}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition ${
+            activeTab === "requests"
+              ? "border-teal-600 text-teal-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <CalendarClock size={16} />
+          <span>
+            {vi ? "Duyệt đổi ca / Nghỉ phép" : "Shift Change & Leave"}
+          </span>
+          {pendingCount > 0 && (
+            <span className="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-rose-500 text-white animate-pulse">
+              {pendingCount}
+            </span>
+          )}
         </button>
       </div>
 
-      {/* Filter toolbar */}
-      <div className="mb-4 grid grid-cols-1 gap-2.5 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 sm:grid-cols-2 lg:grid-cols-5 text-xs">
-        <label className="flex flex-col gap-1 text-slate-700 font-medium">
-          <span>{vi ? "Từ ngày" : "From date"}</span>
-          <input
-            type="date"
-            value={filterFromDate}
-            onChange={(e) => setFilterFromDate(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-slate-700 font-medium">
-          <span>{vi ? "Đến ngày" : "To date"}</span>
-          <input
-            type="date"
-            value={filterThroughDate}
-            onChange={(e) => setFilterThroughDate(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-slate-700 font-medium">
-          <span>{vi ? "Bác sĩ" : "Doctor"}</span>
-          <select
-            value={filterDoctorId ?? ""}
-            onChange={(e) =>
-              setFilterDoctorId(
-                e.target.value ? Number(e.target.value) : undefined,
-              )
-            }
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
-          >
-            <option value="">{vi ? "Tất cả bác sĩ" : "All doctors"}</option>
-            {(doctorsQuery.data?.duLieu?.noiDung ?? []).map((doc) => (
-              <option key={doc.id} value={doc.id}>
-                {doc.hoTen} ({doc.tenChuyenKhoa ?? doc.hocVi ?? "Bác sĩ"})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-slate-700 font-medium">
-          <span>{vi ? "Phòng khám" : "Clinic"}</span>
-          <select
-            value={filterClinicId ?? ""}
-            onChange={(e) =>
-              setFilterClinicId(
-                e.target.value ? Number(e.target.value) : undefined,
-              )
-            }
-            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
-          >
-            <option value="">{vi ? "Tất cả phòng khám" : "All clinics"}</option>
-            {(clinicsQuery.data?.duLieu?.noiDung ?? []).map((clinic) => (
-              <option key={clinic.id} value={clinic.id}>
-                {clinic.tenPhong} ({clinic.tenChuyenKhoa})
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="flex items-end">
-          {isFiltered && (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-            >
-              <RotateCcw size={13} />
-              <span>{vi ? "Đặt lại" : "Reset"}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <p role="alert" className="mb-3 text-sm text-rose-700">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p role="status" className="mb-3 text-sm text-emerald-800">
-          {message}
-        </p>
-      )}
-
-      <CreateShiftModal
-        isOpen={isCreateShiftOpen}
-        onClose={() => setIsCreateShiftOpen(false)}
-        onSuccess={() =>
-          finish(vi ? "Xếp ca thành công" : "Shift created successfully", [
-            "booking|admin-shifts",
-          ])
-        }
-        doctors={doctorsQuery.data?.duLieu?.noiDung ?? []}
-        clinics={clinicsQuery.data?.duLieu?.noiDung ?? []}
-        minDate={defaultFrom}
-        maxDate={defaultThrough}
-      />
-
-      <div className={styles.tableScroll}>
-        <table className={styles.adminTable}>
-          <thead>
-            <tr>
-              <th>{vi ? "Ngày" : "Date"}</th>
-              <th>{vi ? "Bác sĩ" : "Doctor"}</th>
-              <th>{vi ? "Chuyên khoa" : "Specialty"}</th>
-              <th>{vi ? "Ca" : "Shift"}</th>
-              <th>{vi ? "Phòng" : "Clinic"}</th>
-              <th>{vi ? "Đã đặt" : "Booked"}</th>
-              <th>{vi ? "Trạng thái" : "Status"}</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {allShifts.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="py-8 text-center text-xs text-slate-500"
-                >
-                  {shiftQuery.isLoading
-                    ? vi
-                      ? "Đang tải dữ liệu ca làm..."
-                      : "Loading shifts..."
-                    : vi
-                      ? "Không có ca làm việc nào phù hợp với bộ lọc."
-                      : "No work shifts matching current filter."}
-                </td>
-              </tr>
-            ) : (
-              paginatedShifts.map((shift) => (
-                <tr key={shift.id}>
-                  <td>{shift.ngay}</td>
-                  <td className="font-medium text-slate-800">
-                    <div>{shift.bacSi?.hoTen ?? shift.hoTenBacSi ?? "—"}</div>
-                    {shift.bacSi?.hocVi && (
-                      <span className="text-[11px] text-slate-500 font-normal">
-                        {shift.bacSi.hocVi}
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-slate-600">
-                    {shift.tenChuyenKhoa ?? shift.bacSi?.tenChuyenKhoa ?? "—"}
-                  </td>
-                  <td>
-                    {shift.gioBatDau?.slice(0, 5)} - {shift.gioKetThuc?.slice(0, 5)}
-                  </td>
-                  <td>
-                    {shift.phongKham?.tenPhong ?? shift.tenPhongKham ?? "—"}
-                  </td>
-                  <td>
-                    <span className="font-semibold text-slate-700">
-                      {shift.soLuotDaDat ?? shift.soChoDaDat ?? 0}
-                    </span>{" "}
-                    / {shift.tongSoLuot ?? shift.tongSoCho ?? 0}
-                  </td>
-                  <td>
-                    {shift.trangThai === "HOAT_DONG" ? (
-                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {vi ? "Hoạt động" : "Active"}
-                      </span>
-                    ) : shift.trangThai === "DA_HUY" ? (
-                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                        {vi ? "Đã hủy" : "Cancelled"}
-                      </span>
-                    ) : (
-                      <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-600">
-                        {shift.trangThai}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      className={`${styles.actionBtn} mr-1 text-teal-700 bg-teal-50 hover:bg-teal-100 border-teal-200`}
-                      type="button"
-                      onClick={() => setSelectedShiftForPatients(shift)}
-                    >
-                      {vi ? "Bệnh nhân" : "Patients"}
-                    </button>
-                    {shift.trangThai === "HOAT_DONG" && (
-                      <>
-                        <button
-                          className={styles.actionBtn}
-                          type="button"
-                          onClick={() => setEditingShift(shift)}
-                        >
-                          {vi ? "Sửa" : "Edit"}
-                        </button>{" "}
-                        <button
-                          className={styles.actionBtnDanger}
-                          type="button"
-                          onClick={() => {
-                            setCancellingShift(shift);
-                            setCancelReason("");
-                          }}
-                        >
-                          {vi ? "Hủy ca" : "Cancel shift"}
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Pagination
-        currentPage={shiftPage}
-        totalPages={totalShiftPages}
-        totalElements={allShifts.length}
-        pageSize={shiftPageSize}
-        onPageChange={setShiftPage}
-      />
-
-      <h3 className="mb-3 mt-8 font-semibold">
-        {vi ? "Yêu cầu đổi ca / xin nghỉ" : "Shift change and leave requests"}
-      </h3>
-      {(requestsQuery.data?.duLieu?.noiDung ?? []).map((request) => (
-        <article
-          className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3"
-          key={request.id}
-        >
-          <div>
-            <strong>
-              {request.loaiYeuCau ?? request.idCaLamViec} · {request.trangThai}
-            </strong>
-            <p className="text-xs text-slate-600">
-              {request.ca?.hoTenBacSi ?? ""} ·{" "}
-              {request.ngayMongMuon ?? request.ngay} · {request.lyDo}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              className={styles.actionBtn}
-              type="button"
-              onClick={() => void decideRequest(request.id, true)}
-            >
-              {vi ? "Duyệt" : "Approve"}
-            </button>
-            <button
-              className={styles.actionBtnDanger}
-              type="button"
-              onClick={() => void decideRequest(request.id, false)}
-            >
-              {vi ? "Từ chối" : "Reject"}
-            </button>
-          </div>
-        </article>
-      ))}
-
-      <h3 className="mb-3 mt-8 font-semibold">
-        {vi ? "Lịch hẹn cần đổi lịch" : "Appointments awaiting reschedule"}
-      </h3>
-      {(waitingAppointmentsQuery.data?.duLieu?.noiDung ?? []).length === 0 ? (
-        <p className="text-xs text-slate-500 py-2">
-          {vi
-            ? "Không có lịch hẹn nào cần đổi lịch."
-            : "No appointments awaiting reschedule."}
-        </p>
+      {activeTab === "requests" ? (
+        <AdminShiftRequestsTab
+          requests={requestsQuery.data?.duLieu?.noiDung ?? []}
+          isLoading={requestsQuery.isLoading}
+          doctors={doctorsQuery.data?.duLieu?.noiDung ?? []}
+          onApprove={handleApproveRequest}
+          onReject={handleRejectRequest}
+          highlightId={urlIdYeuCau}
+          statusFilter={requestStatusFilter}
+          onStatusFilterChange={setRequestStatusFilter}
+          doctorFilter={requestDoctorFilter}
+          onDoctorFilterChange={setRequestDoctorFilter}
+          typeFilter={requestTypeFilter}
+          onTypeFilterChange={setRequestTypeFilter}
+        />
       ) : (
-        (waitingAppointmentsQuery.data?.duLieu?.noiDung ?? []).map(
-          (appointment) => (
-            <p
-              className="border-b border-slate-100 py-2 text-sm"
-              key={appointment.maPhieuKham}
-            >
-              {appointment.ngay} · {appointment.gioKhamDuKien} ·{" "}
-              {appointment.hoTenBenhNhan} · {appointment.maTraCuu}
+        <>
+          {/* Filter toolbar & Action button */}
+          <div className="mb-4 flex flex-col gap-2.5 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 lg:flex-row lg:items-end lg:justify-between text-xs">
+            <div className="grid flex-1 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="flex flex-col gap-1 text-slate-700 font-medium">
+                <span>{vi ? "Từ ngày" : "From date"}</span>
+                <input
+                  type="date"
+                  value={filterFromDate}
+                  onChange={(e) => setFilterFromDate(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-slate-700 font-medium">
+                <span>{vi ? "Đến ngày" : "To date"}</span>
+                <input
+                  type="date"
+                  value={filterThroughDate}
+                  onChange={(e) => setFilterThroughDate(e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-slate-700 font-medium">
+                <span>{vi ? "Bác sĩ" : "Doctor"}</span>
+                <select
+                  value={filterDoctorId ?? ""}
+                  onChange={(e) =>
+                    setFilterDoctorId(
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
+                >
+                  <option value="">
+                    {vi ? "Tất cả bác sĩ" : "All doctors"}
+                  </option>
+                  {(doctorsQuery.data?.duLieu?.noiDung ?? []).map((doc) => (
+                    <option key={doc.id} value={doc.id}>
+                      {doc.hoTen} ({doc.tenChuyenKhoa ?? doc.hocVi ?? "Bác sĩ"})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-slate-700 font-medium">
+                <span>{vi ? "Phòng khám" : "Clinic"}</span>
+                <select
+                  value={filterClinicId ?? ""}
+                  onChange={(e) =>
+                    setFilterClinicId(
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:border-teal-600 focus:outline-none"
+                >
+                  <option value="">
+                    {vi ? "Tất cả phòng khám" : "All clinics"}
+                  </option>
+                  {(clinicsQuery.data?.duLieu?.noiDung ?? []).map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.tenPhong} ({clinic.tenChuyenKhoa})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {isFiltered && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="inline-flex h-[34px] items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <RotateCcw size={13} />
+                  <span>{vi ? "Đặt lại" : "Reset"}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsCreateShiftOpen(true)}
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-lg bg-teal-700! px-3.5 text-xs font-bold! text-white shadow-sm! hover:bg-teal-800! transition-all hover:shadow-md whitespace-nowrap cursor-pointer"
+              >
+                <CalendarPlus size={15} />
+                <span>{vi ? "Xếp ca lịch mới" : "Schedule New Shift"}</span>
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <p role="alert" className="mb-3 text-sm text-rose-700">
+              {error}
             </p>
-          ),
-        )
+          )}
+          {message && (
+            <p role="status" className="mb-3 text-sm text-emerald-800">
+              {message}
+            </p>
+          )}
+
+          <CreateShiftModal
+            isOpen={isCreateShiftOpen}
+            onClose={() => setIsCreateShiftOpen(false)}
+            onSuccess={() =>
+              finish(vi ? "Xếp ca thành công" : "Shift created successfully", [
+                "booking|admin-shifts",
+              ])
+            }
+            doctors={doctorsQuery.data?.duLieu?.noiDung ?? []}
+            clinics={clinicsQuery.data?.duLieu?.noiDung ?? []}
+            minDate={defaultFrom}
+            maxDate={defaultThrough}
+          />
+
+          <div className={styles.tableScroll}>
+            <table className={styles.adminTable}>
+              <thead>
+                <tr>
+                  <th>{vi ? "Ngày" : "Date"}</th>
+                  <th>{vi ? "Bác sĩ" : "Doctor"}</th>
+                  <th>{vi ? "Chuyên khoa" : "Specialty"}</th>
+                  <th>{vi ? "Ca" : "Shift"}</th>
+                  <th>{vi ? "Phòng" : "Clinic"}</th>
+                  <th>{vi ? "Đã đặt" : "Booked"}</th>
+                  <th>{vi ? "Trạng thái" : "Status"}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {allShifts.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-8 text-center text-xs text-slate-500"
+                    >
+                      {shiftQuery.isLoading
+                        ? vi
+                          ? "Đang tải dữ liệu ca làm..."
+                          : "Loading shifts..."
+                        : vi
+                          ? "Không có ca làm việc nào phù hợp với bộ lọc."
+                          : "No work shifts matching current filter."}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedShifts.map((shift) => (
+                    <tr key={shift.id}>
+                      <td>{shift.ngay}</td>
+                      <td className="font-medium text-slate-800">
+                        <div>
+                          {shift.bacSi?.hoTen ?? shift.hoTenBacSi ?? "—"}
+                        </div>
+                        {shift.bacSi?.hocVi && (
+                          <span className="text-[11px] text-slate-500 font-normal">
+                            {shift.bacSi.hocVi}
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-slate-600">
+                        {shift.tenChuyenKhoa ??
+                          (shift.bacSi as { tenChuyenKhoa?: string })
+                            ?.tenChuyenKhoa ??
+                          "—"}
+                      </td>
+                      <td>
+                        {shift.gioBatDau?.slice(0, 5)} -{" "}
+                        {shift.gioKetThuc?.slice(0, 5)}
+                      </td>
+                      <td>
+                        {shift.phongKham?.tenPhong ?? shift.tenPhongKham ?? "—"}
+                      </td>
+                      <td>
+                        <span className="font-semibold text-slate-700">
+                          {shift.soLuotDaDat ?? shift.soChoDaDat ?? 0}
+                        </span>{" "}
+                        / {shift.tongSoLuot ?? shift.tongSoCho ?? 0}
+                      </td>
+                      <td>
+                        {shift.trangThai === "HOAT_DONG" ? (
+                          <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {vi ? "Hoạt động" : "Active"}
+                          </span>
+                        ) : shift.trangThai === "DA_HUY" ? (
+                          <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            {vi ? "Đã hủy" : "Cancelled"}
+                          </span>
+                        ) : (
+                          <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-slate-100 text-slate-600">
+                            {shift.trangThai}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="flex gap-1.5 items-center flex-wrap">
+                          <button
+                            className={styles.actionBtnTeal}
+                            type="button"
+                            onClick={() => setSelectedShiftForPatients(shift)}
+                          >
+                            <Users size={13} />
+                            {vi ? "Bệnh nhân" : "Patients"}
+                          </button>
+                          {shift.trangThai === "HOAT_DONG" && (
+                            <>
+                              <button
+                                className={styles.actionBtn}
+                                type="button"
+                                onClick={() => setEditingShift(shift)}
+                              >
+                                <Edit3 size={13} />
+                                {vi ? "Sửa" : "Edit"}
+                              </button>
+                              <button
+                                className={styles.actionBtnDanger}
+                                type="button"
+                                onClick={() => {
+                                  setCancellingShift(shift);
+                                  setCancelReason("");
+                                }}
+                              >
+                                <Trash2 size={13} />
+                                {vi ? "Hủy ca" : "Cancel"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={shiftPage}
+            totalPages={totalShiftPages}
+            totalElements={allShifts.length}
+            pageSize={shiftPageSize}
+            onPageChange={setShiftPage}
+          />
+
+          <h3 className="mb-3 mt-8 font-semibold">
+            {vi ? "Lịch hẹn cần đổi lịch" : "Appointments awaiting reschedule"}
+          </h3>
+          {(waitingAppointmentsQuery.data?.duLieu?.noiDung ?? []).length ===
+          0 ? (
+            <p className="text-xs text-slate-500 py-2">
+              {vi
+                ? "Không có lịch hẹn nào cần đổi lịch."
+                : "No appointments awaiting reschedule."}
+            </p>
+          ) : (
+            (waitingAppointmentsQuery.data?.duLieu?.noiDung ?? []).map(
+              (appointment) => (
+                <p
+                  className="border-b border-slate-100 py-2 text-sm"
+                  key={appointment.maPhieuKham}
+                >
+                  {appointment.ngay} · {appointment.gioKhamDuKien} ·{" "}
+                  {appointment.hoTenBenhNhan} · {appointment.maTraCuu}
+                </p>
+              ),
+            )
+          )}
+        </>
       )}
 
       {/* Modal Danh sách bệnh nhân của 1 ca khám */}
@@ -576,11 +658,15 @@ export function AdminScheduleSection() {
                   {vi ? "Bệnh nhân trong ca khám" : "Patients in Shift"}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {selectedShiftForPatients.bacSi?.hoTen ?? selectedShiftForPatients.hoTenBacSi ?? "—"} ·{" "}
-                  {selectedShiftForPatients.ngay} (
+                  {selectedShiftForPatients.bacSi?.hoTen ??
+                    selectedShiftForPatients.hoTenBacSi ??
+                    "—"}{" "}
+                  · {selectedShiftForPatients.ngay} (
                   {selectedShiftForPatients.gioBatDau?.slice(0, 5)} -{" "}
                   {selectedShiftForPatients.gioKetThuc?.slice(0, 5)}) ·{" "}
-                  {selectedShiftForPatients.phongKham?.tenPhong ?? selectedShiftForPatients.tenPhongKham ?? "—"}
+                  {selectedShiftForPatients.phongKham?.tenPhong ??
+                    selectedShiftForPatients.tenPhongKham ??
+                    "—"}
                 </p>
               </div>
               <button
@@ -832,13 +918,7 @@ export function AdminScheduleSection() {
 
       {/* Modal Hủy ca làm việc */}
       {cancellingShift && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isCancelling)
-              setCancellingShift(null);
-          }}
-        >
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
           <div
             role="dialog"
             aria-modal="true"
@@ -943,82 +1023,6 @@ export function AdminScheduleSection() {
                     : vi
                       ? "Xác nhận hủy ca"
                       : "Confirm Cancel"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal từ chối yêu cầu đổi lịch / xin nghỉ */}
-      {rejectingRequestId !== null && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isRejecting)
-              setRejectingRequestId(null);
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-base font-bold text-rose-700 flex items-center gap-2">
-                <AlertTriangle size={18} className="text-rose-600" />
-                <span>{vi ? "Từ chối yêu cầu đổi lịch" : "Reject Shift Request"}</span>
-              </h3>
-              <button
-                type="button"
-                disabled={isRejecting}
-                onClick={() => setRejectingRequestId(null)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleConfirmRejectRequest}>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                {vi ? "Ghi chú từ chối (bắt buộc)" : "Rejection note (required)"}{" "}
-                <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                required
-                rows={3}
-                maxLength={500}
-                value={rejectNote}
-                onChange={(e) => setRejectNote(e.target.value)}
-                placeholder={
-                  vi
-                    ? "Nhập lý do từ chối yêu cầu của bác sĩ..."
-                    : "Enter reason for rejecting doctor's request..."
-                }
-                className="w-full rounded-xl border border-slate-300 p-3 text-xs focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
-              />
-
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
-                <button
-                  type="button"
-                  disabled={isRejecting}
-                  onClick={() => setRejectingRequestId(null)}
-                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
-                >
-                  {vi ? "Hủy" : "Cancel"}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isRejecting}
-                  className="rounded-xl bg-rose-700 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
-                >
-                  {isRejecting
-                    ? vi
-                      ? "Đang xử lý..."
-                      : "Processing..."
-                    : vi
-                      ? "Xác nhận từ chối"
-                      : "Confirm Reject"}
                 </button>
               </div>
             </form>

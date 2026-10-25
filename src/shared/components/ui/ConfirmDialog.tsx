@@ -1,6 +1,7 @@
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
 import { AlertCircle } from "lucide-react";
+import { useLanguage } from "@/shared/context/LanguageContext";
 import styles from "./ConfirmDialog.module.css";
 
 interface ConfirmDialogProps {
@@ -19,19 +20,24 @@ export function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmLabel = "Sign out",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   variant = "danger",
   isLoading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { lang } = useLanguage();
+  const resolvedCancelLabel = cancelLabel ?? (lang === "vi" ? "Hủy" : "Cancel");
+  const resolvedConfirmLabel = confirmLabel ?? (lang === "vi" ? "Xác nhận" : "Confirm");
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onCancel}
       title="" // Ẩn header mặc định của Modal để tự custom layout liền mạch
       className={styles.modalCustom}
+      closeOnBackdropClick={false}
     >
       <div className={styles.dialogContainer}>
         {/* Phần thân: Icon tròn mềm + Title + Message */}
@@ -54,7 +60,7 @@ export function ConfirmDialog({
             disabled={isLoading}
             className={styles.btnCancel}
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             type="button"
@@ -62,7 +68,11 @@ export function ConfirmDialog({
             disabled={isLoading}
             className={`${styles.btnConfirm} ${styles[`btn_${variant}`]}`}
           >
-            {isLoading ? "Processing..." : confirmLabel}
+            {isLoading
+              ? lang === "vi"
+                ? "Đang xử lý..."
+                : "Processing..."
+              : resolvedConfirmLabel}
           </Button>
         </div>
       </div>

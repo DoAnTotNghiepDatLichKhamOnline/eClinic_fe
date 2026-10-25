@@ -65,6 +65,10 @@ export function DoctorSearchBar() {
 
   const handleSelect = (appointment: LichHenCuaToiResponse) => {
     setOpen(false);
+    if (appointment.id) {
+      navigate(`/doctor/consultation/${appointment.id}`);
+      return;
+    }
     const code = appointment.maTraCuu || appointment.maPhieuKham;
     navigate(`/doctor/consultation?search=${encodeURIComponent(code)}`);
   };

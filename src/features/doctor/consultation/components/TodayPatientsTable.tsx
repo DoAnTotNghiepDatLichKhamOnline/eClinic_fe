@@ -55,6 +55,11 @@ const TRANG_THAI_LABELS: Record<
     en: "No Show",
     color: "bg-purple-50 text-purple-700 border-purple-200",
   },
+  DA_KHAM: {
+    vi: "Đã khám",
+    en: "Examined",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
 };
 
 export function TodayPatientsTable({
@@ -224,12 +229,15 @@ export function TodayPatientsTable({
               <th className="py-2.5 px-3 w-36">
                 {lang === "vi" ? "Mã tra cứu" : "Lookup Code"}
               </th>
+              <th className="py-2.5 px-3 w-28 text-center">
+                {lang === "vi" ? "Thao tác" : "Action"}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-400">
+                <td colSpan={8} className="py-8 text-center text-slate-400">
                   <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-teal-500 border-t-transparent mb-2" />
                   <p>
                     {lang === "vi"
@@ -240,7 +248,7 @@ export function TodayPatientsTable({
               </tr>
             ) : patients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-400">
+                <td colSpan={8} className="py-8 text-center text-slate-400">
                   <Clock className="w-8 h-8 mx-auto text-slate-300 mb-1" />
                   <p className="font-medium text-slate-600">
                     {lang === "vi"
@@ -307,6 +315,24 @@ export function TodayPatientsTable({
                     </td>
                     <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
                       {p.maTraCuu}
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectPatient(p.id);
+                        }}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                          p.trangThai === "DA_KHAM" || p.trangThai === "DA_HOAN_THANH"
+                            ? "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                            : "bg-teal-600 hover:bg-teal-700 text-white shadow-xs"
+                        }`}
+                      >
+                        {p.trangThai === "DA_KHAM" || p.trangThai === "DA_HOAN_THANH"
+                          ? lang === "vi" ? "Xem bệnh án" : "View Record"
+                          : lang === "vi" ? "Khám bệnh" : "Examine"}
+                      </button>
                     </td>
                   </tr>
                 );

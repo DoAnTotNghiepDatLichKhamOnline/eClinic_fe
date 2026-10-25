@@ -598,7 +598,7 @@ export function DoctorDashboardPage({
                                       className={styles.actionBtn}
                                       onClick={() =>
                                         navigate(
-                                          `/doctor/consultation?ma=${encodeURIComponent(apt.maTraCuu)}`,
+                                          `/doctor/consultation/${apt.id}`,
                                         )
                                       }
                                     >
@@ -617,7 +617,7 @@ export function DoctorDashboardPage({
                                     className={styles.secondaryBtn}
                                     onClick={() =>
                                       navigate(
-                                        `/doctor/consultation?ma=${encodeURIComponent(apt.maTraCuu)}`,
+                                        `/doctor/consultation/${apt.id}`,
                                       )
                                     }
                                   >

@@ -16,6 +16,7 @@ const sections: { path: string; section: DoctorSection | null }[] = [
   { path: "dashboard", section: null },
   { path: "work-schedule", section: "schedule" },
   { path: "consultation", section: "consultation" },
+  { path: "consultation/:appointmentId", section: "consultation" },
   { path: "profile", section: "profile" },
 ];
 

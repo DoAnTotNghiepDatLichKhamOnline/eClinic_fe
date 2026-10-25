@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Bell, Check, CheckCheck, Loader2 } from 'lucide-react'
 import { useLanguage } from '@/shared/context/LanguageContext'
 import { useDanhSachThongBao, useSoThongBaoChuaDoc, useNotificationActions } from '@/hooks/useNotification'
@@ -33,6 +33,27 @@ export function DoctorNotificationCenter({ onNavigate }: DoctorNotificationCente
   const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions()
 
   const [open, setOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    if (open) {
+      document.addEventListener('mousedown', handleOutsideClick)
+      document.addEventListener('keydown', handleEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [open])
 
   const openNotice = async (notice: ThongBaoResponse) => {
     if (!notice.daDoc) {
@@ -59,7 +80,7 @@ export function DoctorNotificationCenter({ onNavigate }: DoctorNotificationCente
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div ref={wrapperRef} className={styles.wrapper}>
       <button
         type="button"
         className={styles.trigger}

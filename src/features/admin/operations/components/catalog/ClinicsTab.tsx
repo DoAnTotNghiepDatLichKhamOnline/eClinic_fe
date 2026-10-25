@@ -2,7 +2,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import type { PhongKhamQuanTriResponse } from "@/types/catalog.type";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
-import { Plus, Edit3 } from "lucide-react";
+import { Plus, Edit3, Lock, Check } from "lucide-react";
 
 interface ClinicsTabProps {
   clinics: PhongKhamQuanTriResponse[];
@@ -34,14 +34,11 @@ export function ClinicsTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-800">
-          {vi ? "Danh sách phòng khám" : "Clinics List"}
-        </h3>
+      <div className="mb-4 flex items-center justify-end">
         <button
           type="button"
           onClick={onOpenAddModal}
-          className={styles.actionBtn}
+          className={styles.actionBtnPrimary}
         >
           <Plus size={14} />
           <span>{vi ? "Thêm phòng khám" : "Add Clinic"}</span>
@@ -111,32 +108,36 @@ export function ClinicsTab({
                           : "Inactive"}
                     </span>
                   </td>
-                  <td className="space-x-2">
-                    <button
-                      className={styles.actionBtn}
-                      type="button"
-                      onClick={() => onSelectEdit(clinic)}
-                    >
-                      <Edit3 size={13} className="inline mr-1" />
-                      {vi ? "Sửa" : "Edit"}
-                    </button>
-                    {clinic.trangThai === "HOAT_DONG" ? (
-                      <button
-                        className={styles.actionBtnDanger}
-                        type="button"
-                        onClick={() => onDeactivate(clinic.id)}
-                      >
-                        {vi ? "Ngừng hoạt động" : "Deactivate"}
-                      </button>
-                    ) : (
+                  <td>
+                    <div className="flex gap-1.5 items-center">
                       <button
                         className={styles.actionBtn}
                         type="button"
-                        onClick={() => onActivate(clinic.id)}
+                        onClick={() => onSelectEdit(clinic)}
                       >
-                        {vi ? "Kích hoạt" : "Activate"}
+                        <Edit3 size={13} />
+                        {vi ? "Sửa" : "Edit"}
                       </button>
-                    )}
+                      {clinic.trangThai === "HOAT_DONG" ? (
+                        <button
+                          className={styles.actionBtnDanger}
+                          type="button"
+                          onClick={() => onDeactivate(clinic.id)}
+                        >
+                          <Lock size={13} />
+                          {vi ? "Ngừng" : "Deactivate"}
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.actionBtnSuccess}
+                          type="button"
+                          onClick={() => onActivate(clinic.id)}
+                        >
+                          <Check size={13} />
+                          {vi ? "Kích hoạt" : "Activate"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

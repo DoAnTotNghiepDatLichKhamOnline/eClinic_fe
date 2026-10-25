@@ -406,7 +406,7 @@ export function DoctorUpcomingAppointmentsSection({
             : `Are you sure you want to cancel appointment #${cancellingId}? The patient will be notified.`
         }
         confirmLabel={lang === "vi" ? "Xác nhận hủy" : "Confirm Cancel"}
-        cancelLabel={lang === "vi" ? "Quay lại" : "Back"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
         variant="danger"
         isLoading={isCancelling}
         onConfirm={() => void executeCancelAppointment()}

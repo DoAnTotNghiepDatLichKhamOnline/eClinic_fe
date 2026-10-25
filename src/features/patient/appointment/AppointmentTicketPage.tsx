@@ -6,6 +6,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Download,
+  FileText,
   Loader2,
   Mail,
   QrCode,
@@ -418,6 +419,64 @@ export function AppointmentTicketPage() {
         <div className="p-6 pt-5 bg-white space-y-4">
           {!mode ? (
             <div className="space-y-3">
+              {/* Thẻ Sổ khám bệnh điện tử khi đã hoàn thành khám */}
+              {(ticket.trangThai === "DA_HOAN_THANH" || ticket.trangThai === "DA_KHAM") && (
+                <div className="rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50 to-emerald-50/50 p-4 sm:p-5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-teal-600 p-2 text-white shadow-sm flex-shrink-0">
+                      <FileText size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-teal-950">
+                        {vi ? "Kết quả khám bệnh & Sổ khám điện tử" : "Medical Record & Prescription"}
+                      </h3>
+                      <p className="mt-0.5 text-xs text-teal-800">
+                        {vi
+                          ? "Bác sĩ đã hoàn tất khám bệnh và lưu hồ sơ bệnh án điện tử."
+                          : "Doctor has completed consultation and recorded the electronic medical record."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                    <div className="text-xs text-slate-600">
+                      <span className="font-semibold text-slate-800">{vi ? "Mã tra cứu sổ khám: " : "Record Code: "}</span>
+                      <span className="font-mono font-bold text-teal-800">
+                        {ticket.maSoKham || ticket.maTraCuu}
+                      </span>
+                    </div>
+
+                    <Link
+                      to={ticket.linkSoKham || `/so-kham/${ticket.maSoKham || ticket.maTraCuu}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-xs font-bold text-white shadow hover:bg-teal-800 transition"
+                    >
+                      <FileText size={14} />
+                      {vi ? "Xem Sổ Khám Bệnh" : "View Medical Record"}
+                    </Link>
+                  </div>
+
+                  <div className="rounded-lg border border-teal-200/80 bg-white/80 p-3 text-xs text-slate-600 space-y-1">
+                    <p className="font-medium text-slate-700">
+                      🔒 {vi ? "Bảo mật thông tin y tế:" : "Medical Data Security:"}
+                    </p>
+                    <p>
+                      {vi
+                        ? "Khi mở sổ khám, quý khách chỉ cần nhập 4 số cuối số điện thoại đăng ký đặt khám để mở khóa xem đầy đủ chẩn đoán, sinh hiệu và đơn thuốc."
+                        : "Please prepare the last 4 digits of your phone number to unlock diagnosis and prescription."}
+                    </p>
+                    {!user && (
+                      <p className="pt-1 text-slate-700 font-medium">
+                        💡 {vi ? "Muốn lưu vĩnh viễn lịch sử này?" : "Want to permanently save this history?"}{" "}
+                        <Link to="/register" className="font-bold text-teal-700 underline hover:text-teal-900">
+                          {vi ? "Đăng ký tài khoản" : "Register account"}
+                        </Link>{" "}
+                        {vi ? "với cùng CCCD / SĐT để quản lý tập trung mọi lần khám." : "with same ID/phone to sync all records."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Primary action: Đổi lịch khám */}
               {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" && (
                 <button

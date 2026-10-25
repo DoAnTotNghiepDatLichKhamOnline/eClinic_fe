@@ -212,8 +212,12 @@ export function AdminCatalogSection() {
       {/* TAB 1: SPECIALTIES */}
       {tab === "specialties" && (
         <SpecialtiesTab
-          specialties={allSpecialtiesQuery.data?.duLieu?.noiDung ?? specialtiesList}
+          specialties={specialtiesList}
           isLoading={specialtiesQuery.isLoading}
+          currentPage={specialtiesPage}
+          totalPages={specialtiesQuery.data?.duLieu?.tongSoTrang ?? 1}
+          totalElements={specialtiesQuery.data?.duLieu?.tongSoPhanTu}
+          onPageChange={setSpecialtiesPage}
           onOpenAddModal={() => setIsAddSpecialtyOpen(true)}
           onSelectEdit={(item) => setEditingSpecialty(item)}
           onDeleteSpecialty={(item) => setDeletingSpecialty(item)}
@@ -225,6 +229,10 @@ export function AdminCatalogSection() {
         <ClinicsTab
           clinics={clinicsList}
           isLoading={clinicsQuery.isLoading}
+          currentPage={clinicsPage}
+          totalPages={clinicsQuery.data?.duLieu?.tongSoTrang ?? 1}
+          totalElements={clinicsQuery.data?.duLieu?.tongSoPhanTu}
+          onPageChange={setClinicsPage}
           onOpenAddModal={() => setIsAddClinicOpen(true)}
           onSelectEdit={(clinic) => setEditingClinic(clinic)}
           onDeactivate={(id) => setDeactivatingClinicId(id)}

@@ -27,13 +27,17 @@ export function DoctorScheduleSection() {
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
   const [scheduleDate, setScheduleDate] = useState(() => new Date());
   const [requestMode, setRequestMode] = useState<"SINGLE" | "MULTI">("SINGLE");
-  const [requestType, setRequestType] = useState<"XIN_NGHI" | "DOI_CA">("XIN_NGHI");
+  const [requestType, setRequestType] = useState<"XIN_NGHI" | "DOI_CA">(
+    "XIN_NGHI",
+  );
   const [selectedMultiShifts, setSelectedMultiShifts] = useState<number[]>([]);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const [confirmWithdrawId, setConfirmWithdrawId] = useState<number | null>(null);
+  const [confirmWithdrawId, setConfirmWithdrawId] = useState<number | null>(
+    null,
+  );
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const [confirmTransferAction, setConfirmTransferAction] = useState<{
@@ -89,7 +93,8 @@ export function DoctorScheduleSection() {
   const shifts = shiftsResponse?.duLieu ?? [];
   const calendarAppointments = calendarAppointmentsResponse?.duLieu ?? [];
   const ownShiftRequests = ownShiftRequestsResponse?.duLieu?.noiDung ?? [];
-  const transferredShifts = (transferredShiftsResponse?.duLieu as any)?.noiDung ?? [];
+  const transferredShifts =
+    (transferredShiftsResponse?.duLieu as any)?.noiDung ?? [];
 
   const handleExportPdf = async () => {
     try {
@@ -172,7 +177,9 @@ export function DoctorScheduleSection() {
             : "Transferred shift accepted.",
         );
       } else {
-        await doctorBookingService.tuChoiNhuongCaBacSi(confirmTransferAction.id);
+        await doctorBookingService.tuChoiNhuongCaBacSi(
+          confirmTransferAction.id,
+        );
         notifyAuth(
           "info",
           lang === "vi" ? "Đã từ chối" : "Shift declined",
@@ -279,7 +286,9 @@ export function DoctorScheduleSection() {
           ),
         );
 
-        const succeeded = results.filter((r) => r.status === "fulfilled").length;
+        const succeeded = results.filter(
+          (r) => r.status === "fulfilled",
+        ).length;
         const failed = results.filter((r) => r.status === "rejected").length;
 
         form.reset();
@@ -300,7 +309,9 @@ export function DoctorScheduleSection() {
         } else {
           notifyAuth(
             "error",
-            lang === "vi" ? "Gửi yêu cầu thất bại" : "Request submission failed",
+            lang === "vi"
+              ? "Gửi yêu cầu thất bại"
+              : "Request submission failed",
             lang === "vi"
               ? "Không thể gửi yêu cầu xin nghỉ cho các ca đã chọn."
               : "Failed to submit leave request for selected shifts.",
@@ -323,8 +334,7 @@ export function DoctorScheduleSection() {
 
     const shiftId = Number(formData.get("idLichLamViec"));
     const currentShift = shifts.find(
-      (shift) =>
-        Number((shift as any).idLichLamViec ?? shift.id) === shiftId,
+      (shift) => Number((shift as any).idLichLamViec ?? shift.id) === shiftId,
     );
 
     if (!shiftId || !currentShift) {
@@ -337,7 +347,9 @@ export function DoctorScheduleSection() {
             ? "Ca làm việc này không thể chỉnh sửa."
             : "This shift cannot be modified.";
       }
-      const shiftStart = new Date(`${currentShift.ngay}T${currentShift.gioBatDau}`);
+      const shiftStart = new Date(
+        `${currentShift.ngay}T${currentShift.gioBatDau}`,
+      );
       const now = Date.now();
       if (shiftStart.getTime() < now + 24 * 60 * 60 * 1000) {
         newErrors.idLichLamViec =
@@ -347,8 +359,11 @@ export function DoctorScheduleSection() {
       }
       const hasPending = ownShiftRequests.some(
         (req: any) =>
-          ((req.lichLamViec && ((req.lichLamViec.idLichLamViec === shiftId) || (req.lichLamViec.id === shiftId))) ||
-            (req.ca && ((req.ca.idLichLamViec === shiftId) || (req.ca.id === shiftId))) ||
+          ((req.lichLamViec &&
+            (req.lichLamViec.idLichLamViec === shiftId ||
+              req.lichLamViec.id === shiftId)) ||
+            (req.ca &&
+              (req.ca.idLichLamViec === shiftId || req.ca.id === shiftId)) ||
             req.idLichLamViec === shiftId) &&
           req.trangThai === "CHO_DUYET",
       );
@@ -379,24 +394,38 @@ export function DoctorScheduleSection() {
       ngayMongMuon = String(formData.get("ngayMongMuon") || "");
       const rawStart = String(formData.get("gioBatDauMongMuon") || "");
       const rawEnd = String(formData.get("gioKetThucMongMuon") || "");
-      gioBatDauMongMuon = rawStart ? (rawStart.length === 5 ? `${rawStart}:00` : rawStart) : undefined;
-      gioKetThucMongMuon = rawEnd ? (rawEnd.length === 5 ? `${rawEnd}:00` : rawEnd) : undefined;
+      gioBatDauMongMuon = rawStart
+        ? rawStart.length === 5
+          ? `${rawStart}:00`
+          : rawStart
+        : undefined;
+      gioKetThucMongMuon = rawEnd
+        ? rawEnd.length === 5
+          ? `${rawEnd}:00`
+          : rawEnd
+        : undefined;
       const phongVal = formData.get("idPhongKhamMongMuon");
       idPhongKhamMongMuon = phongVal ? Number(phongVal) : undefined;
 
       if (!ngayMongMuon) {
         newErrors.ngayMongMuon =
-          lang === "vi" ? "Vui lòng chọn ngày mong muốn." : "Please choose requested date.";
+          lang === "vi"
+            ? "Vui lòng chọn ngày mong muốn."
+            : "Please choose requested date.";
       }
 
       if (!gioBatDauMongMuon) {
         newErrors.gioBatDauMongMuon =
-          lang === "vi" ? "Vui lòng chọn giờ bắt đầu." : "Please choose start time.";
+          lang === "vi"
+            ? "Vui lòng chọn giờ bắt đầu."
+            : "Please choose start time.";
       }
 
       if (!gioKetThucMongMuon) {
         newErrors.gioKetThucMongMuon =
-          lang === "vi" ? "Vui lòng chọn giờ kết thúc." : "Please choose end time.";
+          lang === "vi"
+            ? "Vui lòng chọn giờ kết thúc."
+            : "Please choose end time.";
       } else if (gioBatDauMongMuon && gioKetThucMongMuon <= gioBatDauMongMuon) {
         newErrors.gioKetThucMongMuon =
           lang === "vi"
@@ -415,12 +444,18 @@ export function DoctorScheduleSection() {
         }
       }
 
-      if (currentShift && ngayMongMuon && gioBatDauMongMuon && gioKetThucMongMuon) {
+      if (
+        currentShift &&
+        ngayMongMuon &&
+        gioBatDauMongMuon &&
+        gioKetThucMongMuon
+      ) {
         const sameDate = ngayMongMuon === currentShift.ngay;
         const sameStart =
           gioBatDauMongMuon.slice(0, 5) === currentShift.gioBatDau.slice(0, 5);
         const sameEnd =
-          gioKetThucMongMuon.slice(0, 5) === currentShift.gioKetThuc.slice(0, 5);
+          gioKetThucMongMuon.slice(0, 5) ===
+          currentShift.gioKetThuc.slice(0, 5);
         const currentRoomId =
           (currentShift.phongKham as any)?.id ??
           (currentShift.phongKham as any)?.idPhongKham ??
@@ -608,8 +643,9 @@ export function DoctorScheduleSection() {
                 ) : dayShifts.length ? (
                   <span className={styles.calendarShift}>
                     {dayShifts.map((shift) => {
-                      const sid =
-                        Number((shift as any).idLichLamViec ?? shift.id);
+                      const sid = Number(
+                        (shift as any).idLichLamViec ?? shift.id,
+                      );
                       const roomName =
                         shift.phongKham?.tenPhong ||
                         (shift as any).tenPhongKham ||
@@ -618,7 +654,9 @@ export function DoctorScheduleSection() {
                       return (
                         <span key={sid}>
                           <Clock3 size={13} aria-hidden="true" />
-                          {shift.gioBatDau.slice(0, 5)} - {shift.gioKetThuc.slice(0, 5)}
+                          {shift.gioBatDau.slice(0, 5)} -{" "}
+                          {shift.gioKetThuc.slice(0, 5)}
+                          <br />
                           <small>
                             {roomName ? `${roomName} · ` : ""}
                             {shift.soLuotDaDat ?? 0}/{shift.tongSoLuot ?? 0}
@@ -706,10 +744,19 @@ export function DoctorScheduleSection() {
       {/* Transferred shifts section */}
       {transferredShifts.length > 0 && (
         <section className={styles.panel}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "12px",
+            }}
+          >
             <ArrowRightLeft size={18} className="text-emerald-600" />
             <h2 style={{ margin: 0 }}>
-              {lang === "vi" ? "Ca trực được nhường từ đồng nghiệp" : "Shifts Transferred From Colleagues"}
+              {lang === "vi"
+                ? "Ca trực được nhường từ đồng nghiệp"
+                : "Shifts Transferred From Colleagues"}
             </h2>
           </div>
           <div className={styles.requestList}>
@@ -717,17 +764,33 @@ export function DoctorScheduleSection() {
               <article className={styles.requestItem} key={req.id}>
                 <div>
                   <strong>
-                    {req.ca?.ngay} · {req.ca?.gioBatDau?.slice(0, 5)} - {req.ca?.gioKetThuc?.slice(0, 5)}
-                    {req.bacSiNhuong?.hoTen ? ` (${lang === "vi" ? "Từ BS" : "From Dr"}. ${req.bacSiNhuong.hoTen})` : ""}
+                    {req.ca?.ngay} · {req.ca?.gioBatDau?.slice(0, 5)} -{" "}
+                    {req.ca?.gioKetThuc?.slice(0, 5)}
+                    {req.bacSiNhuong?.hoTen
+                      ? ` (${lang === "vi" ? "Từ BS" : "From Dr"}. ${req.bacSiNhuong.hoTen})`
+                      : ""}
                   </strong>
-                  <p>{req.lyDo || (lang === "vi" ? "Không có ghi chú thêm" : "No additional note")}</p>
+                  <p>
+                    {req.lyDo ||
+                      (lang === "vi"
+                        ? "Không có ghi chú thêm"
+                        : "No additional note")}
+                  </p>
                 </div>
                 <div className={styles.requestActions}>
                   <button
                     type="button"
                     className={styles.primaryButton}
-                    style={{ background: "#10b981", color: "#fff", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                    onClick={() => setConfirmTransferAction({ id: req.id, type: "ACCEPT" })}
+                    style={{
+                      background: "#10b981",
+                      color: "#fff",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                    onClick={() =>
+                      setConfirmTransferAction({ id: req.id, type: "ACCEPT" })
+                    }
                   >
                     <Check size={14} />
                     <span>{lang === "vi" ? "Nhận ca" : "Accept"}</span>
@@ -735,8 +798,14 @@ export function DoctorScheduleSection() {
                   <button
                     type="button"
                     className={styles.secondaryButton}
-                    style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
-                    onClick={() => setConfirmTransferAction({ id: req.id, type: "DECLINE" })}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                    onClick={() =>
+                      setConfirmTransferAction({ id: req.id, type: "DECLINE" })
+                    }
                   >
                     <X size={14} />
                     <span>{lang === "vi" ? "Từ chối" : "Decline"}</span>
@@ -750,7 +819,14 @@ export function DoctorScheduleSection() {
 
       {/* Form: Shift Request */}
       <section className={styles.panel}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "8px",
+          }}
+        >
           <h2 style={{ margin: 0 }}>
             {lang === "vi"
               ? "Đăng ký đổi ca / Xin nghỉ"
@@ -780,7 +856,10 @@ export function DoctorScheduleSection() {
             : "Requests must be submitted at least 24 hours in advance for admin approval."}
         </p>
 
-        <form className={styles.formGrid} onSubmit={(e) => void submitShiftRequest(e)}>
+        <form
+          className={styles.formGrid}
+          onSubmit={(e) => void submitShiftRequest(e)}
+        >
           {requestMode === "SINGLE" ? (
             <div className={styles.formRowThree}>
               <label>
@@ -802,8 +881,9 @@ export function DoctorScheduleSection() {
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
                     .map((shift) => {
-                      const sid =
-                        Number((shift as any).idLichLamViec ?? shift.id);
+                      const sid = Number(
+                        (shift as any).idLichLamViec ?? shift.id,
+                      );
                       const roomName =
                         shift.phongKham?.tenPhong ||
                         (shift as any).tenPhongKham ||
@@ -811,8 +891,8 @@ export function DoctorScheduleSection() {
                         (lang === "vi" ? "Phòng khám" : "Clinic");
                       return (
                         <option key={sid} value={sid}>
-                          {shift.ngay} · {shift.gioBatDau.slice(0, 5)}-{shift.gioKetThuc.slice(0, 5)} ·{" "}
-                          {roomName}
+                          {shift.ngay} · {shift.gioBatDau.slice(0, 5)}-
+                          {shift.gioKetThuc.slice(0, 5)} · {roomName}
                         </option>
                       );
                     })}
@@ -856,7 +936,10 @@ export function DoctorScheduleSection() {
                       aria-invalid={Boolean(formErrors.ngayMongMuon)}
                       onChange={() => {
                         if (formErrors.ngayMongMuon) {
-                          setFormErrors((prev) => ({ ...prev, ngayMongMuon: "" }));
+                          setFormErrors((prev) => ({
+                            ...prev,
+                            ngayMongMuon: "",
+                          }));
                         }
                       }}
                     />
@@ -981,15 +1064,31 @@ export function DoctorScheduleSection() {
           ) : (
             <div style={{ display: "grid", gap: "14px" }}>
               <div>
-                <label style={{ fontWeight: 600, display: "block", marginBottom: "8px" }}>
-                  {lang === "vi" ? "Chọn danh sách các ca xin nghỉ:" : "Select shifts to request leave:"}
+                <label
+                  style={{
+                    fontWeight: 600,
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  {lang === "vi"
+                    ? "Chọn danh sách các ca xin nghỉ:"
+                    : "Select shifts to request leave:"}
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "10px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: "10px",
+                  }}
+                >
                   {shifts
                     .filter((shift) => shift.trangThai === "HOAT_DONG")
                     .map((shift) => {
-                      const sid =
-                        Number((shift as any).idLichLamViec ?? shift.id);
+                      const sid = Number(
+                        (shift as any).idLichLamViec ?? shift.id,
+                      );
                       const isChecked = selectedMultiShifts.includes(sid);
                       const roomName =
                         shift.phongKham?.tenPhong ||
@@ -1015,7 +1114,10 @@ export function DoctorScheduleSection() {
                             checked={isChecked}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedMultiShifts((prev) => [...prev, sid]);
+                                setSelectedMultiShifts((prev) => [
+                                  ...prev,
+                                  sid,
+                                ]);
                               } else {
                                 setSelectedMultiShifts((prev) =>
                                   prev.filter((id) => id !== sid),
@@ -1031,7 +1133,8 @@ export function DoctorScheduleSection() {
                           />
                           <div>
                             <div style={{ fontWeight: 600, fontSize: "13px" }}>
-                              {shift.ngay} · {shift.gioBatDau.slice(0, 5)} - {shift.gioKetThuc.slice(0, 5)}
+                              {shift.ngay} · {shift.gioBatDau.slice(0, 5)} -{" "}
+                              {shift.gioKetThuc.slice(0, 5)}
                             </div>
                             <div style={{ fontSize: "12px", color: "#64748b" }}>
                               {roomName}
@@ -1050,8 +1153,16 @@ export function DoctorScheduleSection() {
               </div>
 
               <label>
-                <span style={{ fontWeight: 600, display: "block", marginBottom: "6px" }}>
-                  {lang === "vi" ? "Lý do xin nghỉ nhiều ca (bắt buộc):" : "Reason for multi-shift leave (required):"}
+                <span
+                  style={{
+                    fontWeight: 600,
+                    display: "block",
+                    marginBottom: "6px",
+                  }}
+                >
+                  {lang === "vi"
+                    ? "Lý do xin nghỉ nhiều ca (bắt buộc):"
+                    : "Reason for multi-shift leave (required):"}
                 </span>
                 <textarea
                   name="reason"
@@ -1069,7 +1180,12 @@ export function DoctorScheduleSection() {
                       setFormErrors((prev) => ({ ...prev, reason: "" }));
                     }
                   }}
-                  style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "8px" }}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "8px",
+                  }}
                 />
                 {formErrors.reason && (
                   <p className="text-xs text-rose-600 flex items-center gap-1 mt-1 font-medium">
@@ -1081,7 +1197,9 @@ export function DoctorScheduleSection() {
 
               <button
                 type="submit"
-                disabled={isSubmittingRequest || selectedMultiShifts.length === 0}
+                disabled={
+                  isSubmittingRequest || selectedMultiShifts.length === 0
+                }
                 className={styles.primaryButton}
                 style={{ width: "fit-content" }}
               >
@@ -1106,14 +1224,18 @@ export function DoctorScheduleSection() {
       {/* Confirm Dialog for Withdrawing Request */}
       <ConfirmDialog
         isOpen={confirmWithdrawId !== null}
-        title={lang === "vi" ? "Xác nhận rút yêu cầu đổi lịch" : "Confirm withdraw request"}
+        title={
+          lang === "vi"
+            ? "Xác nhận rút yêu cầu đổi lịch"
+            : "Confirm withdraw request"
+        }
         message={
           lang === "vi"
             ? "Bạn có chắc chắn muốn rút lại yêu cầu đổi ca / xin nghỉ này? Hành động này sẽ hủy yêu cầu đang chờ phê duyệt."
             : "Are you sure you want to withdraw this request? This action will cancel your pending submission."
         }
         confirmLabel={lang === "vi" ? "Rút yêu cầu" : "Withdraw"}
-        cancelLabel={lang === "vi" ? "Hủy bỏ" : "Cancel"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
         variant="danger"
         isLoading={isWithdrawing}
         onConfirm={() => void executeWithdraw()}
@@ -1150,8 +1272,10 @@ export function DoctorScheduleSection() {
               ? "Từ chối"
               : "Decline"
         }
-        cancelLabel={lang === "vi" ? "Đóng" : "Close"}
-        variant={confirmTransferAction?.type === "ACCEPT" ? "primary" : "danger"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
+        variant={
+          confirmTransferAction?.type === "ACCEPT" ? "primary" : "danger"
+        }
         isLoading={isProcessingTransfer}
         onConfirm={() => void handleProcessTransfer()}
         onCancel={() => setConfirmTransferAction(null)}

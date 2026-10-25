@@ -11,6 +11,7 @@ export interface ModalProps {
   footer?: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  closeOnBackdropClick?: boolean;
 }
 
 export function Modal({
@@ -22,6 +23,7 @@ export function Modal({
   footer,
   maxWidth = "md",
   className,
+  closeOnBackdropClick = true,
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -55,7 +57,11 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
       role="dialog"
       aria-modal="true"
-      onClick={onClose}
+      onClick={(e) => {
+        if (closeOnBackdropClick && e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
         className={`w-full ${maxWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all ${className ?? ""}`}

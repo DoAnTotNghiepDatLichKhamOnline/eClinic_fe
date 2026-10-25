@@ -32,14 +32,11 @@ export function SpecialtiesTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-800">
-          {vi ? "Danh sách chuyên khoa" : "Specialties List"}
-        </h3>
+      <div className="mb-4 flex items-center justify-end">
         <button
           type="button"
           onClick={onOpenAddModal}
-          className={styles.actionBtn}
+          className={styles.actionBtnPrimary}
         >
           <Plus size={14} />
           <span>{vi ? "Thêm chuyên khoa" : "Add Specialty"}</span>
@@ -96,12 +93,12 @@ export function SpecialtiesTab({
                         type="button"
                         onClick={() => onSelectEdit(item)}
                       >
-                        <Edit3 size={13} className="inline mr-1" />
+                        <Edit3 size={13} />
                         {vi ? "Sửa" : "Edit"}
                       </button>
                       {onDeleteSpecialty && (
                         <button
-                          className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                          className={styles.actionBtnDanger}
                           type="button"
                           onClick={() => onDeleteSpecialty(item)}
                           title={vi ? "Xóa chuyên khoa" : "Delete specialty"}

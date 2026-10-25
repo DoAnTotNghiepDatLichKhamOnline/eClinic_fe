@@ -116,6 +116,8 @@ export interface DatLichResponse {
 	hoTenNguoiGiamHo: string | null;
 	luuVaoTaiKhoan: boolean;
 	bacSiDoPhongKhamXep: boolean;
+	maSoKham?: string | null;
+	linkSoKham?: string | null;
 }
 
 export interface PhieuKhamResponse {
@@ -140,6 +142,8 @@ export interface PhieuKhamResponse {
 	duocHuyDoi: boolean;
 	hanHuyDoi: string;
 	canDoiLich: boolean;
+	maSoKham?: string | null;
+	linkSoKham?: string | null;
 }
 
 export interface LichHenCuaToiResponse {
@@ -198,11 +202,13 @@ export interface DonThuoc {
 	hamLuong?: string | null;
 	duongDung?: string | null;
 	donVi: string;
+	donViTinh?: string | null;
 	lieuDung: string;
-	soLanMoiNgay: number | null;
-	soNgayDung: number | null;
+	cachDung?: string | null;
+	soLanMoiNgay?: number | null;
+	soNgayDung?: number | null;
 	soLuong?: number | null;
-	ghiChuSuDung: string | null;
+	ghiChuSuDung?: string | null;
 }
 
 export interface DongThuocRequest {

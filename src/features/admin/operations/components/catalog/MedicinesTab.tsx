@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
+  Lock,
+  RotateCcw,
 } from "lucide-react";
 
 interface MedicinesTabProps {
@@ -42,14 +44,11 @@ export function MedicinesTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-800">
-          {vi ? "Danh mục thuốc y tế" : "Medicines Directory"}
-        </h3>
+      <div className="mb-4 flex items-center justify-end">
         <button
           type="button"
           onClick={onOpenAddModal}
-          className={styles.actionBtn}
+          className={styles.actionBtnPrimary}
         >
           <Plus size={14} />
           <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
@@ -145,44 +144,48 @@ export function MedicinesTab({
                           : "Disabled"}
                     </span>
                   </td>
-                  <td className="space-x-2">
-                    <button
-                      className={styles.actionBtn}
-                      type="button"
-                      onClick={() => onSelectEdit(medicine)}
-                    >
-                      <Edit3 size={13} className="inline mr-1" />
-                      {vi ? "Sửa" : "Edit"}
-                    </button>
-
-                    {!medicine.daXacMinh && (
+                  <td>
+                    <div className="flex gap-1.5 items-center flex-wrap">
                       <button
                         className={styles.actionBtn}
                         type="button"
-                        onClick={() => onVerify(medicine.id)}
+                        onClick={() => onSelectEdit(medicine)}
                       >
-                        <ShieldCheck size={13} className="inline mr-1" />
-                        {vi ? "Xác minh" : "Verify"}
+                        <Edit3 size={13} />
+                        {vi ? "Sửa" : "Edit"}
                       </button>
-                    )}
 
-                    {medicine.trangThai === "DANG_DUNG" ? (
-                      <button
-                        className={styles.actionBtnDanger}
-                        type="button"
-                        onClick={() => onDisable(medicine.id)}
-                      >
-                        {vi ? "Ngừng dùng" : "Disable"}
-                      </button>
-                    ) : (
-                      <button
-                        className={styles.actionBtn}
-                        type="button"
-                        onClick={() => onReactivate(medicine.id)}
-                      >
-                        {vi ? "Dùng lại" : "Reactivate"}
-                      </button>
-                    )}
+                      {!medicine.daXacMinh && (
+                        <button
+                          className={styles.actionBtnSuccess}
+                          type="button"
+                          onClick={() => onVerify(medicine.id)}
+                        >
+                          <ShieldCheck size={13} />
+                          {vi ? "Xác minh" : "Verify"}
+                        </button>
+                      )}
+
+                      {medicine.trangThai === "DANG_DUNG" ? (
+                        <button
+                          className={styles.actionBtnDanger}
+                          type="button"
+                          onClick={() => onDisable(medicine.id)}
+                        >
+                          <Lock size={13} />
+                          {vi ? "Ngừng dùng" : "Disable"}
+                        </button>
+                      ) : (
+                        <button
+                          className={styles.actionBtnSuccess}
+                          type="button"
+                          onClick={() => onReactivate(medicine.id)}
+                        >
+                          <RotateCcw size={13} />
+                          {vi ? "Dùng lại" : "Reactivate"}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

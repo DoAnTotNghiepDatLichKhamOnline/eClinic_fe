@@ -1,37 +1,39 @@
 # ĐẶC TẢ GIAO DIỆN & TÍCH HỢP API — VAI TRÒ BÁC SĨ (DOCTOR)
 
-Tài liệu này đặc tả chi tiết toàn bộ các màn hình, luồng nghiệp vụ và danh sách API tích hợp dành cho vai trò **Bác sĩ (Doctor)** trong ứng dụng `eClinic_fe`, cập nhật toàn diện theo các thay đổi backend ngày 05/10/2026, 14/10/2026 và 15/10/2026.
+Tài liệu này đặc tả chi tiết toàn bộ các màn hình, luồng nghiệp vụ và danh sách API tích hợp dành cho vai trò **Bác sĩ (Doctor)** trong ứng dụng `eClinic_fe`, cập nhật toàn diện theo các thay đổi mã nguồn và nghiệp vụ tính đến cuối tháng 10/2026.
 
 ---
 
 ## 1. Tổng quan Kiến trúc Màn hình Bác sĩ
 
-Thanh điều hướng bên (Sidebar) của Bác sĩ gồm 5 phân hệ chính:
+Thanh điều hướng bên (Sidebar - `DoctorSidebar.tsx`) của Bác sĩ gồm 4 phân hệ chính:
 1. **Bảng điều khiển (Dashboard)** (`/doctor/dashboard`)
 2. **Lịch làm việc cá nhân (Work Schedule)** (`/doctor/work-schedule`)
-3. **Lịch hẹn sắp tới (Upcoming Appointments)** (`/doctor/upcoming-appointments` - thay thế hoàn toàn *Appointment Requests* từ ngày 15/10/2026)
-4. **Tiếp nhận & khám bệnh (Consultation / EMR)** (`/doctor/consultation`)
-5. **Hồ sơ cá nhân (Doctor Profile)** (`/doctor/profile`)
+3. **Tiếp nhận & Khám bệnh (Consultation / EMR)** (`/doctor/consultation`)
+4. **Hồ sơ cá nhân (Doctor Profile)** (`/doctor/profile`)
 
-Ngoài ra, thanh trên (Header) tích hợp:
-- Thanh tìm kiếm nhanh lượt khám / bệnh nhân (`DoctorSearchBar`).
-- Trung tâm thông báo chuông thời gian thực (`DoctorNotificationCenter`).
-- Nút chuyển đổi ngôn ngữ EN | VI (`LanguageToggle`).
-- Menu thông tin cá nhân và đăng xuất (`UserProfile`).
+*Lưu ý về định tuyến (Routing)*: Các đường dẫn cũ `/doctor/upcoming-appointments` và `/doctor/appointment-requests` được tự động chuyển hướng (redirect) về `/doctor/work-schedule` để quản lý tập trung trên cùng một không gian làm việc.
+
+Thanh điều hướng trên (Header) tích hợp:
+- **Thanh tìm kiếm nhanh (`DoctorSearchBar`)**: Tra cứu nhanh bệnh nhân hoặc mã lượt khám theo từ khóa, hỗ trợ mở ngay hồ sơ bệnh án.
+- **Trung tâm thông báo (`DoctorNotificationCenter`)**: Chuông thông báo thời gian thực về ca trực mới, thông báo thay đổi lịch trực, kết quả phê duyệt đơn đổi ca/xin nghỉ từ ban quản trị.
+- **Nút chuyển đổi ngôn ngữ (`LanguageToggle`)**: Hỗ trợ chuyển đổi giao diện Tiếng Việt (VI) và Tiếng Anh (EN).
+- **Menu thông tin cá nhân (`UserProfile`)**: Hiển thị avatar, tên bác sĩ, chuyên khoa và nút Đăng xuất.
 
 ---
 
-## 2. Các Thay đổi Nghiệp vụ Quan trọng từ Backend (14/10 & 15/10/2026)
+## 2. Các Cập nhật Nghiệp vụ & Kỹ thuật Trọng tâm
 
-| Chức năng | Quy định cũ | Quy định mới (Hiện tại) | Yêu cầu Frontend Bác sĩ |
+| Chức năng | Quy định trước đây | Quy định mới (Hiện tại) | Yêu cầu Frontend Bác sĩ |
 |---|---|---|---|
-| **Duyệt lịch hẹn** | Bác sĩ duyệt/từ chối lịch ở màn hình "Appointment Requests" | Bỏ duyệt lịch: Mọi lịch đặt hoặc đổi đều **xác nhận ngay** (`DA_XAC_NHAN`). Chuyển thành màn hình **Upcoming Appointments**. Bác sĩ chỉ có quyền hủy lịch trước giờ khám | Đổi sang `/doctor/upcoming-appointments`. Nút Hủy lịch bắt buộc nhập lý do (`POST .../lich-hen/{id}/huy`). |
-| **Kê đơn thuốc** | Tự gõ tên thuốc dạng text tự do | Bác sĩ **chỉ được chọn thuốc từ danh mục chuẩn** của quản trị viên | Ô chọn thuốc có gợi ý tìm kiếm theo tên hoặc hoạt chất. Bắt buộc gửi `idThuoc`, `soLuong`, `soNgayDung`. |
-| **Gợi ý thuốc** | Trả về tên thuốc, đơn vị | Trả về `{ id, tenThuoc, hoatChat, hamLuong, dangBaoChe, duongDung, donVi }` | Hiển thị rõ tên thuốc kèm hàm lượng, dạng bào chế và đường dùng để phân biệt (vd: Paracetamol 500mg viên nén vs 250mg gói). |
-| **Mã chẩn đoán ICD-10** | Chỉ gõ text chẩn đoán | Bổ sung danh mục mã ICD-10 (`GET /api/medical/bac-si/toi/icd10?tuKhoa=`) | Thêm ô chọn mã ICD-10 chính bên cạnh ô chẩn đoán. Hiển thị nhãn *(mạn tính)* nếu bệnh mạn tính. |
-| **Sinh hiệu & Khám lâm sàng** | Chỉ có chẩn đoán & ghi chú | Đầy đủ sinh hiệu: mạch, huyết áp (tâm thu/tâm trương), nhiệt độ, nhịp thở, cân nặng, chiều cao; khám lâm sàng | Bổ sung form nhập sinh hiệu và khám lâm sàng. Tự động tính chỉ số BMI. |
-| **Sửa hồ sơ bệnh án** | Sửa không giới hạn | **Chỉ được sửa trong vòng 7 ngày** kể từ lần lưu đầu. Bắt buộc có `lyDoSua` và `phienBan` | Thêm ô nhập lý do sửa bệnh án. Quản lý optimistic locking qua `phienBan`. Hết 7 ngày chuyển sang chế độ Chỉ xem (Read-only). |
-| **Hồ sơ bác sĩ** | Quản trị viên quản lý 100% | Bác sĩ được **tự cập nhật** một phần hồ sơ giới thiệu của mình | Thêm form tự sửa giới thiệu ngắn, tiểu sử, giải thưởng, công trình nghiên cứu (`PUT /api/catalog/bac-si/toi/ho-so`). |
+| **Chỉ số Giờ làm việc** | Chỉ đếm số ca trực | Thêm thống kê **Số giờ làm việc trong tuần (`weeklyHours`)** và **trong tháng (`monthlyHours`)** | Thuật toán tính toán cross-month bao phủ lịch làm việc giáp ranh giữa các tháng. Tự động tính tổng giờ từ `gioBatDau` đến `gioKetThuc` của các ca trực. |
+| **Bệnh nhân trong tháng** | Không có số liệu | Thêm chỉ số **Số bệnh nhân đã khám trong tháng (`monthlyPatients`)** | Hiển thị thẻ thống kê tổng số lượt khám hoàn thành (`DA_HOAN_THANH`) trong tháng hiện tại. |
+| **Đánh giá & Nhận xét** | Dễ crash nếu trống dữ liệu | Bổ sung cơ chế Fallback an toàn cho điểm đánh giá và số lượt đánh giá | Hiển thị điểm rating mặc định `5.0` (hoặc tính từ danh sách đánh giá) và hiển thị danh sách 5 nhận xét gần nhất. |
+| **Hàng đợi khám hôm nay** | Cần tải lại trang thủ công | **Tự động làm mới (Polling 15s)**; Bổ sung thao tác Gọi khám, Báo vắng mặt, Gọi lại | Tích hợp React Query với `refetchInterval: 15000`. Cung cấp 3 nút tác vụ: "Gọi vào khám" (`goi-kham`), "Báo vắng mặt" (`vang-mat`), "Gọi lại" (`goi-lai` đưa lại về hàng đợi). |
+| **Lịch trực & Đổi ca** | Chỉ nhận `idLichLamViec` | **Tương thích cả `idLichLamViec` và `id`**; Kiểm tra điều kiện tối thiểu 24h | Hỗ trợ fallback tra cứu ca trực. Form đổi ca/xin nghỉ validate thời gian bắt đầu ca phải cách hiện tại ít nhất 24 giờ. Bổ sung nút "Rút yêu cầu" (`rut`) cho đơn `CHO_DUYET`. |
+| **Bệnh án điện tử EMR** | Gõ text chẩn đoán tự do | **Mã ICD-10** (có nhãn mạn tính); **Sinh hiệu tự tính BMI**; **Kê đơn thuốc từ danh mục đã xác minh** | Tích hợp dropdown tìm kiếm mã ICD-10. Form nhập sinh hiệu tự tính chỉ số BMI động. Bác sĩ chỉ được chọn thuốc đã qua kiểm duyệt (`daXacMinh = true`). |
+| **Quy định sửa bệnh án** | Sửa không giới hạn | **Chỉ được sửa trong vòng 7 ngày**. Khóa Read-only sau 7 ngày | Bắt buộc nhập `lyDoSua`, kiểm soát xung đột đồng thời qua `phienBan` (Optimistic Locking). Sau 7 ngày khóa toàn bộ form. |
+| **Hồ sơ bác sĩ** | Thiếu chứng chỉ, nhảy layout | **Khôi phục thẻ bằng cấp (`credentials card`)**; Cố định layout view/edit; Hỗ trợ mã ISO 639 | Giữ cố định cấu trúc input khi chuyển đổi xem/sửa; Hỗ trợ mã ngôn ngữ chuẩn quốc tế ISO 639 (vi, en, fr, zh, de, ja...); Upload ảnh hoạt động multipart/form-data. |
 
 ---
 
@@ -42,159 +44,178 @@ Ngoài ra, thanh trên (Header) tích hợp:
 - **Đường dẫn**: `/doctor/dashboard`
 - **Component**: `DoctorDashboardPage.tsx`
 - **Khối chức năng trên UI**:
-  1. *Thẻ thống kê nhanh*:
-     - Số ca trực trong tuần / tháng.
-     - Số lịch hẹn sắp tới (`lichHenSapToi`).
-     - Số bệnh nhân đang chờ khám trong ca hiện tại (`dangCho` - chỉ tính lịch `DA_XAC_NHAN`).
-     - Điểm đánh giá trung bình và tổng số lượt đánh giá của bệnh nhân.
+  1. *Thẻ thống kê chỉ số làm việc & hiệu suất*:
+     - **Số ca trực**: Hiển thị số ca trực đã được phân công trong tuần và trong tháng.
+     - **Số giờ làm việc**: Tổng số giờ làm việc trong tuần hiện tại (`weeklyHours`) và trong tháng (`monthlyHours`) với thuật toán cross-month chính xác.
+     - **Bệnh nhân trong tháng**: Tổng số bệnh nhân đã được bác sĩ khám xong trong tháng (`monthlyPatients`).
+     - **Lịch hẹn sắp tới**: Tổng số lịch hẹn đã xác nhận đang chờ khám (`lichHenSapToi`).
+     - **Đang chờ tại phòng khám**: Số lượng bệnh nhân trong ca hiện tại đang ở trạng thái `DANG_CHO` (chỉ tính lịch hẹn `DA_XAC_NHAN`).
+     - **Đánh giá trung bình**: Điểm số sao trung bình (1.0 đến 5.0) và tổng số lượt đánh giá, có fallback an toàn.
   2. *Hàng đợi khám hôm nay (Queue Management)*:
+     - Tự động thăm dò dữ liệu mới mỗi 15 giây (`refetchInterval: 15000`).
      - Hiển thị danh sách bệnh nhân theo số thứ tự (STT).
-     - Trạng thái hàng đợi: `DANG_CHO` (Đang chờ), `DANG_KHAM` (Đang khám), `DA_KHAM` (Đã khám xong), `VANG_MAT` (Vắng mặt).
-     - Nút **"Gọi vào khám"**: Chuyển trạng thái lượt khám sang `DANG_KHAM` và mở màn hình Consultation.
-     - Nút **"Báo vắng mặt"**: Đánh dấu bệnh nhân vắng mặt khi gọi nhiều lần không có mặt.
-     - Nút **"Gọi lại"**: Phục hồi bệnh nhân vắng mặt về cuối hàng đợi khi họ quay lại.
+     - 4 trạng thái lượt khám:
+       - `DANG_CHO`: Đang chờ gọi vào phòng khám.
+       - `DANG_KHAM`: Đang trong quá trình khám tại phòng.
+       - `DA_KHAM`: Đã hoàn tất khám và lưu bệnh án.
+       - `VANG_MAT`: Bác sĩ đã gọi nhiều lần nhưng bệnh nhân không có mặt.
+     - Các nút thao tác nghiệp vụ:
+       - Nút **"Gọi vào khám"**: Chuyển trạng thái lượt khám sang `DANG_KHAM` và tự động điều hướng sang tab Consultation với mã bệnh nhân đã nạp sẵn.
+       - Nút **"Báo vắng mặt"**: Mở dialog xác nhận, đánh dấu bệnh nhân vắng mặt (`POST .../hang-doi/{id}/vang-mat`).
+       - Nút **"Gọi lại"**: Phục hồi bệnh nhân từ trạng thái `VANG_MAT` về cuối hàng đợi khi người bệnh quay lại.
+  3. *Danh sách đánh giá gần đây (Recent Reviews)*:
+     - Hiển thị tối đa 5 đánh giá mới nhất: Số sao, nhận xét của người bệnh, họ tên người đánh giá, ngày đánh giá.
 - **API Mapping**:
-  - `GET /api/booking/bac-si/toi/tong-quan`: Thống kê tổng quan dashboard.
-  - `GET /api/booking/bac-si/toi/hang-doi?ngay=YYYY-MM-DD`: Hàng đợi khám bệnh theo ca hôm nay.
+  - `GET /api/booking/bac-si/toi/tong-quan`: Thống kê tổng quan ca trực, lịch hẹn, đánh giá.
+  - `GET /api/booking/bac-si/toi/lich-tuan?tuNgay=...&denNgay=...`: Lấy danh sách ca làm việc phục vụ tính toán giờ làm việc cross-month và đếm ca trực.
+  - `GET /api/booking/bac-si/toi/hang-doi?ngay=YYYY-MM-DD`: Lấy hàng đợi khám theo ngày hôm nay.
   - `POST /api/booking/bac-si/toi/hang-doi/{id}/goi-kham`: Gọi bệnh nhân vào phòng khám.
   - `POST /api/booking/bac-si/toi/hang-doi/{id}/vang-mat`: Đánh dấu vắng mặt.
-  - `GET /api/booking/bac-si/toi/danh-gia`: Danh sách đánh giá nhận xét từ bệnh nhân.
+  - `GET /api/booking/bac-si/toi/danh-gia?trang=0&kichThuoc=5`: Danh sách đánh giá nhận xét từ bệnh nhân.
 
 ---
 
 ### 3.2. Lịch làm việc Cá nhân (Work Schedule)
 
 - **Đường dẫn**: `/doctor/work-schedule`
-- **Component**: `DoctorWorkspace.tsx` (`activeSection = "schedule"`)
+- **Component**: `DoctorWorkspace.tsx` (`activeSection = "schedule"`) -> `DoctorScheduleSection.tsx`
 - **Khối chức năng trên UI**:
-  1. *Lịch trực (Calendar View)*:
-     - Hỗ trợ chế độ xem theo Ngày (Day view) và Tuần (Week view).
-     - Hiển thị ca trực: Giờ bắt đầu - kết thúc, phòng khám, số lượt đã đặt / tổng lượt (`soLuotDaDat / tongSoLuot`).
-     - Danh sách bệnh nhân đã đặt trong từng ca.
+  1. *Lịch trực (Calendar / Week / Day View)*:
+     - Hỗ trợ chuyển đổi chế độ xem theo Tuần (Week view) hoặc theo Ngày (Day view).
+     - Hiển thị ca trực: Khung giờ bắt đầu - kết thúc, phòng khám trực thuộc, tầng, số lượt đã đặt / tổng công suất (`soLuotDaDat / tongSoLuot`).
+     - **Khả năng tương thích mã ca**: Hỗ trợ tra cứu ca trực thông qua cả `shift.idLichLamViec` và `shift.id`.
+     - Danh sách bệnh nhân đã đặt trong từng ca: Mã tra cứu, họ tên bệnh nhân, giờ hẹn dự kiến, số điện thoại, lý do khám.
   2. *Gửi yêu cầu Đổi ca / Xin nghỉ*:
-     - Chọn ca trực cần thay đổi.
-     - Chọn loại yêu cầu: `XIN_NGHI` (Xin nghỉ trực) hoặc `DOI_CA` (Đổi sang ca/ngày khác).
-     - Nhập lý do (bắt buộc). Nếu là đổi ca: nhập thời gian mong muốn và phòng mong muốn.
-     - **Ràng buộc thời gian**: Yêu cầu phải gửi **trước giờ bắt đầu ca ít nhất 24 giờ**. Nếu gửi trễ hơn, hệ thống báo lỗi quá hạn.
+     - Chọn ca trực cần xin nghỉ hoặc đổi ca.
+     - Chọn loại yêu cầu:
+       - `XIN_NGHI`: Bác sĩ xin nghỉ ca trực đột xuất.
+       - `DOI_CA`: Bác sĩ xin chuyển sang ca khác hoặc ngày khác.
+     - **Ràng buộc thời gian**: Kiểm tra nghiêm ngặt ca trực phải bắt đầu sau thời điểm gửi đơn ít nhất **24 giờ**. Nếu vi phạm, hệ thống hiển thị cảnh báo không cho gửi.
+     - Form nhập dữ liệu:
+       - Lý do (bắt buộc, mô tả cụ thể lý do cá nhân hoặc y tế).
+       - Đối với `DOI_CA`: Chọn ngày mong muốn, giờ bắt đầu/kết thúc mong muốn, phòng khám mong muốn.
   3. *Danh sách yêu cầu đã gửi*:
-     - Hiển thị trạng thái: `CHO_DUYET` (Chờ duyệt), `DA_DUYET` (Đã duyệt), `TU_CHOI` (Từ chối).
-     - Nút **"Rút yêu cầu"**: Cho phép bác sĩ hủy yêu cầu khi đang ở trạng thái `CHO_DUYET`.
+     - Danh sách đơn đã gửi kèm huy hiệu trạng thái: `CHO_DUYET` (Chờ duyệt), `DA_DUYET` (Đã duyệt), `TU_CHOI` (Từ chối kèm ghi chú của Quản trị viên).
+     - Nút **"Rút yêu cầu"**: Cho phép bác sĩ chủ động hủy đơn khi đang ở trạng thái `CHO_DUYET`.
 - **API Mapping**:
-  - `GET /api/booking/bac-si/toi/lich-lam-viec?tuNgay=...&denNgay=...`: Lấy danh sách ca làm việc của bác sĩ.
-  - `GET /api/booking/bac-si/toi/lich-hen/lich?tuNgay=...&denNgay=...`: Lấy danh sách lịch hẹn trong khoảng thời gian để vẽ lịch.
-  - `POST /api/booking/bac-si/toi/yeu-cau-doi-lich`: Gửi đơn xin nghỉ hoặc đổi ca.
+  - `GET /api/booking/bac-si/toi/lich-lam-viec?tuNgay=...&denNgay=...`: Danh sách ca làm việc của bác sĩ.
+  - `GET /api/booking/bac-si/toi/lich-hen/lich?tuNgay=...&denNgay=...`: Danh sách lịch hẹn chi tiết trong khoảng thời gian để hiển thị trên lưới lịch.
+  - `POST /api/booking/bac-si/toi/yeu-cau-doi-lich`: Gửi đơn xin nghỉ hoặc đổi ca:
+    ```json
+    {
+      "idLichLamViec": 15,
+      "loaiYeuCau": "DOI_CA",
+      "lyDo": "Tham gia hội thảo tim mạch toàn quốc",
+      "ngayMongMuon": "2026-10-30",
+      "gioBatDauMongMuon": "08:00:00",
+      "gioKetThucMongMuon": "12:00:00"
+    }
+    ```
   - `GET /api/booking/bac-si/toi/yeu-cau-doi-lich`: Xem danh sách đơn yêu cầu đổi ca của bản thân.
   - `POST /api/booking/bac-si/toi/yeu-cau-doi-lich/{id}/rut`: Rút đơn yêu cầu đang chờ duyệt.
 
 ---
 
-### 3.3. Lịch hẹn Sắp tới (Upcoming Appointments)
+### 3.3. Tiếp nhận & Khám bệnh (Consultation / EMR Workflow)
 
-- **Đường dẫn**: `/doctor/upcoming-appointments`
-- **Component**: `DoctorWorkspace.tsx` (`activeSection = "appointments"`)
-- **Khối chức năng trên UI**:
-  - Danh sách tất cả lịch hẹn đã xác nhận (`DA_XAC_NHAN`) thuộc ca làm việc sắp tới của bác sĩ.
-  - Mỗi thẻ lịch hẹn hiển thị: Mã tra cứu, họ tên bệnh nhân, tuổi, giới tính, số điện thoại, khung giờ khám dự kiến, lý do khám.
-  - Nút **"Mở hồ sơ khám"**: Chuyển ngay sang tab Khám bệnh (Consultation / EMR) với thông tin bệnh nhân đã được nạp sẵn.
-  - Nút **"Hủy lịch hẹn"**:
-    - Dùng khi bác sĩ có sự cố đột xuất hoặc lý do y khoa không thể tiếp nhận lượt khám này trước giờ khám.
-    - Modal popup yêu cầu **nhập lý do hủy bắt buộc** (tối thiểu 5 ký tự).
-    - Sau khi hủy thành công: Lịch hẹn chuyển sang trạng thái `BI_TU_CHOI`, hệ thống tự động gửi email thông báo và tạo thông báo chuông cho bệnh nhân kèm lý do của bác sĩ.
-- **API Mapping**:
-  - `GET /api/booking/bac-si/toi/lich-hen/lich?tuNgay=...&denNgay=...`: Lấy danh sách lịch hẹn sắp tới.
-  - `POST /api/booking/bac-si/toi/lich-hen/{id}/huy`: Bác sĩ hủy lịch hẹn.
-    - Body: `{ "lyDo": "Bác sĩ có ca phẫu thuật cấp cứu đột xuất" }`
+Quy trình khám bệnh được chuẩn hóa theo tiêu chuẩn y tế, tách biệt rõ ràng giữa 2 màn hình:
 
----
-
-### 3.4. Tiếp nhận & Khám bệnh điện tử (Consultation / EMR)
-
+#### A. Màn hình Tiếp nhận & Hàng đợi chờ khám (`/doctor/consultation`)
 - **Đường dẫn**: `/doctor/consultation`
-- **Component**: `DoctorWorkspace.tsx` (`activeSection = "consultation"`)
+- **Component**: `DoctorConsultationPage.tsx`
 - **Khối chức năng trên UI**:
-  1. *Tra cứu bệnh nhân*:
-     - Nhập mã tra cứu phiếu khám (ví dụ: `PK-20261017-001`) hoặc quét mã QR qua webcam/camera điện thoại.
-     - Kiểm tra trạng thái đối chiếu giấy tờ: Nếu bệnh nhân đặt lịch dùng CCCD lần đầu, hiển thị nút **"Đã đối chiếu giấy tờ"** (`POST .../da-doi-chieu`).
-  2. *Xem tiền sử & Hồ sơ bệnh nhân*:
-     - Tiền sử bệnh lý, dị ứng thuốc.
-     - Lịch sử các lần khám trước (bấm vào xem chi tiết chẩn đoán và đơn thuốc cũ).
-     - Cho phép bác sĩ cập nhật nhanh thông tin hành chính bệnh nhân nếu có sai sót (`PUT .../benh-nhan`).
-  3. *Ghi kết quả khám bệnh (EMR Form)*:
-     - **Lý do khám**: Kế thừa lý do ban đầu hoặc bác sĩ cập nhật lại.
-     - **Sinh hiệu y tế**:
-       - Mạch (`mach`): 30 - 250 lần/phút.
-       - Huyết áp (`huyetApTamThu` / `huyetApTamTruong`): 50 - 260 / 30 - 180 mmHg. Huyết áp tâm trương phải nhỏ hơn tâm thu.
-       - Nhiệt độ (`nhietDo`): 34.0 - 43.0 °C.
-       - Nhịp thở (`nhipTho`): 8 - 60 lần/phút.
-       - Cân nặng (`canNang`): 0.5 - 300.0 kg. Trẻ dưới 72 tháng tuổi nếu kê đơn thuốc **bắt buộc phải có cân nặng**.
-       - Chiều cao (`chieuCao`): 20 - 250 cm.
-     - **Khám lâm sàng (`khamLamSang`)**: Mô tả triệu chứng thực thể phát hiện khi thăm khám.
-     - **Chẩn đoán**:
-       - Ô chọn **Mã ICD-10 chính** (`maIcdChinh`): Có ô tìm kiếm gợi ý từ `GET /api/medical/bac-si/toi/icd10?tuKhoa=...`. Hiển thị nhãn *(mạn tính)* nếu mã là bệnh mạn tính.
-       - Chẩn đoán xác định dạng văn bản (`chanDoan`).
-       - Chẩn đoán kèm theo (`chanDoanKemTheo`).
-     - **Kê đơn thuốc điện tử**:
-       - Bấm "Thêm thuốc" để thêm dòng thuốc.
-       - Ô tìm kiếm thuốc: Gọi `GET /api/medical/bac-si/toi/thuoc?tuKhoa=...`. Hiển thị danh sách gợi ý gồm: Tên thuốc, hoạt chất, hàm lượng, dạng bào chế, đường dùng. Chọn thuốc để lưu `idThuoc`.
-       - Các trường mỗi dòng thuốc:
-         - `idThuoc` (bắt buộc)
-         - `soLuong` (bắt buộc, số nguyên dương)
-         - `soNgayDung` (bắt buộc, tối đa 30 ngày đối với bệnh cấp tính, 90 ngày đối với mã ICD-10 mạn tính)
-         - `lieuDung` (ví dụ: "Uống 1 viên / lần")
-         - `soLanMoiNgay` (ví dụ: 2)
-         - `ghiChuSuDung` (ví dụ: "Uống sau ăn 30 phút")
-     - **Ngày hẹn tái khám (`ngayTaiKhamDeXuat`)**: Chọn ngày tái khám trong tương lai. Hệ thống sẽ tự động gửi email và thông báo nhắc lịch trước 7 ngày.
-     - **Lời dặn bác sĩ (`ghiChu`)**: Hướng dẫn chế độ nghỉ ngơi, sinh hoạt.
-  4. *Lưu & Hoàn tất khám*:
-     - Bấm "Hoàn tất và lưu bệnh án" (`POST /api/medical/bac-si/toi/lich-hen/{id}/benh-an`). Lịch hẹn chuyển thành `DA_HOAN_THANH`.
-     - Xuất hiện mẫu **Sổ khám bệnh điện tử** kèm mã QR để in hoặc lưu file PDF gửi bệnh nhân.
-  5. *Chỉnh sửa Bệnh án & Xem Lịch sử sửa*:
-     - Khi mở lại một lượt khám đã hoàn thành trong vòng **7 ngày**, hiển thị form sửa.
-     - Form sửa bắt buộc nhập **Lý do sửa (`lyDoSua`)** và truyền kèm **`phienBan`** hiện tại.
-     - Quá 7 ngày: Khóa form và hiển thị nhãn "Bệnh án đã hết hạn chỉnh sửa (chế độ chỉ xem)".
-     - Tab Lịch sử sửa: Gọi `GET /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su`, hiển thị chi tiết thời gian sửa, lý do sửa và đối chiếu giá trị trước/sau.
+  1. *Khối Tiếp nhận & Quét mã QR (`ConsultationLookupCard`)*:
+     - Nhập mã tra cứu bệnh nhân (ECL-…), mã phiếu khám, hoặc quét mã QR từ camera / upload ảnh chụp.
+     - Khi tra cứu/quét QR thành công: Hệ thống tự động **redirect sang route trang khám riêng**: `/doctor/consultation/:appointmentId`.
+  2. *Khối Danh sách bệnh nhân chờ khám trong ngày (`TodayPatientsTable`)*:
+     - Bảng danh sách hàng đợi theo ngày và ca trực.
+     - Cung cấp bộ lọc theo STT, từ khóa họ tên/mã hẹn, ngày khám.
+     - Cột Thao tác: Nút "Khám bệnh" / "Xem bệnh án" cùng tương tác click dòng bệnh nhân, tự động **redirect sang `/doctor/consultation/:appointmentId`**.
+
+#### B. Màn hình Khám bệnh Riêng biệt (`/doctor/consultation/:appointmentId`)
+- **Đường dẫn**: `/doctor/consultation/:appointmentId`
+- **Component**: `DoctorExaminePage.tsx`
+- **Khối chức năng trên UI**:
+  1. *Thanh Điều hướng Breadcrumb & Nút Quay lại*:
+     - Nút `← Quay lại danh sách`: Điều hướng nhanh về trang tiếp nhận `/doctor/consultation`.
+     - Breadcrumb hiển thị vị trí: `Tiếp nhận & khám bệnh / #STT · Tên bệnh nhân`.
+     - Thẻ chip tóm tắt: Mã tra cứu, giờ hẹn, trạng thái đã đối chiếu CCCD, thời gian bản nháp lưu tạm (draft).
+  2. *Thông tin Hành chính & Đối chiếu Giấy tờ (`PatientIdentityCard`)*:
+     - Hiển thị thông tin hồ sơ: Họ tên, ngày sinh, tuổi, giới tính, số điện thoại, CCCD, địa chỉ, BHYT.
+     - Nút xác nhận đã đối chiếu giấy tờ tùy thân (`POST .../da-doi-chieu`).
+     - Cho phép cập nhật thông tin hành chính bệnh nhân khi có sai lệch.
+  3. *Khám Lâm sàng, Sinh hiệu, ICD-10 & Kê đơn thuốc (`ClinicalExamForm`)*:
+     - Chỉ số sinh hiệu (Mạch, Huyết áp, Thân nhiệt, Nhịp thở, Cân nặng, Chiều cao). Tự động validate bắt buộc cân nặng cho trẻ < 72 tháng tuổi có kê thuốc.
+     - Dropdown tìm kiếm mã bệnh quốc tế ICD-10 (`GET /api/medical/bac-si/toi/icd10?tuKhoa=`).
+     - Kê đơn thuốc điện tử từ danh mục chuẩn Bộ Y tế (`daXacMinh = true`). Validate số ngày tối đa (30 ngày thường, 90 ngày mạn tính).
+     - Lời dặn của bác sĩ và ngày hẹn tái khám.
+  4. *Lịch sử các lần khám trước (`PreviousVisitsSection`)*:
+     - Xem lại toàn bộ các lần khám và đơn thuốc trước đây của người bệnh tại phòng khám.
+  5. *Thanh Tác vụ Cố định (Sticky Action Bar)*:
+     - **In đơn thuốc**: Mở hộp thoại in đơn thuốc / sổ khám bệnh EMR.
+     - **Lưu tạm**: Lưu dữ liệu ca khám hiện thời vào local session (`localStorage`), hiển thị thông báo bản nháp thành công.
+     - **Hoàn thành khám**: Validate toàn diện form, gọi API ghi/sửa kết quả khám bệnh (`POST/PUT .../benh-an`), chuyển trạng thái lịch hẹn sang `DA_HOAN_THANH` / `DA_KHAM`, thông báo thành công và **tự động quay về trang danh sách `/doctor/consultation`**.
+  6. *Lịch sử sửa đổi bệnh án (`MedicalRecordHistoryModal`)*:
+     - Bác sĩ được quyền sửa bệnh án trong 7 ngày (yêu cầu nhập `lyDoSua`). Modal hiển thị toàn bộ audit log các phiên bản chỉnh sửa trước đó. Khóa Read-only sau 7 ngày.
 - **API Mapping**:
-  - `GET /api/booking/bac-si/toi/lich-hen/tra-cuu/ho-so-kham?ma=...`: Tra cứu thông tin khám qua mã.
-  - `GET /api/booking/bac-si/toi/lich-hen/{id}/ho-so-kham`: Lấy hồ sơ khám.
-  - `POST /api/booking/bac-si/toi/lich-hen/{id}/da-doi-chieu`: Đánh dấu đã đối chiếu giấy tờ.
-  - `GET /api/medical/bac-si/toi/icd10?tuKhoa=...`: Gợi ý mã ICD-10.
-  - `GET /api/medical/bac-si/toi/thuoc?tuKhoa=...`: Gợi ý thuốc từ danh mục chuẩn.
-  - `POST /api/medical/bac-si/toi/lich-hen/{id}/benh-an`: Lưu kết quả khám lần đầu.
-  - `PUT /api/medical/bac-si/toi/lich-hen/{id}/benh-an`: Chỉnh sửa kết quả khám (cần `lyDoSua` và `phienBan`).
-  - `GET /api/medical/bac-si/toi/lich-hen/{id}/benh-an/lich-su`: Xem lịch sử chỉnh sửa bệnh án.
+  - `GET /api/booking/bac-si/toi/lich-hen/{maPhieuKham}`: Tra cứu thông tin lượt khám.
+  - `GET /api/medical/bac-si/toi/icd10?tuKhoa=...`: Tìm kiếm danh mục mã ICD-10.
+  - `GET /api/medical/bac-si/toi/thuoc?tuKhoa=...`: Tìm kiếm danh mục thuốc hợp chuẩn để kê đơn.
+  - `POST /api/medical/bac-si/toi/lich-hen/{id}/benh-an`: Lưu hồ sơ bệnh án điện tử mới:
+    ```json
+    {
+      "chanDoan": "Viêm họng cấp",
+      "maIcd10": "J02.9",
+      "mach": 82,
+      "huyetApTamThu": 120,
+      "huyetApTamTruong": 80,
+      "nhietDo": 37.5,
+      "nhipTho": 18,
+      "canNang": 65.0,
+      "chieuCao": 170.0,
+      "khamLamSang": "Họng đỏ, niêm mạc xung huyết nhẹ, không giả mạc",
+      "loiDan": "Uống nhiều nước ấm, súc họng nước muối sinh lý",
+      "ngayTaiKham": "2026-11-05",
+      "donThuoc": [
+        {
+          "idThuoc": 101,
+          "soLuong": 10,
+          "soNgayDung": 5,
+          "cachDung": "Uống 1 viên sau ăn sáng, 1 viên sau ăn tối"
+        }
+      ]
+    }
+    ```
+  - `PUT /api/medical/bac-si/toi/lich-hen/{id}/benh-an`: Chỉnh sửa bệnh án (chỉ khả dụng trong vòng 7 ngày):
+    ```json
+    {
+      "phienBan": 1,
+      "lyDoSua": "Bổ sung kết quả đo huyết áp chính xác hơn",
+      "chanDoan": "...",
+      ...
+    }
+    ```
 
 ---
 
-### 3.5. Hồ sơ Cá nhân Bác sĩ (Doctor Profile)
+### 3.4. Hồ sơ Cá nhân Bác sĩ (Doctor Profile)
 
 - **Đường dẫn**: `/doctor/profile`
-- **Component**: `DoctorWorkspace.tsx` (`activeSection = "profile"`)
+- **Component**: `DoctorWorkspace.tsx` (`activeSection = "profile"`) -> `DoctorProfileSection.tsx`
 - **Khối chức năng trên UI**:
-  1. *Thông tin hành chính (Chỉ xem - Quản trị viên quản lý)*:
-     - Họ tên, Email, Số điện thoại.
-     - Chuyên khoa, Học vị / Chức vụ, Số năm hành nghề.
-     - Số giấy phép hành nghề, nơi cấp, phạm vi hoạt động chuyên môn.
-  2. *Thông tin Bác sĩ tự chỉnh sửa (Mới từ 14/10/2026)*:
-     - Giới thiệu ngắn (`gioiThieuNgan` / `gioiThieuNganEn`).
-     - Tiểu sử chuyên môn (`tieuSu` / `tieuSuEn`).
-     - Giải thưởng & chứng nhận (`giaiThuong` / `giaiThuongEn`).
-     - Đề tài nghiên cứu khoa học (`congTrinhNghienCuu` / `congTrinhNghienCuuEn`).
-  3. *Quản lý ảnh đại diện*:
-     - Tải lên ảnh chân dung chuyên nghiệp (`POST /api/catalog/bac-si/toi/anh`).
+  1. *Thẻ bằng cấp & Giấy phép hành nghề (`Credentials Card`)*:
+     - Hiển thị số giấy phép hành nghề y khoa, ngày cấp, nơi cấp, phạm vi hoạt động chuyên môn.
+  2. *Thông tin Giới thiệu Chuyên môn*:
+     - Xem và chỉnh sửa tiểu sử, quá trình đào tạo học vị, quá trình công tác tại các bệnh viện.
+     - Lĩnh vực khám chữa bệnh chuyên sâu.
+     - Giải thưởng y khoa, các công trình nghiên cứu và bài báo khoa học.
+  3. *Ngôn ngữ Giao tiếp (ISO 639)*:
+     - Hỗ trợ lựa chọn và hiển thị các ngôn ngữ bác sĩ có thể giao tiếp theo mã chuẩn quốc tế ISO 639 (vi: Tiếng Việt, en: Tiếng Anh, fr: Tiếng Pháp, zh: Tiếng Trung...).
+  4. *Cố định Bố cục Giao diện (Stable Layout)*:
+     - Đảm bảo giữ nguyên kích thước và cấu trúc các khung hiển thị khi chuyển đổi qua lại giữa chế độ Xem (View mode) và chế độ Chỉnh sửa (Edit mode).
+  5. *Tải lên Ảnh Hoạt động Khám chữa bệnh*:
+     - Hỗ trợ tải lên các hình ảnh tư liệu về hoạt động chuyên môn, hội thảo thông qua giao thức `multipart/form-data`.
 - **API Mapping**:
-  - `GET /api/catalog/bac-si/toi/ho-so`: Đọc hồ sơ đầy đủ của bác sĩ đang đăng nhập.
-  - `PUT /api/catalog/bac-si/toi/ho-so`: Bác sĩ cập nhật thông tin giới thiệu.
-    - Body:
-      ```json
-      {
-        "gioiThieuNgan": "Bác sĩ chuyên khoa Tim mạch hơn 15 năm kinh nghiệm...",
-        "gioiThieuNganEn": "Cardiologist with over 15 years of clinical practice...",
-        "tieuSu": "Tốt nghiệp Đại học Y Hà Nội...",
-        "tieuSuEn": "Graduated from Hanoi Medical University...",
-        "giaiThuong": "Thầy thuốc ưu tú năm 2024",
-        "giaiThuongEn": "Meritorious Doctor Award 2024",
-        "congTrinhNghienCuu": "Nghiên cứu điều trị tăng huyết áp ở người cao tuổi",
-        "congTrinhNghienCuuEn": "Research on hypertension in the elderly"
-      }
-      ```
-  - `POST /api/catalog/bac-si/toi/anh`: Tải lên ảnh hồ sơ bác sĩ (multipart/form-data).
+  - `GET /api/catalog/bac-si/toi/ho-so`: Lấy toàn bộ hồ sơ chuyên môn của bác sĩ.
+  - `PUT /api/catalog/bac-si/toi/ho-so`: Cập nhật thông tin hồ sơ bác sĩ (tiểu sử, đào tạo, công tác, giải thưởng, nghiên cứu, ngôn ngữ).
+  - `POST /api/catalog/bac-si/toi/anh`: Tải lên ảnh hoạt động y khoa (`multipart/form-data`).

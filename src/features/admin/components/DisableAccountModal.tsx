@@ -38,9 +38,6 @@ export function DisableAccountModal({
   return (
     <div
       className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget && !isLoading) onClose();
-      }}
     >
       <div
         role="dialog"

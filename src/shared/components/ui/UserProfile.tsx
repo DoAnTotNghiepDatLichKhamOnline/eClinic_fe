@@ -346,7 +346,7 @@ export function UserProfile({ className }: UserProfileProps) {
             : "Are you sure you want to sign out of eClinic?"
         }
         confirmLabel={lang === "vi" ? "Đăng xuất" : "Sign out"}
-        cancelLabel={lang === "vi" ? "Ở lại" : "Stay signed in"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
         onConfirm={confirmLogout}
         onCancel={() => setLogoutConfirmOpen(false)}
       />

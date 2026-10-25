@@ -5,7 +5,10 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
 import type { TaoCaRequest } from "@/types/booking.type";
-import type { BacSiQuanTriResponse, PhongKhamQuanTriResponse } from "@/types/catalog.type";
+import type {
+  BacSiQuanTriResponse,
+  PhongKhamQuanTriResponse,
+} from "@/types/catalog.type";
 
 interface CreateShiftModalProps {
   isOpen: boolean;
@@ -32,7 +35,9 @@ export function CreateShiftModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const activeDoctors = doctors.filter((doc) => doc.trangThai === "DANG_CONG_TAC");
+  const activeDoctors = doctors.filter(
+    (doc) => doc.trangThai === "DANG_CONG_TAC",
+  );
   const activeClinics = clinics.filter((c) => c.trangThai === "HOAT_DONG");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -52,17 +57,29 @@ export function CreateShiftModal({
     const denNgay = String(values.get("denNgay") || "");
 
     if (!idBacSi || !idPhongKham || !ngay || !gioBatDau || !gioKetThuc) {
-      setFormError(vi ? "Vui lòng điền đầy đủ các thông tin bắt buộc." : "Please fill in all required fields.");
+      setFormError(
+        vi
+          ? "Vui lòng điền đầy đủ các thông tin bắt buộc."
+          : "Please fill in all required fields.",
+      );
       return;
     }
 
     if (gioKetThuc <= gioBatDau) {
-      setFormError(vi ? "Giờ kết thúc phải sau giờ bắt đầu." : "End time must be after start time.");
+      setFormError(
+        vi
+          ? "Giờ kết thúc phải sau giờ bắt đầu."
+          : "End time must be after start time.",
+      );
       return;
     }
 
     if (weekDays.length > 0 && !denNgay) {
-      setFormError(vi ? "Vui lòng chọn ngày kết thúc chu kỳ lặp lại." : "Please select an end date for the recurrence.");
+      setFormError(
+        vi
+          ? "Vui lòng chọn ngày kết thúc chu kỳ lặp lại."
+          : "Please select an end date for the recurrence.",
+      );
       return;
     }
 
@@ -88,13 +105,19 @@ export function CreateShiftModal({
       setIsSubmitting(true);
       const result = await bookingService.taoCaLamViec(request);
       if (!result.thanhCong) {
-        throw new Error(result.thongDiep || (vi ? "Không thể xếp ca làm việc." : "Failed to create shift."));
+        throw new Error(
+          result.thongDiep ||
+            (vi ? "Không thể xếp ca làm việc." : "Failed to create shift."),
+        );
       }
 
       notifyAuth(
         "success",
         vi ? "Xếp ca thành công" : "Shift created successfully",
-        result.thongDiep || (vi ? "Ca làm việc mới đã được tạo vào hệ thống." : "New shift has been scheduled successfully."),
+        result.thongDiep ||
+          (vi
+            ? "Ca làm việc mới đã được tạo vào hệ thống."
+            : "New shift has been scheduled successfully."),
       );
 
       form.reset();
@@ -103,7 +126,11 @@ export function CreateShiftModal({
     } catch (cause: any) {
       const msg =
         cause?.response?.data?.thongDiep ||
-        (cause instanceof Error ? cause.message : vi ? "Thao tác thất bại." : "The operation failed.");
+        (cause instanceof Error
+          ? cause.message
+          : vi
+            ? "Thao tác thất bại."
+            : "The operation failed.");
       setFormError(msg);
     } finally {
       setIsSubmitting(false);
@@ -115,8 +142,8 @@ export function CreateShiftModal({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div className="flex items-center gap-2 text-slate-800 font-bold">
-          <CalendarPlus size={20} className="text-emerald-700" />
+        <div className="flex items-center gap-2 text-slate-800 font-bold ">
+          <CalendarPlus size={20} className="text-teal-700" />
           <span>{vi ? "Xếp ca làm việc mới" : "Schedule New Shift"}</span>
         </div>
       }
@@ -140,7 +167,8 @@ export function CreateShiftModal({
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             <span>
-              {vi ? "Bác sĩ phụ trách" : "Doctor"} <span className="text-rose-500">*</span>
+              {vi ? "Bác sĩ phụ trách" : "Doctor"}{" "}
+              <span className="text-rose-500">*</span>
             </span>
             <select
               name="idBacSi"
@@ -161,7 +189,8 @@ export function CreateShiftModal({
 
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             <span>
-              {vi ? "Phòng khám" : "Clinic Room"} <span className="text-rose-500">*</span>
+              {vi ? "Phòng khám" : "Clinic Room"}{" "}
+              <span className="text-rose-500">*</span>
             </span>
             <select
               name="idPhongKham"
@@ -184,7 +213,8 @@ export function CreateShiftModal({
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             <span>
-              {vi ? "Ngày làm việc" : "Date"} <span className="text-rose-500">*</span>
+              {vi ? "Ngày làm việc" : "Date"}{" "}
+              <span className="text-rose-500">*</span>
             </span>
             <input
               name="ngay"
@@ -199,7 +229,8 @@ export function CreateShiftModal({
 
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             <span>
-              {vi ? "Giờ bắt đầu" : "Start Time"} <span className="text-rose-500">*</span>
+              {vi ? "Giờ bắt đầu" : "Start Time"}{" "}
+              <span className="text-rose-500">*</span>
             </span>
             <input
               name="gioBatDau"
@@ -212,7 +243,8 @@ export function CreateShiftModal({
 
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             <span>
-              {vi ? "Giờ kết thúc" : "End Time"} <span className="text-rose-500">*</span>
+              {vi ? "Giờ kết thúc" : "End Time"}{" "}
+              <span className="text-rose-500">*</span>
             </span>
             <input
               name="gioKetThuc"
@@ -239,7 +271,9 @@ export function CreateShiftModal({
           </label>
 
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
-            <span>{vi ? "Thời lượng mỗi lượt (phút)" : "Slot duration (mins)"}</span>
+            <span>
+              {vi ? "Thời lượng mỗi lượt (phút)" : "Slot duration (mins)"}
+            </span>
             <input
               name="thoiLuongLuotPhut"
               type="number"
@@ -254,7 +288,9 @@ export function CreateShiftModal({
 
         <fieldset className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
           <legend className="px-2 text-xs font-bold text-slate-700">
-            {vi ? "Tùy chọn lặp lại ca theo tuần (không bắt buộc)" : "Weekly recurrence (optional)"}
+            {vi
+              ? "Tùy chọn lặp lại ca theo tuần (không bắt buộc)"
+              : "Weekly recurrence (optional)"}
           </legend>
           <div className="flex flex-wrap gap-3 py-1 text-xs">
             {[
@@ -266,8 +302,16 @@ export function CreateShiftModal({
               { day: 7, vi: "Thứ 7", en: "Sat" },
               { day: 1, vi: "Chủ nhật", en: "Sun" },
             ].map(({ day, vi: viText, en: enText }) => (
-              <label key={day} className="inline-flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" name="repeatDay" value={day} className="rounded text-emerald-600" />
+              <label
+                key={day}
+                className="inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  name="repeatDay"
+                  value={day}
+                  className="rounded text-emerald-600"
+                />
                 <span>{vi ? viText : enText}</span>
               </label>
             ))}
