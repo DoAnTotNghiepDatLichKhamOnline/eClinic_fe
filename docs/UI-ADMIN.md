@@ -272,3 +272,26 @@ Header tích hợp:
     - Kích hoạt lại: `{ "trangThai": "DA_KICH_HOAT" }`
     - Vô hiệu hóa: `{ "trangThai": "VO_HIEU_HOA", "lyDoVoHieuHoa": "Lý do vi phạm chính sách..." }`
   - `DELETE /api/identity/quan-tri/tai-khoan/{id}`: Xóa tài khoản chưa xác minh email.
+
+---
+
+### 3.7. Chuẩn hóa Nút Thao tác (Action Buttons) & Hộp thoại Xác nhận (Confirm Modals)
+
+1. **Hệ thống Nút Thao tác Chuẩn (Action Buttons Design System)**:
+   - Áp dụng kích thước đồng bộ (`5px 11px`, font 12px font-weight 600, `rounded-8px`, `white-space: nowrap`) trên toàn bộ các bảng dữ liệu Admin:
+     * **Nút Chi tiết (`.actionBtnOutline`)**: Nền trắng, viền `#cbd5e1`, chữ `#334155` kèm icon `Eye`.
+     * **Nút Sửa / Hồ sơ (`.actionBtn`)**: Nền `#eef2ff`, viền `#c7d2fe`, chữ `#4338ca` kèm icon `Edit3` hoặc `FileText`.
+     * **Nút Xóa / Khóa / Ngừng / Từ chối (`.actionBtnDanger`)**: Nền `#fef2f2`, viền `#fecaca`, chữ `#b91c1c` kèm icon `Trash2`, `Lock` hoặc `X`.
+     * **Nút Kích hoạt / Duyệt / Xác minh / Phục hồi (`.actionBtnSuccess`)**: Nền `#ecfdf5`, viền `#a7f3d0`, chữ `#047857` kèm icon `Check`, `ShieldCheck` hoặc `RotateCcw`.
+     * **Nút Bệnh nhân ca trực (`.actionBtnTeal`)**: Nền `#f0fdfa`, viền `#99f6e4`, chữ `#0f766e` kèm icon `Users`.
+     * **Nút Thêm mới đầu trang (`.actionBtnPrimary`)**: Nền `#0d9488`, viền `#0d9488`, chữ trắng `#ffffff` kèm icon `Plus`, `CalendarPlus` hoặc `UserPlus`.
+   - Đảm bảo độ tương phản màu chuẩn WCAG AA/AAA, không bao giờ xảy ra hiện tượng chữ trắng trên nền sáng.
+
+2. **Quy tắc Bố cục Tab Không Tiêu đề Dư thừa**:
+   - Khi các phân hệ đã có cấu trúc Tab rõ ràng (ví dụ: Tab Chuyên khoa, Tab Phòng khám, Tab Thuốc), các tiêu đề bảng dạng `<h3>` bên trong bảng được lược bỏ hoàn toàn để không gây trùng lặp thông tin và tối ưu hóa không gian hiển thị.
+   - Nút hành động chính (Thêm mới) được căn lề phải ngay phía trên bảng.
+
+3. **Chuẩn hóa Hộp thoại Xác nhận (Confirm Modals)**:
+   - Nút hủy thao tác luôn hiển thị rõ ràng là **"Hủy"** (`cancelLabel="Hủy"` / `Cancel`).
+   - **Vô hiệu hóa Click Backdrop**: Mọi hộp thoại xác nhận quan trọng (`ConfirmDialog`, modal vô hiệu hóa tài khoản, modal hủy ca làm việc, modal từ chối yêu cầu đổi ca) được thiết lập `closeOnBackdropClick = false`. Người dùng không thể vô tình đóng modal bằng cách click vào vùng tối bên ngoài; modal chỉ đóng khi người dùng chủ động bấm nút "Hủy", nút "X", hoặc hoàn thành tác vụ.
+   - Tiêu đề modal (`title`) luôn mô tả chính xác và cụ thể hành động cần xác nhận (ví dụ: "Xác nhận xóa tài khoản", "Xác nhận hủy ca làm việc", "Xác nhận đăng xuất", "Xác nhận xóa ảnh hoạt động",...).
