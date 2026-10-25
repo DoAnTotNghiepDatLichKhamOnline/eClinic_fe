@@ -254,9 +254,7 @@ export function AdminShiftRequestsTab({
                   const docInfo = r.ca?.bacSi;
                   const docName =
                     docInfo?.hoTen ?? r.ca?.hoTenBacSi ?? "Bác sĩ eClinic";
-                  const specialty =
-                    r.ca?.tenChuyenKhoa ??
-                    "Chuyên khoa";
+                  const specialty = r.ca?.tenChuyenKhoa ?? "Chuyên khoa";
 
                   return (
                     <tr
