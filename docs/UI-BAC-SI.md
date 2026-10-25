@@ -116,42 +116,47 @@ Thanh điều hướng trên (Header) tích hợp:
 
 ---
 
-### 3.3. Tiếp nhận & Khám bệnh (Consultation / EMR)
+### 3.3. Tiếp nhận & Khám bệnh (Consultation / EMR Workflow)
 
+Quy trình khám bệnh được chuẩn hóa theo tiêu chuẩn y tế, tách biệt rõ ràng giữa 2 màn hình:
+
+#### A. Màn hình Tiếp nhận & Hàng đợi chờ khám (`/doctor/consultation`)
 - **Đường dẫn**: `/doctor/consultation`
-- **Component**: `DoctorWorkspace.tsx` (`activeSection = "consultation"`) -> `DoctorConsultationSection.tsx`
+- **Component**: `DoctorConsultationPage.tsx`
 - **Khối chức năng trên UI**:
-  1. *Tra cứu Lượt khám & Bệnh nhân*:
-     - Ô nhập mã phiếu khám / mã tra cứu bệnh nhân hoặc nạp tự động từ nút "Gọi vào khám" tại Dashboard.
-     - Hiển thị thông tin hành chính: Họ tên, ngày sinh, tuổi, giới tính, số điện thoại, CCCD, địa chỉ, lý do đến khám ban đầu.
-     - Lịch sử các lần khám trước đây của bệnh nhân (nếu có).
-  2. *Chẩn đoán & Mã bệnh ICD-10*:
+  1. *Khối Tiếp nhận & Quét mã QR (`ConsultationLookupCard`)*:
+     - Nhập mã tra cứu bệnh nhân (ECL-…), mã phiếu khám, hoặc quét mã QR từ camera / upload ảnh chụp.
+     - Khi tra cứu/quét QR thành công: Hệ thống tự động **redirect sang route trang khám riêng**: `/doctor/consultation/:appointmentId`.
+  2. *Khối Danh sách bệnh nhân chờ khám trong ngày (`TodayPatientsTable`)*:
+     - Bảng danh sách hàng đợi theo ngày và ca trực.
+     - Cung cấp bộ lọc theo STT, từ khóa họ tên/mã hẹn, ngày khám.
+     - Cột Thao tác: Nút "Khám bệnh" / "Xem bệnh án" cùng tương tác click dòng bệnh nhân, tự động **redirect sang `/doctor/consultation/:appointmentId`**.
+
+#### B. Màn hình Khám bệnh Riêng biệt (`/doctor/consultation/:appointmentId`)
+- **Đường dẫn**: `/doctor/consultation/:appointmentId`
+- **Component**: `DoctorExaminePage.tsx`
+- **Khối chức năng trên UI**:
+  1. *Thanh Điều hướng Breadcrumb & Nút Quay lại*:
+     - Nút `← Quay lại danh sách`: Điều hướng nhanh về trang tiếp nhận `/doctor/consultation`.
+     - Breadcrumb hiển thị vị trí: `Tiếp nhận & khám bệnh / #STT · Tên bệnh nhân`.
+     - Thẻ chip tóm tắt: Mã tra cứu, giờ hẹn, trạng thái đã đối chiếu CCCD, thời gian bản nháp lưu tạm (draft).
+  2. *Thông tin Hành chính & Đối chiếu Giấy tờ (`PatientIdentityCard`)*:
+     - Hiển thị thông tin hồ sơ: Họ tên, ngày sinh, tuổi, giới tính, số điện thoại, CCCD, địa chỉ, BHYT.
+     - Nút xác nhận đã đối chiếu giấy tờ tùy thân (`POST .../da-doi-chieu`).
+     - Cho phép cập nhật thông tin hành chính bệnh nhân khi có sai lệch.
+  3. *Khám Lâm sàng, Sinh hiệu, ICD-10 & Kê đơn thuốc (`ClinicalExamForm`)*:
+     - Chỉ số sinh hiệu (Mạch, Huyết áp, Thân nhiệt, Nhịp thở, Cân nặng, Chiều cao). Tự động validate bắt buộc cân nặng cho trẻ < 72 tháng tuổi có kê thuốc.
      - Dropdown tìm kiếm mã bệnh quốc tế ICD-10 (`GET /api/medical/bac-si/toi/icd10?tuKhoa=`).
-     - Hiển thị mã bệnh, tên bệnh, và gắn cờ nhãn **(mạn tính)** đối với các bệnh lý mãn tính.
-     - Ô nhập mô tả chẩn đoán xác định và chẩn đoán phân biệt/kèm theo.
-  3. *Sinh hiệu (Vital Signs) & Tự tính BMI*:
-     - Nhập các chỉ số sinh hiệu:
-       - Mạch (`mach`, lần/phút)
-       - Huyết áp tâm thu (`huyetApTamThu`, mmHg) & Huyết áp tâm trương (`huyetApTamTruong`, mmHg)
-       - Thân nhiệt (`nhietDo`, °C)
-       - Nhịp thở (`nhipTho`, lần/phút)
-       - Cân nặng (`canNang`, kg)
-       - Chiều cao (`chieuCao`, cm)
-     - **Tự động tính BMI**: Hệ thống tự động tính $BMI = \frac{\text{Cân nặng (kg)}}{(\text{Chiều cao (m)})^2}$ và hiển thị trạng thái phân loại thể trạng (Gầy, Bình thường, Thừa cân, Béo phì).
-  4. *Khám Lâm sàng*:
-     - Ô nhập kết quả khám thực thể (toàn thân, các cơ quan tim mạch, hô hấp, tiêu hóa, thần kinh...).
-  5. *Kê đơn Thuốc Điện tử (Prescription)*:
-     - Ô tìm kiếm thuốc tự động từ **danh mục thuốc chuẩn đã được quản trị viên xác minh** (`daXacMinh = true`).
-     - Hiển thị chi tiết: Tên thuốc, hoạt chất, hàm lượng, dạng bào chế, đường dùng, đơn vị tính.
-     - Nhập số lượng kê đơn, số ngày dùng, hướng dẫn cách dùng chi tiết (ví dụ: *"Uống 1 viên sau ăn sáng và 1 viên sau ăn tối"*).
-  6. *Lời dặn Bác sĩ & Hẹn Tái khám*:
-     - Ghi chú chế độ sinh hoạt, dinh dưỡng, kiêng cữ.
-     - Chọn ngày hẹn tái khám (nếu cần theo dõi thêm).
-  7. *Lưu Bệnh án & Quy định Chỉnh sửa (Optimistic Locking & 7-Day Window)*:
-     - Nút **"Lưu hồ sơ bệnh án"**: Tạo bệnh án điện tử lần đầu, chuyển trạng thái lịch hẹn sang `DA_HOAN_THANH`.
-     - **Chỉnh sửa bệnh án trong 7 ngày**: Bác sĩ chỉ được phép chỉnh sửa bệnh án trong vòng 7 ngày kể từ ngày khám ban đầu.
-     - Khi chỉnh sửa, bắt buộc nhập **Lý do sửa (`lyDoSua`)** và truyền đúng số phiên bản (`phienBan`) để chống xung đột ghi đè.
-     - Hết thời hạn 7 ngày, màn hình tự động chuyển sang chế độ **Chỉ xem (Read-only)**, vô hiệu hóa toàn bộ nút lưu và các ô nhập liệu.
+     - Kê đơn thuốc điện tử từ danh mục chuẩn Bộ Y tế (`daXacMinh = true`). Validate số ngày tối đa (30 ngày thường, 90 ngày mạn tính).
+     - Lời dặn của bác sĩ và ngày hẹn tái khám.
+  4. *Lịch sử các lần khám trước (`PreviousVisitsSection`)*:
+     - Xem lại toàn bộ các lần khám và đơn thuốc trước đây của người bệnh tại phòng khám.
+  5. *Thanh Tác vụ Cố định (Sticky Action Bar)*:
+     - **In đơn thuốc**: Mở hộp thoại in đơn thuốc / sổ khám bệnh EMR.
+     - **Lưu tạm**: Lưu dữ liệu ca khám hiện thời vào local session (`localStorage`), hiển thị thông báo bản nháp thành công.
+     - **Hoàn thành khám**: Validate toàn diện form, gọi API ghi/sửa kết quả khám bệnh (`POST/PUT .../benh-an`), chuyển trạng thái lịch hẹn sang `DA_HOAN_THANH` / `DA_KHAM`, thông báo thành công và **tự động quay về trang danh sách `/doctor/consultation`**.
+  6. *Lịch sử sửa đổi bệnh án (`MedicalRecordHistoryModal`)*:
+     - Bác sĩ được quyền sửa bệnh án trong 7 ngày (yêu cầu nhập `lyDoSua`). Modal hiển thị toàn bộ audit log các phiên bản chỉnh sửa trước đó. Khóa Read-only sau 7 ngày.
 - **API Mapping**:
   - `GET /api/booking/bac-si/toi/lich-hen/{maPhieuKham}`: Tra cứu thông tin lượt khám.
   - `GET /api/medical/bac-si/toi/icd10?tuKhoa=...`: Tìm kiếm danh mục mã ICD-10.
