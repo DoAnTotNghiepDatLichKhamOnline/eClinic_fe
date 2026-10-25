@@ -1235,7 +1235,7 @@ export function DoctorScheduleSection() {
             : "Are you sure you want to withdraw this request? This action will cancel your pending submission."
         }
         confirmLabel={lang === "vi" ? "Rút yêu cầu" : "Withdraw"}
-        cancelLabel={lang === "vi" ? "Hủy bỏ" : "Cancel"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
         variant="danger"
         isLoading={isWithdrawing}
         onConfirm={() => void executeWithdraw()}
@@ -1272,7 +1272,7 @@ export function DoctorScheduleSection() {
               ? "Từ chối"
               : "Decline"
         }
-        cancelLabel={lang === "vi" ? "Đóng" : "Close"}
+        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
         variant={
           confirmTransferAction?.type === "ACCEPT" ? "primary" : "danger"
         }
