@@ -7,6 +7,9 @@ import {
   AlertTriangle,
   CalendarDays,
   CalendarClock,
+  Users,
+  Edit3,
+  Trash2,
 } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
@@ -554,34 +557,39 @@ export function AdminScheduleSection() {
                     )}
                   </td>
                   <td>
-                    <button
-                      className={`${styles.actionBtn} mr-1 text-teal-700 bg-teal-50 hover:bg-teal-100 border-teal-200`}
-                      type="button"
-                      onClick={() => setSelectedShiftForPatients(shift)}
-                    >
-                      {vi ? "Bệnh nhân" : "Patients"}
-                    </button>
-                    {shift.trangThai === "HOAT_DONG" && (
-                      <>
-                        <button
-                          className={styles.actionBtn}
-                          type="button"
-                          onClick={() => setEditingShift(shift)}
-                        >
-                          {vi ? "Sửa" : "Edit"}
-                        </button>{" "}
-                        <button
-                          className={styles.actionBtnDanger}
-                          type="button"
-                          onClick={() => {
-                            setCancellingShift(shift);
-                            setCancelReason("");
-                          }}
-                        >
-                          {vi ? "Hủy ca" : "Cancel shift"}
-                        </button>
-                      </>
-                    )}
+                    <div className="flex gap-1.5 items-center flex-wrap">
+                      <button
+                        className={styles.actionBtnTeal}
+                        type="button"
+                        onClick={() => setSelectedShiftForPatients(shift)}
+                      >
+                        <Users size={13} />
+                        {vi ? "Bệnh nhân" : "Patients"}
+                      </button>
+                      {shift.trangThai === "HOAT_DONG" && (
+                        <>
+                          <button
+                            className={styles.actionBtn}
+                            type="button"
+                            onClick={() => setEditingShift(shift)}
+                          >
+                            <Edit3 size={13} />
+                            {vi ? "Sửa" : "Edit"}
+                          </button>
+                          <button
+                            className={styles.actionBtnDanger}
+                            type="button"
+                            onClick={() => {
+                              setCancellingShift(shift);
+                              setCancelReason("");
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            {vi ? "Hủy ca" : "Cancel"}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -901,10 +909,6 @@ export function AdminScheduleSection() {
       {cancellingShift && (
         <div
           className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isCancelling)
-              setCancellingShift(null);
-          }}
         >
           <div
             role="dialog"
