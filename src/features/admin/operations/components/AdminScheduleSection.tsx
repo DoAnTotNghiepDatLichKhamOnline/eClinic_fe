@@ -1,11 +1,22 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, RotateCcw, AlertTriangle } from "lucide-react";
+import {
+  CalendarPlus,
+  RotateCcw,
+  AlertTriangle,
+  CalendarDays,
+  CalendarClock,
+} from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import type { CaLamViecResponse } from "@/types/booking.type";
+import type {
+  CaLamViecResponse,
+  TrangThaiYeuCau,
+} from "@/types/booking.type";
 import { CreateShiftModal } from "./CreateShiftModal";
+import { AdminShiftRequestsTab } from "./AdminShiftRequestsTab";
 import { notifyAuth } from "@/utils/authNotification";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../AdminDashboardPage.module.css";
@@ -45,12 +56,49 @@ export function AdminScheduleSection() {
     useState<CaLamViecResponse | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
-  const [rejectingRequestId, setRejectingRequestId] = useState<number | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
-  const [isRejecting, setIsRejecting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const urlIdYeuCau = searchParams.get("idYeuCau")
+    ? Number(searchParams.get("idYeuCau"))
+    : null;
 
-  const [shiftPage, setShiftPage] = useState(0);
-  const shiftPageSize = 10;
+  const [activeTab, setActiveTab] = useState<"shifts" | "requests">(
+    urlTab === "requests" ? "requests" : "shifts",
+  );
+
+  // Tab 2 filter states
+  const [requestStatusFilter, setRequestStatusFilter] = useState<
+    TrangThaiYeuCau | "ALL"
+  >(urlIdYeuCau ? "ALL" : "CHO_DUYET");
+  const [requestDoctorFilter, setRequestDoctorFilter] = useState<
+    number | undefined
+  >(undefined);
+  const [requestTypeFilter, setRequestTypeFilter] = useState<
+    "ALL" | "XIN_NGHI" | "DOI_CA"
+  >("ALL");
+
+  useEffect(() => {
+    if (urlTab === "requests") {
+      setActiveTab("requests");
+      if (urlIdYeuCau) {
+        setRequestStatusFilter("ALL");
+      }
+    } else if (urlTab === "shifts") {
+      setActiveTab("shifts");
+    }
+  }, [urlTab, urlIdYeuCau]);
+
+  const handleTabChange = (tab: "shifts" | "requests") => {
+    setActiveTab(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", tab);
+      if (tab === "shifts") {
+        next.delete("idYeuCau");
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     setShiftPage(0);
@@ -103,14 +151,30 @@ export function AdminScheduleSection() {
   });
 
   const requestsQuery = useQuery({
-    queryKey: ["booking", "admin-shift-requests"],
+    queryKey: ["booking", "admin-shift-requests", requestStatusFilter],
+    queryFn: () =>
+      bookingService.getYeuCauDoiLichQuanTri({
+        trangThai:
+          requestStatusFilter === "ALL" ? undefined : requestStatusFilter,
+        tatCa: requestStatusFilter === "ALL" ? true : undefined,
+        trang: 0,
+        kichThuoc: 100,
+      }),
+  });
+
+  const pendingRequestsQuery = useQuery({
+    queryKey: ["booking", "admin-shift-requests", "pending-count"],
     queryFn: () =>
       bookingService.getYeuCauDoiLichQuanTri({
         trangThai: "CHO_DUYET",
         trang: 0,
         kichThuoc: 100,
       }),
+    refetchInterval: 30000,
   });
+
+  const pendingCount =
+    pendingRequestsQuery.data?.duLieu?.noiDung?.length ?? 0;
 
   const waitingAppointmentsQuery = useQuery({
     queryKey: ["booking", "admin-reschedule-needed"],
@@ -202,12 +266,7 @@ export function AdminScheduleSection() {
     }
   };
 
-  const decideRequest = async (id: number, approve: boolean) => {
-    if (!approve) {
-      setRejectingRequestId(id);
-      setRejectNote("");
-      return;
-    }
+  const handleApproveRequest = async (id: number) => {
     try {
       const result = await bookingService.xuLyYeuCauDoiLich(
         id,
@@ -224,19 +283,11 @@ export function AdminScheduleSection() {
     }
   };
 
-  const handleConfirmRejectRequest = async (e: FormEvent) => {
-    e.preventDefault();
-    if (rejectingRequestId === null) return;
-    const note = rejectNote.trim();
-    if (!note) {
-      setError(vi ? "Vui lòng nhập lý do từ chối." : "Please enter rejection reason.");
-      return;
-    }
+  const handleRejectRequest = async (id: number, reason: string) => {
     try {
-      setIsRejecting(true);
       const result = await bookingService.xuLyYeuCauDoiLich(
-        rejectingRequestId,
-        { ghiChu: note },
+        id,
+        { ghiChu: reason },
         false,
       );
       if (!result.thanhCong) throw new Error(result.thongDiep);
@@ -244,12 +295,8 @@ export function AdminScheduleSection() {
         "booking|admin-shift-requests",
         "booking|admin-shifts",
       ]);
-      setRejectingRequestId(null);
-      setRejectNote("");
     } catch (cause) {
       showFailure(cause);
-    } finally {
-      setIsRejecting(false);
     }
   };
 
@@ -268,12 +315,63 @@ export function AdminScheduleSection() {
 
   return (
     <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <span className="text-xs text-slate-500">
-            {filterFromDate} — {filterThroughDate}
-          </span>
-        </div>
+      {/* 2 Dedicated Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+        <button
+          type="button"
+          onClick={() => handleTabChange("shifts")}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition ${
+            activeTab === "shifts"
+              ? "border-teal-600 text-teal-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <CalendarDays size={16} />
+          <span>{vi ? "Lịch trực & Khám bệnh" : "Work Shifts & Schedule"}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("requests")}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition ${
+            activeTab === "requests"
+              ? "border-teal-600 text-teal-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <CalendarClock size={16} />
+          <span>{vi ? "Duyệt đổi ca / Nghỉ phép" : "Shift Change & Leave"}</span>
+          {pendingCount > 0 && (
+            <span className="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-rose-500 text-white animate-pulse">
+              {pendingCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === "requests" ? (
+        <AdminShiftRequestsTab
+          requests={requestsQuery.data?.duLieu?.noiDung ?? []}
+          isLoading={requestsQuery.isLoading}
+          doctors={doctorsQuery.data?.duLieu?.noiDung ?? []}
+          onApprove={handleApproveRequest}
+          onReject={handleRejectRequest}
+          highlightId={urlIdYeuCau}
+          statusFilter={requestStatusFilter}
+          onStatusFilterChange={setRequestStatusFilter}
+          doctorFilter={requestDoctorFilter}
+          onDoctorFilterChange={setRequestDoctorFilter}
+          typeFilter={requestTypeFilter}
+          onTypeFilterChange={setRequestTypeFilter}
+        />
+      ) : (
+        <>
+          <div className={styles.sectionHeader}>
+            <div>
+              <span className="text-xs text-slate-500">
+                {filterFromDate} — {filterThroughDate}
+              </span>
+            </div>
         <button
           type="button"
           onClick={() => setIsCreateShiftOpen(true)}
@@ -498,41 +596,6 @@ export function AdminScheduleSection() {
         onPageChange={setShiftPage}
       />
 
-      <h3 className="mb-3 mt-8 font-semibold">
-        {vi ? "Yêu cầu đổi ca / xin nghỉ" : "Shift change and leave requests"}
-      </h3>
-      {(requestsQuery.data?.duLieu?.noiDung ?? []).map((request) => (
-        <article
-          className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3"
-          key={request.id}
-        >
-          <div>
-            <strong>
-              {request.loaiYeuCau ?? request.idCaLamViec} · {request.trangThai}
-            </strong>
-            <p className="text-xs text-slate-600">
-              {request.ca?.hoTenBacSi ?? ""} ·{" "}
-              {request.ngayMongMuon ?? request.ngay} · {request.lyDo}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              className={styles.actionBtn}
-              type="button"
-              onClick={() => void decideRequest(request.id, true)}
-            >
-              {vi ? "Duyệt" : "Approve"}
-            </button>
-            <button
-              className={styles.actionBtnDanger}
-              type="button"
-              onClick={() => void decideRequest(request.id, false)}
-            >
-              {vi ? "Từ chối" : "Reject"}
-            </button>
-          </div>
-        </article>
-      ))}
 
       <h3 className="mb-3 mt-8 font-semibold">
         {vi ? "Lịch hẹn cần đổi lịch" : "Appointments awaiting reschedule"}
@@ -555,6 +618,7 @@ export function AdminScheduleSection() {
             </p>
           ),
         )
+        </>
       )}
 
       {/* Modal Danh sách bệnh nhân của 1 ca khám */}
