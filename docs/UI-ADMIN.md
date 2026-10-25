@@ -69,32 +69,53 @@ Header tích hợp:
 
 ---
 
-### 3.2. Quản lý Ca làm việc (Schedule Management)
+### 3.2. Quản lý Lịch khám & Phê duyệt Ca trực (Schedule Management & Request Approval)
 
 - **Đường dẫn**: `/admin/schedule-management`
-- **Component**: `AdminOperationsPanel.tsx` (`activeSection = "schedule"`)
-- **Khối chức năng trên UI**:
-  1. *Tạo ca làm việc mới / Ca lặp (Create Shifts)*:
-     - Chọn Bác sĩ (`idBacSi`), Phòng khám (`idPhongKham`).
-     - Chọn ngày (`ngay`), giờ bắt đầu (`gioBatDau`), giờ kết thúc (`gioKetThuc`).
-     - Số lượt tối đa mỗi giờ (`soLuotToiDaMoiGio`, ví dụ: 4) và thời lượng mỗi lượt (`thoiLuongLuotPhut`, ví dụ: 15).
-     - **Tùy chọn Lặp lại (Recurring shifts)**: Chọn các thứ trong tuần (Thứ 2 đến Chủ nhật) và ngày kết thúc chu kỳ lặp (`denNgay`).
-  2. *Danh sách ca làm việc & Thao tác*:
-     - Hiển thị lưới ca làm việc từ ngày hiện tại đến 42 ngày tiếp theo.
-     - Nút **Sửa ca**: Cập nhật phòng khám, giờ bắt đầu, giờ kết thúc, công suất lượt khám.
-     - Nút **Hủy ca**: Bắt buộc nhập lý do hủy. Khi hủy ca, mọi lịch hẹn đã đặt trong ca sẽ bị hủy và chuyển sang mục "Lịch hẹn cần đổi lịch".
-  3. *Xử lý Yêu cầu Đổi ca / Xin nghỉ của Bác sĩ*:
-     - Hiển thị danh sách yêu cầu có trạng thái `CHO_DUYET`.
-     - Nút **"Duyệt"**: Chấp thuận đơn (ca trực cũ được đóng/đổi, lịch hẹn bệnh nhân được xử lý).
-     - Nút **"Từ chối"**: Bắt buộc nhập ghi chú/lý do từ chối gửi lại cho bác sĩ.
-  4. *Danh sách Lịch hẹn cần đổi lịch (Reschedule Needed)*:
-     - Danh sách các bệnh nhân bị ảnh hưởng do ca trực bị hủy. Quản trị viên liên hệ hoặc đổi ca thủ công cho bệnh nhân.
+- **Component**: `AdminOperationsPanel.tsx` -> `AdminScheduleSection.tsx` & `AdminShiftRequestsTab.tsx`
+- **Cấu trúc 2 Tab Chuyên biệt**:
+
+#### Tab 1: Lịch trực & Khám bệnh
+1. *Tạo ca làm việc mới / Ca lặp (Create Shifts)*:
+   - Chọn Bác sĩ (`idBacSi`), Phòng khám (`idPhongKham`).
+   - Chọn ngày (`ngay`), giờ bắt đầu (`gioBatDau`), giờ kết thúc (`gioKetThuc`).
+   - Số lượt tối đa mỗi giờ (`soLuotToiDaMoiGio`, ví dụ: 4) và thời lượng mỗi lượt (`thoiLuongLuotPhut`, ví dụ: 15).
+   - **Tùy chọn Lặp lại (Recurring shifts)**: Chọn các thứ trong tuần (Thứ 2 đến Chủ nhật) và ngày kết thúc chu kỳ lặp (`denNgay`).
+2. *Danh sách ca làm việc & Thao tác*:
+   - Hiển thị lưới ca làm việc từ ngày hiện tại đến 42 ngày tiếp theo.
+   - Nút **Sửa ca**: Cập nhật phòng khám, giờ bắt đầu, giờ kết thúc, công suất lượt khám.
+   - Nút **Hủy ca**: Bắt buộc nhập lý do hủy. Khi hủy ca, mọi lịch hẹn đã đặt trong ca sẽ bị hủy và chuyển sang mục "Lịch hẹn cần đổi lịch".
+   - Nút **Bệnh nhân trong ca**: Xem danh sách bệnh nhân đã đặt khám trong ca đó.
+3. *Danh sách Lịch hẹn cần đổi lịch (Reschedule Needed)*:
+   - Danh sách các bệnh nhân bị ảnh hưởng do ca trực bị hủy. Quản trị viên liên hệ hoặc đổi ca thủ công cho bệnh nhân.
+
+#### Tab 2: Duyệt đổi ca / Nghỉ phép (Kèm Badge số lượng chờ duyệt)
+- **Huy hiệu Badge số lượng**: Hiển thị số lượng đơn `CHO_DUYET` thời gian thực (ví dụ: `(3)`).
+- **Bộ lọc trên đầu**:
+  - Trạng thái: Tất cả (`ALL`), Chờ duyệt (`CHO_DUYET`), Đã duyệt (`DA_DUYET`), Từ chối (`TU_CHOI`).
+  - Lọc theo Bác sĩ yêu cầu (Dropdown danh sách bác sĩ).
+  - Lọc theo Loại đơn (Tất cả / Xin nghỉ / Đổi ca).
+- **Bảng dữ liệu Data Table chuẩn y tế**:
+  - **Bác sĩ yêu cầu**: Avatar/Initials tròn + Học vị + Họ tên + Chuyên khoa (ví dụ: *TS.BS Nguyễn Văn An - Nội tổng quát*).
+  - **Loại yêu cầu**: Tag màu phân biệt rõ ràng ([Xin nghỉ] màu cam/amber, [Đổi ca] màu tím/purple).
+  - **Ca làm việc liên quan**: Ngày khám, Khung giờ (08:00 - 11:30), Phòng khám (Phòng 101).
+  - **Người nhận đổi ca / Ca mong muốn**: Tên bác sĩ trực thay / thời gian ca mong muốn (nếu là Đổi ca) hoặc `— (Nghỉ phép)` (nếu là Xin nghỉ).
+  - **Lý do**: Hiển thị ngắn gọn kèm nút xem chi tiết modal đầy đủ.
+  - **Bệnh nhân bị ảnh hưởng**: Số lượng lịch hẹn đã đặt trong ca đó (Ví dụ: `⚠️ 1 bệnh nhân cần chuyển ca` hoặc `✓ 0 bệnh nhân (an toàn)`).
+  - **Hành động (Action)**:
+    - Đơn chờ duyệt: Nút **"Duyệt"** (Xanh lục/Primary), Nút **"Từ chối"** (Đỏ Outline mở modal nhập lý do từ chối).
+    - Đơn đã xử lý: Huy hiệu trạng thái Đã duyệt / Đã từ chối kèm ghi chú xử lý.
+- **Điều hướng từ Thông báo (Notification Deep-linking)**:
+  - Khi Admin click vào thông báo có `idYeuCau`, hệ thống tự động điều hướng sang `/admin/schedule-management?tab=requests&idYeuCau=...` và tự động cuộn/highlight đơn yêu cầu đó.
+- **Cơ chế Đóng khi Click ra ngoài (Click Outside)**:
+  - Khung popover thông báo (`AdminNotificationCenter`, `DoctorNotificationCenter`) và các modal xác nhận hỗ trợ tự động đóng khi người dùng click ra vùng bên ngoài hoặc nhấn phím Escape.
+
 - **API Mapping**:
   - `GET /api/booking/quan-tri/lich-lam-viec?tuNgay=...&denNgay=...`: Xem danh sách ca làm việc.
   - `POST /api/booking/quan-tri/lich-lam-viec`: Tạo ca làm việc (đơn lẻ hoặc lặp lại).
   - `PUT /api/booking/quan-tri/lich-lam-viec/{id}`: Chỉnh sửa ca làm việc.
   - `POST /api/booking/quan-tri/lich-lam-viec/{id}/huy`: Hủy ca làm việc (`{ lyDo: string }`).
-  - `GET /api/booking/quan-tri/yeu-cau-doi-lich?trangThai=CHO_DUYET`: Danh sách đơn xin nghỉ/đổi ca.
+  - `GET /api/booking/quan-tri/yeu-cau-doi-lich`: Danh sách đơn xin nghỉ/đổi ca theo trạng thái.
   - `POST /api/booking/quan-tri/yeu-cau-doi-lich/{id}/duyet`: Duyệt đơn.
   - `POST /api/booking/quan-tri/yeu-cau-doi-lich/{id}/tu-choi`: Từ chối đơn (`{ ghiChu: string }`).
   - `GET /api/booking/quan-tri/lich-hen/can-doi-lich`: Danh sách lịch hẹn bị hủy ca cần bố trí lại.
