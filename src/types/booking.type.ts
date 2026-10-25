@@ -205,10 +205,10 @@ export interface DonThuoc {
 	donViTinh?: string | null;
 	lieuDung: string;
 	cachDung?: string | null;
-	soLanMoiNgay: number | null;
-	soNgayDung: number | null;
+	soLanMoiNgay?: number | null;
+	soNgayDung?: number | null;
 	soLuong?: number | null;
-	ghiChuSuDung: string | null;
+	ghiChuSuDung?: string | null;
 }
 
 export interface DongThuocRequest {
