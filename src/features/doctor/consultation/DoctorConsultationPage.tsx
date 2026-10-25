@@ -1,19 +1,20 @@
-import { useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Stethoscope, X } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import { notifyAuth } from "@/utils/authNotification";
+import { consultationService } from "@/services/consultationService";
 import { useConsultation } from "@/hooks/useConsultation";
 import { ConsultationLookupCard } from "./components/ConsultationLookupCard";
 import { TodayPatientsTable } from "./components/TodayPatientsTable";
-import { PatientIdentityCard } from "./components/PatientIdentityCard";
-import { ClinicalExamForm } from "./components/ClinicalExamForm";
-import { PreviousVisitsSection } from "./components/PreviousVisitsSection";
-import { MedicalRecordHistoryModal } from "./components/MedicalRecordHistoryModal";
 
 export function DoctorConsultationPage() {
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const recordSectionRef = useRef<HTMLDivElement>(null);
+
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Parse URL search params
   const paramId = searchParams.get("id");
@@ -26,26 +27,41 @@ export function DoctorConsultationPage() {
     setFilters,
     dailyPatients,
     isLoadingDailyPatients,
-    hoSoKham,
-    isLoadingHoSo,
-    hoSoError,
-    moHoSoTheoMa,
-    moHoSoTheoId,
-    dongHoSo,
-    updatePatient,
-    isUpdatingPatient,
-    markVerified,
-    isMarkingVerified,
-    saveExamResult,
-    isSavingExamResult,
-    selectedHistoryId,
-    setSelectedHistoryId,
-    lichSuSua,
-    isLoadingLichSuSua,
-  } = useConsultation({
-    id: paramId && /^\d+$/.test(paramId) ? Number(paramId) : undefined,
-    ma: paramMa || undefined,
-  });
+  } = useConsultation();
+
+  // Search by code or QR and redirect to dedicated examine page
+  const handleSearchCode = async (code: string): Promise<boolean> => {
+    if (!code.trim()) return false;
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const res = await consultationService.traCuuHoSoKham(code.trim());
+      if (res?.thanhCong && res?.duLieu?.lichHen?.id) {
+        navigate(`/doctor/consultation/${res.duLieu.lichHen.id}`);
+        return true;
+      }
+      throw new Error(res?.thongDiep || "Không tìm thấy hồ sơ khám");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { thongDiep?: string } } }).response?.data
+          ?.thongDiep ||
+        (err instanceof Error ? err.message : "Không tìm thấy hồ sơ khám");
+      setSearchError(msg);
+      notifyAuth("error", lang === "vi" ? "Lỗi tra cứu" : "Lookup error", msg);
+      return false;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Redirect if URL search params contain specific ID or lookup code
+  useEffect(() => {
+    if (paramId && /^\d+$/.test(paramId)) {
+      navigate(`/doctor/consultation/${paramId}`, { replace: true });
+    } else if (paramMa) {
+      void handleSearchCode(paramMa);
+    }
+  }, [paramId, paramMa]);
 
   // Apply URL filters if provided
   useEffect(() => {
@@ -60,18 +76,8 @@ export function DoctorConsultationPage() {
     }
   }, [paramNgay, paramIdLichLamViec, setFilters]);
 
-  // Smooth scroll to record section when hoSoKham is loaded
-  useEffect(() => {
-    if (hoSoKham && recordSectionRef.current) {
-      recordSectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, [hoSoKham]);
-
-  const handleSelectPatient = async (id: number) => {
-    await moHoSoTheoId(id);
+  const handleSelectPatient = (id: number) => {
+    navigate(`/doctor/consultation/${id}`);
   };
 
   return (
@@ -83,26 +89,26 @@ export function DoctorConsultationPage() {
             <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
               <Stethoscope className="w-6 h-6 text-teal-600" />
               {lang === "vi"
-                ? "Khám bệnh & Kê đơn thuốc (EMR)"
-                : "Consultation & Medical Records"}
+                ? "Tiếp nhận & khám bệnh"
+                : "Reception & Consultation"}
             </h1>
             <p className="text-xs text-slate-500 mt-1">
               {lang === "vi"
-                ? "Tiếp nhận bệnh nhân bằng mã hoặc QR, đối chiếu giấy tờ tùy thân, ghi nhận chẩn đoán ICD-10 và kê đơn thuốc."
-                : "Check in patients by code or QR, verify identity, record ICD-10 diagnosis, and issue prescriptions."}
+                ? "Tiếp nhận bệnh nhân bằng mã hoặc quét QR, theo dõi danh sách bệnh nhân chờ khám trong ngày."
+                : "Check in patients by code or QR, monitor today's patient consultation queue."}
             </p>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Error banner if any */}
-        {hoSoError && (
+        {/* Error banner if search fails */}
+        {searchError && (
           <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center justify-between shadow-xs">
-            <span>{hoSoError}</span>
+            <span>{searchError}</span>
             <button
               type="button"
-              onClick={dongHoSo}
+              onClick={() => setSearchError(null)}
               className="text-rose-500 hover:text-rose-700"
             >
               <X className="w-4 h-4" />
@@ -112,8 +118,8 @@ export function DoctorConsultationPage() {
 
         {/* 1. Mở hồ sơ khám bằng mã hoặc QR */}
         <ConsultationLookupCard
-          onSearch={moHoSoTheoMa}
-          isLoading={isLoadingHoSo}
+          onSearch={handleSearchCode}
+          isLoading={isSearching}
         />
 
         {/* 2. Danh sách bệnh nhân trong ngày (Queue Table) */}
@@ -123,65 +129,9 @@ export function DoctorConsultationPage() {
           filters={filters}
           onFilterChange={setFilters}
           onSelectPatient={handleSelectPatient}
-          selectedAppointmentId={hoSoKham?.lichHen.id}
         />
-
-        {/* 3. Chi tiết hồ sơ khám khi đã mở */}
-        {hoSoKham && (
-          <div ref={recordSectionRef} className="space-y-6 animate-in fade-in duration-200">
-            {/* Header thanh đóng hồ sơ */}
-            <div className="flex items-center justify-between bg-teal-50 border border-teal-200 px-5 py-3 rounded-xl shadow-xs">
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-600 animate-ping" />
-                <span className="text-sm font-bold text-teal-900">
-                  {lang === "vi"
-                    ? `Đang mở hồ sơ: ${hoSoKham.hoSoBenhNhan.hoTen} (${hoSoKham.lichHen.maTraCuu})`
-                    : `Active record: ${hoSoKham.hoSoBenhNhan.hoTen} (${hoSoKham.lichHen.maTraCuu})`}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={dongHoSo}
-                className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-white text-slate-600 hover:text-rose-600 rounded-lg border border-teal-200 hover:border-rose-300 transition shadow-xs"
-              >
-                <X className="w-3.5 h-3.5" />
-                {lang === "vi" ? "Đóng hồ sơ" : "Close Record"}
-              </button>
-            </div>
-
-            {/* Thông tin đối chiếu giấy tờ & cập nhật hồ sơ bệnh nhân */}
-            <PatientIdentityCard
-              hoSoKham={hoSoKham}
-              onUpdatePatient={updatePatient}
-              onMarkVerified={markVerified}
-              isUpdating={isUpdatingPatient}
-              isMarkingVerified={isMarkingVerified}
-            />
-
-            {/* Form khám lâm sàng, chẩn đoán ICD-10 và kê đơn thuốc */}
-            <ClinicalExamForm
-              hoSoKham={hoSoKham}
-              onSaveExamResult={saveExamResult}
-              onOpenHistory={(id) => setSelectedHistoryId(id)}
-              isSaving={isSavingExamResult}
-            />
-
-            {/* Lịch sử các lần khám trước của bệnh nhân */}
-            <PreviousVisitsSection
-              previousVisits={hoSoKham.lanKhamTruoc}
-              onOpenHistory={(id) => setSelectedHistoryId(id)}
-            />
-          </div>
-        )}
       </div>
-
-      {/* Modal xem lịch sử chỉnh sửa bệnh án (Audit Log) */}
-      <MedicalRecordHistoryModal
-        isOpen={Boolean(selectedHistoryId)}
-        onClose={() => setSelectedHistoryId(null)}
-        data={lichSuSua}
-        isLoading={isLoadingLichSuSua}
-      />
     </div>
   );
 }
+
