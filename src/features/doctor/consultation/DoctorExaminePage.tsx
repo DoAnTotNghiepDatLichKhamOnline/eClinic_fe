@@ -266,12 +266,17 @@ export function DoctorExaminePage({
               <Clock className="w-3.5 h-3.5 text-slate-500" />
               {lichHen.gioKhamDuKien?.slice(11, 16) || lichHen.gioKhamDuKien}
             </span>
-            {lichHen.doiChieu?.daDoiChieu ? (
+            {lichHen.doiChieu?.canDoiChieu ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                <AlertCircle className="w-3 h-3 text-amber-600" />
+                {lang === "vi" ? "Cần đối chiếu" : "Verify ID"}
+              </span>
+            ) : (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                {lang === "vi" ? "Đã đối chiếu" : "Verified"}
+                {lang === "vi" ? "Hồ sơ khớp" : "Profile Matched"}
               </span>
-            ) : null}
+            )}
             {draftSavedAt && (
               <span className="text-[11px] text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                 {lang === "vi"
