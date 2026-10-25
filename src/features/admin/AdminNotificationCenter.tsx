@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Bell, CalendarClock, Check, CheckCheck, UserPlus, Loader2 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -27,6 +28,7 @@ function formatNoticeTime(isoDate?: string, vi?: boolean): string {
 export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterProps) {
   const { lang } = useLanguage();
   const vi = lang === "vi";
+  const navigate = useNavigate();
 
   const { danhSach: notices, isLoading } = useDanhSachThongBao({ kichThuoc: 10 });
   const { soChuaDoc } = useSoThongBaoChuaDoc();
@@ -72,10 +74,10 @@ export function AdminNotificationCenter({ onNavigate }: AdminNotificationCenterP
       }
     }
     setOpen(false);
-    if (notice.idLichHen) {
-      onNavigate("schedule");
-    } else if (notice.idYeuCau) {
-      onNavigate("schedule");
+    if (notice.idYeuCau) {
+      navigate(`/admin/schedule-management?tab=requests&idYeuCau=${notice.idYeuCau}`);
+    } else if (notice.idLichHen) {
+      navigate(`/admin/schedule-management?tab=shifts&idLichHen=${notice.idLichHen}`);
     } else {
       onNavigate("dashboard");
     }
