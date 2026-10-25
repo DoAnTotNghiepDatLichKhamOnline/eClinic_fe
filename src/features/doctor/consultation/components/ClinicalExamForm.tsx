@@ -30,6 +30,7 @@ interface ClinicalExamFormProps {
   ) => Promise<unknown>;
   onOpenHistory: (idLichHen: number) => void;
   isSaving?: boolean;
+  onSaveSuccess?: () => void;
 }
 
 export function ClinicalExamForm({
@@ -37,6 +38,7 @@ export function ClinicalExamForm({
   onSaveExamResult,
   onOpenHistory,
   isSaving = false,
+  onSaveSuccess,
 }: ClinicalExamFormProps) {
   const { lang } = useLanguage();
   const { lichHen, hoSoBenhNhan, ketQua } = hoSoKham;
@@ -327,6 +329,7 @@ export function ClinicalExamForm({
     };
 
     await onSaveExamResult(payload, isEdit);
+    onSaveSuccess?.();
   };
 
   return (
@@ -409,7 +412,11 @@ export function ClinicalExamForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form
+        id="clinical-exam-form"
+        onSubmit={handleSubmit}
+        className="space-y-6"
+      >
         {/* 1. Lý do khám & Triệu chứng */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">
