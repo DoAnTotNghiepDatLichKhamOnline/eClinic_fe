@@ -11,8 +11,10 @@ import {
   FileText,
   RotateCcw,
   Info,
+  Eye,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
+import styles from "../../../AdminDashboardPage.module.css";
 import type {
   YeuCauDoiLichResponse,
   TrangThaiYeuCau,
@@ -355,16 +357,9 @@ export function AdminShiftRequestsTab({
 
                       {/* Lý do */}
                       <td className="py-3 px-3.5">
-                        <div className="max-w-[180px] truncate text-slate-700 font-medium">
+                        <div className="max-w-[180px] truncate text-slate-700 font-medium" title={r.lyDo}>
                           {r.lyDo}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRequestForDetail(r)}
-                          className="text-[11px] text-teal-600 hover:text-teal-800 font-semibold underline mt-0.5"
-                        >
-                          {vi ? "Xem chi tiết" : "View detail"}
-                        </button>
                       </td>
 
                       {/* Bệnh nhân bị ảnh hưởng */}
@@ -386,39 +381,50 @@ export function AdminShiftRequestsTab({
 
                       {/* Hành động */}
                       <td className="py-3 px-3.5 text-center">
-                        {r.trangThai === "CHO_DUYET" ? (
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => void onApprove(r.id)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition shadow-xs"
-                              title={vi ? "Phê duyệt yêu cầu" : "Approve"}
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              {vi ? "Duyệt" : "Approve"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenRejectModal(r.id)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 font-bold rounded-lg transition shadow-xs"
-                              title={vi ? "Từ chối yêu cầu" : "Reject"}
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              {vi ? "Từ chối" : "Reject"}
-                            </button>
-                          </div>
-                        ) : r.trangThai === "DA_DUYET" ? (
-                          <span className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {vi ? "Đã duyệt" : "Approved"}
-                          </span>
-                        ) : (
-                          <span
-                            className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200"
-                            title={r.ghiChuXuLy || r.phanHoi || undefined}
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRequestForDetail(r)}
+                            className={styles.actionBtnOutline}
+                            title={vi ? "Xem chi tiết yêu cầu" : "View detail"}
                           >
-                            {vi ? "Đã từ chối" : "Rejected"}
-                          </span>
-                        )}
+                            <Eye size={13} />
+                            {vi ? "Chi tiết" : "Detail"}
+                          </button>
+                          {r.trangThai === "CHO_DUYET" ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => void onApprove(r.id)}
+                                className={styles.actionBtnSuccess}
+                                title={vi ? "Phê duyệt yêu cầu" : "Approve"}
+                              >
+                                <Check size={13} />
+                                {vi ? "Duyệt" : "Approve"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenRejectModal(r.id)}
+                                className={styles.actionBtnDanger}
+                                title={vi ? "Từ chối yêu cầu" : "Reject"}
+                              >
+                                <X size={13} />
+                                {vi ? "Từ chối" : "Reject"}
+                              </button>
+                            </>
+                          ) : r.trangThai === "DA_DUYET" ? (
+                            <span className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {vi ? "Đã duyệt" : "Approved"}
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+                              title={r.ghiChuXuLy || r.phanHoi || undefined}
+                            >
+                              {vi ? "Đã từ chối" : "Rejected"}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -570,9 +576,6 @@ export function AdminShiftRequestsTab({
       {rejectingRequestId !== null && (
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setRejectingRequestId(null);
-          }}
         >
           <div
             role="dialog"
