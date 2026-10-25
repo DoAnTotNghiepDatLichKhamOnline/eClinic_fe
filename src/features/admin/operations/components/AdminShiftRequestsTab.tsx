@@ -14,7 +14,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import styles from "../../../AdminDashboardPage.module.css";
+import styles from "../../AdminDashboardPage.module.css";
 import type {
   YeuCauDoiLichResponse,
   TrangThaiYeuCau,
@@ -357,7 +357,10 @@ export function AdminShiftRequestsTab({
 
                       {/* Lý do */}
                       <td className="py-3 px-3.5">
-                        <div className="max-w-[180px] truncate text-slate-700 font-medium" title={r.lyDo}>
+                        <div
+                          className="max-w-[180px] truncate text-slate-700 font-medium"
+                          title={r.lyDo}
+                        >
                           {r.lyDo}
                         </div>
                       </td>
@@ -574,9 +577,7 @@ export function AdminShiftRequestsTab({
 
       {/* 4. Modal Từ Chối Yêu Cầu */}
       {rejectingRequestId !== null && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
-        >
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150">
           <div
             role="dialog"
             aria-modal="true"
