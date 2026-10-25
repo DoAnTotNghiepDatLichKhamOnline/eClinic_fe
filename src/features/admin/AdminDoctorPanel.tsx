@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { UserPlus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  UserPlus,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  Lock,
+  RotateCcw,
+} from "lucide-react";
 import { adminBookingService } from "@/services/booking";
 import { doctorService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -390,7 +398,9 @@ export function AdminDoctorPanel() {
         <div className="flex gap-2 items-center">
           <button
             type="button"
-            className={styles.actionBtn}
+            className={
+              tab === "directory" ? styles.actionBtn : styles.actionBtnOutline
+            }
             aria-pressed={tab === "directory"}
             onClick={() => setTab("directory")}
           >
@@ -398,7 +408,9 @@ export function AdminDoctorPanel() {
           </button>
           <button
             type="button"
-            className={styles.actionBtn}
+            className={
+              tab === "reviews" ? styles.actionBtn : styles.actionBtnOutline
+            }
             aria-pressed={tab === "reviews"}
             onClick={() => setTab("reviews")}
           >
@@ -407,7 +419,7 @@ export function AdminDoctorPanel() {
           <button
             type="button"
             onClick={() => setIsAddDoctorOpen(true)}
-           className={styles.actionBtn}
+            className={styles.actionBtnPrimary}
           >
             <UserPlus size={14} />
             <span>{vi ? "Thêm bác sĩ" : "Add Doctor"}</span>
@@ -555,31 +567,38 @@ export function AdminDoctorPanel() {
                               : doctor.trangThai}
                         </span>
                       </td>
-                      <td className="flex flex-wrap gap-1">
-                        <button
-                          type="button"
-                          className={styles.actionBtn}
-                          onClick={() => setSelectedDoctor(doctor)}
-                        >
-                          {vi ? "Hồ sơ" : "Profile"}
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            doctor.trangThai === "DANG_CONG_TAC"
-                              ? styles.actionBtnDanger
-                              : styles.actionBtn
-                          }
-                          onClick={() => void toggleWorkStatus(doctor)}
-                        >
-                          {doctor.trangThai === "DANG_CONG_TAC"
-                            ? vi
-                              ? "Ngừng"
-                              : "Deactivate"
-                            : vi
-                              ? "Công tác lại"
-                              : "Reactivate"}
-                        </button>
+                      <td>
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <button
+                            type="button"
+                            className={styles.actionBtnOutline}
+                            onClick={() => setSelectedDoctor(doctor)}
+                          >
+                            <FileText size={13} />
+                            {vi ? "Hồ sơ" : "Profile"}
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              doctor.trangThai === "DANG_CONG_TAC"
+                                ? styles.actionBtnDanger
+                                : styles.actionBtnSuccess
+                            }
+                            onClick={() => void toggleWorkStatus(doctor)}
+                          >
+                            {doctor.trangThai === "DANG_CONG_TAC" ? (
+                              <>
+                                <Lock size={13} />
+                                {vi ? "Ngừng" : "Deactivate"}
+                              </>
+                            ) : (
+                              <>
+                                <RotateCcw size={13} />
+                                {vi ? "Công tác lại" : "Reactivate"}
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1055,7 +1074,7 @@ export function AdminDoctorPanel() {
       {/* Confirm dialog xóa ảnh bác sĩ */}
       <ConfirmDialog
         isOpen={deletingPhotoId !== null}
-        title={vi ? "Xóa ảnh bác sĩ" : "Delete Doctor Photo"}
+        title={vi ? "Xác nhận xóa ảnh hoạt động" : "Confirm Delete Photo"}
         message={vi ? "Bạn có chắc chắn muốn xóa ảnh này? Thao tác này không thể hoàn tác." : "Are you sure you want to delete this photo? This cannot be undone."}
         confirmLabel={vi ? "Xóa ảnh" : "Delete Photo"}
         cancelLabel={vi ? "Hủy" : "Cancel"}
@@ -1068,7 +1087,7 @@ export function AdminDoctorPanel() {
       {/* Confirm dialog công tác lại */}
       <ConfirmDialog
         isOpen={reactivatingDoctor !== null}
-        title={vi ? "Tiếp nhận công tác lại" : "Reactivate Doctor"}
+        title={vi ? "Xác nhận tiếp nhận công tác lại" : "Confirm Reactivate Doctor"}
         message={
           reactivatingDoctor
             ? vi
