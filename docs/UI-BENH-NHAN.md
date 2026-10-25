@@ -41,6 +41,27 @@ Tài liệu này đặc tả chi tiết toàn bộ các màn hình, luồng nghi
 
 ---
 
+## 1.1. Cơ Chế Dành Riêng Cho Bệnh Nhân Đặt Lịch Dưới Hình Thức "Khách" (Guest)
+
+Đối với bệnh nhân đặt khám mà không đăng nhập / không tạo tài khoản, hệ thống cung cấp 2 cơ chế độc lập giúp bảo đảm quyền lợi y tế và khả năng lưu trữ thông tin lâu dài:
+
+### Cơ chế 1: Xem Kết quả qua Trang Sổ khám bệnh Công khai (`so-kham`)
+- **Khởi tạo tự động**: Sau khi bác sĩ hoàn thành lượt khám và ghi nhận bệnh án điện tử EMR, hệ thống tự động khởi tạo **Sổ khám bệnh** với mã định danh ngẫu nhiên `maSoKham` và liên kết truy cập `linkSoKham` (dạng `http://.../so-kham/{maSoKham}`).
+- **Truy cập từ Phiếu khám**: Tại màn hình Phiếu khám điện tử (`/phieu-kham/{maPhieuKham}`), khi trạng thái chuyển sang `DA_HOAN_THANH` (hoặc `DA_KHAM`), giao diện tự động hiển thị thẻ nổi bật **"Kết quả khám bệnh & Sổ khám điện tử"** kèm nút **"Xem Sổ Khám Bệnh"** dẫn trực tiếp đến `/so-kham/{maSoKham}`.
+- **Cơ chế Bảo mật 2 lớp**:
+  1. *Lớp 1 (Tóm tắt công khai)*: Người có link hoặc mã `maSoKham` xem được thông tin tóm tắt cơ bản nhưng toàn bộ Họ tên (`hoTenChe`) và Số điện thoại (`soDienThoaiChe`) đều được che bảo mật.
+  2. *Lớp 2 (Mở khóa toàn diện bằng 4 số cuối SĐT)*: Để xem toàn bộ bệnh án, sinh hiệu, kết quả khám thực thể, chẩn đoán ICD-10 và đơn thuốc chi tiết, người bệnh bắt buộc phải nhập **4 số cuối của số điện thoại** đã dùng khi đặt lịch khám (`soDienThoai4SoCuoi`).
+
+### Cơ chế 2: Đồng bộ Lịch sử Khám vào Tài khoản Cá nhân Sau này
+- **Đăng ký tài khoản sau khám**: Người bệnh có thể đăng ký tài khoản mới bất cứ lúc nào qua trang `/register`.
+- **Liên kết Hồ sơ Y tế qua CCCD 12 số**:
+  - Tại trang Hồ sơ bệnh nhân (`/patient/patient-profile`), người bệnh nhập số CCCD 12 chữ số để gửi yêu cầu liên kết hồ sơ y tế cũ.
+  - Ban quản trị duyệt yêu cầu tại phân hệ `/admin/patients`. Hệ thống tự động đối chiếu cờ khớp tên (`khopHoTen`) và khớp SĐT (`khopSoDienThoai`).
+- **Hợp nhất Lịch sử Tự động**: Sau khi yêu cầu được duyệt thành công, toàn bộ các lượt khám trước đây được thực hiện dưới tư cách Khách sẽ tự động đồng bộ và hiển thị đầy đủ trong danh sách **Lịch hẹn của tôi** (`/patient/appointments`, `/patient/my-appointments`) của tài khoản chính thức.
+- **Khối CTA Hướng dẫn**: Cả trang Phiếu khám và trang Sổ khám bệnh đều tích hợp khối thông báo gợi ý đăng ký tài khoản để đồng bộ lưu trữ vĩnh viễn.
+
+---
+
 ## 2. Vòng đời Lịch hẹn (Appointment Lifecycle) Phía Bệnh nhân
 
 ```
@@ -136,10 +157,18 @@ Tài liệu này đặc tả chi tiết toàn bộ các màn hình, luồng nghi
      - Hiển thị Huy hiệu trạng thái lịch hẹn (`TrangThaiLichHen`).
      - Hiển thị Số thứ tự khám (STT), ngày khám, khung giờ khám dự kiến, họ tên bác sĩ phụ trách, phòng khám và số tầng.
      - Hiển thị hình ảnh Mã QR điện tử (chứa mã phiếu để nhân viên lễ tân quét tiếp đón tại phòng khám). Nút **"Tải mã QR"** lưu ảnh về thiết bị.
-  2. *Hủy Lịch khám*:
-     - Khả dụng khi `ticket.duocHuyDoi === true` (thời điểm hiện tại trước giờ khám quy định).
+  2. *Thẻ Sổ Khám Bệnh Điện Tử (Khi đã hoàn thành khám)*:
+     - Khi `ticket.trangThai === "DA_HOAN_THANH"` hoặc `ticket.trangThai === "DA_KHAM"`:
+       - Hiển thị thẻ màu xanh ngọc nổi bật: **"Kết quả khám bệnh & Sổ khám điện tử"**.
+       - Hiển thị mã tra cứu sổ khám (`ticket.maSoKham || ticket.maTraCuu`).
+       - Nút hành động **"Xem Sổ Khám Bệnh"**: Dẫn trực tiếp sang `/so-kham/{maSoKham}`.
+       - Hướng dẫn bảo mật cho Khách: Chuẩn bị 4 số cuối số điện thoại đặt khám để mở khóa xem toàn bộ đơn thuốc và bệnh án.
+       - Gợi ý cho Khách tạo tài khoản với cùng CCCD/SĐT để đồng bộ vĩnh viễn dữ liệu.
+  3. *Hủy Lịch khám*:
+     - Khả dụng khi `ticket.duocHuyDoi === true` và trạng thái `DA_XAC_NHAN` (trước giờ khám quy định).
      - Bấm nút **"Hủy lịch"**: Mở modal yêu cầu nhập lý do hủy, sau đó gọi `POST /api/booking/lich-hen/{id}/huy`.
-  3. *Đổi Lịch khám*:
+  4. *Đổi Lịch khám*:
+     - Khả dụng khi `ticket.duocHuyDoi === true` và trạng thái `DA_XAC_NHAN`.
      - Bấm nút **"Đổi lịch"**: Mở modal chọn ngày và khung giờ mới.
      - Xác nhận đổi lịch: Gọi `POST /api/booking/lich-hen/{id}/doi-lich`, hệ thống hủy vé cũ và chuyển hướng sang phiếu khám mới.
 - **API Mapping**:
@@ -153,11 +182,21 @@ Tài liệu này đặc tả chi tiết toàn bộ các màn hình, luồng nghi
 
 - **Component**: `MedicalBookPublicPage.tsx`
 - **Nghiệp vụ trên UI**:
-  - Cung cấp ô nhập **Mã sổ khám bệnh** để tra cứu nhanh toàn bộ hồ sơ khám bệnh điện tử công khai.
-  - Hiển thị thông tin hành chính của bệnh nhân (đã bảo mật che bớt thông tin nhạy cảm).
-  - Danh sách các đợt khám bệnh theo dòng thời gian: Ngày khám, bác sĩ khám, chẩn đoán ICD-10, kết quả khám lâm sàng, đơn thuốc được kê và ngày hẹn tái khám.
+  1. *Tra cứu Mã Sổ Khám*:
+     - Cho phép nhập trực tiếp mã sổ khám hoặc truy cập qua URL `/so-kham/{maSoKham}` hoặc quét mã QR.
+     - Tự động gọi `GET /api/booking/so-kham/{maSoKham}` để lấy thông tin tóm tắt: Bác sĩ, chuyên khoa, phòng khám, ngày giờ khám, trạng thái có kết quả.
+  2. *Xác minh Bảo mật 4 số cuối Số điện thoại*:
+     - Người bệnh nhập 4 số cuối số điện thoại liên hệ đặt khám (`soDienThoai4SoCuoi`).
+     - Bấm nút "Mở khóa xem chi tiết": Gọi `POST /api/booking/so-kham/{maSoKham}/xem`.
+     - Xác minh thành công: Hiển thị đầy đủ thông tin hành chính, chỉ số sinh hiệu (mạch, huyết áp, nhiệt độ, BMI), chẩn đoán chính ICD-10, chẩn đoán kèm theo, lời dặn bác sĩ, ngày hẹn tái khám và bảng đơn thuốc chi tiết (tên thuốc, hoạt chất, số lượng, đơn vị, cách dùng).
+  3. *Mã QR & Tải Phiếu Khám*:
+     - Hiển thị ảnh mã QR sổ khám bệnh; nút "Tải ảnh QR" lưu về thiết bị.
+  4. *Khối CTA Đồng bộ Tài khoản dành cho Khách*:
+     - Hiển thị banner khuyến khích đăng ký tài khoản với cùng SĐT và CCCD để tự động đồng bộ kết quả điều trị vào hồ sơ sức khỏe cá nhân, kèm nút chuyển nhanh tới `/register`.
 - **API Mapping**:
-  - `GET /api/medical/so-kham/{maSoKham}`: Lấy thông tin sổ khám bệnh và lịch sử các đợt khám bệnh.
+  - `GET /api/booking/so-kham/{maSoKham}`: Lấy tóm tắt sổ khám bệnh (che dữ liệu nhạy cảm).
+  - `POST /api/booking/so-kham/{maSoKham}/xem`: Xác minh 4 số cuối SĐT để mở khóa toàn bộ bệnh án (`{ "soDienThoai4SoCuoi": string }`).
+  - `GET /api/booking/so-kham/{maSoKham}/qr`: Tải ảnh mã QR sổ khám.
 
 ---
 
