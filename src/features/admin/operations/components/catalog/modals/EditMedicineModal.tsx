@@ -57,7 +57,7 @@ export function EditMedicineModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800">
             {vi ? "Chỉnh sửa thông tin thuốc" : "Edit Medicine"} #{medicine.id}
@@ -126,8 +126,9 @@ export function EditMedicineModal({
           </label>
           <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả / Hướng dẫn" : "Description / Notes"}
-            <input
+            <textarea
               name="moTa"
+              rows={3}
               defaultValue={medicine.moTa || ""}
               className="px-3 py-2 text-xs"
             />
