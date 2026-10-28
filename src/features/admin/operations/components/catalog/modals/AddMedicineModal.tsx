@@ -71,60 +71,60 @@ export function AddMedicineModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3 sm:grid-cols-2">
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên biệt dược / Tên thuốc *" : "Medicine / Brand Name *"}
             <input
               name="tenThuoc"
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Paracetamol, Amoxicillin..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hoạt chất chính" : "Active Ingredient"}
             <input
               name="hoatChat"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Paracetamol 500mg"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hàm lượng" : "Strength / Dosage"}
             <input
               name="hamLuong"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: 500mg, 10ml..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Dạng bào chế" : "Dosage Form"}
             <input
               name="dangBaoChe"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Viên nén, Siro, Gói bột..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đường dùng" : "Administration Route"}
             <input
               name="duongDung"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Uống, Tiêm bắp, Bôi ngoài da..."
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đơn vị đóng gói / cấp phát" : "Unit"}
             <input
               name="donVi"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Viên, Vỉ, Hộp, Lọ..."
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả / Lưu ý sử dụng" : "Usage Notes / Description"}
             <input
               name="moTa"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="Lưu ý tương tác, chống chỉ định..."
             />
           </label>
