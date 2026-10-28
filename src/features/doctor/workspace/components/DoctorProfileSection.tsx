@@ -19,6 +19,7 @@ import { userProfileService } from "@/services/identity/userProfileService";
 import { doctorService } from "@/services/catalog/doctorService";
 import { notifyAuth } from "@/utils/authNotification";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { AvatarImage } from "@/shared/components/ui/AvatarImage";
 import type {
   HoSoBacSiQuanTriResponse,
   AnhBacSiResponse,
@@ -394,14 +395,23 @@ export function DoctorProfileSection() {
       {/* Card 1: Admin Managed Credentials (Read-only) */}
       <section className={styles.panel}>
         <div className={styles.profileHeading}>
-          <span className={styles.profileAvatar}>
-            {(profile?.hoTen || doctorAccount?.hoTen || user?.name || "BS")
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((part: string) => part[0])
-              .join("")
-              .toUpperCase()}
-          </span>
+          <div className={styles.profileAvatar} style={{ overflow: "hidden" }}>
+            <AvatarImage
+              src={doctorAccount?.anhDaiDien || profile?.anhDaiDien || user?.avatarUrl}
+              alt={profile?.hoTen || doctorAccount?.hoTen || user?.name || "Doctor"}
+              fallback={
+                <span>
+                  {(profile?.hoTen || doctorAccount?.hoTen || user?.name || "BS")
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((part: string) => part[0])
+                    .join("")
+                    .toUpperCase()}
+                </span>
+              }
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
           <div>
             <h2>
               {profile?.hoTen ||
