@@ -8,6 +8,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { LoginForm } from "./LoginForm";
+import { GoogleSignInModal } from "./GoogleSignInModal";
 import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
@@ -25,6 +26,7 @@ export function LoginPagePatient() {
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
 
   const handleLoginSubmit = async (e: FormEvent, password: string) => {
     e.preventDefault();
@@ -67,17 +69,15 @@ export function LoginPagePatient() {
     navigate("/forgot-password");
   };
 
-  const handleGoogleLogin = async () => {
-    const token = window.prompt(
-      lang === "vi"
-        ? "Nhập Google ID Token để đăng nhập:"
-        : "Enter Google ID Token to sign in:",
-    );
-    if (!token?.trim()) return;
+  const handleGoogleLogin = () => {
+    setIsGoogleModalOpen(true);
+  };
 
+  const handleGoogleSubmit = async (token: string) => {
     setIsLoading(true);
     try {
       await loginWithGoogle(token.trim());
+      setIsGoogleModalOpen(false);
       notifyAuth(
         "success",
         lang === "vi" ? "Đăng nhập Google thành công" : "Google sign-in successful",
@@ -87,11 +87,27 @@ export function LoginPagePatient() {
         navigate(redirectTo, { replace: true });
       }, 400);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.thongDiep ||
-        err?.message ||
-        (lang === "vi" ? "Đăng nhập Google thất bại." : "Google login failed.");
-      notifyAuth("error", "Google Sign-in", msg);
+      const serverMsg = err?.response?.data?.thongDiep;
+      const errorCode = err?.response?.data?.maLoi;
+      let msg = serverMsg || err?.message;
+
+      if (errorCode === "DANG_NHAP_GOOGLE_KHONG_HO_TRO") {
+        msg =
+          lang === "vi"
+            ? "Tài khoản Bác sĩ / Quản trị viên không hỗ trợ đăng nhập qua Google. Vui lòng sử dụng email và mật khẩu."
+            : "Doctor/Admin accounts cannot sign in via Google. Please use email and password.";
+      } else if (errorCode === "DANG_NHAP_GOOGLE_KHONG_KHA_DUNG") {
+        msg =
+          lang === "vi"
+            ? "Hệ thống máy chủ chưa cấu hình Google OAuth Client. Vui lòng liên hệ quản trị viên."
+            : "Google OAuth is not configured on the server yet.";
+      }
+
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Đăng nhập Google thất bại" : "Google Sign-in Failed",
+        msg || (lang === "vi" ? "Đã có lỗi xảy ra." : "An error occurred."),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -217,6 +233,13 @@ export function LoginPagePatient() {
       </main>
 
       <Footer />
+
+      <GoogleSignInModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSuccess={handleGoogleSubmit}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
