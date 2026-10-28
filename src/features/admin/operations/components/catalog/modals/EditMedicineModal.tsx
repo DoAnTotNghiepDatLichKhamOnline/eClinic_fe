@@ -75,61 +75,61 @@ export function EditMedicineModal({
           onSubmit={(e) => void handleSubmit(e)}
           className="grid gap-3 sm:grid-cols-2"
         >
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên thuốc *" : "Medicine Name *"}
             <input
               name="tenThuoc"
               defaultValue={medicine.tenThuoc}
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hoạt chất chính" : "Active Ingredient"}
             <input
               name="hoatChat"
               defaultValue={medicine.hoatChat || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hàm lượng" : "Strength"}
             <input
               name="hamLuong"
               defaultValue={medicine.hamLuong || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Dạng bào chế" : "Dosage Form"}
             <input
               name="dangBaoChe"
               defaultValue={medicine.dangBaoChe || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đường dùng" : "Administration Route"}
             <input
               name="duongDung"
               defaultValue={medicine.duongDung || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đơn vị tính" : "Unit"}
             <input
               name="donVi"
               defaultValue={medicine.donVi || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả / Hướng dẫn" : "Description / Notes"}
             <input
               name="moTa"
               defaultValue={medicine.moTa || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
           <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t">
