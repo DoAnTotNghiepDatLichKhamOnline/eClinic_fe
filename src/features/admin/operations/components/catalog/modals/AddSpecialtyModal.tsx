@@ -70,55 +70,55 @@ export function AddSpecialtyModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (VI) *" : "Specialty Name (VI) *"}
             <input
               name="tenChuyenKhoa"
               required
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Tim mạch, Nhi khoa..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (EN)" : "Specialty Name (EN)"}
             <input
               name="tenChuyenKhoaEn"
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="e.g. Cardiology, Pediatrics..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả chuyên khoa (VI)" : "Description (VI)"}
             <input
               name="moTa"
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả chuyên khoa (EN)" : "Description (EN)"}
             <input
               name="moTaEn"
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng thường gặp (VI)" : "Symptoms (VI)"}
             <input
               name="trieuChung"
               maxLength={2000}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng thường gặp (EN)" : "Symptoms (EN)"}
             <input
               name="trieuChungEn"
               maxLength={2000}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
           <div className="flex justify-end gap-2 mt-2 pt-3 border-t">
