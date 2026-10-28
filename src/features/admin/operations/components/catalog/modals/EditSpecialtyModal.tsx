@@ -71,53 +71,53 @@ export function EditSpecialtyModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (VI) *" : "Specialty Name (VI) *"}
             <input
               name="tenChuyenKhoa"
               defaultValue={specialty.tenChuyenKhoa}
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (EN)" : "Specialty Name (EN)"}
             <input
               name="tenChuyenKhoaEn"
               defaultValue={specialty.tenChuyenKhoaEn || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả (VI)" : "Description (VI)"}
             <input
               name="moTa"
               defaultValue={specialty.moTa || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả (EN)" : "Description (EN)"}
             <input
               name="moTaEn"
               defaultValue={specialty.moTaEn || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng (VI)" : "Symptoms (VI)"}
             <input
               name="trieuChung"
               defaultValue={specialty.trieuChung || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng (EN)" : "Symptoms (EN)"}
             <input
               name="trieuChungEn"
               defaultValue={specialty.trieuChungEn || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
           <div className="flex justify-end gap-2 pt-3 border-t">
