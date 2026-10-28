@@ -91,16 +91,36 @@ export function LoginPagePatient() {
       const errorCode = err?.response?.data?.maLoi;
       let msg = serverMsg || err?.message;
 
-      if (errorCode === "DANG_NHAP_GOOGLE_KHONG_HO_TRO") {
+      if (errorCode === "GOOGLE_TOKEN_KHONG_HOP_LE") {
+        msg =
+          lang === "vi"
+            ? "Mã xác thực Google không hợp lệ, đã hết hạn hoặc email chưa được xác minh từ Google."
+            : "Google token is invalid, expired, or the Google email is not verified.";
+      } else if (errorCode === "DANG_NHAP_GOOGLE_KHONG_HO_TRO") {
         msg =
           lang === "vi"
             ? "Tài khoản Bác sĩ / Quản trị viên không hỗ trợ đăng nhập qua Google. Vui lòng sử dụng email và mật khẩu."
             : "Doctor/Admin accounts cannot sign in via Google. Please use email and password.";
+      } else if (errorCode === "TAI_KHOAN_BI_VO_HIEU_HOA") {
+        msg =
+          lang === "vi"
+            ? "Tài khoản liên kết đã bị khóa hoặc vô hiệu hóa. Vui lòng liên hệ ban quản trị để được hỗ trợ."
+            : "Your account has been locked or disabled. Please contact the administrator.";
+      } else if (errorCode === "EMAIL_DA_DANG_KY_MAT_KHAU") {
+        msg =
+          lang === "vi"
+            ? "Email đã được liên kết với một tài khoản Google khác, hoặc Google không đảm bảo người đăng nhập là chủ email."
+            : "Email is already linked to another Google account or ownership cannot be verified.";
+      } else if (errorCode === "XUNG_DOT_DU_LIEU") {
+        msg =
+          lang === "vi"
+            ? "Hệ thống đang xử lý yêu cầu đăng nhập của bạn, vui lòng thử lại sau giây lát."
+            : "Conflict occurred during account provisioning. Please try again shortly.";
       } else if (errorCode === "DANG_NHAP_GOOGLE_KHONG_KHA_DUNG") {
         msg =
           lang === "vi"
-            ? "Hệ thống máy chủ chưa cấu hình Google OAuth Client. Vui lòng liên hệ quản trị viên."
-            : "Google OAuth is not configured on the server yet.";
+            ? "Hệ thống máy chủ chưa cấu hình Google OAuth Client hoặc gặp lỗi kết nối tới Google."
+            : "Google OAuth is not configured on the server yet or cannot reach Google.";
       }
 
       notifyAuth(
