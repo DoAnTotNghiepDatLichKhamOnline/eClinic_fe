@@ -71,30 +71,30 @@ export function AddClinicModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên phòng khám (VI) *" : "Clinic Name (VI) *"}
             <input
               name="tenPhong"
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Phòng khám Nội 1..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên phòng khám (EN)" : "Clinic Name (EN)"}
             <input
               name="tenPhongEn"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="e.g. Internal Medicine Clinic 1..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Chuyên khoa *" : "Specialty *"}
             <select
               name="idChuyenKhoa"
               required
               defaultValue=""
-              className="p-2 border rounded text-xs bg-white"
+              className="px-3 py-2 text-xs"
             >
               <option value="" disabled>
                 {vi ? "-- Chọn chuyên khoa --" : "-- Select specialty --"}
@@ -106,11 +106,11 @@ export function AddClinicModal({
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tầng / Khu vực" : "Floor / Area"}
             <input
               name="tang"
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Tầng 2, Khu A"
             />
           </label>
