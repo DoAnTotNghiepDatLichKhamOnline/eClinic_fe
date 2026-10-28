@@ -56,7 +56,7 @@ export function EditSpecialtyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800">
             {vi ? "Chỉnh sửa chuyên khoa" : "Edit Specialty"} #{specialty.id}
@@ -90,32 +90,40 @@ export function EditSpecialtyModal({
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả (VI)" : "Description (VI)"}
-            <input
+            <textarea
               name="moTa"
+              rows={3}
+              maxLength={255}
               defaultValue={specialty.moTa || ""}
               className="px-3 py-2 text-xs"
             />
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả (EN)" : "Description (EN)"}
-            <input
+            <textarea
               name="moTaEn"
+              rows={3}
+              maxLength={255}
               defaultValue={specialty.moTaEn || ""}
               className="px-3 py-2 text-xs"
             />
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng (VI)" : "Symptoms (VI)"}
-            <input
+            <textarea
               name="trieuChung"
+              rows={3}
+              maxLength={2000}
               defaultValue={specialty.trieuChung || ""}
               className="px-3 py-2 text-xs"
             />
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng (EN)" : "Symptoms (EN)"}
-            <input
+            <textarea
               name="trieuChungEn"
+              rows={3}
+              maxLength={2000}
               defaultValue={specialty.trieuChungEn || ""}
               className="px-3 py-2 text-xs"
             />
