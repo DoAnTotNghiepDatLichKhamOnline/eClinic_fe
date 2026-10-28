@@ -1,7 +1,8 @@
 /* ─── Page Layout ─── */
 .page {
   width: 100%;
-  max-width: 760px;
+  max-width: 840px;
+  margin: 0 auto;
 }
 
 .pageHeader {
