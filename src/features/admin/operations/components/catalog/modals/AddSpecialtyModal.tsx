@@ -54,7 +54,7 @@ export function AddSpecialtyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
             <Plus size={18} className="text-teal-700" />
@@ -70,55 +70,63 @@ export function AddSpecialtyModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (VI) *" : "Specialty Name (VI) *"}
             <input
               name="tenChuyenKhoa"
               required
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="VD: Tim mạch, Nhi khoa..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên chuyên khoa (EN)" : "Specialty Name (EN)"}
             <input
               name="tenChuyenKhoaEn"
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
               placeholder="e.g. Cardiology, Pediatrics..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả chuyên khoa (VI)" : "Description (VI)"}
-            <input
+            <textarea
               name="moTa"
+              rows={3}
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
+              placeholder={vi ? "Mô tả chuyên môn..." : "Specialty description..."}
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả chuyên khoa (EN)" : "Description (EN)"}
-            <input
+            <textarea
               name="moTaEn"
+              rows={3}
               maxLength={255}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
+              placeholder="Description in English..."
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng thường gặp (VI)" : "Symptoms (VI)"}
-            <input
+            <textarea
               name="trieuChung"
+              rows={3}
               maxLength={2000}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
+              placeholder={vi ? "Các triệu chứng điển hình (sốt, ho, khó thở...)" : "Common symptoms..."}
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Triệu chứng thường gặp (EN)" : "Symptoms (EN)"}
-            <input
+            <textarea
               name="trieuChungEn"
+              rows={3}
               maxLength={2000}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
+              placeholder="Common symptoms in English..."
             />
           </label>
           <div className="flex justify-end gap-2 mt-2 pt-3 border-t">

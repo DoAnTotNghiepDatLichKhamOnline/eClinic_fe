@@ -54,7 +54,7 @@ export function EditClinicModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800">
             {vi ? "Chỉnh sửa phòng khám" : "Edit Clinic"} #{clinic.id}
@@ -69,30 +69,30 @@ export function EditClinicModal({
           </button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)} className="grid gap-3">
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên phòng khám (VI) *" : "Clinic Name (VI) *"}
             <input
               name="tenPhong"
               defaultValue={clinic.tenPhong}
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên phòng khám (EN)" : "Clinic Name (EN)"}
             <input
               name="tenPhongEn"
               defaultValue={clinic.tenPhongEn || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Chuyên khoa *" : "Specialty *"}
             <select
               name="idChuyenKhoa"
               defaultValue={clinic.idChuyenKhoa}
               required
-              className="p-2 border rounded text-xs bg-white"
+              className="px-3 py-2 text-xs"
             >
               {specialties.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -101,12 +101,12 @@ export function EditClinicModal({
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tầng / Khu vực" : "Floor / Area"}
             <input
               name="tang"
               defaultValue={clinic.tang || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
           <div className="flex justify-end gap-2 pt-3 border-t">

@@ -28,4 +28,17 @@
 
   --radius: 14px;
   --border-w: 2px;
+
+  /* Form design tokens */
+  --form-border-w: 1.5px;
+  --form-border-color: var(--line-strong);
+  --form-border-focus: var(--navy);
+  --form-ring-focus: 0 0 0 3px rgba(15, 77, 58, 0.12);
+  --form-border-error: var(--danger);
+  --form-ring-error: 0 0 0 3px rgba(220, 38, 38, 0.12);
+  --form-radius: 10px;
+  --form-bg: #ffffff;
+  --form-bg-disabled: #f4f7f4;
+  --form-text: var(--ink);
+  --form-placeholder: var(--muted);
 }

@@ -41,6 +41,9 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.headers["Accept-Language"] = getRequestLanguage();
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers["Content-Type"];
+    }
     const isPublicAuthRequest = config.url?.startsWith("/api/auth/");
     if (memoryAccessToken && config.headers && !isPublicAuthRequest) {
       config.headers["Authorization"] = `Bearer ${memoryAccessToken}`;

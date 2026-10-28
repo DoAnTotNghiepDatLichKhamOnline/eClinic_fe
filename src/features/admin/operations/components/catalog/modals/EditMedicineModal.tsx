@@ -57,7 +57,7 @@ export function EditMedicineModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800">
             {vi ? "Chỉnh sửa thông tin thuốc" : "Edit Medicine"} #{medicine.id}
@@ -75,61 +75,62 @@ export function EditMedicineModal({
           onSubmit={(e) => void handleSubmit(e)}
           className="grid gap-3 sm:grid-cols-2"
         >
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Tên thuốc *" : "Medicine Name *"}
             <input
               name="tenThuoc"
               defaultValue={medicine.tenThuoc}
               required
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hoạt chất chính" : "Active Ingredient"}
             <input
               name="hoatChat"
               defaultValue={medicine.hoatChat || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Hàm lượng" : "Strength"}
             <input
               name="hamLuong"
               defaultValue={medicine.hamLuong || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Dạng bào chế" : "Dosage Form"}
             <input
               name="dangBaoChe"
               defaultValue={medicine.dangBaoChe || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="grid gap-1 text-xs font-semibold">
+          <label className="grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đường dùng" : "Administration Route"}
             <input
               name="duongDung"
               defaultValue={medicine.duongDung || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Đơn vị tính" : "Unit"}
             <input
               name="donVi"
               defaultValue={medicine.donVi || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
-          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold">
+          <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả / Hướng dẫn" : "Description / Notes"}
-            <input
+            <textarea
               name="moTa"
+              rows={3}
               defaultValue={medicine.moTa || ""}
-              className="p-2 border rounded text-xs"
+              className="px-3 py-2 text-xs"
             />
           </label>
           <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t">

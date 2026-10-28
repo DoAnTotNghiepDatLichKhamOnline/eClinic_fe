@@ -738,30 +738,50 @@ export function AdminDoctorPanel() {
                     "linhVucKhamChua",
                     "linhVucKhamChuaEn",
                   ] as const
-                ).map((name) => (
-                  <label className="grid gap-1 text-xs" key={name}>
-                    {name}
-                    {name.startsWith("quaTrinh") ||
-                    name.startsWith("linhVuc") ||
-                    name === "tieuSu" ||
-                    name === "tieuSuEn" ? (
-                      <textarea
-                        name={name}
-                        rows={3}
-                        defaultValue={
-                          Array.isArray(detail[name])
-                            ? (detail[name] as string[]).join("\n")
-                            : String(detail[name] ?? "")
-                        }
-                      />
-                    ) : (
-                      <input
-                        name={name}
-                        defaultValue={String(detail[name] ?? "")}
-                      />
-                    )}
-                  </label>
-                ))}
+                ).map((name) => {
+                  const labelMap: Record<string, { vi: string; en: string }> = {
+                    hocVi: { vi: "Học vị (Học hàm)", en: "Academic Degree" },
+                    chucVu: { vi: "Chức vụ (VI)", en: "Position (VI)" },
+                    chucVuEn: { vi: "Chức vụ (EN)", en: "Position (EN)" },
+                    namBatDauHanhNghe: { vi: "Năm bắt đầu hành nghề", en: "Practice Start Year" },
+                    gioiThieuNgan: { vi: "Giới thiệu ngắn (VI)", en: "Short Bio (VI)" },
+                    gioiThieuNganEn: { vi: "Giới thiệu ngắn (EN)", en: "Short Bio (EN)" },
+                    tieuSu: { vi: "Tiểu sử chuyên môn (VI)", en: "Biography (VI)" },
+                    tieuSuEn: { vi: "Tiểu sử chuyên môn (EN)", en: "Biography (EN)" },
+                    quaTrinhDaoTao: { vi: "Quá trình đào tạo (VI)", en: "Education & Training (VI)" },
+                    quaTrinhDaoTaoEn: { vi: "Quá trình đào tạo (EN)", en: "Education & Training (EN)" },
+                    quaTrinhCongTac: { vi: "Quá trình công tác (VI)", en: "Work Experience (VI)" },
+                    quaTrinhCongTacEn: { vi: "Quá trình công tác (EN)", en: "Work Experience (EN)" },
+                    linhVucKhamChua: { vi: "Lĩnh vực khám chữa bệnh (VI)", en: "Clinical Expertise (VI)" },
+                    linhVucKhamChuaEn: { vi: "Lĩnh vực khám chữa bệnh (EN)", en: "Clinical Expertise (EN)" },
+                  };
+                  const label = vi ? labelMap[name]?.vi || name : labelMap[name]?.en || name;
+
+                  return (
+                    <label className="grid gap-1 text-xs font-semibold text-slate-700" key={name}>
+                      <span>{label}</span>
+                      {name.startsWith("quaTrinh") ||
+                      name.startsWith("linhVuc") ||
+                      name === "tieuSu" ||
+                      name === "tieuSuEn" ? (
+                        <textarea
+                          name={name}
+                          rows={3}
+                          defaultValue={
+                            Array.isArray(detail[name])
+                              ? (detail[name] as string[]).join("\n")
+                              : String(detail[name] ?? "")
+                          }
+                        />
+                      ) : (
+                        <input
+                          name={name}
+                          defaultValue={String(detail[name] ?? "")}
+                        />
+                      )}
+                    </label>
+                  );
+                })}
                 <button className={styles.actionBtn} type="submit">
                   {vi ? "Lưu hồ sơ" : "Save profile"}
                 </button>

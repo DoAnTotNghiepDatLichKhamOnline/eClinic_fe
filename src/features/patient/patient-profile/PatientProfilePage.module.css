@@ -1,7 +1,8 @@
 /* ─── Page Layout ─── */
 .page {
   width: 100%;
-  max-width: 760px;
+  max-width: 840px;
+  margin: 0 auto;
 }
 
 .pageHeader {
@@ -131,65 +132,69 @@
 }
 
 .input {
-  height: 38px;
-  padding: 0 12px;
-  border: 1.5px solid #d1ddd6;
-  border-radius: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: var(--form-border-w, 1.5px) solid var(--form-border-color, var(--line-strong));
+  border-radius: var(--form-radius, 10px);
   font: inherit;
   font-size: 14px;
-  color: #18372b;
-  background: #fff;
+  color: var(--ink);
+  background: var(--form-bg, #ffffff);
   width: 100%;
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input:focus {
   outline: none;
-  border-color: #15553e;
-  box-shadow: 0 0 0 3px rgba(21, 85, 62, 0.1);
+  border-color: var(--form-border-focus, var(--navy));
+  box-shadow: var(--form-ring-focus, 0 0 0 3px rgba(15, 77, 58, 0.12));
 }
 
 .textarea {
-  padding: 10px 12px;
+  padding: 10px 14px;
   min-height: 90px;
   resize: vertical;
-  border: 1.5px solid #d1ddd6;
-  border-radius: 6px;
+  border: var(--form-border-w, 1.5px) solid var(--form-border-color, var(--line-strong));
+  border-radius: var(--form-radius, 10px);
   font: inherit;
   font-size: 14px;
-  color: #18372b;
-  background: #fff;
+  color: var(--ink);
+  background: var(--form-bg, #ffffff);
   width: 100%;
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .textarea:focus {
   outline: none;
-  border-color: #15553e;
-  box-shadow: 0 0 0 3px rgba(21, 85, 62, 0.1);
+  border-color: var(--form-border-focus, var(--navy));
+  box-shadow: var(--form-ring-focus, 0 0 0 3px rgba(15, 77, 58, 0.12));
 }
 
 .select {
-  height: 38px;
-  padding: 0 12px;
-  border: 1.5px solid #d1ddd6;
-  border-radius: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: var(--form-border-w, 1.5px) solid var(--form-border-color, var(--line-strong));
+  border-radius: var(--form-radius, 10px);
   font: inherit;
   font-size: 14px;
-  color: #18372b;
-  background: #fff;
+  color: var(--ink);
+  background: var(--form-bg, #ffffff);
   width: 100%;
   cursor: pointer;
   appearance: auto;
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .select:focus {
   outline: none;
-  border-color: #15553e;
-  box-shadow: 0 0 0 3px rgba(21, 85, 62, 0.1);
+  border-color: var(--form-border-focus, var(--navy));
+  box-shadow: var(--form-ring-focus, 0 0 0 3px rgba(15, 77, 58, 0.12));
 }
 
 /* ─── Action bar ─── */

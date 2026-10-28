@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { authService } from "@/services/identity/authService";
+import { userProfileService } from "@/services/identity/userProfileService";
 import { setAccessToken, getAccessToken } from "@/utils/axiosClient";
 import { applyAccountLanguage } from "@/utils/languagePreference";
 import type {
@@ -111,12 +112,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAccessToken(response.duLieu.accessToken);
           const tk = response.duLieu.taiKhoan;
           applyAccountLanguage(tk.ngonNgu);
+
+          let avatarUrl: string | undefined = undefined;
+          try {
+            const profileRes = await userProfileService.getHoSoCaNhan();
+            if (profileRes.thanhCong && profileRes.duLieu?.anhDaiDien) {
+              avatarUrl = profileRes.duLieu.anhDaiDien;
+            }
+          } catch {
+            // Non-blocking
+          }
+
           setUser({
             id: String(tk.id),
             name: tk.hoTen,
             email: tk.email,
             phone: tk.soDienThoai || undefined,
             role: mapVaiTroToRole(tk.vaiTro),
+            vaiTro: tk.vaiTro,
+            avatarUrl,
           });
         } else if (isMounted) {
           setAccessToken(null);
@@ -164,12 +178,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applyAccountLanguage(taiKhoan.ngonNgu);
     setAccessToken(accessToken);
 
+    let avatarUrl: string | undefined = undefined;
+    try {
+      const profileRes = await userProfileService.getHoSoCaNhan();
+      if (profileRes.thanhCong && profileRes.duLieu?.anhDaiDien) {
+        avatarUrl = profileRes.duLieu.anhDaiDien;
+      }
+    } catch {
+      // Non-blocking
+    }
+
     const mappedUser: User = {
       id: String(taiKhoan.id),
       name: taiKhoan.hoTen,
       email: taiKhoan.email,
       phone: taiKhoan.soDienThoai || undefined,
       role: mapVaiTroToRole(taiKhoan.vaiTro),
+      vaiTro: taiKhoan.vaiTro,
+      avatarUrl,
     };
 
     setUser(mappedUser);
@@ -188,12 +214,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applyAccountLanguage(taiKhoan.ngonNgu);
     setAccessToken(accessToken);
 
+    let avatarUrl: string | undefined = undefined;
+    try {
+      const profileRes = await userProfileService.getHoSoCaNhan();
+      if (profileRes.thanhCong && profileRes.duLieu?.anhDaiDien) {
+        avatarUrl = profileRes.duLieu.anhDaiDien;
+      }
+    } catch {
+      // Non-blocking
+    }
+
     const mappedUser: User = {
       id: String(taiKhoan.id),
       name: taiKhoan.hoTen,
       email: taiKhoan.email,
       phone: taiKhoan.soDienThoai || undefined,
       role: mapVaiTroToRole(taiKhoan.vaiTro),
+      vaiTro: taiKhoan.vaiTro,
+      avatarUrl,
     };
 
     setUser(mappedUser);

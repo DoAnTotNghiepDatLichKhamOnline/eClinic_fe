@@ -43,6 +43,10 @@ export function PatientProfilePage() {
   const { capNhatHoSo, isUpdatingHoSo } = useBookingActions();
 
   const [editing, setEditing] = useState(false);
+  const [editingInsurance, setEditingInsurance] = useState(false);
+  const [draftInsurance, setDraftInsurance] = useState("");
+  const [editingMedicalHistory, setEditingMedicalHistory] = useState(false);
+  const [draftMedicalHistory, setDraftMedicalHistory] = useState("");
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [editingRelative, setEditingRelative] = useState<number | null>(null);
@@ -79,8 +83,8 @@ export function PatientProfilePage() {
         gioiTinh: draft.gioiTinh,
         soDienThoai: draft.soDienThoai,
         diaChi: draft.diaChi,
-        soBaoHiemYTe: draft.soBaoHiemYTe,
-        tienSuBenhLy: draft.tienSuBenhLy,
+        soBaoHiemYTe: form.soBaoHiemYTe,
+        tienSuBenhLy: form.tienSuBenhLy,
       });
       if (!updated?.thanhCong || !updated.duLieu)
         throw new Error(updated?.thongDiep || "Profile update failed");
@@ -97,6 +101,92 @@ export function PatientProfilePage() {
             : vi
               ? "Không thể lưu hồ sơ."
               : "Could not save profile."),
+      );
+    }
+  };
+
+  const handleEditInsurance = () => {
+    setDraftInsurance(form.soBaoHiemYTe || "");
+    setEditingInsurance(true);
+  };
+
+  const handleCancelInsurance = () => {
+    setEditingInsurance(false);
+    setDraftInsurance(form.soBaoHiemYTe || "");
+  };
+
+  const handleSaveInsurance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError("");
+    try {
+      const updated = await capNhatHoSo({
+        cccd: form.cccd,
+        hoTen: form.hoTen,
+        ngaySinh: form.ngaySinh,
+        gioiTinh: form.gioiTinh,
+        soDienThoai: form.soDienThoai,
+        diaChi: form.diaChi,
+        soBaoHiemYTe: draftInsurance.trim() || null,
+        tienSuBenhLy: form.tienSuBenhLy,
+      });
+      if (!updated?.thanhCong || !updated.duLieu)
+        throw new Error(updated?.thongDiep || "Profile update failed");
+      setForm(updated.duLieu);
+      setEditingInsurance(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      setSaveError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : vi
+              ? "Không thể lưu số bảo hiểm y tế."
+              : "Could not save health insurance."),
+      );
+    }
+  };
+
+  const handleEditMedicalHistory = () => {
+    setDraftMedicalHistory(form.tienSuBenhLy || "");
+    setEditingMedicalHistory(true);
+  };
+
+  const handleCancelMedicalHistory = () => {
+    setEditingMedicalHistory(false);
+    setDraftMedicalHistory(form.tienSuBenhLy || "");
+  };
+
+  const handleSaveMedicalHistory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError("");
+    try {
+      const updated = await capNhatHoSo({
+        cccd: form.cccd,
+        hoTen: form.hoTen,
+        ngaySinh: form.ngaySinh,
+        gioiTinh: form.gioiTinh,
+        soDienThoai: form.soDienThoai,
+        diaChi: form.diaChi,
+        soBaoHiemYTe: form.soBaoHiemYTe,
+        tienSuBenhLy: draftMedicalHistory.trim() || null,
+      });
+      if (!updated?.thanhCong || !updated.duLieu)
+        throw new Error(updated?.thongDiep || "Profile update failed");
+      setForm(updated.duLieu);
+      setEditingMedicalHistory(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      setSaveError(
+        (error as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (error instanceof Error
+            ? error.message
+            : vi
+              ? "Không thể lưu tiền sử bệnh lý."
+              : "Could not save medical history."),
       );
     }
   };
@@ -444,18 +534,63 @@ export function PatientProfilePage() {
             <h2 className={styles.cardTitle}>
               {vi ? "Bảo hiểm y tế" : "Health Insurance"}
             </h2>
-            {!editing && (
+            {!editingInsurance && (
               <button
                 className={styles.btnOutline}
                 type="button"
-                onClick={handleEdit}
+                onClick={handleEditInsurance}
               >
                 <Edit3 size={14} />
                 {vi ? "Cập nhật" : "Update"}
               </button>
             )}
           </div>
-          {form.soBaoHiemYTe ? (
+          {editingInsurance ? (
+            <form onSubmit={handleSaveInsurance}>
+              <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                <label className={styles.fieldLabel} htmlFor="pp-insurance-input">
+                  {vi ? "Mã số thẻ Bảo hiểm Y tế" : "Health Insurance Number"}
+                </label>
+                <input
+                  id="pp-insurance-input"
+                  className={styles.input}
+                  maxLength={50}
+                  value={draftInsurance}
+                  onChange={(e) => setDraftInsurance(e.target.value)}
+                  placeholder="DN4797912345601"
+                />
+                <span style={{ fontSize: "11px", color: "var(--ink-soft)" }}>
+                  {vi
+                    ? "Tối đa 50 ký tự. Để trống nếu bạn không có hoặc muốn gỡ thẻ BHYT."
+                    : "Up to 50 characters. Leave blank if you don't have health insurance."}
+                </span>
+              </div>
+              <div className={styles.actionBar}>
+                <button
+                  className={styles.btnOutline}
+                  type="button"
+                  onClick={handleCancelInsurance}
+                >
+                  <X size={14} />
+                  {vi ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  className={styles.btnPrimary}
+                  type="submit"
+                  disabled={isUpdatingHoSo}
+                >
+                  <Save size={14} />
+                  {isUpdatingHoSo
+                    ? vi
+                      ? "Đang lưu..."
+                      : "Saving..."
+                    : vi
+                      ? "Lưu BHYT"
+                      : "Save Insurance"}
+                </button>
+              </div>
+            </form>
+          ) : form.soBaoHiemYTe ? (
             <div className={styles.insuranceCard}>
               <div className={styles.insuranceLogo}>
                 <ShieldCheck size={20} />
@@ -475,8 +610,8 @@ export function PatientProfilePage() {
           ) : (
             <span className={styles.viewItemEmpty}>
               {vi
-                ? "Chưa cập nhật số bảo hiểm y tế"
-                : "No health insurance number provided"}
+                ? "Chưa cập nhật số bảo hiểm y tế. Nhấn 'Cập nhật' để điền số thẻ."
+                : "No health insurance number provided. Click 'Update' to enter."}
             </span>
           )}
         </div>
@@ -487,36 +622,69 @@ export function PatientProfilePage() {
             <h2 className={styles.cardTitle}>
               {vi ? "Tiền sử bệnh lý" : "Medical History"}
             </h2>
-            {!editing && (
+            {!editingMedicalHistory && (
               <button
                 className={styles.btnOutline}
                 type="button"
-                onClick={handleEdit}
+                onClick={handleEditMedicalHistory}
               >
                 <Edit3 size={14} />
                 {vi ? "Cập nhật" : "Update"}
               </button>
             )}
           </div>
-          {editing ? (
-            <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
-              <label className={styles.fieldLabel} htmlFor="pp-history">
-                {vi
-                  ? "Tiền sử bệnh lý & Dị ứng"
-                  : "Medical history & Allergies"}
-              </label>
-              <textarea
-                id="pp-history"
-                className={styles.textarea}
-                value={draft.tienSuBenhLy || ""}
-                onChange={(e) => setDraftField("tienSuBenhLy", e.target.value)}
-                placeholder={
-                  vi
-                    ? "Mô tả các bệnh lý nền, dị ứng thuốc..."
-                    : "Describe chronic conditions, drug allergies..."
-                }
-              />
-            </div>
+          {editingMedicalHistory ? (
+            <form onSubmit={handleSaveMedicalHistory}>
+              <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                <label className={styles.fieldLabel} htmlFor="pp-history">
+                  {vi
+                    ? "Tiền sử bệnh lý, dị ứng & bệnh mạn tính"
+                    : "Medical history, allergies & chronic conditions"}
+                </label>
+                <textarea
+                  id="pp-history"
+                  className={styles.textarea}
+                  rows={4}
+                  maxLength={5000}
+                  value={draftMedicalHistory}
+                  onChange={(e) => setDraftMedicalHistory(e.target.value)}
+                  placeholder={
+                    vi
+                      ? "Mô tả các bệnh lý nền, tiền sử phẫu thuật, dị ứng thuốc (penicillin, aspirin...)..."
+                      : "Describe chronic conditions, past surgeries, drug allergies..."
+                  }
+                />
+                <span style={{ fontSize: "11px", color: "var(--ink-soft)" }}>
+                  {vi
+                    ? "Tối đa 5.000 ký tự. Giúp bác sĩ đưa ra phác đồ điều trị chính xác hơn."
+                    : "Up to 5,000 characters. Helps doctors provide accurate care plans."}
+                </span>
+              </div>
+              <div className={styles.actionBar}>
+                <button
+                  className={styles.btnOutline}
+                  type="button"
+                  onClick={handleCancelMedicalHistory}
+                >
+                  <X size={14} />
+                  {vi ? "Hủy" : "Cancel"}
+                </button>
+                <button
+                  className={styles.btnPrimary}
+                  type="submit"
+                  disabled={isUpdatingHoSo}
+                >
+                  <Save size={14} />
+                  {isUpdatingHoSo
+                    ? vi
+                      ? "Đang lưu..."
+                      : "Saving..."
+                    : vi
+                      ? "Lưu bệnh sử"
+                      : "Save History"}
+                </button>
+              </div>
+            </form>
           ) : form.tienSuBenhLy ? (
             <p
               className={styles.viewItemValue}
@@ -527,8 +695,8 @@ export function PatientProfilePage() {
           ) : (
             <span className={styles.viewItemEmpty}>
               {vi
-                ? "Chưa cập nhật tiền sử bệnh lý"
-                : "No medical history provided"}
+                ? "Chưa cập nhật tiền sử bệnh lý. Nhấn 'Cập nhật' để bổ sung thông tin."
+                : "No medical history provided. Click 'Update' to add details."}
             </span>
           )}
         </div>
@@ -559,79 +727,109 @@ export function PatientProfilePage() {
                 >
                   {editingRelative === relative.id ? (
                     <form
-                      className="grid gap-3 sm:grid-cols-2"
+                      className={styles.fieldsGrid}
                       onSubmit={(event) =>
                         void saveRelative(event, relative.id)
                       }
                     >
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Họ tên" : "Full name"}
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Họ tên người thân" : "Full name"}
+                        </label>
                         <input
                           name="hoTen"
                           required
+                          maxLength={150}
+                          className={styles.input}
                           defaultValue={relative.hoTen}
                         />
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Ngày sinh" : "Date of birth"}
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Ngày sinh" : "Date of birth"}
+                        </label>
                         <input
                           name="ngaySinh"
                           type="date"
                           required
+                          className={styles.input}
                           defaultValue={relative.ngaySinh}
                         />
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Giới tính" : "Gender"}
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Giới tính" : "Gender"}
+                        </label>
                         <select
                           name="gioiTinh"
+                          className={styles.select}
                           defaultValue={relative.gioiTinh}
                         >
-                          <option value="NAM">NAM</option>
-                          <option value="NU">NU</option>
-                          <option value="KHAC">KHAC</option>
+                          <option value="NAM">{vi ? "Nam" : "Male"}</option>
+                          <option value="NU">{vi ? "Nữ" : "Female"}</option>
+                          <option value="KHAC">{vi ? "Khác" : "Other"}</option>
                         </select>
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Điện thoại" : "Phone"}
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Số điện thoại" : "Phone number"}
+                        </label>
                         <input
                           name="soDienThoai"
                           required
+                          pattern="^0\d{9}$"
+                          className={styles.input}
                           defaultValue={relative.soDienThoai}
+                          placeholder="0912345678"
                         />
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        Email
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          Email
+                        </label>
                         <input
                           name="email"
                           type="email"
+                          className={styles.input}
                           defaultValue={relative.email ?? ""}
+                          placeholder="email@example.com"
                         />
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Địa chỉ" : "Address"}
-                        <input
-                          name="diaChi"
-                          defaultValue={relative.diaChi ?? ""}
-                        />
-                      </label>
-                      <label className="grid gap-1 text-xs">
-                        {vi ? "Bảo hiểm y tế" : "Health insurance"}
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Số thẻ BHYT" : "Health insurance"}
+                        </label>
                         <input
                           name="soBaoHiemYTe"
+                          maxLength={50}
+                          className={styles.input}
                           defaultValue={relative.soBaoHiemYTe ?? ""}
+                          placeholder="DN4797912345601"
                         />
-                      </label>
-                      <div className="flex gap-2">
-                        <button className={styles.btnPrimary} type="submit">
-                          {vi ? "Lưu" : "Save"}
-                        </button>
+                      </div>
+                      <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+                        <label className={styles.fieldLabel}>
+                          {vi ? "Địa chỉ" : "Address"}
+                        </label>
+                        <input
+                          name="diaChi"
+                          maxLength={500}
+                          className={styles.input}
+                          defaultValue={relative.diaChi ?? ""}
+                        />
+                      </div>
+                      <div className={`${styles.actionBar} ${styles.fullWidth}`} style={{ marginTop: "8px" }}>
                         <button
                           className={styles.btnOutline}
                           type="button"
                           onClick={() => setEditingRelative(null)}
                         >
+                          <X size={14} />
                           {vi ? "Hủy" : "Cancel"}
+                        </button>
+                        <button className={styles.btnPrimary} type="submit">
+                          <Save size={14} />
+                          {vi ? "Lưu người thân" : "Save Relative"}
                         </button>
                       </div>
                     </form>

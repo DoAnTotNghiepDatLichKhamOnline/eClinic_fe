@@ -43,7 +43,7 @@ export function DisableAccountModal({
         role="dialog"
         aria-modal="true"
         aria-label={vi ? "Vô hiệu hóa tài khoản" : "Disable account"}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5 text-rose-600">
@@ -95,7 +95,7 @@ export function DisableAccountModal({
                   ? "Ví dụ: Vi phạm quy định sử dụng, tài khoản trùng lặp..."
                   : "E.g.: Violation of terms, duplicate account..."
               }
-              className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full p-3 text-xs placeholder:text-slate-400"
               disabled={isLoading}
             />
             <div className="flex justify-between items-center mt-1 text-[11px] text-slate-400">
