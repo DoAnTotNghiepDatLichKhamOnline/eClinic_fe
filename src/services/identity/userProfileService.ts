@@ -16,7 +16,11 @@ export const userProfileService = {
   },
 
   capNhatHoSo: async (data: CapNhatHoSoRequest) => {
-    const res = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>("/api/users/me", data);
+    const payload = {
+      hoTen: data.hoTen?.trim(),
+      soDienThoai: data.soDienThoai?.trim() ? data.soDienThoai.trim() : null,
+    };
+    const res = await axiosClient.put<ApiResponse<HoSoCaNhanResponse>>("/api/users/me", payload);
     return res.data;
   },
 
@@ -34,7 +38,9 @@ export const userProfileService = {
   taiLenAnhDaiDien: async (file: File | Blob) => {
     const formData = new FormData();
     formData.append("anh", file);
-    const res = await axiosClient.post<ApiResponse<HoSoCaNhanResponse>>("/api/users/me/avatar", formData);
+    const res = await axiosClient.post<ApiResponse<HoSoCaNhanResponse>>("/api/users/me/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 
