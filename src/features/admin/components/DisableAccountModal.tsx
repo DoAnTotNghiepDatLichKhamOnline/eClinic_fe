@@ -95,7 +95,7 @@ export function DisableAccountModal({
                   ? "Ví dụ: Vi phạm quy định sử dụng, tài khoản trùng lặp..."
                   : "E.g.: Violation of terms, duplicate account..."
               }
-              className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full p-3 text-xs placeholder:text-slate-400"
               disabled={isLoading}
             />
             <div className="flex justify-between items-center mt-1 text-[11px] text-slate-400">
