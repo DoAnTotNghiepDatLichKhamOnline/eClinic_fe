@@ -399,17 +399,13 @@ export function DoctorProfileSection() {
             <AvatarImage
               src={doctorAccount?.anhDaiDien || profile?.anhDaiDien || user?.avatarUrl}
               alt={profile?.hoTen || doctorAccount?.hoTen || user?.name || "Doctor"}
-              fallback={
-                <span>
-                  {(profile?.hoTen || doctorAccount?.hoTen || user?.name || "BS")
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((part: string) => part[0])
-                    .join("")
-                    .toUpperCase()}
-                </span>
-              }
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              fallbackInitials={(profile?.hoTen || doctorAccount?.hoTen || user?.name || "BS")
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part: string) => part[0])
+                .join("")
+                .toUpperCase()}
+              className="w-full h-full object-cover"
             />
           </div>
           <div>
