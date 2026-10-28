@@ -55,7 +55,7 @@ export function AddMedicineModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
             <Plus size={18} className="text-teal-700" />
@@ -122,10 +122,11 @@ export function AddMedicineModal({
           </label>
           <label className="sm:col-span-2 grid gap-1 text-xs font-semibold text-slate-700">
             {vi ? "Mô tả / Lưu ý sử dụng" : "Usage Notes / Description"}
-            <input
+            <textarea
               name="moTa"
+              rows={3}
               className="px-3 py-2 text-xs"
-              placeholder="Lưu ý tương tác, chống chỉ định..."
+              placeholder="Lưu ý tương tác, chống chỉ định, hướng dẫn sử dụng..."
             />
           </label>
           <div className="sm:col-span-2 flex justify-end gap-2 mt-2 pt-3 border-t">
