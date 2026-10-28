@@ -140,7 +140,7 @@ export function GoogleSignInModal({
       isOpen={isOpen}
       onClose={onClose}
       title={lang === "vi" ? "Đăng nhập với Google" : "Sign in with Google"}
-      maxWidth="sm"
+      maxWidth="lg"
     >
       <div className="space-y-4 py-1 text-sm text-slate-700">
         {/* Role Notice based on BE business rule */}
