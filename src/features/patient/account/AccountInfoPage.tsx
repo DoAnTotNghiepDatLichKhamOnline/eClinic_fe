@@ -23,7 +23,7 @@ import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
   const { lang } = useLanguage();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { hoSo, isLoading: isLoadingHoSo } = useHoSoCaNhan();
@@ -137,7 +137,10 @@ export function AccountInfoPage() {
       return;
     }
     try {
-      await taiLenAnh(file);
+      const res = await taiLenAnh(file);
+      if (res?.duLieu?.anhDaiDien && user) {
+        setUser({ ...user, avatarUrl: res.duLieu.anhDaiDien });
+      }
     } catch (err: any) {
       alert(
         err?.response?.data?.thongDiep || "Không thể tải lên ảnh đại diện.",
@@ -148,6 +151,9 @@ export function AccountInfoPage() {
   const handleRemoveAvatar = async () => {
     try {
       await xoaAnh();
+      if (user) {
+        setUser({ ...user, avatarUrl: undefined });
+      }
     } catch (error: any) {
       alert(
         error?.response?.data?.thongDiep ||
