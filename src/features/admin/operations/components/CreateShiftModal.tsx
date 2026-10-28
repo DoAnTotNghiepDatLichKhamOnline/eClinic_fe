@@ -174,7 +174,7 @@ export function CreateShiftModal({
               name="idBacSi"
               required
               defaultValue=""
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             >
               <option value="" disabled>
                 {vi ? "-- Chọn bác sĩ --" : "-- Select doctor --"}
@@ -196,7 +196,7 @@ export function CreateShiftModal({
               name="idPhongKham"
               required
               defaultValue=""
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             >
               <option value="" disabled>
                 {vi ? "-- Chọn phòng khám --" : "-- Select clinic --"}
@@ -223,7 +223,7 @@ export function CreateShiftModal({
               min={minDate}
               max={maxDate}
               defaultValue={minDate}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             />
           </label>
 
@@ -237,7 +237,7 @@ export function CreateShiftModal({
               type="time"
               required
               defaultValue="08:00"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             />
           </label>
 
@@ -251,7 +251,7 @@ export function CreateShiftModal({
               type="time"
               required
               defaultValue="12:00"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             />
           </label>
         </div>
@@ -266,7 +266,7 @@ export function CreateShiftModal({
               max={60}
               defaultValue={6}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             />
           </label>
 
@@ -281,7 +281,7 @@ export function CreateShiftModal({
               max={120}
               defaultValue={10}
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white focus:border-emerald-600 focus:outline-none"
+              className="w-full px-3 py-2 text-sm"
             />
           </label>
         </div>
