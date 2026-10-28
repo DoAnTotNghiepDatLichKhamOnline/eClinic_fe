@@ -43,7 +43,7 @@ export function DisableAccountModal({
         role="dialog"
         aria-modal="true"
         aria-label={vi ? "Vô hiệu hóa tài khoản" : "Disable account"}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5 text-rose-600">
