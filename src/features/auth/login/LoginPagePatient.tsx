@@ -8,7 +8,6 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { LoginForm } from "./LoginForm";
-import { GoogleSignInModal } from "./GoogleSignInModal";
 import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
@@ -218,15 +217,23 @@ export function LoginPagePatient() {
                 </p>
               </div>
 
-              <LoginForm
-                lang={lang}
-                email={loginEmail}
-                onEmailChange={setLoginEmail}
-                onSubmit={handleLoginSubmit}
-                onForgotPassword={handleForgotPassword}
-                onGoogleLogin={handleGoogleLogin}
-                isLoading={isLoading}
-              />
+              <div className="flex flex-col items-center justify-center gap-3 py-4">
+      <div
+        ref={googleBtnContainerRef}
+        className="min-h-[44px] flex items-center justify-center"
+      />
+
+        {gisError && (
+          <div className="flex items-start gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-3 py-2 w-full">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-500 mt-0.5" />
+            <p className="text-xs text-rose-700">
+              {popupBlocked
+                ? "Trình duyệt đang chặn popup Google."
+                : gisError}
+            </p>
+          </div>
+        )}
+      </div>
 
               <div className={styles.registerLinkWrapper}>
                 <span>
