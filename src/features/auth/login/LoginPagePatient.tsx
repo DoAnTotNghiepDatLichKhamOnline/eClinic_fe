@@ -1,13 +1,36 @@
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              width?: string | number;
+            }
+          ) => void;
+        };
+      };
+    };
+  }
+}
+
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { AlertCircle, ArrowRight, Check } from "lucide-react";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
-import { LoginForm } from "./LoginForm";
 import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
@@ -18,14 +41,73 @@ export function LoginPagePatient() {
   const requestedPath = (location.state as { from?: unknown } | null)?.from;
   const redirectTo =
     typeof requestedPath === "string" &&
-    (requestedPath === "/patient" || requestedPath.startsWith("/patient/"))
+      (requestedPath === "/patient" || requestedPath.startsWith("/patient/"))
       ? requestedPath
       : "/home";
 
   // Form states
   const [loginEmail, setLoginEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const [gisLoaded, setGisLoaded] = useState(false);
+  const [gisError, setGisError] = useState<string | null>(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    if (!googleClientId) return;
+
+    const existing = window.google?.accounts?.id;
+
+    if (existing) {
+      setGisLoaded(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+
+    script.onload = () => setGisLoaded(true);
+
+    script.onerror = () =>
+      setGisError(
+        lang === "vi"
+          ? "Không thể tải Google Identity Services."
+          : "Failed to load Google Identity Services.",
+      );
+
+    document.head.appendChild(script);
+  }, [googleClientId, lang]);
+
+  useEffect(() => {
+    if (
+      !gisLoaded ||
+      !googleClientId ||
+      !googleBtnContainerRef.current ||
+      !window.google
+    ) {
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: async (response) => {
+        await handleGoogleSubmit(response.credential);
+      },
+    });
+
+    googleBtnContainerRef.current.innerHTML = "";
+
+    window.google.accounts.id.renderButton(
+      googleBtnContainerRef.current,
+      {
+        theme: "outline",
+        size: "large",
+        width: 320,
+      }
+    );
+  }, [gisLoaded, googleClientId]);
 
   const handleLoginSubmit = async (e: FormEvent, password: string) => {
     e.preventDefault();
@@ -68,15 +150,11 @@ export function LoginPagePatient() {
     navigate("/forgot-password");
   };
 
-  const handleGoogleLogin = () => {
-    setIsGoogleModalOpen(true);
-  };
 
   const handleGoogleSubmit = async (token: string) => {
     setIsLoading(true);
     try {
       await loginWithGoogle(token.trim());
-      setIsGoogleModalOpen(false);
       notifyAuth(
         "success",
         lang === "vi" ? "Đăng nhập Google thành công" : "Google sign-in successful",
@@ -218,22 +296,24 @@ export function LoginPagePatient() {
               </div>
 
               <div className="flex flex-col items-center justify-center gap-3 py-4">
-      <div
-        ref={googleBtnContainerRef}
-        className="min-h-[44px] flex items-center justify-center"
-      />
+                <div
+                  ref={googleBtnContainerRef}
+                  className="min-h-[44px] flex items-center justify-center"
+                />
 
-        {gisError && (
-          <div className="flex items-start gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-3 py-2 w-full">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-500 mt-0.5" />
-            <p className="text-xs text-rose-700">
-              {popupBlocked
-                ? "Trình duyệt đang chặn popup Google."
-                : gisError}
-            </p>
-          </div>
-        )}
-      </div>
+                {gisError && (
+                  <div className="flex items-start gap-1.5 rounded-md bg-rose-50 border border-rose-200 px-3 py-2 w-full">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-500 mt-0.5" />
+                    <p className="text-xs text-rose-700">
+                      {lang === "vi"
+                        ? "Trình duyệt đang chặn popup Google."
+                        : "Google popup is blocked by your browser."}
+
+                      {/* popupBlocked state removed — inline Google button renders in-page and does not use a popup */}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               <div className={styles.registerLinkWrapper}>
                 <span>
@@ -260,13 +340,6 @@ export function LoginPagePatient() {
       </main>
 
       <Footer />
-
-      <GoogleSignInModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-        onSuccess={handleGoogleSubmit}
-        isLoading={isLoading}
-      />
     </div>
   );
 }
