@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import type { AppointmentFormValues } from "./appointment.types";
 import {
   ArrowLeft,
   Calendar,
@@ -16,7 +17,26 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { patientBookingService } from "@/services/booking";
-import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
+import type { DoiLichRequest, PhieuKhamResponse } from "@/types/booking.type";
+import { getUpcomingBookingDays } from "./appointment.utils";
+import { ServiceTimeStep } from "./components/ServiceTimeStep";
+
+function createRescheduleValues(): AppointmentFormValues {
+  return {
+    specialtyId: "",
+    doctorId: "",
+    date: getUpcomingBookingDays(1)[0]?.dateStr ?? "",
+    slotId: "",
+    slotTime: "",
+    gioBatDauKhung: "",
+    patientName: "",
+    patientDob: "",
+    patientGender: "NAM",
+    patientPhone: "",
+    patientCccd: "",
+    reason: "",
+  };
+}
 
 export function AppointmentTicketPage() {
   const { maPhieuKham = "" } = useParams();
@@ -28,9 +48,8 @@ export function AppointmentTicketPage() {
   const [qrUrl, setQrUrl] = useState("");
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
-  const [idLichLamViec, setIdLichLamViec] = useState("");
-  const [idChuyenKhoa, setIdChuyenKhoa] = useState("");
-  const [gioBatDauKhung, setGioBatDauKhung] = useState("");
+  const [rescheduleValues, setRescheduleValues] =
+    useState<AppointmentFormValues>(createRescheduleValues);
   const [mode, setMode] = useState<"cancel" | "reschedule" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -45,6 +64,14 @@ export function AppointmentTicketPage() {
   const [resendSuccess, setResendSuccess] = useState("");
   const [resendError, setResendError] = useState("");
 
+  const isPatientAccount = user?.role === "patient";
+
+  const updateRescheduleValue = <K extends keyof AppointmentFormValues>(
+    field: K,
+    value: AppointmentFormValues[K],
+  ) => {
+    setRescheduleValues((current) => ({ ...current, [field]: value }));
+  };
 
   const loadTicket = async () => {
     setLoading(true);
@@ -91,7 +118,7 @@ export function AppointmentTicketPage() {
     try {
       if (mode === "cancel") {
         const response =
-          user?.role === "patient"
+          isPatientAccount
             ? await patientBookingService.huyLichHen(maPhieuKham, {
                 lyDo: reason || undefined,
               })
@@ -103,23 +130,40 @@ export function AppointmentTicketPage() {
         await loadTicket();
         setMode(null);
       } else {
-        const body = {
-          ...(!user?.role || user.role !== "patient"
-            ? { soDienThoai: phone }
-            : {}),
-          ...(idLichLamViec
-            ? { idLichLamViec: Number(idLichLamViec) }
-            : { idChuyenKhoa: Number(idChuyenKhoa) }),
-          gioBatDauKhung,
+        if (!rescheduleValues.gioBatDauKhung) {
+          throw new Error(
+            t({
+              en: "Choose an available appointment time.",
+              vi: "Vui lòng chọn một khung giờ còn chỗ.",
+            }),
+          );
+        }
+        if (
+          !rescheduleValues.idLichLamViec &&
+          !rescheduleValues.specialtyId
+        ) {
+          throw new Error(
+            t({
+              en: "Choose a specialty or doctor.",
+              vi: "Vui lòng chọn chuyên khoa hoặc bác sĩ.",
+            }),
+          );
+        }
+        const body: DoiLichRequest = {
+          ...(!isPatientAccount ? { soDienThoai: phone.trim() } : {}),
+          ...(rescheduleValues.idLichLamViec
+            ? { idLichLamViec: rescheduleValues.idLichLamViec }
+            : { idChuyenKhoa: Number(rescheduleValues.specialtyId) }),
+          gioBatDauKhung: rescheduleValues.gioBatDauKhung,
         };
         const response =
-          user?.role === "patient"
+          isPatientAccount
             ? await patientBookingService.doiLichHen(maPhieuKham, body)
             : await patientBookingService.doiPhieuKhamKhach(maPhieuKham, body);
         if (!response.thanhCong || !response.duLieu)
           throw new Error(response.thongDiep);
         navigate(
-          `/phieu-kham/${(response.duLieu as DatLichResponse).maPhieuKham}`,
+          `/phieu-kham/${response.duLieu.maPhieuKham}`,
           { replace: true },
         );
       }
@@ -590,7 +634,7 @@ export function AppointmentTicketPage() {
                 </button>
               </div>
 
-              {!user && (
+              {!isPatientAccount && (
                 <label className="grid gap-1 text-xs font-semibold text-slate-700">
                   {t({ en: "Contact phone *", vi: "Số điện thoại liên hệ *" })}
                   <input
@@ -603,6 +647,10 @@ export function AppointmentTicketPage() {
                     onChange={(event) =>
                       setPhone(event.target.value.replace(/\D/g, ""))
                     }
+                    aria-label={t({
+                      en: "Contact phone",
+                      vi: "Số điện thoại liên hệ",
+                    })}
                   />
                 </label>
               )}
@@ -624,49 +672,14 @@ export function AppointmentTicketPage() {
                   />
                 </label>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                    {t({
-                      en: "Shift ID (optional)",
-                      vi: "Mã ca làm việc (nếu có)",
-                    })}
-                    <input
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                      inputMode="numeric"
-                      placeholder="Mã ca mới"
-                      value={idLichLamViec}
-                      onChange={(event) => setIdLichLamViec(event.target.value)}
-                    />
-                  </label>
-
-                  {!idLichLamViec && (
-                    <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                      {t({ en: "Specialty ID *", vi: "Mã chuyên khoa *" })}
-                      <input
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                        inputMode="numeric"
-                        required
-                        placeholder="Mã chuyên khoa"
-                        value={idChuyenKhoa}
-                        onChange={(event) =>
-                          setIdChuyenKhoa(event.target.value)
-                        }
-                      />
-                    </label>
-                  )}
-
-                  <label className="grid gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
-                    {t({ en: "Slot start time *", vi: "Giờ bắt đầu khung *" })}
-                    <input
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                      required
-                      type="datetime-local"
-                      value={gioBatDauKhung}
-                      onChange={(event) =>
-                        setGioBatDauKhung(event.target.value)
-                      }
-                    />
-                  </label>
+                <div className="max-h-[55vh] overflow-y-auto pr-1">
+                  <ServiceTimeStep
+                    lang={lang}
+                    formValues={rescheduleValues}
+                    onChange={(field, value) =>
+                      updateRescheduleValue(field, value)
+                    }
+                  />
                 </div>
               )}
 
