@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Calendar,
   Clock,
@@ -17,13 +17,28 @@ import {
   formatSlotRange,
 } from "../appointment.utils";
 import { useDanhSachChuyenKhoa, useDanhSachBacSi } from "@/hooks/useCatalog";
-import { useCaKhamTheoNgay, useKhungGioGop } from "@/hooks/useBooking";
+import {
+  useCaKhamTheoNgay,
+  useKhungGioGop,
+  useKhungGioNhieuNgay,
+  useNgayConCho,
+  useNgayNghi,
+  useNgaySomNhat,
+  useQuyTacDatLich,
+} from "@/hooks/useBooking";
 
 interface ServiceTimeStepProps {
   lang: Lang;
   formValues: AppointmentFormValues;
   onChange: (field: keyof AppointmentFormValues, value: any) => void;
   errors?: Partial<Record<keyof AppointmentFormValues, string>>;
+}
+
+function dateToKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function ServiceTimeStep({
@@ -33,6 +48,7 @@ export function ServiceTimeStep({
   errors = {},
 }: ServiceTimeStepProps) {
   const upcomingDays = useMemo(() => getUpcomingBookingDays(7), []);
+  const [holidayError, setHolidayError] = useState("");
 
   // 1. Fetch danh sách chuyên khoa từ API catalog-service
   const { danhSach: danhSachChuyenKhoa, isLoading: loadingChuyenKhoa } =
@@ -53,13 +69,73 @@ export function ServiceTimeStep({
   const idBacSiNum = formValues.doctorId
     ? Number(formValues.doctorId)
     : undefined;
+  const dateRange = {
+    tuNgay: upcomingDays[0].dateStr,
+    denNgay: upcomingDays[upcomingDays.length - 1].dateStr,
+  };
+  const availabilityParams =
+    idBacSiNum || idChuyenKhoaNum
+      ? {
+          ...dateRange,
+          idBacSi: idBacSiNum,
+          idChuyenKhoa: idBacSiNum ? undefined : idChuyenKhoaNum,
+        }
+      : undefined;
+  const isDateInQuickRange =
+    Boolean(formValues.date) &&
+    formValues.date >= dateRange.tuNgay &&
+    formValues.date <= dateRange.denNgay;
+  const {
+    danhSachNgay: availableDays,
+    isError: availabilityError,
+  } = useNgayConCho(availabilityParams);
+  const { quyTac, isError: policyError } = useQuyTacDatLich();
+  const holidayRangeEnd = new Date(`${dateRange.tuNgay}T00:00:00`);
+  holidayRangeEnd.setDate(
+    holidayRangeEnd.getDate() +
+      Math.min(quyTac?.soNgayDatTruocToiDa ?? 365, 365),
+  );
+  const {
+    danhSachNgayNghi,
+    isError: holidaysError,
+  } = useNgayNghi({
+    tuNgay: dateRange.tuNgay,
+    denNgay: dateToKey(holidayRangeEnd),
+  });
+  const {
+    danhSachNgay: earliestDates,
+    isError: earliestDateError,
+  } = useNgaySomNhat(idChuyenKhoaNum);
+  const earliestDate = earliestDates
+    .filter((date) => !idBacSiNum || date.idBacSi === idBacSiNum)
+    .map((date) => date.ngay)
+    .sort()[0];
+  const availableDates = new Map(
+    availableDays.map((day) => [day.ngay, day.soChoConLai]),
+  );
+  const holidays = new Map(
+    danhSachNgayNghi.map((holiday) => [holiday.ngay, holiday.lyDo]),
+  );
 
-  // Khi chọn bác sĩ cụ thể -> Ca khám theo ngày
-  const { danhSachCaKham, isLoading: loadingCaKham } = useCaKhamTheoNgay(
-    formValues.date && idBacSiNum
+  const {
+    danhSachCaKham: caKhamNhieuNgay,
+    isLoading: loadingCaKhamNhieuNgay,
+  } = useKhungGioNhieuNgay(
+    idBacSiNum && isDateInQuickRange
+      ? { idBacSi: idBacSiNum, ...dateRange }
+      : undefined,
+  );
+  const {
+    danhSachCaKham: caKhamTheoNgay,
+    isLoading: loadingCaKhamTheoNgay,
+  } = useCaKhamTheoNgay(
+    formValues.date && idBacSiNum && !isDateInQuickRange
       ? { ngay: formValues.date, idBacSi: idBacSiNum }
       : undefined,
   );
+  const danhSachCaKham = isDateInQuickRange
+    ? caKhamNhieuNgay.filter((ca) => ca.ngay === formValues.date)
+    : caKhamTheoNgay;
 
   // Khi chọn "Bác sĩ bất kỳ" -> Khung giờ gộp theo chuyên khoa
   const {
@@ -71,7 +147,11 @@ export function ServiceTimeStep({
       : undefined,
   );
 
-  const loadingSlots = idBacSiNum ? loadingCaKham : loadingKhungGioGop;
+  const loadingSlots = idBacSiNum
+    ? isDateInQuickRange
+      ? loadingCaKhamNhieuNgay
+      : loadingCaKhamTheoNgay
+    : loadingKhungGioGop;
 
   // Flattened slots list
   interface UnifiedSlot {
@@ -403,6 +483,13 @@ export function ServiceTimeStep({
                   ? "Chọn ngày khám để xem các ca làm việc còn mở"
                   : "Select an appointment date"}
               </p>
+              {quyTac && (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {lang === "vi"
+                    ? `Đặt trước tối đa ${quyTac.soNgayDatTruocToiDa} ngày; cần đặt trước ít nhất ${quyTac.datTruocToiThieuPhut} phút.`
+                    : `Book up to ${quyTac.soNgayDatTruocToiDa} days ahead; at least ${quyTac.datTruocToiThieuPhut} minutes in advance.`}
+                </p>
+              )}
             </div>
           </div>
 
@@ -419,16 +506,48 @@ export function ServiceTimeStep({
             {errors.date}
           </p>
         )}
+        {holidayError && (
+          <p role="alert" className="mb-3 text-xs text-rose-600">
+            {holidayError}
+          </p>
+        )}
+        {(availabilityError || holidaysError || policyError || earliestDateError) && (
+          <p role="alert" className="mb-3 text-xs text-amber-700">
+            {lang === "vi"
+              ? "Một số thông tin ngày khám hoặc quy tắc đặt lịch chưa tải được. Khung giờ vẫn được kiểm tra khi bạn chọn ngày."
+              : "Some appointment date or booking policy details could not be loaded. Availability will still be checked after selecting a date."}
+          </p>
+        )}
+        {earliestDate && (
+          <button
+            type="button"
+            className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+            onClick={() => {
+              onChange("date", earliestDate);
+              onChange("slotId", "");
+              onChange("slotTime", "");
+              onChange("gioBatDauKhung", "");
+            }}
+          >
+            <Calendar size={13} />
+            {lang === "vi"
+              ? `Ngày còn chỗ sớm nhất: ${earliestDate}`
+              : `Earliest available date: ${earliestDate}`}
+          </button>
+        )}
 
         {/* Quick select pills */}
         <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 mb-4">
           {upcomingDays.map((item) => {
             const isSelected = formValues.date === item.dateStr;
+            const isHoliday = holidays.has(item.dateStr);
+            const remaining = availableDates.get(item.dateStr);
 
             return (
               <button
                 key={item.dateStr}
                 type="button"
+                disabled={isHoliday}
                 onClick={() => {
                   onChange("date", item.dateStr);
                   onChange("slotId", "");
@@ -438,7 +557,9 @@ export function ServiceTimeStep({
                 className={`flex flex-col items-center py-2.5 px-1.5 rounded-xl text-center transition-all ${
                   isSelected
                     ? "border-2 border-emerald-800 bg-white text-slate-900 shadow-sm ring-2 ring-emerald-600/20"
-                    : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800"
+                    : isHoliday
+                      ? "border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800"
                 }`}
               >
                 <span
@@ -458,7 +579,17 @@ export function ServiceTimeStep({
                       : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
-                  {lang === "vi" ? "Xem ca" : "View"}
+                  {isHoliday
+                    ? lang === "vi"
+                      ? "Ngày nghỉ"
+                      : "Closed"
+                    : remaining !== undefined
+                      ? lang === "vi"
+                        ? `Còn ${remaining} chỗ`
+                        : `${remaining} left`
+                      : lang === "vi"
+                        ? "Xem ca"
+                        : "View"}
                 </span>
               </button>
             );
@@ -478,8 +609,29 @@ export function ServiceTimeStep({
             id="custom-appointment-date"
             type="date"
             value={formValues.date}
-            min={new Date().toISOString().split("T")[0]}
+            min={dateToKey(new Date())}
+            max={
+              quyTac
+                ? (() => {
+                    const maxDate = new Date();
+                    maxDate.setDate(
+                      maxDate.getDate() + quyTac.soNgayDatTruocToiDa,
+                    );
+                    return dateToKey(maxDate);
+                  })()
+                : undefined
+            }
             onChange={(e) => {
+              const holidayReason = holidays.get(e.target.value);
+              if (holidayReason !== undefined) {
+                setHolidayError(
+                  lang === "vi"
+                    ? `Phòng khám nghỉ ngày này: ${holidayReason}`
+                    : `The clinic is closed on this date: ${holidayReason}`,
+                );
+                return;
+              }
+              setHolidayError("");
               onChange("date", e.target.value);
               onChange("slotId", "");
               onChange("slotTime", "");
