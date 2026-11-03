@@ -13,6 +13,11 @@ export function RegisterPagePatient() {
   const { lang } = useLanguage();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResendingVerification, setIsResendingVerification] =
+    useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [resendError, setResendError] = useState("");
 
   const handleRegisterSubmit = async (data: PatientRegistrationData) => {
     setIsSubmitting(true);
@@ -26,18 +31,7 @@ export function RegisterPagePatient() {
       });
 
       if (response.thanhCong) {
-        notifyAuth(
-          "success",
-          lang === "vi"
-            ? "Đăng ký tài khoản thành công!"
-            : "Registration successful!",
-          lang === "vi"
-            ? `Tài khoản ${data.hoTen} (${data.email}) đã được khởi tạo. Vui lòng kiểm tra hộp thư email để kích hoạt tài khoản.`
-            : `Account ${data.hoTen} created. Please check your email to activate your account.`,
-        );
-        setTimeout(() => {
-          navigate("/login");
-        }, 1200);
+        setRegisteredEmail(data.email);
       } else {
         throw new Error(response.thongDiep || "Đăng ký không thành công");
       }
@@ -55,6 +49,38 @@ export function RegisterPagePatient() {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail || isResendingVerification) return;
+    setIsResendingVerification(true);
+    setResendMessage("");
+    setResendError("");
+    try {
+      const response = await authService.guiLaiXacThuc({
+        email: registeredEmail,
+      });
+      if (!response.thanhCong) {
+        throw new Error(response.thongDiep || "Resend verification failed");
+      }
+      setResendMessage(
+        lang === "vi"
+          ? "Nếu tài khoản có thể nhận email, hệ thống đã gửi liên kết xác thực mới."
+          : "A new verification link has been sent if the account can receive one.",
+      );
+    } catch (err: unknown) {
+      setResendError(
+        (err as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (err instanceof Error
+            ? err.message
+            : lang === "vi"
+              ? "Không thể gửi lại liên kết xác thực."
+              : "Could not resend the verification link."),
+      );
+    } finally {
+      setIsResendingVerification(false);
     }
   };
 
@@ -106,11 +132,54 @@ export function RegisterPagePatient() {
                 </p>
               </div>
 
-              <RegisterForm
-                lang={lang}
-                onSubmit={handleRegisterSubmit}
-                isLoading={isSubmitting}
-              />
+              {registeredEmail ? (
+                <div className="space-y-4" role="status">
+                  <p className="text-sm leading-6 text-slate-700">
+                    {lang === "vi"
+                      ? `Tài khoản ${registeredEmail} đã được tạo. Hãy kiểm tra hộp thư để kích hoạt tài khoản.`
+                      : `Your account ${registeredEmail} has been created. Check your inbox to activate it.`}
+                  </p>
+                  {resendMessage && (
+                    <p className="text-sm text-emerald-800" aria-live="polite">
+                      {resendMessage}
+                    </p>
+                  )}
+                  {resendError && (
+                    <p className="text-sm text-rose-700" role="alert">
+                      {resendError}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      className="rounded-lg border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                      onClick={() => void handleResendVerification()}
+                      disabled={isResendingVerification}
+                    >
+                      {isResendingVerification
+                        ? lang === "vi"
+                          ? "Đang gửi..."
+                          : "Sending..."
+                        : lang === "vi"
+                          ? "Gửi lại liên kết xác thực"
+                          : "Resend verification link"}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg bg-emerald-900 px-4 py-2 text-sm font-semibold text-white"
+                      onClick={() => navigate("/login")}
+                    >
+                      {lang === "vi" ? "Đến trang đăng nhập" : "Go to sign in"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <RegisterForm
+                  lang={lang}
+                  onSubmit={handleRegisterSubmit}
+                  isLoading={isSubmitting}
+                />
+              )}
 
               <div className={styles.registerLinkWrapper}>
                 <span>

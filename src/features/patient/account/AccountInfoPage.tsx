@@ -64,6 +64,7 @@ export function AccountInfoPage() {
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingEmailError, setPendingEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     const currentName = hoSo?.hoTen || user?.name || "";
@@ -79,13 +80,24 @@ export function AccountInfoPage() {
     void userProfileService
       .layYeuCauDoiEmailDangCho()
       .then((response: { duLieu?: { emailMoi?: string } | null }) => {
-        if (active) setPendingEmail(response.duLieu?.emailMoi ?? "");
+        if (active) {
+          setPendingEmail(response.duLieu?.emailMoi ?? "");
+          setPendingEmailError(null);
+        }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active) {
+          setPendingEmailError(
+            lang === "vi"
+              ? "Không thể tải yêu cầu đổi email đang chờ. Vui lòng tải lại trang để thử lại."
+              : "Could not load the pending email-change request. Refresh the page to try again.",
+          );
+        }
+      });
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [lang, user?.id]);
 
   const initials = (name || "U")
     .trim()
@@ -572,6 +584,11 @@ export function AccountInfoPage() {
                 {vi ? "Hủy yêu cầu" : "Cancel request"}
               </button>
             </div>
+          )}
+          {pendingEmailError && (
+            <p className={styles.errorMessage} role="alert">
+              {pendingEmailError}
+            </p>
           )}
         </div>
 

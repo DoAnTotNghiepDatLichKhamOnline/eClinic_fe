@@ -161,6 +161,30 @@
   color: #a52d31;
   line-height: 1.5;
 }
+.historyError {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px 12px;
+}
+.historyRetry {
+  padding: 6px 10px;
+  border: 1px solid #0f4d3a;
+  border-radius: 5px;
+  background: #fff;
+  color: #0f4d3a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.historyRetry:focus-visible {
+  outline: 2px solid #0f4d3a;
+  outline-offset: 2px;
+}
+.historyRetry:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 .form {
   display: flex;
   gap: 8px;

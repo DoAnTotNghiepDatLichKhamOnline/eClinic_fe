@@ -133,6 +133,47 @@
   gap: 10px;
 }
 
+.errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid #f5c6c3;
+  border-radius: 8px;
+  background: #fff7f6;
+  color: #8f1d18;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.errorBanner svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.retryButton {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.retryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .sessionCard {
   display: flex;
   align-items: center;

@@ -42,18 +42,35 @@ export function SymptomChatWidget() {
   const [showHistory, setShowHistory] = useState(false);
   const [historySessions, setHistorySessions] = useState<ChatSession[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState("");
   const currentStorageKey = storageKey(user?.id);
 
   const loadHistory = async () => {
     setShowHistory(true);
     setIsLoadingHistory(true);
+    setHistoryError("");
     try {
       const res = await chatbotService.getPhienCuaToi();
       if (res.thanhCong && res.duLieu) {
         setHistorySessions(res.duLieu);
+      } else {
+        throw new Error(
+          res.thongDiep ||
+            t({
+              en: "Could not load chat history.",
+              vi: "Không thể tải lịch sử trò chuyện.",
+            }),
+        );
       }
-    } catch {
-      // Bỏ qua lỗi nếu chưa đăng nhập hoặc hết phiên
+    } catch (cause) {
+      setHistoryError(
+        cause instanceof Error
+          ? cause.message
+          : t({
+              en: "Could not load chat history.",
+              vi: "Không thể tải lịch sử trò chuyện.",
+            }),
+      );
     } finally {
       setIsLoadingHistory(false);
     }
@@ -413,6 +430,18 @@ export function SymptomChatWidget() {
                   <p style={{ fontSize: "12px", color: "#64748b" }}>
                     {t({ en: "Loading history...", vi: "Đang tải lịch sử..." })}
                   </p>
+                </div>
+              ) : historyError ? (
+                <div className={styles.historyError} role="alert">
+                  <p className={styles.error}>{historyError}</p>
+                  <button
+                    className={styles.historyRetry}
+                    type="button"
+                    onClick={() => void loadHistory()}
+                    disabled={isLoadingHistory}
+                  >
+                    {t({ en: "Retry", vi: "Thử lại" })}
+                  </button>
                 </div>
               ) : historySessions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "30px 10px", color: "#64748b", fontSize: "12px" }}>
