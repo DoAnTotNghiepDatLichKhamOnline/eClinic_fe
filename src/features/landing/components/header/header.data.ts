@@ -9,6 +9,7 @@ export const navLinks: NavLink[] = [
   { href: "/specialties", label: { en: "Specialties", vi: "Chuyên khoa" } },
   { href: "/doctors", label: { en: "Doctors", vi: "Bác sĩ" } },
   { href: "/appointment", label: { en: "Appointment Booking", vi: "Đặt lịch khám" } },
+  { href: "/my-appointments", label: { en: "My Appointments", vi: "Lịch khám của tôi" } },
 ];
 
 export const headerContent = {

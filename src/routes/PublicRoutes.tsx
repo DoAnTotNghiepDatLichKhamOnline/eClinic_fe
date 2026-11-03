@@ -13,6 +13,11 @@ const AppointmentTicketPage = lazy(() =>
     default: m.AppointmentTicketPage,
   }))
 );
+const MyAppointmentsPage = lazy(() =>
+  import("@/features/patient/appointment/MyAppointmentsPage").then((m) => ({
+    default: m.MyAppointmentsPage,
+  }))
+);
 const DoctorPage = lazy(() =>
   import("@/features/patient/doctors/DoctorPage").then((m) => ({
     default: m.DoctorPage,
@@ -96,6 +101,7 @@ export const PublicRoutes = () => {
         <Route path="/home" element={<LandingPage />} />
         <Route path="/entry" element={<RoleSelectionPage />} />
         <Route path="/appointment" element={<AppointmentBookingPage />} />
+        <Route path="/my-appointments" element={<MyAppointmentsPage />} />
         <Route
           path="/phieu-kham/:maPhieuKham"
           element={<AppointmentTicketPage />}

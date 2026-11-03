@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { isAxiosError } from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import type { AppointmentFormValues } from "./appointment.types";
 import {
   ArrowLeft,
   Calendar,
@@ -16,7 +18,26 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { patientBookingService } from "@/services/booking";
-import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
+import type { DoiLichRequest, PhieuKhamResponse } from "@/types/booking.type";
+import { getUpcomingBookingDays } from "./appointment.utils";
+import { ServiceTimeStep } from "./components/ServiceTimeStep";
+
+function createRescheduleValues(): AppointmentFormValues {
+  return {
+    specialtyId: "",
+    doctorId: "",
+    date: getUpcomingBookingDays(1)[0]?.dateStr ?? "",
+    slotId: "",
+    slotTime: "",
+    gioBatDauKhung: "",
+    patientName: "",
+    patientDob: "",
+    patientGender: "NAM",
+    patientPhone: "",
+    patientCccd: "",
+    reason: "",
+  };
+}
 
 export function AppointmentTicketPage() {
   const { maPhieuKham = "" } = useParams();
@@ -26,11 +47,11 @@ export function AppointmentTicketPage() {
   const vi = lang === "vi";
   const [ticket, setTicket] = useState<PhieuKhamResponse | null>(null);
   const [qrUrl, setQrUrl] = useState("");
+  const [qrError, setQrError] = useState("");
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
-  const [idLichLamViec, setIdLichLamViec] = useState("");
-  const [idChuyenKhoa, setIdChuyenKhoa] = useState("");
-  const [gioBatDauKhung, setGioBatDauKhung] = useState("");
+  const [rescheduleValues, setRescheduleValues] =
+    useState<AppointmentFormValues>(createRescheduleValues);
   const [mode, setMode] = useState<"cancel" | "reschedule" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -45,6 +66,14 @@ export function AppointmentTicketPage() {
   const [resendSuccess, setResendSuccess] = useState("");
   const [resendError, setResendError] = useState("");
 
+  const isPatientAccount = user?.role === "patient";
+
+  const updateRescheduleValue = <K extends keyof AppointmentFormValues>(
+    field: K,
+    value: AppointmentFormValues[K],
+  ) => {
+    setRescheduleValues((current) => ({ ...current, [field]: value }));
+  };
 
   const loadTicket = async () => {
     setLoading(true);
@@ -71,17 +100,36 @@ export function AppointmentTicketPage() {
 
   useEffect(() => {
     let url = "";
+    let cancelled = false;
+    setQrUrl("");
+    setQrError("");
     void patientBookingService
       .getQrPhieuKham(maPhieuKham)
       .then((blob) => {
+        if (cancelled) return;
         url = URL.createObjectURL(blob);
         setQrUrl(url);
       })
-      .catch(() => setQrUrl(""));
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        const message = isAxiosError<{ thongDiep?: string }>(cause)
+          ? cause.response?.data?.thongDiep
+          : undefined;
+        setQrError(
+          message ||
+            (cause instanceof Error
+              ? cause.message
+              : t({
+                  en: "Could not load the appointment QR code.",
+                  vi: "Không thể tải mã QR phiếu khám.",
+                })),
+        );
+      });
     return () => {
+      cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [maPhieuKham]);
+  }, [maPhieuKham, t]);
 
   const submitAction = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,7 +139,7 @@ export function AppointmentTicketPage() {
     try {
       if (mode === "cancel") {
         const response =
-          user?.role === "patient"
+          isPatientAccount
             ? await patientBookingService.huyLichHen(maPhieuKham, {
                 lyDo: reason || undefined,
               })
@@ -103,23 +151,40 @@ export function AppointmentTicketPage() {
         await loadTicket();
         setMode(null);
       } else {
-        const body = {
-          ...(!user?.role || user.role !== "patient"
-            ? { soDienThoai: phone }
-            : {}),
-          ...(idLichLamViec
-            ? { idLichLamViec: Number(idLichLamViec) }
-            : { idChuyenKhoa: Number(idChuyenKhoa) }),
-          gioBatDauKhung,
+        if (!rescheduleValues.gioBatDauKhung) {
+          throw new Error(
+            t({
+              en: "Choose an available appointment time.",
+              vi: "Vui lòng chọn một khung giờ còn chỗ.",
+            }),
+          );
+        }
+        if (
+          !rescheduleValues.idLichLamViec &&
+          !rescheduleValues.specialtyId
+        ) {
+          throw new Error(
+            t({
+              en: "Choose a specialty or doctor.",
+              vi: "Vui lòng chọn chuyên khoa hoặc bác sĩ.",
+            }),
+          );
+        }
+        const body: DoiLichRequest = {
+          ...(!isPatientAccount ? { soDienThoai: phone.trim() } : {}),
+          ...(rescheduleValues.idLichLamViec
+            ? { idLichLamViec: rescheduleValues.idLichLamViec }
+            : { idChuyenKhoa: Number(rescheduleValues.specialtyId) }),
+          gioBatDauKhung: rescheduleValues.gioBatDauKhung,
         };
         const response =
-          user?.role === "patient"
+          isPatientAccount
             ? await patientBookingService.doiLichHen(maPhieuKham, body)
             : await patientBookingService.doiPhieuKhamKhach(maPhieuKham, body);
         if (!response.thanhCong || !response.duLieu)
           throw new Error(response.thongDiep);
         navigate(
-          `/phieu-kham/${(response.duLieu as DatLichResponse).maPhieuKham}`,
+          `/phieu-kham/${response.duLieu.maPhieuKham}`,
           { replace: true },
         );
       }
@@ -260,6 +325,13 @@ export function AppointmentTicketPage() {
           {error || (vi ? "Không tìm thấy phiếu khám." : "Ticket not found.")}
         </p>
         <Link
+          to="/my-appointments"
+          className="mb-3 inline-flex rounded-xl border border-emerald-800 px-5 py-2.5 text-sm font-bold text-emerald-900 hover:bg-emerald-50"
+        >
+          {t({ en: "Look up another appointment", vi: "Tra cứu lịch khám khác" })}
+        </Link>
+        <br />
+        <Link
           to="/appointment"
           className="inline-flex rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-900"
         >
@@ -272,13 +344,21 @@ export function AppointmentTicketPage() {
 
   return (
     <main className="mx-auto max-w-xl px-4 py-8 text-slate-800">
-      <Link
-        to="/home"
-        className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-950 transition"
-      >
-        <ArrowLeft size={16} />
-        {t({ en: "Home", vi: "Trang chủ" })}
-      </Link>
+      <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <Link
+          to="/my-appointments"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+        >
+          <ArrowLeft size={16} />
+          {t({ en: "My appointments", vi: "Lịch khám của tôi" })}
+        </Link>
+        <Link
+          to="/home"
+          className="text-sm font-semibold text-slate-500 transition hover:text-emerald-900"
+        >
+          {t({ en: "Home", vi: "Trang chủ" })}
+        </Link>
+      </div>
 
       {/* ─── E-Ticket Card Layout ─── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
@@ -329,10 +409,18 @@ export function AppointmentTicketPage() {
                   />
                 </div>
               ) : (
-                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-[10px] text-slate-400">
-                  <QrCode size={24} className="mb-1 text-slate-300" />
-                  No QR
+                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-center text-[10px] text-slate-500">
+                  <QrCode size={24} className="mb-1 text-slate-400" />
+                  {t({
+                    en: "QR unavailable",
+                    vi: "Chưa có mã QR",
+                  })}
                 </div>
+              )}
+              {qrError && (
+                <p role="alert" className="mt-2 max-w-24 text-center text-[10px] text-rose-700">
+                  {qrError}
+                </p>
               )}
             </div>
           </div>
@@ -590,7 +678,7 @@ export function AppointmentTicketPage() {
                 </button>
               </div>
 
-              {!user && (
+              {!isPatientAccount && (
                 <label className="grid gap-1 text-xs font-semibold text-slate-700">
                   {t({ en: "Contact phone *", vi: "Số điện thoại liên hệ *" })}
                   <input
@@ -603,6 +691,10 @@ export function AppointmentTicketPage() {
                     onChange={(event) =>
                       setPhone(event.target.value.replace(/\D/g, ""))
                     }
+                    aria-label={t({
+                      en: "Contact phone",
+                      vi: "Số điện thoại liên hệ",
+                    })}
                   />
                 </label>
               )}
@@ -624,49 +716,14 @@ export function AppointmentTicketPage() {
                   />
                 </label>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                    {t({
-                      en: "Shift ID (optional)",
-                      vi: "Mã ca làm việc (nếu có)",
-                    })}
-                    <input
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                      inputMode="numeric"
-                      placeholder="Mã ca mới"
-                      value={idLichLamViec}
-                      onChange={(event) => setIdLichLamViec(event.target.value)}
-                    />
-                  </label>
-
-                  {!idLichLamViec && (
-                    <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                      {t({ en: "Specialty ID *", vi: "Mã chuyên khoa *" })}
-                      <input
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                        inputMode="numeric"
-                        required
-                        placeholder="Mã chuyên khoa"
-                        value={idChuyenKhoa}
-                        onChange={(event) =>
-                          setIdChuyenKhoa(event.target.value)
-                        }
-                      />
-                    </label>
-                  )}
-
-                  <label className="grid gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
-                    {t({ en: "Slot start time *", vi: "Giờ bắt đầu khung *" })}
-                    <input
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                      required
-                      type="datetime-local"
-                      value={gioBatDauKhung}
-                      onChange={(event) =>
-                        setGioBatDauKhung(event.target.value)
-                      }
-                    />
-                  </label>
+                <div className="max-h-[55vh] overflow-y-auto pr-1">
+                  <ServiceTimeStep
+                    lang={lang}
+                    formValues={rescheduleValues}
+                    onChange={(field, value) =>
+                      updateRescheduleValue(field, value)
+                    }
+                  />
                 </div>
               )}
 
