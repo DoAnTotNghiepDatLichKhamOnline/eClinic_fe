@@ -29,7 +29,7 @@
 }
 .filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 220px 200px;
+  grid-template-columns: minmax(220px, 1fr) 220px minmax(160px, 190px) 160px;
   gap: 12px;
   margin: 24px 0 18px;
 }
