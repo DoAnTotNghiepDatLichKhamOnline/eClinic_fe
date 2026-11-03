@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { isAxiosError } from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AppointmentFormValues } from "./appointment.types";
 import {
@@ -46,6 +47,7 @@ export function AppointmentTicketPage() {
   const vi = lang === "vi";
   const [ticket, setTicket] = useState<PhieuKhamResponse | null>(null);
   const [qrUrl, setQrUrl] = useState("");
+  const [qrError, setQrError] = useState("");
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
   const [rescheduleValues, setRescheduleValues] =
@@ -98,17 +100,36 @@ export function AppointmentTicketPage() {
 
   useEffect(() => {
     let url = "";
+    let cancelled = false;
+    setQrUrl("");
+    setQrError("");
     void patientBookingService
       .getQrPhieuKham(maPhieuKham)
       .then((blob) => {
+        if (cancelled) return;
         url = URL.createObjectURL(blob);
         setQrUrl(url);
       })
-      .catch(() => setQrUrl(""));
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        const message = isAxiosError<{ thongDiep?: string }>(cause)
+          ? cause.response?.data?.thongDiep
+          : undefined;
+        setQrError(
+          message ||
+            (cause instanceof Error
+              ? cause.message
+              : t({
+                  en: "Could not load the appointment QR code.",
+                  vi: "Không thể tải mã QR phiếu khám.",
+                })),
+        );
+      });
     return () => {
+      cancelled = true;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [maPhieuKham]);
+  }, [maPhieuKham, t]);
 
   const submitAction = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -304,6 +325,13 @@ export function AppointmentTicketPage() {
           {error || (vi ? "Không tìm thấy phiếu khám." : "Ticket not found.")}
         </p>
         <Link
+          to="/my-appointments"
+          className="mb-3 inline-flex rounded-xl border border-emerald-800 px-5 py-2.5 text-sm font-bold text-emerald-900 hover:bg-emerald-50"
+        >
+          {t({ en: "Look up another appointment", vi: "Tra cứu lịch khám khác" })}
+        </Link>
+        <br />
+        <Link
           to="/appointment"
           className="inline-flex rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-900"
         >
@@ -316,13 +344,21 @@ export function AppointmentTicketPage() {
 
   return (
     <main className="mx-auto max-w-xl px-4 py-8 text-slate-800">
-      <Link
-        to="/home"
-        className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-950 transition"
-      >
-        <ArrowLeft size={16} />
-        {t({ en: "Home", vi: "Trang chủ" })}
-      </Link>
+      <div className="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <Link
+          to="/my-appointments"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+        >
+          <ArrowLeft size={16} />
+          {t({ en: "My appointments", vi: "Lịch khám của tôi" })}
+        </Link>
+        <Link
+          to="/home"
+          className="text-sm font-semibold text-slate-500 transition hover:text-emerald-900"
+        >
+          {t({ en: "Home", vi: "Trang chủ" })}
+        </Link>
+      </div>
 
       {/* ─── E-Ticket Card Layout ─── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
@@ -373,9 +409,13 @@ export function AppointmentTicketPage() {
                   />
                 </div>
               ) : (
-                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-[10px] text-slate-400">
-                  <QrCode size={24} className="mb-1 text-slate-300" />
-                  No QR
+                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-center text-[10px] text-slate-500">
+                  <QrCode size={24} className="mb-1 text-slate-400" />
+                  {qrError ||
+                    t({
+                      en: "QR unavailable",
+                      vi: "Chưa có mã QR",
+                    })}
                 </div>
               )}
             </div>
