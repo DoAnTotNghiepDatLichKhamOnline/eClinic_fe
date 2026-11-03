@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isAxiosError } from "axios";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,8 +31,9 @@ export function LanguageToggle() {
         }
       } catch (error: unknown) {
         const message =
-          (error as { response?: { data?: { thongDiep?: string } } }).response
-            ?.data?.thongDiep ??
+          (isAxiosError<{ thongDiep?: string }>(error)
+            ? error.response?.data?.thongDiep
+            : undefined) ??
           (error instanceof Error
             ? error.message
             : "Could not save language preference");
