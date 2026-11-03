@@ -22,7 +22,7 @@ export interface DanhDauDaDocResponse {
 }
 
 export interface GetThongBaoParams {
-  daDoc?: boolean;
+  chuaDoc?: boolean;
   trang?: number;
   kichThuoc?: number;
 }
