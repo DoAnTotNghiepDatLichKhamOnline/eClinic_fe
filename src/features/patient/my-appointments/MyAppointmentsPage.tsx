@@ -28,6 +28,7 @@ import {
   useBookingActions,
   useChiTietLichHen,
   useDanhSachLichHen,
+  useLichSuKham,
 } from "@/hooks/useBooking";
 import styles from "./MyAppointmentsPage.module.css";
 
@@ -113,17 +114,37 @@ export function MyAppointmentsPage() {
   const locParam: LocLichHen =
     activeTab === "upcoming"
       ? "SAP_TOI"
-      : activeTab === "done"
-      ? "LICH_SU"
       : "TAT_CA";
 
   // Filtered appointments from API
-  const { danhSach: appointments } = useDanhSachLichHen({
+  const { danhSach: listedAppointments } = useDanhSachLichHen({
     loc: locParam,
     cuaAi: scope,
     tuKhoa: debouncedSearch || undefined,
     kichThuoc: 100,
   });
+  const {
+    lichSu,
+    isLoading: isLoadingHistory,
+    isError: isHistoryError,
+  } = useLichSuKham(
+    { cuaAi: scope, trang: 0, kichThuoc: 100 },
+    activeTab === "done",
+  );
+  const appointments =
+    activeTab === "done"
+      ? lichSu
+          .map((visit) => visit.lichHen)
+          .filter((appointment) => {
+            const query = debouncedSearch.toLocaleLowerCase();
+            return (
+              !query ||
+              appointment.hoTenBenhNhan.toLocaleLowerCase().includes(query) ||
+              appointment.bacSi.hoTen.toLocaleLowerCase().includes(query) ||
+              appointment.tenChuyenKhoa.toLocaleLowerCase().includes(query)
+            );
+          })
+      : listedAppointments;
   const { chiTiet, isLoading: loadingDetail } = useChiTietLichHen(
     selectedTicket ?? undefined,
   );
@@ -449,6 +470,18 @@ export function MyAppointmentsPage() {
             </button>
           ))}
         </div>
+        {activeTab === "done" && isLoadingHistory && (
+          <p role="status" className={styles.emptyStateDesc}>
+            {vi ? "Đang tải lịch sử khám..." : "Loading visit history..."}
+          </p>
+        )}
+        {activeTab === "done" && isHistoryError && (
+          <p role="alert" className="text-sm text-rose-700">
+            {vi
+              ? "Không thể tải lịch sử khám. Vui lòng thử lại."
+              : "Could not load visit history. Please try again."}
+          </p>
+        )}
 
         {/* ─── Filter bar ─── */}
         <div className={styles.filterBar}>
