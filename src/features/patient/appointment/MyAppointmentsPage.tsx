@@ -33,6 +33,10 @@ export function MyAppointmentsPage() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [maTraCuu, setMaTraCuu] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
+  const [resendValidationErrors, setResendValidationErrors] = useState<{
+    maTraCuu?: string;
+    soDienThoai?: string;
+  }>({});
   const [resendError, setResendError] = useState("");
   const [resendSuccess, setResendSuccess] = useState("");
   const [isResending, setIsResending] = useState(false);
@@ -81,6 +85,26 @@ export function MyAppointmentsPage() {
 
   const handleResend = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const validationErrors = {
+      ...(!maTraCuu.trim()
+        ? {
+            maTraCuu: t({
+              en: "Enter the appointment lookup code.",
+              vi: "Vui lòng nhập mã tra cứu.",
+            }),
+          }
+        : {}),
+      ...(!soDienThoai.trim()
+        ? {
+            soDienThoai: t({
+              en: "Enter the phone number used when booking.",
+              vi: "Vui lòng nhập số điện thoại đã dùng khi đặt lịch.",
+            }),
+          }
+        : {}),
+    };
+    setResendValidationErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
     setIsResending(true);
     setResendError("");
     setResendSuccess("");
@@ -213,7 +237,11 @@ export function MyAppointmentsPage() {
                     vi: "Nhập mã tra cứu và số điện thoại đã dùng khi đặt lịch. Nếu khớp, hệ thống sẽ gửi liên kết phiếu khám qua email.",
                   })}
                 </p>
-                <form className={styles.form} onSubmit={(event) => void handleResend(event)}>
+                <form
+                  className={styles.form}
+                  onSubmit={(event) => void handleResend(event)}
+                  noValidate
+                >
                   <label className={styles.field} htmlFor="appointment-lookup-code">
                     {t({ en: "Lookup code", vi: "Mã tra cứu" })}
                     <input
@@ -222,12 +250,30 @@ export function MyAppointmentsPage() {
                       value={maTraCuu}
                       onChange={(event) => {
                         setMaTraCuu(event.target.value);
+                        setResendValidationErrors((current) => ({
+                          ...current,
+                          maTraCuu: undefined,
+                        }));
                         setResendError("");
                         setResendSuccess("");
                       }}
                       autoComplete="off"
-                      required
+                      aria-invalid={Boolean(resendValidationErrors.maTraCuu)}
+                      aria-describedby={
+                        resendValidationErrors.maTraCuu
+                          ? "appointment-lookup-code-error"
+                          : undefined
+                      }
                     />
+                    {resendValidationErrors.maTraCuu && (
+                      <span
+                        id="appointment-lookup-code-error"
+                        className={`${styles.message} ${styles.error}`}
+                        role="alert"
+                      >
+                        {resendValidationErrors.maTraCuu}
+                      </span>
+                    )}
                   </label>
                   <label className={styles.field} htmlFor="appointment-phone">
                     {t({ en: "Phone number used when booking", vi: "Số điện thoại đã dùng khi đặt lịch" })}
@@ -240,11 +286,29 @@ export function MyAppointmentsPage() {
                       value={soDienThoai}
                       onChange={(event) => {
                         setSoDienThoai(event.target.value);
+                        setResendValidationErrors((current) => ({
+                          ...current,
+                          soDienThoai: undefined,
+                        }));
                         setResendError("");
                         setResendSuccess("");
                       }}
-                      required
+                      aria-invalid={Boolean(resendValidationErrors.soDienThoai)}
+                      aria-describedby={
+                        resendValidationErrors.soDienThoai
+                          ? "appointment-phone-error"
+                          : undefined
+                      }
                     />
+                    {resendValidationErrors.soDienThoai && (
+                      <span
+                        id="appointment-phone-error"
+                        className={`${styles.message} ${styles.error}`}
+                        role="alert"
+                      >
+                        {resendValidationErrors.soDienThoai}
+                      </span>
+                    )}
                   </label>
                   {resendError && (
                     <p className={`${styles.message} ${styles.error}`} role="alert">
