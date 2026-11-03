@@ -561,7 +561,7 @@ export function AppointmentBookingPage() {
                     : "Online 24/7 Appointment Booking"}
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white mb-2">
+              <h1 className="text-2xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white! mb-2">
                 {lang === "vi"
                   ? "Đăng ký khám bệnh trực tuyến"
                   : "Book an Appointment"}

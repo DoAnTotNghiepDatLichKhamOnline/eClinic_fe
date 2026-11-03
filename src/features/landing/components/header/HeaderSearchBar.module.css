@@ -13,7 +13,7 @@
 .searchIcon {
   position: absolute;
   left: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(228, 177, 177, 0.65);
   pointer-events: none;
   transition: color 0.15s ease;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, RotateCcw } from "lucide-react";
+import { CalendarDays, Search, RotateCcw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Container } from "@/shared/components/layout/Container";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -7,9 +7,14 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { DoctorCard } from "@/features/landing/components/doctors/DoctorCard";
 import { useDanhSachBacSi, useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
+import type { BuoiKham } from "@/types/catalog.type";
 import styles from "./DoctorPages.module.css";
 
 const PAGE_SIZE = 8;
+
+function isBuoiKham(value: string): value is BuoiKham {
+  return value === "SANG" || value === "CHIEU" || value === "TOI";
+}
 
 export function DoctorPage() {
   const { t } = useLanguage();
@@ -25,6 +30,11 @@ export function DoctorPage() {
   // Search input state with debounce
   const [inputValue, setInputValue] = useState(paramQuery);
   const [tuKhoa, setTuKhoa] = useState(paramQuery);
+  const [ngay, setNgay] = useState(searchParams.get("ngay") ?? "");
+  const [buoi, setBuoi] = useState<BuoiKham | "">(() => {
+    const value = searchParams.get("buoi") ?? "";
+    return isBuoiKham(value) ? value : "";
+  });
 
   // Current page (1-based for UI display)
   const [currentPage, setCurrentPage] = useState(1);
@@ -107,6 +117,26 @@ export function DoctorPage() {
     setSearchParams(newParams, { replace: true });
   };
 
+  const handleScheduleFilterChange = (
+    nextDate: string,
+    nextSession: BuoiKham | "",
+  ) => {
+    setNgay(nextDate);
+    setBuoi(nextSession);
+    setCurrentPage(1);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (nextDate) next.set("ngay", nextDate);
+        else next.delete("ngay");
+        if (nextSession) next.set("buoi", nextSession);
+        else next.delete("buoi");
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
   // Fetch doctors from catalog API
   const {
     danhSach: doctors,
@@ -118,6 +148,8 @@ export function DoctorPage() {
   } = useDanhSachBacSi({
     idChuyenKhoa: selectedSpecialtyId,
     tuKhoa: tuKhoa || undefined,
+    ngay: ngay || undefined,
+    buoi: buoi || undefined,
     trang: currentPage - 1,
     kichThuoc: PAGE_SIZE,
   });
@@ -172,6 +204,44 @@ export function DoctorPage() {
                     {ck.tenChuyenKhoa}
                   </option>
                 ))}
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              <CalendarDays aria-hidden="true" />
+              <input
+                type="date"
+                value={ngay}
+                onChange={(event) =>
+                  handleScheduleFilterChange(event.target.value, buoi)
+                }
+                aria-label={t({
+                  en: "Filter by available date",
+                  vi: "Lọc theo ngày khám",
+                })}
+              />
+            </label>
+
+            <label className={styles.field}>
+              <select
+                value={buoi}
+                onChange={(event) =>
+                  handleScheduleFilterChange(
+                    ngay,
+                    isBuoiKham(event.target.value) ? event.target.value : "",
+                  )
+                }
+                aria-label={t({
+                  en: "Filter by appointment session",
+                  vi: "Lọc theo buổi khám",
+                })}
+              >
+                <option value="">
+                  {t({ en: "Any session", vi: "Tất cả buổi" })}
+                </option>
+                <option value="SANG">{t({ en: "Morning", vi: "Buổi sáng" })}</option>
+                <option value="CHIEU">{t({ en: "Afternoon", vi: "Buổi chiều" })}</option>
+                <option value="TOI">{t({ en: "Evening", vi: "Buổi tối" })}</option>
               </select>
             </label>
           </div>

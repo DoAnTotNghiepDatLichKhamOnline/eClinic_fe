@@ -16,7 +16,6 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { patientBookingService } from "@/services/booking";
-import { taiTepLichIcs } from "@/utils/calendarGenerator";
 import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
 
 export function AppointmentTicketPage() {
@@ -36,10 +35,11 @@ export function AppointmentTicketPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState("");
 
   // Gửi lại link phiếu khám qua email
   const [showResendModal, setShowResendModal] = useState(false);
-  const [resendEmail, setResendEmail] = useState("");
+  const [resendMaTraCuu, setResendMaTraCuu] = useState("");
   const [resendPhone, setResendPhone] = useState("");
   const [resendBusy, setResendBusy] = useState(false);
   const [resendSuccess, setResendSuccess] = useState("");
@@ -136,6 +136,7 @@ export function AppointmentTicketPage() {
 
   const handleDownloadIcs = async () => {
     if (!ticket) return;
+    setCalendarError("");
     try {
       const blob = await patientBookingService.taiFileLichIcs(ticket.maPhieuKham);
       const url = URL.createObjectURL(blob);
@@ -146,27 +147,35 @@ export function AppointmentTicketPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      taiTepLichIcs(ticket);
+    } catch (cause) {
+      setCalendarError(
+        (cause as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (cause instanceof Error
+            ? cause.message
+            : vi
+              ? "Không thể tải tệp lịch."
+              : "Could not download the calendar file."),
+      );
     }
   };
 
   const handleResendLink = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!resendEmail || !resendPhone) return;
+    if (!resendMaTraCuu || !resendPhone) return;
     setResendBusy(true);
     setResendError("");
     setResendSuccess("");
     try {
       const res = await patientBookingService.capLaiLienKet({
-        email: resendEmail,
+        maTraCuu: resendMaTraCuu.trim(),
         soDienThoai: resendPhone,
       });
       if (!res.thanhCong) throw new Error(res.thongDiep);
       setResendSuccess(
         vi
-          ? "Đã gửi liên kết phiếu khám tới email của bạn! Vui lòng kiểm tra hộp thư (kể cả thư mục Spam)."
-          : "Appointment link resent to your email! Please check your inbox (including Spam folder)."
+          ? "Nếu thông tin khớp, liên kết phiếu khám sẽ được gửi đến email đã dùng khi đặt lịch."
+          : "If the information matches, the appointment link will be sent to the email used when booking.",
       );
     } catch (err: unknown) {
       const msg =
@@ -175,8 +184,8 @@ export function AppointmentTicketPage() {
         (err instanceof Error
           ? err.message
           : vi
-            ? "Không thể gửi lại liên kết. Vui lòng kiểm tra lại email và số điện thoại."
-            : "Failed to resend link. Please check your email and phone.");
+            ? "Không thể gửi lại liên kết. Vui lòng kiểm tra mã tra cứu và số điện thoại."
+            : "Failed to resend link. Please check the lookup code and phone number.");
       setResendError(msg);
     } finally {
       setResendBusy(false);
@@ -299,6 +308,12 @@ export function AppointmentTicketPage() {
                 </span>
               </div>
             </div>
+
+            {calendarError && (
+              <p role="alert" className="text-xs font-semibold text-rose-700">
+                {calendarError}
+              </p>
+            )}
 
             {/* QR Code */}
             <div className="flex flex-col items-center flex-shrink-0">
@@ -532,6 +547,7 @@ export function AppointmentTicketPage() {
                     onClick={() => {
                       setResendSuccess("");
                       setResendError("");
+                      setResendMaTraCuu(ticket.maTraCuu);
                       setShowResendModal(true);
                     }}
                     title={vi ? "Nhận lại link phiếu khám qua email" : "Resend ticket link to email"}
@@ -712,8 +728,8 @@ export function AppointmentTicketPage() {
 
             <p className="text-xs text-slate-600 leading-relaxed">
               {vi
-                ? "Nhập email và số điện thoại đã sử dụng khi đặt lịch. Hệ thống sẽ gửi lại liên kết truy cập phiếu khám điện tử."
-                : "Enter the email and phone number used during booking. We will resend the ticket link to your email."}
+                ? "Nhập mã tra cứu và số điện thoại đã dùng khi đặt lịch. Nếu thông tin khớp, liên kết sẽ được gửi đến email của lịch hẹn."
+                : "Enter the lookup code and phone number used when booking. If they match, the link will be sent to the appointment email."}
             </p>
 
             {resendSuccess ? (
@@ -740,14 +756,16 @@ export function AppointmentTicketPage() {
 
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    {vi ? "Địa chỉ Email nhận liên kết" : "Email Address"}
+                    {vi ? "Mã tra cứu" : "Lookup Code"}
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={resendEmail}
-                    onChange={(e) => setResendEmail(e.target.value)}
-                    placeholder="example@gmail.com"
+                    value={resendMaTraCuu}
+                    onChange={(e) => setResendMaTraCuu(e.target.value.toUpperCase())}
+                    placeholder="ECL-20261025-4198"
+                    pattern="^ECL-\d{8}-\d{4}$"
+                    maxLength={17}
                     className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-900 focus:border-sky-500 focus:outline-hidden"
                   />
                 </div>

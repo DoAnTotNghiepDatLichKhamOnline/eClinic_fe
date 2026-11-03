@@ -3,11 +3,15 @@ import { patientBookingService } from "@/services/booking";
 import type {
   HoSoCuaToiRequest,
   GetLichHenParams,
+  GetLichHenCalendarParams,
+  GetLichSuKhamParams,
   HuyLichRequest,
   DoiLichRequest,
   DanhGiaRequest,
   DatLichRequest,
   GetNgayConChoParams,
+  GetKhungGioNhieuNgayParams,
+  GetNgayNghiParams,
 } from "@/types/booking.type";
 
 /**
@@ -103,6 +107,88 @@ export function useNgayConCho(params?: GetNgayConChoParams) {
   return {
     ...query,
     danhSachNgay: query.data?.duLieu ?? [],
+  };
+}
+
+export function useKhungGioNhieuNgay(params?: GetKhungGioNhieuNgayParams) {
+  const query = useQuery({
+    queryKey: ["booking", "khung-gio-nhieu-ngay", params],
+    queryFn: () => patientBookingService.getKhungGioNhieuNgay(params!),
+    enabled: Boolean(params?.idBacSi && params?.tuNgay && params?.denNgay),
+  });
+
+  return {
+    ...query,
+    danhSachCaKham: query.data?.duLieu ?? [],
+  };
+}
+
+export function useNgaySomNhat(idChuyenKhoa?: number) {
+  const query = useQuery({
+    queryKey: ["booking", "ngay-som-nhat", idChuyenKhoa],
+    queryFn: () => patientBookingService.getNgaySomNhat(idChuyenKhoa!),
+    enabled: Boolean(idChuyenKhoa),
+  });
+
+  return {
+    ...query,
+    danhSachNgay: query.data?.duLieu ?? [],
+  };
+}
+
+export function useNgayNghi(params?: GetNgayNghiParams) {
+  const query = useQuery({
+    queryKey: ["booking", "ngay-nghi", params],
+    queryFn: () => patientBookingService.getNgayNghi(params),
+    enabled: Boolean(params?.tuNgay && params?.denNgay),
+  });
+
+  return {
+    ...query,
+    danhSachNgayNghi: query.data?.duLieu ?? [],
+  };
+}
+
+export function useQuyTacDatLich() {
+  const query = useQuery({
+    queryKey: ["booking", "quy-tac-dat-lich"],
+    queryFn: () => patientBookingService.getQuyTacDatLich(),
+  });
+
+  return {
+    ...query,
+    quyTac: query.data?.duLieu ?? null,
+  };
+}
+
+export function useLichSuKham(
+  params?: GetLichSuKhamParams,
+  enabled = true,
+) {
+  const query = useQuery({
+    queryKey: ["booking", "lich-su-kham", params],
+    queryFn: () => patientBookingService.getLichSuKham(params),
+    enabled,
+  });
+
+  return {
+    ...query,
+    lichSu: query.data?.duLieu?.noiDung ?? [],
+    tongSoPhanTu: query.data?.duLieu?.tongSoPhanTu ?? 0,
+    tongSoTrang: query.data?.duLieu?.tongSoTrang ?? 0,
+  };
+}
+
+export function useLichHenCalendar(params?: GetLichHenCalendarParams) {
+  const query = useQuery({
+    queryKey: ["booking", "lich-hen-calendar", params],
+    queryFn: () => patientBookingService.getLichHenCalendar(params!),
+    enabled: Boolean(params?.tuNgay && params?.denNgay),
+  });
+
+  return {
+    ...query,
+    danhSach: query.data?.duLieu ?? [],
   };
 }
 

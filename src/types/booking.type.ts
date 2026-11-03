@@ -745,61 +745,42 @@ export interface NguoiThanDaLuuRequest {
 }
 
 export interface QuyTacDatLichResponse {
-	gioiHanDatTruocNgay: number;
-	thoiGianHuyToiThieuGio: number;
-	thoiGianDoiLichToiThieuGio: number;
+	datTruocToiThieuPhut: number;
+	soNgayDatTruocToiDa: number;
+	huyDoiTruocToiThieuPhut: number;
 	soLanDoiLichToiDa: number;
+	soLichHieuLucToiDaMoiHoSo: number;
 }
 
 export interface CapLaiLienKetRequest {
-	email: string;
+	maTraCuu: string;
 	soDienThoai: string;
 }
 
 export interface SoKhamTomTatResponse {
-	maSoKham: string;
-	maPhieuKham: string;
 	hoTenChe: string;
-	soDienThoaiChe: string;
+	namSinh: number;
 	ngayKham: string;
 	gioKham: string;
 	bacSi: BacSiTomTatResponse;
-	chuyenKhoa: string;
-	phongKham?: PhongKhamTomTatResponse | null;
-	trangThai: TrangThaiLichHen;
-	coKetQua: boolean;
+	tenChuyenKhoa: string;
+	phongKham: PhongKhamTomTatResponse | null;
 }
 
 export interface XacMinhSoKhamRequest {
-	soDienThoai4SoCuoi: string;
+	bonSoCuoi: string;
 }
 
 export interface SoKhamChiTietResponse {
-	maSoKham: string;
-	maPhieuKham: string;
-	maTraCuu: string;
-	hoTen: string;
-	ngaySinh: string;
-	gioiTinh: GioiTinh;
-	soDienThoai: string;
-	cccdChe?: string | null;
-	diaChi?: string | null;
-	ngayKham: string;
-	gioKham: string;
-	bacSi: BacSiTomTatResponse;
-	chuyenKhoa: string;
-	phongKham?: PhongKhamTomTatResponse | null;
-	trangThai: TrangThaiLichHen;
-	lyDoKham?: string | null;
-	sinhHieu?: SinhHieu | null;
-	khamLamSang?: string | null;
-	chanDoan: string;
-	maIcdChinh?: string | null;
-	chanDoanKemTheo?: string | null;
-	loiDanBacSi?: string | null;
-	ngayTaiKham?: string | null;
-	donThuoc?: DonThuoc[] | null;
-	ngayHoanThanh?: string | null;
+	tomTat: SoKhamTomTatResponse;
+	benhNhan: {
+		hoTen: string;
+		ngaySinh: string;
+		gioiTinh: GioiTinh;
+		cccdChe: string | null;
+	};
+	hoTenNguoiGiamHo: string | null;
+	ketQua: KetQuaKhamResponse;
 }
 
 export interface GetKhungGioTheoNgayParams {
@@ -812,6 +793,23 @@ export interface GetKhungGioNhieuNgayParams {
 	idBacSi: number;
 	tuNgay?: string;
 	denNgay?: string;
+}
+
+export interface GetNgayNghiParams {
+	tuNgay?: string;
+	denNgay?: string;
+}
+
+export interface GetLichSuKhamParams {
+	cuaAi?: PhamViLichHen;
+	trang?: number;
+	kichThuoc?: number;
+}
+
+export interface GetLichHenCalendarParams {
+	tuNgay: string;
+	denNgay: string;
+	cuaAi?: PhamViLichHen;
 }
 
 export interface XinNghiNhieuCaRequest {

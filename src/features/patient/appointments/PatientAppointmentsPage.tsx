@@ -17,7 +17,7 @@ import type {
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
-import { useDanhSachLichHen } from "@/hooks/useBooking";
+import { useLichHenCalendar } from "@/hooks/useBooking";
 import styles from "./PatientAppointmentsPage.module.css";
 
 type CalendarView = "day" | "week";
@@ -34,11 +34,6 @@ function dateKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function parseDate(value: string) {
-  const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day);
 }
 
 function appointmentDateTime(appointment: AppointmentRecord) {
@@ -66,7 +61,22 @@ export function PatientAppointmentsPage() {
   const { lang } = useLanguage();
   const { user } = useAuth();
 
-  const { danhSach: apiAppointments } = useDanhSachLichHen({ loc: "TAT_CA" });
+  const [calendarView, setCalendarView] = useState<CalendarView>("week");
+  const [range, setRange] = useState<AppointmentRange>("upcoming");
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const weekStart = getWeekStart(selectedDate);
+  const periodStart = calendarView === "day" ? selectedDate : weekStart;
+  const periodEnd = new Date(periodStart);
+  if (calendarView === "week") periodEnd.setDate(periodEnd.getDate() + 6);
+  const {
+    danhSach: apiAppointments,
+    isLoading: isLoadingAppointments,
+    isError: isAppointmentsError,
+  } = useLichHenCalendar({
+    tuNgay: dateKey(periodStart),
+    denNgay: dateKey(periodEnd),
+    cuaAi: "TAT_CA",
+  });
 
   const appointments: UnifiedAppointmentRecord[] = apiAppointments.map((lh) => {
     let status: AppointmentStatus = "pending";
@@ -96,9 +106,6 @@ export function PatientAppointmentsPage() {
       hospitalName: lh.phongKham?.tenPhong,
     };
   });
-  const [calendarView, setCalendarView] = useState<CalendarView>("week");
-  const [range, setRange] = useState<AppointmentRange>("upcoming");
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const today = new Date();
   const todayKey = dateKey(today);
 
@@ -112,7 +119,6 @@ export function PatientAppointmentsPage() {
       `${second.date}T${second.slotTime}`,
     ),
   );
-  const weekStart = getWeekStart(selectedDate);
   const calendarDays = Array.from(
     { length: calendarView === "day" ? 1 : 7 },
     (_, index) => {
@@ -133,16 +139,9 @@ export function PatientAppointmentsPage() {
 
   const changeRange = (nextRange: AppointmentRange) => {
     setRange(nextRange);
-    const matching = appointments.filter((appointment) =>
-      nextRange === "past"
-        ? appointmentDateTime(appointment).getTime() < Date.now()
-        : appointmentDateTime(appointment).getTime() >= Date.now(),
-    );
-    setSelectedDate(
-      nextRange === "past" && matching.length > 0
-        ? parseDate(matching[matching.length - 1].date)
-        : new Date(),
-    );
+    const targetDate = new Date();
+    if (nextRange === "past") targetDate.setDate(targetDate.getDate() - 1);
+    setSelectedDate(targetDate);
   };
 
   const moveCalendar = (direction: number) => {
@@ -233,6 +232,18 @@ export function PatientAppointmentsPage() {
           className={styles.calendar}
           aria-label={lang === "vi" ? "Lịch hẹn" : "Appointment calendar"}
         >
+          {isLoadingAppointments && (
+            <p role="status" className="px-4 py-2 text-sm text-slate-600">
+              {lang === "vi" ? "Đang tải lịch hẹn..." : "Loading appointments..."}
+            </p>
+          )}
+          {isAppointmentsError && (
+            <p role="alert" className="px-4 py-2 text-sm text-rose-700">
+              {lang === "vi"
+                ? "Không thể tải lịch hẹn cho khoảng thời gian này."
+                : "Could not load appointments for this date range."}
+            </p>
+          )}
           <div className={styles.calendarToolbar}>
             <div className={styles.navigation}>
               <button
