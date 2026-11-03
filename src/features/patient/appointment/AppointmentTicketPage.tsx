@@ -411,12 +411,16 @@ export function AppointmentTicketPage() {
               ) : (
                 <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-center text-[10px] text-slate-500">
                   <QrCode size={24} className="mb-1 text-slate-400" />
-                  {qrError ||
-                    t({
-                      en: "QR unavailable",
-                      vi: "Chưa có mã QR",
-                    })}
+                  {t({
+                    en: "QR unavailable",
+                    vi: "Chưa có mã QR",
+                  })}
                 </div>
+              )}
+              {qrError && (
+                <p role="alert" className="mt-2 max-w-24 text-center text-[10px] text-rose-700">
+                  {qrError}
+                </p>
               )}
             </div>
           </div>
