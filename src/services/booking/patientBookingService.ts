@@ -30,6 +30,9 @@ import type {
   SoKhamChiTietResponse,
   GetKhungGioTheoNgayParams,
   GetKhungGioNhieuNgayParams,
+  GetNgayNghiParams,
+  GetLichSuKhamParams,
+  GetLichHenCalendarParams,
 } from "@/types/booking.type";
 
 export const patientBookingService = {
@@ -140,40 +143,20 @@ export const patientBookingService = {
   },
 
   /** GET /api/booking/ngay-nghi - Get clinic holidays list */
-  getNgayNghi: async () => {
-    try {
-      const response = await axiosClient.get<ApiResponse<NgayNghiResponse[]>>(
-        "/api/booking/ngay-nghi",
-      );
-      return response.data;
-    } catch {
-      return {
-        thanhCong: true,
-        thongDiep: "Lấy danh sách ngày nghỉ",
-        duLieu: [] as NgayNghiResponse[],
-      };
-    }
+  getNgayNghi: async (params?: GetNgayNghiParams) => {
+    const response = await axiosClient.get<ApiResponse<NgayNghiResponse[]>>(
+      "/api/booking/ngay-nghi",
+      { params },
+    );
+    return response.data;
   },
 
   /** GET /api/booking/quy-tac-dat-lich - Get booking limits and policies */
   getQuyTacDatLich: async () => {
-    try {
-      const response = await axiosClient.get<ApiResponse<QuyTacDatLichResponse>>(
-        "/api/booking/quy-tac-dat-lich",
-      );
-      return response.data;
-    } catch {
-      return {
-        thanhCong: true,
-        thongDiep: "Quy tắc đặt lịch",
-        duLieu: {
-          gioiHanDatTruocNgay: 30,
-          thoiGianHuyToiThieuGio: 2,
-          thoiGianDoiLichToiThieuGio: 2,
-          soLanDoiLichToiDa: 3,
-        } as QuyTacDatLichResponse,
-      };
-    }
+    const response = await axiosClient.get<ApiResponse<QuyTacDatLichResponse>>(
+      "/api/booking/quy-tac-dat-lich",
+    );
+    return response.data;
   },
 
 
@@ -195,10 +178,20 @@ export const patientBookingService = {
   },
 
   /** Get QR code blob for appointment ticket */
-  getQrPhieuKham: async (maPhieuKham: string, taiVe = false) => {
+  getQrPhieuKham: async (
+    maPhieuKham: string,
+    taiVe = false,
+    kichThuoc?: number,
+  ) => {
     const response = await axiosClient.get<Blob>(
       `/api/booking/phieu-kham/${maPhieuKham}/qr`,
-      { params: taiVe ? { taiVe: true } : undefined, responseType: "blob" },
+      {
+        params: {
+          ...(kichThuoc !== undefined ? { kichThuoc } : {}),
+          ...(taiVe ? { taiVe: true } : {}),
+        },
+        responseType: "blob",
+      },
     );
     return response.data;
   },
@@ -274,11 +267,7 @@ export const patientBookingService = {
   },
 
   /** Get medical examination history */
-  getLichSuKham: async (params?: {
-    tuKhoa?: string;
-    trang?: number;
-    kichThuoc?: number;
-  }) => {
+  getLichSuKham: async (params?: GetLichSuKhamParams) => {
     const response = await axiosClient.get<
       ApiResponse<PageResponse<LanKhamCuaToiResponse>>
     >("/api/booking/lich-su-kham/cua-toi", { params });
@@ -286,11 +275,7 @@ export const patientBookingService = {
   },
 
   /** Get unpaginated calendar appointments within max 42 days */
-  getLichHenCalendar: async (params: {
-    tuNgay: string;
-    denNgay: string;
-    cuaAi?: "TAT_CA" | "BAN_THAN" | "NGUOI_KHAC";
-  }) => {
+  getLichHenCalendar: async (params: GetLichHenCalendarParams) => {
     const response = await axiosClient.get<
       ApiResponse<LichHenCuaToiResponse[]>
     >("/api/booking/lich-hen/cua-toi/lich", { params });
@@ -341,10 +326,20 @@ export const patientBookingService = {
   },
 
   /** GET /api/booking/so-kham/{maSoKham}/qr - Get QR image for medical record */
-  getQrSoKham: async (maSoKham: string, taiVe = false) => {
+  getQrSoKham: async (
+    maSoKham: string,
+    taiVe = false,
+    kichThuoc?: number,
+  ) => {
     const response = await axiosClient.get<Blob>(
       `/api/booking/so-kham/${maSoKham}/qr`,
-      { params: taiVe ? { taiVe: true } : undefined, responseType: "blob" },
+      {
+        params: {
+          ...(kichThuoc !== undefined ? { kichThuoc } : {}),
+          ...(taiVe ? { taiVe: true } : {}),
+        },
+        responseType: "blob",
+      },
     );
     return response.data;
   },

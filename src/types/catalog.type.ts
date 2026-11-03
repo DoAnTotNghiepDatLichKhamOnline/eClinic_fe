@@ -98,9 +98,13 @@ export interface BacSiChiTietResponse extends BacSiResponse {
 export interface GetBacSiParams {
   idChuyenKhoa?: number;
   tuKhoa?: string;
+  ngay?: string;
+  buoi?: BuoiKham;
   trang?: number;
   kichThuoc?: number;
 }
+
+export type BuoiKham = "SANG" | "CHIEU" | "TOI";
 
 // ==========================================
 // 3. PHÒNG KHÁM (CLINIC)
