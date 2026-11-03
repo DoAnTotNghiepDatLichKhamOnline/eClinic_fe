@@ -38,6 +38,7 @@ export function MedicalBookPublicPage() {
   const [summary, setSummary] = useState<SoKhamTomTatResponse | null>(null);
   const [detail, setDetail] = useState<SoKhamChiTietResponse | null>(null);
   const [qrUrl, setQrUrl] = useState("");
+  const [qrError, setQrError] = useState("");
 
   // Trạng thái tải và lỗi
   const [loading, setLoading] = useState(false);
@@ -54,14 +55,18 @@ export function MedicalBookPublicPage() {
       setSummary(null);
       setDetail(null);
       setQrUrl("");
+      setQrError("");
       return;
     }
 
     let isMounted = true;
+    let qrObjectUrl: string | null = null;
     setLoading(true);
     setError("");
+    setSummary(null);
     setDetail(null);
     setVerifyError("");
+    setQrError("");
 
     void patientBookingService
       .getSoKhamTomTat(activeCode)
@@ -75,38 +80,15 @@ export function MedicalBookPublicPage() {
       })
       .catch((err: unknown) => {
         if (!isMounted) return;
-        // Fallback demo nếu backend chưa triển khai endpoint
-        const fallbackDemo: SoKhamTomTatResponse = {
-          maSoKham: activeCode,
-          maPhieuKham: `PK-${activeCode}`,
-          hoTenChe: "Nguyễn V*** A",
-          soDienThoaiChe: "09****4321",
-          ngayKham: new Date().toISOString().slice(0, 10),
-          gioKham: "08:30:00",
-          bacSi: {
-            id: 1,
-            hoTen: "PGS.TS Nguyễn Văn An",
-            hocVi: "Phó Giáo sư",
-            anhDaiDien: null,
-          },
-          chuyenKhoa: "Nội tổng quát",
-          phongKham: {
-            id: 101,
-            tenPhong: "Phòng 102",
-            tang: "Tầng 1",
-          },
-          trangThai: "DA_HOAN_THANH",
-          coKetQua: true,
-        };
-        const errMsg =
+        setError(
           (err as { response?: { data?: { thongDiep?: string } } }).response
-            ?.data?.thongDiep;
-        if (errMsg && !errMsg.includes("404")) {
-          setError(errMsg);
-        } else {
-          // Hiển thị dữ liệu mẫu sổ khám
-          setSummary(fallbackDemo);
-        }
+            ?.data?.thongDiep ??
+            (err instanceof Error
+              ? err.message
+              : vi
+                ? "Không thể tải thông tin sổ khám."
+                : "Could not load medical record details."),
+        );
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -117,15 +99,26 @@ export function MedicalBookPublicPage() {
       .getQrSoKham(activeCode)
       .then((blob) => {
         if (!isMounted) return;
-        setQrUrl(URL.createObjectURL(blob));
+        qrObjectUrl = URL.createObjectURL(blob);
+        setQrUrl(qrObjectUrl);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (!isMounted) return;
         setQrUrl("");
+        setQrError(
+          (err as { response?: { data?: { thongDiep?: string } } }).response
+            ?.data?.thongDiep ??
+            (err instanceof Error
+              ? err.message
+              : vi
+                ? "Không thể tải mã QR."
+                : "Could not load the QR code."),
+        );
       });
 
     return () => {
       isMounted = false;
+      if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
     };
   }, [activeCode]);
 
@@ -151,7 +144,7 @@ export function MedicalBookPublicPage() {
 
     try {
       const res = await patientBookingService.xemSoKhamChiTiet(activeCode, {
-        soDienThoai4SoCuoi: last4Digits,
+        bonSoCuoi: last4Digits,
       });
 
       if (res.thanhCong && res.duLieu) {
@@ -159,79 +152,16 @@ export function MedicalBookPublicPage() {
       } else {
         throw new Error(res.thongDiep);
       }
-    } catch {
-      // Giả lập mở khóa EMR demo nếu backend chưa có endpoint này
-      setDetail({
-        maSoKham: activeCode,
-        maPhieuKham: `PK-${activeCode}`,
-        maTraCuu: `ECL-${activeCode}`,
-        hoTen: "Nguyễn Văn An",
-        ngaySinh: "1990-05-12",
-        gioiTinh: "NAM",
-        soDienThoai: `098765${last4Digits}`,
-        cccdChe: "001090****56",
-        diaChi: "Quận 1, TP. Hồ Chí Minh",
-        ngayKham: new Date().toISOString().slice(0, 10),
-        gioKham: "08:30:00",
-        bacSi: {
-          id: 1,
-          hoTen: "PGS.TS Nguyễn Văn An",
-          hocVi: "Phó Giáo sư",
-          anhDaiDien: null,
-        },
-        chuyenKhoa: "Nội tổng quát",
-        phongKham: {
-          id: 101,
-          tenPhong: "Phòng 102",
-          tang: "Tầng 1",
-        },
-        trangThai: "DA_HOAN_THANH",
-        lyDoKham: "Đau đầu nhẹ và mệt mỏi kéo dài 3 ngày",
-        sinhHieu: {
-          mach: 78,
-          nhietDo: 36.8,
-          nhipTho: 18,
-          huyetApTamThu: 120,
-          huyetApTamTruong: 80,
-          canNang: 68,
-          chieuCao: 172,
-        },
-        khamLamSang: "Tim đều, phổi trong, họng không đỏ, phản xạ thần kinh bình thường.",
-        chanDoan: "Đau đầu do căng thẳng (Tension-type headache)",
-        maIcdChinh: "G44.2",
-        chanDoanKemTheo: "Rối loạn giấc ngủ nhẹ",
-        loiDanBacSi: "Nghỉ ngơi hợp lý, tránh thức khuya, uống nhiều nước và tái khám nếu cơn đau kéo dài.",
-        ngayTaiKham: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
-        donThuoc: [
-          {
-            idThuoc: 1,
-            tenThuoc: "Paracetamol 500mg",
-            hoatChat: "Paracetamol",
-            soLuong: 10,
-            donVi: "Viên",
-            donViTinh: "Viên",
-            lieuDung: "Uống 1 viên khi đau đầu nhiều, cách nhau ít nhất 6 tiếng",
-            cachDung: "Uống 1 viên khi đau đầu nhiều, cách nhau ít nhất 6 tiếng",
-            soLanMoiNgay: 2,
-            soNgayDung: 5,
-            ghiChuSuDung: null,
-          },
-          {
-            idThuoc: 2,
-            tenThuoc: "Magnesium B6",
-            hoatChat: "Magnesium lactate dihydrate, Pyridoxine hydrochloride",
-            soLuong: 20,
-            donVi: "Viên",
-            donViTinh: "Viên",
-            lieuDung: "Uống 1 viên vào buổi sáng và 1 viên vào buổi tối sau ăn",
-            cachDung: "Uống 1 viên vào buổi sáng và 1 viên vào buổi tối sau ăn",
-            soLanMoiNgay: 2,
-            soNgayDung: 10,
-            ghiChuSuDung: null,
-          },
-        ],
-        ngayHoanThanh: new Date().toISOString(),
-      });
+    } catch (err: unknown) {
+      setVerifyError(
+        (err as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (err instanceof Error
+            ? err.message
+            : vi
+              ? "Không thể xác minh thông tin. Vui lòng thử lại."
+              : "Could not verify the information. Please try again."),
+      );
     } finally {
       setVerifying(false);
     }
@@ -327,7 +257,7 @@ export function MedicalBookPublicPage() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   {vi ? "Mã sổ khám" : "Medical Record Code"}
                 </span>
-                <p className="text-lg font-mono font-black text-slate-900">{summary.maSoKham}</p>
+                <p className="text-lg font-mono font-black text-slate-900">{activeCode}</p>
               </div>
 
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
@@ -344,7 +274,9 @@ export function MedicalBookPublicPage() {
                 <div>
                   <span className="text-xs text-slate-500">{vi ? "Người khám" : "Patient"}</span>
                   <p className="text-sm font-bold text-slate-900">{summary.hoTenChe}</p>
-                  <p className="text-xs font-mono text-slate-500">{summary.soDienThoaiChe}</p>
+                  <p className="text-xs text-slate-500">
+                    {vi ? "Năm sinh" : "Birth year"}: {summary.namSinh}
+                  </p>
                 </div>
               </div>
 
@@ -355,7 +287,7 @@ export function MedicalBookPublicPage() {
                 <div>
                   <span className="text-xs text-slate-500">{vi ? "Bác sĩ phụ trách" : "Physician"}</span>
                   <p className="text-sm font-bold text-slate-900">{summary.bacSi?.hoTen}</p>
-                  <p className="text-xs text-emerald-700 font-semibold">{summary.chuyenKhoa}</p>
+                  <p className="text-xs text-emerald-700 font-semibold">{summary.tenChuyenKhoa}</p>
                 </div>
               </div>
 
@@ -433,36 +365,26 @@ export function MedicalBookPublicPage() {
                   </h3>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs">
                   <div>
                     <span className="text-slate-500">{vi ? "Họ và tên" : "Full Name"}</span>
-                    <p className="text-sm font-bold text-slate-900 mt-0.5">{detail.hoTen}</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{detail.benhNhan.hoTen}</p>
                   </div>
                   <div>
                     <span className="text-slate-500">{vi ? "Ngày sinh / Giới tính" : "Birth Date / Gender"}</span>
                     <p className="text-sm font-bold text-slate-900 mt-0.5">
-                      {detail.ngaySinh} ({detail.gioiTinh})
+                      {detail.benhNhan.ngaySinh} ({detail.benhNhan.gioiTinh})
                     </p>
                   </div>
                   <div>
-                    <span className="text-slate-500">{vi ? "Số điện thoại" : "Phone Number"}</span>
-                    <p className="text-sm font-bold text-slate-900 mt-0.5">{detail.soDienThoai}</p>
-                  </div>
-                  <div>
                     <span className="text-slate-500">{vi ? "Số CCCD" : "National ID"}</span>
-                    <p className="text-sm font-bold text-slate-900 mt-0.5">{detail.cccdChe || "—"}</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{detail.benhNhan.cccdChe || "—"}</p>
                   </div>
-                  {detail.diaChi && (
-                    <div className="sm:col-span-2 lg:col-span-4">
-                      <span className="text-slate-500">{vi ? "Địa chỉ" : "Address"}</span>
-                      <p className="text-xs font-medium text-slate-800 mt-0.5">{detail.diaChi}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Vitals & Clinical Examination */}
-              {detail.sinhHieu && (
+              {detail.ketQua.sinhHieu && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                     <Activity size={18} className="text-emerald-700" />
@@ -477,7 +399,7 @@ export function MedicalBookPublicPage() {
                         {vi ? "Mạch" : "Pulse"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.mach} <span className="text-[10px] text-slate-500">bpm</span>
+                        {detail.ketQua.sinhHieu.mach} <span className="text-[10px] text-slate-500">bpm</span>
                       </p>
                     </div>
 
@@ -486,7 +408,7 @@ export function MedicalBookPublicPage() {
                         {vi ? "Huyết áp" : "Blood Pressure"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.huyetApTamThu}/{detail.sinhHieu.huyetApTamTruong}{" "}
+                        {detail.ketQua.sinhHieu.huyetApTamThu}/{detail.ketQua.sinhHieu.huyetApTamTruong}{" "}
                         <span className="text-[10px] text-slate-500">mmHg</span>
                       </p>
                     </div>
@@ -496,7 +418,7 @@ export function MedicalBookPublicPage() {
                         {vi ? "Nhiệt độ" : "Temperature"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.nhietDo} <span className="text-[10px] text-slate-500">°C</span>
+                        {detail.ketQua.sinhHieu.nhietDo} <span className="text-[10px] text-slate-500">°C</span>
                       </p>
                     </div>
 
@@ -505,7 +427,7 @@ export function MedicalBookPublicPage() {
                         {vi ? "Nhịp thở" : "Respiration"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.nhipTho} <span className="text-[10px] text-slate-500">/phút</span>
+                        {detail.ketQua.sinhHieu.nhipTho} <span className="text-[10px] text-slate-500">/phút</span>
                       </p>
                     </div>
 
@@ -514,7 +436,7 @@ export function MedicalBookPublicPage() {
                         {vi ? "Cân nặng" : "Weight"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.canNang} <span className="text-[10px] text-slate-500">kg</span>
+                        {detail.ketQua.sinhHieu.canNang} <span className="text-[10px] text-slate-500">kg</span>
                       </p>
                     </div>
 
@@ -523,15 +445,15 @@ export function MedicalBookPublicPage() {
                         {vi ? "Chiều cao" : "Height"}
                       </span>
                       <p className="text-base font-bold text-slate-900 mt-0.5">
-                        {detail.sinhHieu.chieuCao} <span className="text-[10px] text-slate-500">cm</span>
+                        {detail.ketQua.sinhHieu.chieuCao} <span className="text-[10px] text-slate-500">cm</span>
                       </p>
                     </div>
                   </div>
 
-                  {detail.khamLamSang && (
+                  {detail.ketQua.khamLamSang && (
                     <div className="rounded-xl bg-slate-50 p-3.5 text-xs text-slate-700 leading-relaxed border border-slate-200">
                       <strong>{vi ? "Khám lâm sàng: " : "Clinical findings: "}</strong>
-                      {detail.khamLamSang}
+                      {detail.ketQua.khamLamSang}
                     </div>
                   )}
                 </div>
@@ -550,36 +472,36 @@ export function MedicalBookPublicPage() {
                   <div>
                     <span className="text-xs text-slate-500">{vi ? "Chẩn đoán chính" : "Primary Diagnosis"}</span>
                     <p className="text-base font-bold text-slate-900 mt-0.5">
-                      {detail.chanDoan}
-                      {detail.maIcdChinh && (
+                      {detail.ketQua.chanDoan}
+                      {detail.ketQua.icdChinh?.ma && (
                         <span className="ml-2 inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-mono font-bold text-emerald-800">
-                          {detail.maIcdChinh}
+                          {detail.ketQua.icdChinh.ma}
                         </span>
                       )}
                     </p>
                   </div>
 
-                  {detail.chanDoanKemTheo && (
+                  {detail.ketQua.chanDoanKemTheo && (
                     <div>
                       <span className="text-xs text-slate-500">{vi ? "Chẩn đoán kèm theo" : "Secondary Diagnosis"}</span>
-                      <p className="text-xs font-semibold text-slate-700 mt-0.5">{detail.chanDoanKemTheo}</p>
+                      <p className="text-xs font-semibold text-slate-700 mt-0.5">{detail.ketQua.chanDoanKemTheo}</p>
                     </div>
                   )}
 
-                  {detail.loiDanBacSi && (
+                  {detail.ketQua.ghiChu && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-900 leading-relaxed">
                       <strong>{vi ? "Lời dặn của bác sĩ: " : "Doctor's Advice: "}</strong>
-                      {detail.loiDanBacSi}
+                      {detail.ketQua.ghiChu}
                     </div>
                   )}
 
-                  {detail.ngayTaiKham && (
+                  {detail.ketQua.ngayTaiKhamDeXuat && (
                     <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
                       <Clock size={15} />
                       <span>
                         {vi
-                          ? `Ngày hẹn tái khám: ${detail.ngayTaiKham}`
-                          : `Follow-up appointment date: ${detail.ngayTaiKham}`}
+                          ? `Ngày hẹn tái khám: ${detail.ketQua.ngayTaiKhamDeXuat}`
+                          : `Follow-up appointment date: ${detail.ketQua.ngayTaiKhamDeXuat}`}
                       </span>
                     </div>
                   )}
@@ -587,7 +509,7 @@ export function MedicalBookPublicPage() {
               </div>
 
               {/* Prescription Table */}
-              {detail.donThuoc && detail.donThuoc.length > 0 && (
+              {detail.ketQua.donThuoc && detail.ketQua.donThuoc.length > 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
                     <Pill size={18} className="text-emerald-700" />
@@ -607,7 +529,7 @@ export function MedicalBookPublicPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-800">
-                        {detail.donThuoc.map((thuoc, idx) => (
+                        {detail.ketQua.donThuoc.map((thuoc, idx) => (
                           <tr key={thuoc.idThuoc || idx} className="hover:bg-slate-50/50">
                             <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
                             <td className="py-2.5 px-3 font-semibold">
@@ -654,6 +576,11 @@ export function MedicalBookPublicPage() {
                     {vi ? "Tải ảnh QR" : "Download QR"}
                   </a>
                 </div>
+              )}
+              {qrError && (
+                <p role="alert" className="text-sm text-rose-700">
+                  {qrError}
+                </p>
               )}
 
               {/* Guest Account Sync CTA Banner */}
