@@ -36,7 +36,13 @@ export function SessionsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
 
-  const { danhSach: sessions, isLoading } = useDanhSachPhienDangNhap();
+  const {
+    danhSach: sessions,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useDanhSachPhienDangNhap();
   const { xoaPhien, xoaTatCaPhienKhac, isRevokingAllSessions } = useIdentityActions();
 
   const [revokingId, setRevokingId] = useState<string | null>(null);
@@ -101,6 +107,31 @@ export function SessionsPage() {
         <div style={{ display: "flex", justifyContent: "center", padding: "32px 0", gap: "8px", alignItems: "center", color: "#64748b" }}>
           <Loader2 size={18} className="animate-spin" />
           <span>{vi ? "Đang tải danh sách thiết bị..." : "Loading devices..."}</span>
+        </div>
+      )}
+
+      {!isLoading && isError && (
+        <div className={styles.errorBanner} role="alert">
+          <AlertTriangle size={16} />
+          <span>
+            {vi
+              ? "Không thể tải danh sách thiết bị đăng nhập."
+              : "Could not load your signed-in devices."}
+          </span>
+          <button
+            className={styles.retryButton}
+            type="button"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+          >
+            {isFetching
+              ? vi
+                ? "Đang thử..."
+                : "Retrying..."
+              : vi
+                ? "Thử lại"
+                : "Retry"}
+          </button>
         </div>
       )}
 
@@ -186,7 +217,7 @@ export function SessionsPage() {
         </>
       )}
 
-      {!isLoading && otherSessions.length === 0 && !revokedAll && (
+      {!isLoading && !isError && otherSessions.length === 0 && !revokedAll && (
         <div style={{ fontSize: 13, color: "#8a948f", textAlign: "center", padding: "16px 0" }}>
           {vi ? "Không có thiết bị nào khác đang đăng nhập." : "No other devices are currently signed in."}
         </div>
