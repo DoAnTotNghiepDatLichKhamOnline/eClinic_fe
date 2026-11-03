@@ -7,6 +7,8 @@ import {
   FileText,
   HeartPulse,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -62,12 +64,32 @@ export function PatientNotificationCenter() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
   const navigate = useNavigate();
+  const [page, setPage] = useState(0);
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [actionError, setActionError] = useState("");
 
-  const { danhSach: notices, isLoading } = useDanhSachThongBao({
-    kichThuoc: 10,
+  const {
+    danhSach: notices,
+    isLoading,
+    isError,
+    refetch,
+    tongSoTrang,
+    trangHienTai,
+  } = useDanhSachThongBao({
+    ...(unreadOnly ? { chuaDoc: true } : {}),
+    trang: page,
+    kichThuoc: 5,
   });
-  const { soChuaDoc } = useSoThongBaoChuaDoc();
-  const { danhDauDaDoc, danhDauTatCaDaDoc } = useNotificationActions();
+  const {
+    soChuaDoc,
+    isError: isUnreadCountError,
+  } = useSoThongBaoChuaDoc();
+  const {
+    danhDauDaDoc,
+    isMarkingRead,
+    danhDauTatCaDaDoc,
+    isMarkingAllRead,
+  } = useNotificationActions();
 
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -96,19 +118,39 @@ export function PatientNotificationCenter() {
   }, [open]);
 
   const handleMarkAllRead = async () => {
+    setActionError("");
     try {
       await danhDauTatCaDaDoc();
-    } catch (err) {
-      console.error(err);
+      setPage(0);
+    } catch (err: unknown) {
+      setActionError(
+        (err as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep ??
+          (err instanceof Error
+            ? err.message
+            : vi
+              ? "Không thể đánh dấu tất cả đã đọc."
+              : "Could not mark all notifications as read."),
+      );
     }
   };
 
   const handleOpenNotice = async (notice: ThongBaoResponse) => {
+    setActionError("");
     if (!notice.daDoc) {
       try {
         await danhDauDaDoc(notice.id);
-      } catch (err) {
-        console.error(err);
+      } catch (err: unknown) {
+        setActionError(
+          (err as { response?: { data?: { thongDiep?: string } } }).response
+            ?.data?.thongDiep ??
+            (err instanceof Error
+              ? err.message
+              : vi
+                ? "Không thể cập nhật trạng thái thông báo."
+                : "Could not update the notification status."),
+        );
+        return;
       }
     }
     setOpen(false);
@@ -154,6 +196,7 @@ export function PatientNotificationCenter() {
             : `Notifications, ${soChuaDoc} unread`
         }
         aria-expanded={open}
+        aria-controls="patient-notification-panel"
         onClick={() => setOpen((val) => !val)}
       >
         <Bell aria-hidden="true" size={18} />
@@ -162,6 +205,7 @@ export function PatientNotificationCenter() {
 
       {open && (
         <section
+          id="patient-notification-panel"
           className={styles.panel}
           aria-label={vi ? "Trung tâm thông báo" : "Notification center"}
         >
@@ -173,29 +217,87 @@ export function PatientNotificationCenter() {
               <button
                 type="button"
                 className={styles.markAll}
+                disabled={isMarkingAllRead}
                 onClick={handleMarkAllRead}
               >
-                <CheckCheck size={14} aria-hidden="true" />
+                {isMarkingAllRead ? (
+                  <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <CheckCheck size={14} aria-hidden="true" />
+                )}
                 {vi ? "Đã đọc hết" : "Mark all read"}
               </button>
             )}
           </header>
 
+          <div className={styles.filters} role="group" aria-label={vi ? "Lọc thông báo" : "Filter notifications"}>
+            <button
+              type="button"
+              className={`${styles.filterButton} ${!unreadOnly ? styles.filterButtonActive : ""}`}
+              aria-pressed={!unreadOnly}
+              onClick={() => {
+                setUnreadOnly(false);
+                setPage(0);
+                setActionError("");
+              }}
+            >
+              {vi ? "Tất cả" : "All"}
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterButton} ${unreadOnly ? styles.filterButtonActive : ""}`}
+              aria-pressed={unreadOnly}
+              onClick={() => {
+                setUnreadOnly(true);
+                setPage(0);
+                setActionError("");
+              }}
+            >
+              {vi ? "Chưa đọc" : "Unread"}
+            </button>
+          </div>
+
+          {actionError && (
+            <p className={styles.actionError} role="alert">
+              {actionError}
+            </p>
+          )}
+          {isUnreadCountError && (
+            <p className={styles.actionError} role="alert">
+              {vi
+                ? "Không thể tải số thông báo chưa đọc."
+                : "Could not load the unread notification count."}
+            </p>
+          )}
+
           <div className={styles.list}>
             {isLoading ? (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  padding: "24px 0",
-                  color: "#64748b",
-                }}
-              >
-                <Loader2 size={16} className="animate-spin" />
-              </div>
+              <p className={styles.loading} role="status">
+                <Loader2 size={16} className="mr-2 inline animate-spin" />
+                {vi ? "Đang tải thông báo..." : "Loading notifications..."}
+              </p>
+            ) : isError ? (
+              <p className={styles.error} role="alert">
+                {vi
+                  ? "Không thể tải thông báo."
+                  : "Could not load notifications."}
+                <button
+                  type="button"
+                  className={styles.retry}
+                  onClick={() => void refetch()}
+                >
+                  {vi ? "Thử lại" : "Retry"}
+                </button>
+              </p>
             ) : notices.length === 0 ? (
               <div className={styles.empty}>
-                {vi ? "Không có thông báo mới" : "No new notifications"}
+                {unreadOnly
+                  ? vi
+                    ? "Không có thông báo chưa đọc."
+                    : "No unread notifications."
+                  : vi
+                    ? "Chưa có thông báo."
+                    : "No notifications yet."}
               </div>
             ) : (
               notices.map((notice) => (
@@ -203,6 +305,7 @@ export function PatientNotificationCenter() {
                   key={notice.id}
                   type="button"
                   className={`${styles.notice} ${notice.daDoc ? "" : styles.unread}`}
+                  disabled={isMarkingRead}
                   onClick={() => handleOpenNotice(notice)}
                 >
                   <span className={styles.noticeDot}>{renderIcon(notice)}</span>
@@ -215,6 +318,34 @@ export function PatientNotificationCenter() {
               ))
             )}
           </div>
+
+          {!isLoading && !isError && tongSoTrang > 1 && (
+            <nav className={styles.pagination} aria-label={vi ? "Phân trang thông báo" : "Notification pages"}>
+              <button
+                type="button"
+                className={styles.pageButton}
+                disabled={trangHienTai <= 0}
+                onClick={() => setPage((current) => Math.max(current - 1, 0))}
+              >
+                <ChevronLeft size={14} aria-hidden="true" />
+                {vi ? "Trước" : "Previous"}
+              </button>
+              <span className={styles.pageLabel} aria-live="polite">
+                {trangHienTai + 1} / {tongSoTrang}
+              </span>
+              <button
+                type="button"
+                className={styles.pageButton}
+                disabled={trangHienTai + 1 >= tongSoTrang}
+                onClick={() =>
+                  setPage((current) => Math.min(current + 1, tongSoTrang - 1))
+                }
+              >
+                {vi ? "Sau" : "Next"}
+                <ChevronRight size={14} aria-hidden="true" />
+              </button>
+            </nav>
+          )}
 
           <p className={styles.footer}>
             {vi
