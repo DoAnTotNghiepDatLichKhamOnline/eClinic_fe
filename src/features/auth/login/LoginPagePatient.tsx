@@ -6,12 +6,17 @@ declare global {
           initialize: (config: {
             client_id: string;
             callback: (response: { credential: string }) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
           }) => void;
           renderButton: (
             parent: HTMLElement,
             options: {
               theme?: "outline" | "filled_blue" | "filled_black";
               size?: "large" | "medium" | "small";
+              type?: "standard" | "icon";
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              shape?: "rectangular" | "pill" | "circle" | "square";
               width?: string | number;
             }
           ) => void;
@@ -31,6 +36,7 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { notifyAuth } from "@/utils/authNotification";
+import { LoginForm } from "./LoginForm";
 import styles from "./LoginPagePatient.module.css";
 
 export function LoginPagePatient() {
@@ -294,6 +300,15 @@ export function LoginPagePatient() {
                     : "Welcome back to eClinic"}
                 </p>
               </div>
+
+              <LoginForm
+                lang={lang}
+                email={loginEmail}
+                onEmailChange={setLoginEmail}
+                onSubmit={handleLoginSubmit}
+                onForgotPassword={handleForgotPassword}
+                isLoading={isLoading}
+              />
 
               <div className="flex flex-col items-center justify-center gap-3 py-4">
                 <div
