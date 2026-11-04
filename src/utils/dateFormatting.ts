@@ -65,11 +65,21 @@ export function formatDateTimeWithWeekday(
     minute: "2-digit",
     hourCycle: "h23",
   }).format(date);
+  return `${time} - ${formatFullDateWithWeekday(date, language)}`;
+}
+
+export function formatFullDateWithWeekday(
+  value: string | Date | null | undefined,
+  language: DateDisplayLanguage = "vi",
+): string {
+  const date = parseLocalDate(value);
+  if (!date) return "—";
+
   const weekday = new Intl.DateTimeFormat(getLocale(language), {
     weekday: "long",
   }).format(date);
 
-  return `${time} - ${weekday}, ${formatFullDate(date, language)}`;
+  return `${weekday}, ${formatFullDate(date, language)}`;
 }
 
 export function formatTimeAndDate(
