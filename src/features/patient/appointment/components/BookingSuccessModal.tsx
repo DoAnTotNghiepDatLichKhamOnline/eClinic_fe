@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   Calendar,
@@ -12,11 +14,12 @@ import {
   Plus,
   MapPin,
   Hash,
+  Loader2,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
+import { patientBookingService } from "@/services/booking";
 import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
 import type { DatLichResponse } from "@/types/booking.type";
@@ -57,11 +60,55 @@ export function BookingSuccessModal({
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
   const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
-  const qrValue =
-    bookingResult?.linkPhieuKham ||
-    bookingResult?.maPhieuKham ||
-    bookingCode ||
-    "ECLINIC";
+  const [qrUrl, setQrUrl] = useState("");
+  const [qrError, setQrError] = useState("");
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
+
+  useEffect(() => {
+    const maPhieuKham = bookingResult?.maPhieuKham;
+    if (!isOpen || !maPhieuKham) {
+      setQrUrl("");
+      setQrError("");
+      setIsLoadingQr(false);
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl = "";
+    setQrUrl("");
+    setQrError("");
+    setIsLoadingQr(true);
+
+    void patientBookingService
+      .getQrPhieuKham(maPhieuKham)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setQrUrl(objectUrl);
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        const apiMessage = isAxiosError<{ thongDiep?: string }>(cause)
+          ? cause.response?.data?.thongDiep
+          : undefined;
+        setQrError(
+          apiMessage ||
+            (cause instanceof Error
+              ? cause.message
+              : lang === "vi"
+                ? "Không thể tải mã QR phiếu khám."
+                : "Could not load the appointment QR code."),
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingQr(false);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [bookingResult?.maPhieuKham, isOpen, lang]);
 
   const displayCode =
     bookingResult?.maTraCuu || bookingResult?.maPhieuKham || bookingCode;
@@ -165,8 +212,41 @@ export function BookingSuccessModal({
             )}
           </div>
 
-          <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 shrink-0">
-            <QRCodeSVG value={qrValue} size={92} level="M" />
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex h-[112px] w-[112px] items-center justify-center rounded-xl border border-emerald-100 bg-white p-2.5 shadow-sm">
+              {isLoadingQr ? (
+                <Loader2
+                  className="animate-spin text-emerald-800"
+                  aria-label={
+                    lang === "vi" ? "Đang tải mã QR" : "Loading QR code"
+                  }
+                />
+              ) : qrUrl ? (
+                <img
+                  src={qrUrl}
+                  alt={
+                    lang === "vi" ? "Mã QR phiếu khám" : "Appointment QR code"
+                  }
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <p role="alert" className="text-center text-[10px] text-rose-700">
+                  {qrError ||
+                    (lang === "vi"
+                      ? "Không có mã QR. Hãy mở phiếu khám để thử lại."
+                      : "QR unavailable. Open the appointment ticket to retry.")}
+                </p>
+              )}
+            </div>
+            {qrUrl && bookingResult?.maPhieuKham && (
+              <a
+                href={qrUrl}
+                download={`phieu-kham-${bookingResult.maPhieuKham}.png`}
+                className="text-xs font-semibold text-emerald-800 underline"
+              >
+                {lang === "vi" ? "Tải mã QR" : "Download QR"}
+              </a>
+            )}
           </div>
         </div>
 
