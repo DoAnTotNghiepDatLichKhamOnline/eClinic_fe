@@ -1,5 +1,25 @@
 import type { GioiTinh, QuanHeGiamHo } from "@/types/common.type";
 
+export type AppointmentStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "completed";
+
+export interface AppointmentRecord {
+  bookingCode: string;
+  patientId?: string;
+  patientName: string;
+  patientPhone: string;
+  specialtyId: string;
+  doctorId: string;
+  date: string;
+  slotTime: string;
+  reason: string;
+  status: AppointmentStatus;
+  createdAt: string;
+}
+
 export interface AppointmentFormValues {
   // 1. Nhóm thông tin Đăng ký Dịch vụ & Thời gian khám
   specialtyId: string; // ID chuyên khoa (bắt buộc)
