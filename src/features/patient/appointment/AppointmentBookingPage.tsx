@@ -463,7 +463,7 @@ export function AppointmentBookingPage() {
         nguoiGiamHo: isMinor
           ? {
               hoTen: formValues.guardianName!.trim(),
-              quanHe: (formValues.guardianRelationship as any) || "CHA",
+            quanHe: formValues.guardianRelationship ?? "CHA",
               soDienThoai: formValues.guardianPhone!.trim(),
               cccd: formValues.guardianCccd!.trim(),
             }
