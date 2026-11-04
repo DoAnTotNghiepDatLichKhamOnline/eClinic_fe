@@ -14,6 +14,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useTrangCaNhan } from "@/hooks/useBooking";
+import { formatFullDate } from "@/utils/dateFormatting";
 import styles from "./DashboardPage.module.css";
 
 export function DashboardPage() {
@@ -191,7 +192,7 @@ export function DashboardPage() {
                   <div className={styles.recentInfo}>
                     <div className={styles.recentDoctor}>{v.lichHen.bacSi.hoTen}</div>
                     <div className={styles.recentDate}>
-                      {new Date(v.lichHen.ngay).toLocaleDateString(vi ? "vi-VN" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
+                      {formatFullDate(v.lichHen.ngay, lang)}
                       {" · "}{v.lichHen.tenChuyenKhoa}
                     </div>
                     {v.ketQua?.chanDoan && (
