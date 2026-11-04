@@ -1,52 +1,4 @@
-import type { LucideIcon } from "lucide-react";
-import type { Bilingual } from "@/types/i18n";
 import type { GioiTinh, QuanHeGiamHo } from "@/types/common.type";
-
-export interface SpecialtyItem {
-  id: string;
-  name: Bilingual;
-  description: Bilingual;
-  icon: LucideIcon;
-  isPediatric?: boolean;
-}
-
-export interface DoctorItem {
-  id: string;
-  name: Bilingual;
-  title: Bilingual;
-  specialtyId: string;
-  specialtyName: Bilingual;
-  experience: Bilingual;
-  image?: string;
-  hospital: Bilingual;
-}
-
-export interface TimeSlotItem {
-  id: string;
-  time: string;
-  period: "morning" | "afternoon";
-  available: boolean;
-}
-
-export type AppointmentStatus =
-  | "pending"
-  | "accepted"
-  | "declined"
-  | "completed";
-
-export interface AppointmentRecord {
-  bookingCode: string;
-  patientId?: string;
-  patientName: string;
-  patientPhone: string;
-  specialtyId: string;
-  doctorId: string;
-  date: string;
-  slotTime: string;
-  reason: string;
-  status: AppointmentStatus;
-  createdAt: string;
-}
 
 export interface AppointmentFormValues {
   // 1. Nhóm thông tin Đăng ký Dịch vụ & Thời gian khám
@@ -76,5 +28,5 @@ export interface AppointmentFormValues {
   guardianName?: string;
   guardianCccd?: string;
   guardianPhone?: string;
-  guardianRelationship?: QuanHeGiamHo | string;
+  guardianRelationship?: QuanHeGiamHo;
 }
