@@ -760,12 +760,6 @@ export interface SoKhamChiTietResponse {
 	ketQua: KetQuaKhamResponse;
 }
 
-export interface GetKhungGioTheoNgayParams {
-	ngay: string;
-	idBacSi?: number;
-	idChuyenKhoa?: number;
-}
-
 export interface GetKhungGioNhieuNgayParams {
 	idBacSi: number;
 	tuNgay?: string;
