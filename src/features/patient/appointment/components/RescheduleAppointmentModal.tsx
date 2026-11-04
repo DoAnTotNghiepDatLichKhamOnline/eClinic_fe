@@ -92,30 +92,32 @@ export function RescheduleAppointmentModal({
     displayMonth.getMonth() + 1,
     0,
   );
-  const { quyTac, isError: policyError, refetch: refetchPolicy } =
-    useQuyTacDatLich();
-  const { danhSachNgay, isLoading: isLoadingDates, isError: datesError, refetch } =
-    useNgayConCho({
-      idBacSi: ticket.bacSi.id,
-      tuNgay: dateKey(monthStart),
-      denNgay: dateKey(monthEnd),
-    });
+  const {
+    quyTac,
+    isError: policyError,
+    refetch: refetchPolicy,
+  } = useQuyTacDatLich();
+  const {
+    danhSachNgay,
+    isLoading: isLoadingDates,
+    isError: datesError,
+    refetch,
+  } = useNgayConCho({
+    idBacSi: ticket.bacSi.id,
+    tuNgay: dateKey(monthStart),
+    denNgay: dateKey(monthEnd),
+  });
   const {
     danhSachCaKham,
     isLoading: isLoadingSlots,
     isError: slotsError,
     refetch: refetchSlots,
   } = useCaKhamTheoNgay(
-    selectedDate
-      ? { idBacSi: ticket.bacSi.id, ngay: selectedDate }
-      : undefined,
+    selectedDate ? { idBacSi: ticket.bacSi.id, ngay: selectedDate } : undefined,
   );
 
   const availableDates = useMemo(
-    () =>
-      new Map(
-        danhSachNgay.map((date) => [date.ngay, date.soChoConLai]),
-      ),
+    () => new Map(danhSachNgay.map((date) => [date.ngay, date.soChoConLai])),
     [danhSachNgay],
   );
   const slots = useMemo(
@@ -235,7 +237,9 @@ export function RescheduleAppointmentModal({
     displayMonth.getFullYear() < maxBookingMonth.getFullYear() ||
     (displayMonth.getFullYear() === maxBookingMonth.getFullYear() &&
       displayMonth.getMonth() < maxBookingMonth.getMonth());
-  const hasAvailableDay = [...availableDates.values()].some((count) => count > 0);
+  const hasAvailableDay = [...availableDates.values()].some(
+    (count) => count > 0,
+  );
 
   return (
     <Modal
@@ -318,7 +322,10 @@ export function RescheduleAppointmentModal({
           </label>
         )}
 
-        <section aria-labelledby="reschedule-calendar-title" className="space-y-3">
+        <section
+          aria-labelledby="reschedule-calendar-title"
+          className="space-y-3"
+        >
           <div className="flex items-center justify-between gap-3">
             <h3
               id="reschedule-calendar-title"
@@ -375,10 +382,10 @@ export function RescheduleAppointmentModal({
               const hasAvailability = (availableDates.get(key) ?? 0) > 0;
               const isSelected = selectedDate === key;
               const isDisabled =
-              key < todayKey ||
-              key > dateKey(maxBookingDate) ||
-              !hasAvailability ||
-              isSubmitting;
+                key < todayKey ||
+                key > dateKey(maxBookingDate) ||
+                !hasAvailability ||
+                isSubmitting;
 
               return (
                 <button
@@ -415,7 +422,9 @@ export function RescheduleAppointmentModal({
           {isLoadingDates && (
             <p className="flex items-center justify-center gap-2 py-3 text-xs text-slate-500">
               <Loader2 size={15} className="animate-spin text-emerald-800" />
-              {lang === "vi" ? "Đang tải ngày còn chỗ..." : "Loading available dates..."}
+              {lang === "vi"
+                ? "Đang tải ngày còn chỗ..."
+                : "Loading available dates..."}
             </p>
           )}
           {datesError && (
@@ -490,7 +499,9 @@ export function RescheduleAppointmentModal({
           ) : isLoadingSlots ? (
             <p className="flex items-center justify-center gap-2 py-5 text-xs text-slate-500">
               <Loader2 size={15} className="animate-spin text-emerald-800" />
-              {lang === "vi" ? "Đang tải khung giờ..." : "Loading time slots..."}
+              {lang === "vi"
+                ? "Đang tải khung giờ..."
+                : "Loading time slots..."}
             </p>
           ) : slotsError ? (
             <div
@@ -546,7 +557,10 @@ export function RescheduleAppointmentModal({
                     }`}
                   >
                     <span className="block text-xs font-bold">
-                      {formatSlotRange(slot.gioBatDauKhung, slot.gioKetThucKhung)}
+                      {formatSlotRange(
+                        slot.gioBatDauKhung,
+                        slot.gioKetThucKhung,
+                      )}
                     </span>
                     <span className="mt-1 flex items-center gap-1 text-[10px]">
                       <MapPin size={11} />
@@ -566,8 +580,8 @@ export function RescheduleAppointmentModal({
         {selectedSlot && (
           <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
             {lang === "vi"
-              ? "Lịch khám cũ sẽ được giải phóng sau khi đổi lịch thành công."
-              : "The current appointment will be released after rescheduling succeeds."}
+              ? "Lịch khám hiện tại sẽ được thay thế ngay sau khi xác nhận đặt lại."
+              : "Your existing appointment will be replaced upon confirmation."}
           </p>
         )}
 
