@@ -88,7 +88,7 @@ export interface NgaySomNhatResponse {
 
 export interface BenhNhanPhieuKhamResponse {
 	hoTen: string;
-	namSinh: number;
+	namSinh: number | null;
 	gioiTinh: GioiTinh;
 	cccd: string | null;
 	soDienThoai: string | null;
