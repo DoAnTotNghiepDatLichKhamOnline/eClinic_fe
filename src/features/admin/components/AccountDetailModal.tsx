@@ -1,5 +1,6 @@
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useChiTietTaiKhoan } from "@/hooks/useIdentity";
+import { formatDateTime, formatFullDate } from "@/utils/dateFormatting";
 import {
   Loader2,
   X,
@@ -139,19 +140,19 @@ export function AccountDetailModal({ userId, onClose }: AccountDetailModalProps)
                   <div className="flex justify-between py-1 border-b border-slate-100">
                     <span className="text-slate-500">{vi ? "Ngày sinh:" : "Date of birth:"}</span>
                     <span className="font-medium text-slate-800">
-                      {chiTiet.ngaySinh ? new Date(chiTiet.ngaySinh).toLocaleDateString("vi-VN") : "—"}
+                      {formatFullDate(chiTiet.ngaySinh, lang)}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-100">
                     <span className="text-slate-500">{vi ? "Ngày tạo:" : "Created at:"}</span>
                     <span className="font-medium text-slate-800">
-                      {new Date(chiTiet.ngayTao).toLocaleString("vi-VN")}
+                      {formatDateTime(chiTiet.ngayTao, lang)}
                     </span>
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-slate-500">{vi ? "Cập nhật:" : "Updated at:"}</span>
                     <span className="font-medium text-slate-800">
-                      {chiTiet.ngayCapNhat ? new Date(chiTiet.ngayCapNhat).toLocaleString("vi-VN") : "—"}
+                      {formatDateTime(chiTiet.ngayCapNhat, lang)}
                     </span>
                   </div>
                 </div>
