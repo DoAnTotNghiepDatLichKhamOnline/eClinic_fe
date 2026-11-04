@@ -523,7 +523,7 @@ export function SymptomChatWidget() {
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
                           <span style={{ fontSize: "12px", fontWeight: 600, color: isCurrent ? "#0f4d3a" : "#1e293b" }}>
-                            {t({ en: "Session", vi: "Phiên khám" })} #{s.idPhien.slice(0, 8)}
+                            {t({ en: "Session", vi: "Phiên khám" })} #{String(s.idPhien).slice(0, 8)}
                           </span>
                           {isCurrent && (
                             <span style={{ fontSize: "10px", background: "#0f4d3a", color: "#fff", padding: "1px 6px", borderRadius: "4px" }}>
