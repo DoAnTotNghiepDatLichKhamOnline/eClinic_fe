@@ -43,7 +43,7 @@ export interface ChatMessage {
 }
 
 export interface ChatSession {
-  idPhien: string;
+  idPhien: number;
   maKhach?: string;
   thoiGianBatDau: string;
   daDongYDuLieu?: boolean;
