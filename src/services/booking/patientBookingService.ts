@@ -28,7 +28,6 @@ import type {
   SoKhamTomTatResponse,
   XacMinhSoKhamRequest,
   SoKhamChiTietResponse,
-  GetKhungGioTheoNgayParams,
   GetKhungGioNhieuNgayParams,
   GetNgayNghiParams,
   GetLichSuKhamParams,
@@ -74,15 +73,6 @@ export const patientBookingService = {
     const response = await axiosClient.put<ApiResponse<unknown>>(
       `/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/${id}`,
       data,
-    );
-    return response.data;
-  },
-
-  /** GET /api/booking/khung-gio - Get shifts and time slots by date and doctor/specialty */
-  getKhungGioTheoNgay: async (params: GetKhungGioTheoNgayParams) => {
-    const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
-      "/api/booking/khung-gio",
-      { params },
     );
     return response.data;
   },
