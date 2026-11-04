@@ -51,15 +51,24 @@ export function ServiceTimeStep({
   const [holidayError, setHolidayError] = useState("");
 
   // 1. Fetch danh sách chuyên khoa từ API catalog-service
-  const { danhSach: danhSachChuyenKhoa, isLoading: loadingChuyenKhoa } =
-    useDanhSachChuyenKhoa({ kichThuoc: 50 });
+  const {
+    danhSach: danhSachChuyenKhoa,
+    isLoading: loadingChuyenKhoa,
+    isError: chuyenKhoaError,
+    refetch: refetchChuyenKhoa,
+  } = useDanhSachChuyenKhoa({ kichThuoc: 50 });
 
   // 2. Fetch danh sách bác sĩ thuộc chuyên khoa đã chọn
   const idChuyenKhoaNum = formValues.specialtyId
     ? Number(formValues.specialtyId)
     : undefined;
 
-  const { danhSach: danhSachBacSi, isLoading: loadingBacSi } = useDanhSachBacSi(
+  const {
+    danhSach: danhSachBacSi,
+    isLoading: loadingBacSi,
+    isError: bacSiError,
+    refetch: refetchBacSi,
+  } = useDanhSachBacSi(
     idChuyenKhoaNum && !isNaN(idChuyenKhoaNum)
       ? { idChuyenKhoa: idChuyenKhoaNum, kichThuoc: 50 }
       : { kichThuoc: 50 },
@@ -120,6 +129,8 @@ export function ServiceTimeStep({
   const {
     danhSachCaKham: caKhamNhieuNgay,
     isLoading: loadingCaKhamNhieuNgay,
+    isError: caKhamNhieuNgayError,
+    refetch: refetchCaKhamNhieuNgay,
   } = useKhungGioNhieuNgay(
     idBacSiNum && isDateInQuickRange
       ? { idBacSi: idBacSiNum, ...dateRange }
@@ -128,6 +139,8 @@ export function ServiceTimeStep({
   const {
     danhSachCaKham: caKhamTheoNgay,
     isLoading: loadingCaKhamTheoNgay,
+    isError: caKhamTheoNgayError,
+    refetch: refetchCaKhamTheoNgay,
   } = useCaKhamTheoNgay(
     formValues.date && idBacSiNum && !isDateInQuickRange
       ? { ngay: formValues.date, idBacSi: idBacSiNum }
@@ -141,6 +154,8 @@ export function ServiceTimeStep({
   const {
     danhSachKhungGio: danhSachKhungGioGop,
     isLoading: loadingKhungGioGop,
+    isError: khungGioGopError,
+    refetch: refetchKhungGioGop,
   } = useKhungGioGop(
     formValues.date && idChuyenKhoaNum && !idBacSiNum
       ? { idChuyenKhoa: idChuyenKhoaNum, ngay: formValues.date }
@@ -152,6 +167,16 @@ export function ServiceTimeStep({
       ? loadingCaKhamNhieuNgay
       : loadingCaKhamTheoNgay
     : loadingKhungGioGop;
+  const slotsError = idBacSiNum
+    ? isDateInQuickRange
+      ? caKhamNhieuNgayError
+      : caKhamTheoNgayError
+    : khungGioGopError;
+  const refetchSlots = idBacSiNum
+    ? isDateInQuickRange
+      ? refetchCaKhamNhieuNgay
+      : refetchCaKhamTheoNgay
+    : refetchKhungGioGop;
 
   // Flattened slots list
   interface UnifiedSlot {
@@ -264,6 +289,26 @@ export function ServiceTimeStep({
           </p>
         )}
 
+        {chuyenKhoaError && (
+          <div
+            role="alert"
+            className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700"
+          >
+            <span>
+              {lang === "vi"
+                ? "Không thể tải danh sách chuyên khoa."
+                : "Could not load specialties."}
+            </span>
+            <button
+              type="button"
+              onClick={() => void refetchChuyenKhoa()}
+              className="font-semibold underline"
+            >
+              {lang === "vi" ? "Thử lại" : "Retry"}
+            </button>
+          </div>
+        )}
+
         {loadingChuyenKhoa ? (
           <div className="flex items-center justify-center py-10 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
@@ -273,6 +318,14 @@ export function ServiceTimeStep({
                 : "Loading specialties..."}
             </span>
           </div>
+        ) : danhSachChuyenKhoa.length === 0 ? (
+          chuyenKhoaError ? null : (
+            <div className="py-8 text-center text-sm text-slate-500">
+              {lang === "vi"
+                ? "Hiện chưa có chuyên khoa để đặt lịch."
+                : "No specialties are currently available."}
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {danhSachChuyenKhoa.map((spec) => {
@@ -364,6 +417,26 @@ export function ServiceTimeStep({
           </div>
         </div>
 
+        {bacSiError && (
+          <div
+            role="alert"
+            className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700"
+          >
+            <span>
+              {lang === "vi"
+                ? "Không thể tải danh sách bác sĩ."
+                : "Could not load doctors."}
+            </span>
+            <button
+              type="button"
+              onClick={() => void refetchBacSi()}
+              className="font-semibold underline"
+            >
+              {lang === "vi" ? "Thử lại" : "Retry"}
+            </button>
+          </div>
+        )}
+
         {loadingBacSi ? (
           <div className="flex items-center justify-center py-8 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
@@ -375,6 +448,13 @@ export function ServiceTimeStep({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {danhSachBacSi.length === 0 && !bacSiError && (
+              <p className="col-span-full text-xs text-slate-500">
+                {lang === "vi"
+                  ? "Chưa có bác sĩ trong danh sách; bạn vẫn có thể chọn bác sĩ bất kỳ."
+                  : "No doctors are listed; you can still choose any available doctor."}
+              </p>
+            )}
             {/* Lựa chọn mặc định: Bác sĩ bất kỳ */}
             <button
               type="button"
@@ -679,7 +759,45 @@ export function ServiceTimeStep({
           </p>
         )}
 
-        {loadingSlots ? (
+        {slotsError && allSlots.length > 0 && (
+          <div
+            role="alert"
+            className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700"
+          >
+            <span>
+              {lang === "vi"
+                ? "Không thể làm mới khung giờ; đang hiển thị dữ liệu đã tải trước đó."
+                : "Could not refresh slots; showing previously loaded results."}
+            </span>
+            <button
+              type="button"
+              onClick={() => void refetchSlots()}
+              className="font-semibold underline"
+            >
+              {lang === "vi" ? "Thử lại" : "Retry"}
+            </button>
+          </div>
+        )}
+
+        {slotsError && allSlots.length === 0 ? (
+          <div
+            role="alert"
+            className="flex flex-col items-center justify-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-8 text-center text-sm text-rose-700"
+          >
+            <p>
+              {lang === "vi"
+                ? "Không thể tải khung giờ khám. Vui lòng thử lại."
+                : "Could not load time slots. Please try again."}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetchSlots()}
+              className="rounded-lg border border-rose-200 px-3 py-1.5 font-semibold hover:bg-white"
+            >
+              {lang === "vi" ? "Thử lại" : "Retry"}
+            </button>
+          </div>
+        ) : loadingSlots ? (
           <div className="flex items-center justify-center py-10 gap-2 text-sm text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin text-[#0f4d3a]" />
             <span>
