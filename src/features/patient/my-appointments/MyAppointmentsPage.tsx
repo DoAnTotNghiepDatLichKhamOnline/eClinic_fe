@@ -24,6 +24,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import type { TrangThaiLichHen, LocLichHen } from "@/types/common.type";
+import { formatFullDateWithWeekday } from "@/utils/dateFormatting";
 import {
   useBookingActions,
   useChiTietLichHen,
@@ -672,7 +673,7 @@ export function MyAppointmentsPage() {
                   <CalendarDays size={18} />
                   {vi
                     ? `Lịch hẹn ngày ${new Date(selectedDate + "T00:00:00").toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}`
-                    : `Appointments on ${new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}`}
+                    : `Appointments on ${formatFullDateWithWeekday(selectedDate, lang)}`}
                   <span
                     style={{ fontSize: 12, fontWeight: 500, color: "#5d7367" }}
                   >
