@@ -30,6 +30,7 @@ import {
   useDanhSachLichHen,
   useLichSuKham,
 } from "@/hooks/useBooking";
+import { formatFullDate } from "@/utils/dateFormatting";
 import styles from "./MyAppointmentsPage.module.css";
 
 type TabStatus = "upcoming" | "done" | "cancelled";
@@ -990,7 +991,7 @@ export function MyAppointmentsPage() {
                             <p className="flex items-center gap-1.5 font-semibold text-amber-950">
                               <CalendarClock size={14} className="text-amber-700" />
                               {vi ? "Hẹn tái khám đề xuất:" : "Suggested follow-up:"}{" "}
-                              {new Date(chiTiet.ketQua.ngayTaiKhamDeXuat).toLocaleDateString("vi-VN")}
+                              {formatFullDate(chiTiet.ketQua.ngayTaiKhamDeXuat, lang)}
                             </p>
                           )}
                         </div>
