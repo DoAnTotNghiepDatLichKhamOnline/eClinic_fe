@@ -3,6 +3,7 @@ import { History, X, Clock, User, AlertCircle, Check } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { doctorBookingService, adminBookingService } from "@/services/booking";
 import type { LanSuaBenhAn, SinhHieu, DonThuoc } from "@/types/booking.type";
+import { formatDateTime } from "@/utils/dateFormatting";
 
 interface MedicalRecordHistoryModalProps {
   idLichHen: number | null;
@@ -159,7 +160,7 @@ export function MedicalRecordHistoryModal({
                       </div>
                       <span className="flex items-center gap-1 text-xs text-slate-400">
                         <Clock size={12} />
-                        {lan.ngaySua ? new Date(lan.ngaySua).toLocaleString(vi ? "vi-VN" : "en-US") : ""}
+                        {formatDateTime(lan.ngaySua, lang)}
                       </span>
                     </div>
 
