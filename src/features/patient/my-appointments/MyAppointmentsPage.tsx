@@ -277,11 +277,13 @@ export function MyAppointmentsPage() {
     },
   );
 
-  const calendarTitle = new Intl.DateTimeFormat(lang, {
-    ...(scheduleView === "day"
-      ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
-      : { month: "long", year: "numeric" }),
-  }).format(scheduleDate);
+  const calendarTitle =
+    scheduleView === "day"
+      ? formatFullDateWithWeekday(scheduleDate, lang)
+      : new Intl.DateTimeFormat(lang, {
+          month: "long",
+          year: "numeric",
+        }).format(scheduleDate);
 
   const moveCalendar = (direction: number) => {
     setScheduleDate((current) => {
@@ -672,7 +674,7 @@ export function MyAppointmentsPage() {
                 <h3 className={styles.selectedDayTitle}>
                   <CalendarDays size={18} />
                   {vi
-                    ? `Lịch hẹn ngày ${new Date(selectedDate + "T00:00:00").toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}`
+                    ? `Lịch hẹn ngày ${formatFullDateWithWeekday(selectedDate, lang)}`
                     : `Appointments on ${formatFullDateWithWeekday(selectedDate, lang)}`}
                   <span
                     style={{ fontSize: 12, fontWeight: 500, color: "#5d7367" }}
