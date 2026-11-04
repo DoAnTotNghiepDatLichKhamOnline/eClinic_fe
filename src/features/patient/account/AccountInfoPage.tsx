@@ -19,6 +19,7 @@ import { useAuth } from "@/shared/context/AuthContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
 import { userProfileService } from "@/services/identity";
+import { formatFullDate } from "@/utils/dateFormatting";
 import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
@@ -773,10 +774,7 @@ export function AccountInfoPage() {
             <div className={styles.accountMeta}>
               <span>{vi ? "Ngày tạo tài khoản:" : "Account created:"}</span>
               <strong>
-                {new Date(hoSo.ngayTao).toLocaleDateString(
-                  vi ? "vi-VN" : "en-US",
-                  { year: "numeric", month: "long", day: "numeric" },
-                )}
+                {formatFullDate(hoSo.ngayTao, lang)}
               </strong>
             </div>
           )}

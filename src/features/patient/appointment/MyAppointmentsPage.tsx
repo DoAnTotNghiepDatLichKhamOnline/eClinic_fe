@@ -47,8 +47,8 @@ export function MyAppointmentsPage() {
     if (!/^[a-zA-Z0-9_-]{43}$/.test(code)) {
       setLookupError(
         t({
-          en: "Enter the 43-character appointment link code.",
-          vi: "Vui lòng nhập mã liên kết phiếu khám gồm 43 ký tự.",
+          en: "Enter the secure 43-character appointment link code, not the short ECL lookup code.",
+          vi: "Vui lòng nhập mã liên kết bảo mật đúng 43 ký tự, không phải mã tra cứu ECL-...",
         }),
       );
       return;
@@ -172,13 +172,16 @@ export function MyAppointmentsPage() {
                 </h2>
                 <p className={styles.cardDescription}>
                   {t({
-                    en: "Enter the secure appointment link code from your confirmation email or booking page.",
-                    vi: "Nhập mã liên kết bảo mật trong email xác nhận hoặc trang đặt lịch.",
+                    en: "Enter the 43-character secure link code from your confirmation email or booking page. The short ECL lookup code is used below to request a replacement link.",
+                    vi: "Nhập mã liên kết bảo mật gồm 43 ký tự trong email xác nhận hoặc trang đặt lịch. Mã tra cứu ECL ngắn dùng ở mục bên dưới để yêu cầu gửi lại liên kết.",
                   })}
                 </p>
                 <form className={styles.form} onSubmit={handleLookup} noValidate>
                   <label className={styles.field} htmlFor="appointment-ticket-code">
-                    {t({ en: "Appointment link code", vi: "Mã liên kết phiếu khám" })}
+                    {t({
+                      en: "Appointment link code (43 characters)",
+                      vi: "Mã liên kết phiếu khám (43 ký tự)",
+                    })}
                     <input
                       id="appointment-ticket-code"
                       className={styles.input}
@@ -191,16 +194,20 @@ export function MyAppointmentsPage() {
                       minLength={43}
                       pattern="[a-zA-Z0-9_-]{43}"
                       autoComplete="off"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
                       aria-invalid={Boolean(lookupError)}
                       aria-describedby={
                         lookupError ? "appointment-lookup-error" : "appointment-code-hint"
                       }
-                      placeholder={vi ? "Mã gồm 43 ký tự" : "43-character code"}
+                      placeholder={vi ? "Token gồm 43 ký tự" : "43-character token"}
                     />
                     <span id="appointment-code-hint" className={styles.hint}>
                       {t({
-                        en: "The code is 43 characters long.",
-                        vi: "Mã phiếu khám có 43 ký tự.",
+                        en: "Use the case-sensitive link token; the short ECL code cannot open a ticket.",
+                        vi: "Mã liên kết phân biệt chữ hoa/thường; mã ECL ngắn không mở trực tiếp phiếu khám.",
                       })}
                     </span>
                   </label>

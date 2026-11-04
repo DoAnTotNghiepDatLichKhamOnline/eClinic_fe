@@ -18,6 +18,10 @@ import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useAuth } from "@/shared/context/AuthContext";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useLichHenCalendar } from "@/hooks/useBooking";
+import {
+  formatFullDate,
+  formatFullDateWithWeekday,
+} from "@/utils/dateFormatting";
 import styles from "./PatientAppointmentsPage.module.css";
 
 type CalendarView = "day" | "week";
@@ -131,11 +135,13 @@ export function PatientAppointmentsPage() {
   const selectedDayAppointments = orderedAppointments.filter(
     (appointment) => appointment.date === dateKey(selectedDate),
   );
-  const periodTitle = new Intl.DateTimeFormat(lang, {
-    ...(calendarView === "day"
-      ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
-      : { month: "long", year: "numeric" }),
-  }).format(selectedDate);
+  const periodTitle =
+    calendarView === "day"
+      ? formatFullDateWithWeekday(selectedDate, lang)
+      : new Intl.DateTimeFormat(lang, {
+          month: "long",
+          year: "numeric",
+        }).format(selectedDate);
 
   const changeRange = (nextRange: AppointmentRange) => {
     setRange(nextRange);
@@ -329,9 +335,7 @@ export function PatientAppointmentsPage() {
                 {lang === "vi" ? "Chi tiết lịch khám" : "Appointment details"}
               </h2>
               <p>
-                {new Intl.DateTimeFormat(lang, { dateStyle: "full" }).format(
-                  selectedDate,
-                )}
+                {formatFullDate(selectedDate, lang)}
               </p>
             </div>
             <span className={styles.count}>

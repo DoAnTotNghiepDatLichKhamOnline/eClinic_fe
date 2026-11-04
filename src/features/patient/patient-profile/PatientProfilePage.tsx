@@ -12,6 +12,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useQueryClient } from "@tanstack/react-query";
 import { patientBookingService } from "@/services/booking";
+import { formatFullDate } from "@/utils/dateFormatting";
 import type { HoSoCuaToiResponse } from "@/types/booking.type";
 import type { GioiTinh } from "@/types/common.type";
 import {
@@ -474,9 +475,7 @@ export function PatientProfilePage() {
                 {
                   label: vi ? "Ngày sinh" : "Date of birth",
                   value: form.ngaySinh
-                    ? new Date(form.ngaySinh).toLocaleDateString(
-                        vi ? "vi-VN" : "en-US",
-                      )
+                    ? formatFullDate(form.ngaySinh, lang)
                     : "",
                 },
                 {

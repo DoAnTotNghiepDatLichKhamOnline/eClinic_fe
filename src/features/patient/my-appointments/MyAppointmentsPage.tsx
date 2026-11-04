@@ -24,12 +24,14 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientPortal } from "@/features/patient/PatientPortal";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import type { TrangThaiLichHen, LocLichHen } from "@/types/common.type";
+import { formatFullDateWithWeekday } from "@/utils/dateFormatting";
 import {
   useBookingActions,
   useChiTietLichHen,
   useDanhSachLichHen,
   useLichSuKham,
 } from "@/hooks/useBooking";
+import { formatFullDate } from "@/utils/dateFormatting";
 import styles from "./MyAppointmentsPage.module.css";
 
 type TabStatus = "upcoming" | "done" | "cancelled";
@@ -275,11 +277,13 @@ export function MyAppointmentsPage() {
     },
   );
 
-  const calendarTitle = new Intl.DateTimeFormat(lang, {
-    ...(scheduleView === "day"
-      ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
-      : { month: "long", year: "numeric" }),
-  }).format(scheduleDate);
+  const calendarTitle =
+    scheduleView === "day"
+      ? formatFullDateWithWeekday(scheduleDate, lang)
+      : new Intl.DateTimeFormat(lang, {
+          month: "long",
+          year: "numeric",
+        }).format(scheduleDate);
 
   const moveCalendar = (direction: number) => {
     setScheduleDate((current) => {
@@ -670,8 +674,8 @@ export function MyAppointmentsPage() {
                 <h3 className={styles.selectedDayTitle}>
                   <CalendarDays size={18} />
                   {vi
-                    ? `Lịch hẹn ngày ${new Date(selectedDate + "T00:00:00").toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}`
-                    : `Appointments on ${new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}`}
+                    ? `Lịch hẹn ngày ${formatFullDateWithWeekday(selectedDate, lang)}`
+                    : `Appointments on ${formatFullDateWithWeekday(selectedDate, lang)}`}
                   <span
                     style={{ fontSize: 12, fontWeight: 500, color: "#5d7367" }}
                   >
@@ -990,7 +994,7 @@ export function MyAppointmentsPage() {
                             <p className="flex items-center gap-1.5 font-semibold text-amber-950">
                               <CalendarClock size={14} className="text-amber-700" />
                               {vi ? "Hẹn tái khám đề xuất:" : "Suggested follow-up:"}{" "}
-                              {new Date(chiTiet.ketQua.ngayTaiKhamDeXuat).toLocaleDateString("vi-VN")}
+                              {formatFullDate(chiTiet.ketQua.ngayTaiKhamDeXuat, lang)}
                             </p>
                           )}
                         </div>

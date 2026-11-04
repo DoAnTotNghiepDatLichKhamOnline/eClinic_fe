@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import {
   CheckCircle2,
   Calendar,
@@ -12,11 +14,13 @@ import {
   Plus,
   MapPin,
   Hash,
+  Loader2,
+  Copy,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Button } from "@/shared/components/ui/Button";
+import { patientBookingService } from "@/services/booking";
 import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
 import type { DatLichResponse } from "@/types/booking.type";
@@ -57,14 +61,71 @@ export function BookingSuccessModal({
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
   const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
-  const qrValue =
-    bookingResult?.linkPhieuKham ||
-    bookingResult?.maPhieuKham ||
-    bookingCode ||
-    "ECLINIC";
+  const [qrUrl, setQrUrl] = useState("");
+  const [qrError, setQrError] = useState("");
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
+  const [ticketCodeCopyStatus, setTicketCodeCopyStatus] = useState<
+    "copied" | "failed" | null
+  >(null);
 
-  const displayCode =
-    bookingResult?.maTraCuu || bookingResult?.maPhieuKham || bookingCode;
+  useEffect(() => {
+    setTicketCodeCopyStatus(null);
+    const maPhieuKham = bookingResult?.maPhieuKham;
+    if (!isOpen || !maPhieuKham) {
+      setQrUrl("");
+      setQrError("");
+      setIsLoadingQr(false);
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl = "";
+    setQrUrl("");
+    setQrError("");
+    setIsLoadingQr(true);
+
+    void patientBookingService
+      .getQrPhieuKham(maPhieuKham)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setQrUrl(objectUrl);
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        const apiMessage = isAxiosError<{ thongDiep?: string }>(cause)
+          ? cause.response?.data?.thongDiep
+          : undefined;
+        setQrError(
+          apiMessage ||
+            (cause instanceof Error
+              ? cause.message
+              : lang === "vi"
+                ? "Không thể tải mã QR phiếu khám."
+                : "Could not load the appointment QR code."),
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingQr(false);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [bookingResult?.maPhieuKham, isOpen, lang]);
+
+  const displayCode = bookingResult?.maTraCuu || bookingCode;
+
+  const copyTicketCode = async () => {
+    if (!bookingResult?.maPhieuKham) return;
+    try {
+      await navigator.clipboard.writeText(bookingResult.maPhieuKham);
+      setTicketCodeCopyStatus("copied");
+    } catch {
+      setTicketCodeCopyStatus("failed");
+    }
+  };
 
   const doctorDisplay = bookingResult?.bacSi?.hoTen
     ? `${bookingResult.bacSi.hocVi ? bookingResult.bacSi.hocVi + " " : ""}${bookingResult.bacSi.hoTen}`
@@ -135,8 +196,8 @@ export function BookingSuccessModal({
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded">
                 {lang === "vi"
-                  ? "Mã tra cứu / Phiếu khám"
-                  : "Booking Reference"}
+                  ? "Mã tra cứu tại quầy"
+                  : "Clinic reference"}
               </span>
               {bookingResult?.soThuTu ? (
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-white bg-[#0f4d3a] px-2 py-0.5 rounded flex items-center gap-1">
@@ -156,17 +217,96 @@ export function BookingSuccessModal({
                 : "Show this code or present the QR code at the reception counter"}
             </p>
             {bookingResult?.maPhieuKham && (
-              <Link
-                className="mt-2 inline-block text-xs font-bold text-emerald-900 underline"
-                to={`/phieu-kham/${bookingResult.maPhieuKham}`}
-              >
-                {lang === "vi" ? "Mở phiếu khám" : "Open appointment ticket"}
-              </Link>
+              <div className="mt-3 space-y-2 rounded-xl border border-emerald-200 bg-white/80 p-3 text-left">
+                <div>
+                  <p className="text-xs font-bold text-slate-700">
+                    {lang === "vi"
+                      ? "Mã liên kết phiếu khám (43 ký tự)"
+                      : "Appointment link code (43 characters)"}
+                  </p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-800 select-all">
+                    {bookingResult.maPhieuKham}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void copyTicketCode()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 px-3 py-1.5 text-xs font-bold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  >
+                    <Copy size={14} />
+                    {lang === "vi" ? "Sao chép mã" : "Copy code"}
+                  </button>
+                  <Link
+                    className="text-xs font-bold text-emerald-900 underline"
+                    to={`/phieu-kham/${bookingResult.maPhieuKham}`}
+                  >
+                    {lang === "vi" ? "Mở phiếu khám" : "Open appointment ticket"}
+                  </Link>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  {lang === "vi"
+                    ? "Dán mã này vào ô mở phiếu khám để tra cứu. Mã tra cứu ngắn phía trên không dùng để mở phiếu."
+                    : "Paste this code into the appointment lookup field. The short reference above cannot open the ticket."}
+                </p>
+                {ticketCodeCopyStatus && (
+                  <p
+                    role={ticketCodeCopyStatus === "failed" ? "alert" : "status"}
+                    aria-live="polite"
+                    className={`text-xs font-semibold ${
+                      ticketCodeCopyStatus === "copied"
+                        ? "text-emerald-700"
+                        : "text-rose-700"
+                    }`}
+                  >
+                    {ticketCodeCopyStatus === "copied"
+                      ? lang === "vi"
+                        ? "Đã sao chép mã liên kết."
+                        : "Appointment link code copied."
+                      : lang === "vi"
+                        ? "Không thể sao chép. Vui lòng chọn và sao chép mã ở trên."
+                        : "Could not copy. Please select and copy the code above."}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
-          <div className="p-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 shrink-0">
-            <QRCodeSVG value={qrValue} size={92} level="M" />
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex h-[112px] w-[112px] items-center justify-center rounded-xl border border-emerald-100 bg-white p-2.5 shadow-sm">
+              {isLoadingQr ? (
+                <Loader2
+                  className="animate-spin text-emerald-800"
+                  aria-label={
+                    lang === "vi" ? "Đang tải mã QR" : "Loading QR code"
+                  }
+                />
+              ) : qrUrl ? (
+                <img
+                  src={qrUrl}
+                  alt={
+                    lang === "vi" ? "Mã QR phiếu khám" : "Appointment QR code"
+                  }
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <p role="alert" className="text-center text-[10px] text-rose-700">
+                  {qrError ||
+                    (lang === "vi"
+                      ? "Không có mã QR. Hãy mở phiếu khám để thử lại."
+                      : "QR unavailable. Open the appointment ticket to retry.")}
+                </p>
+              )}
+            </div>
+            {qrUrl && bookingResult?.maPhieuKham && (
+              <a
+                href={qrUrl}
+                download={`phieu-kham-${bookingResult.maPhieuKham}.png`}
+                className="text-xs font-semibold text-emerald-800 underline"
+              >
+                {lang === "vi" ? "Tải mã QR" : "Download QR"}
+              </a>
+            )}
           </div>
         </div>
 

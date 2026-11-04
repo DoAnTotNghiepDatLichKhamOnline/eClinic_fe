@@ -5,11 +5,9 @@ export type { ChatMessage, ChatSession };
 
 
 export const chatbotService = {
-  taoPhien: async (maKhach?: string) => {
+  taoPhien: async () => {
     const response = await axiosClient.post<ApiResponse<ChatSession>>(
       "/api/chatbot/phien",
-      {},
-      { headers: maKhach ? { "X-Chat-Khach": maKhach } : undefined },
     );
     return response.data;
   },

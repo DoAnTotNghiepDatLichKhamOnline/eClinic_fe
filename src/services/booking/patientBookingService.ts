@@ -22,13 +22,12 @@ import type {
   DanhGiaCuaToiResponse,
   LanKhamCuaToiResponse,
   TrangCaNhanResponse,
-  NgayNghiResponse,
+  NgayNghiCongKhaiResponse,
   QuyTacDatLichResponse,
   CapLaiLienKetRequest,
   SoKhamTomTatResponse,
   XacMinhSoKhamRequest,
   SoKhamChiTietResponse,
-  GetKhungGioTheoNgayParams,
   GetKhungGioNhieuNgayParams,
   GetNgayNghiParams,
   GetLichSuKhamParams,
@@ -74,15 +73,6 @@ export const patientBookingService = {
     const response = await axiosClient.put<ApiResponse<unknown>>(
       `/api/booking/thong-tin-dat-lich/cua-toi/nguoi-than/${id}`,
       data,
-    );
-    return response.data;
-  },
-
-  /** GET /api/booking/khung-gio - Get shifts and time slots by date and doctor/specialty */
-  getKhungGioTheoNgay: async (params: GetKhungGioTheoNgayParams) => {
-    const response = await axiosClient.get<ApiResponse<CaKhamResponse[]>>(
-      "/api/booking/khung-gio",
-      { params },
     );
     return response.data;
   },
@@ -144,7 +134,7 @@ export const patientBookingService = {
 
   /** GET /api/booking/ngay-nghi - Get clinic holidays list */
   getNgayNghi: async (params?: GetNgayNghiParams) => {
-    const response = await axiosClient.get<ApiResponse<NgayNghiResponse[]>>(
+    const response = await axiosClient.get<ApiResponse<NgayNghiCongKhaiResponse[]>>(
       "/api/booking/ngay-nghi",
       { params },
     );

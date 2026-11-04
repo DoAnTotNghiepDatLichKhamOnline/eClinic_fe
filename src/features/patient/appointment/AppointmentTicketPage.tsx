@@ -1,43 +1,31 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { isAxiosError } from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { AppointmentFormValues } from "./appointment.types";
+import { message } from "antd";
 import {
   ArrowLeft,
   Calendar,
   CalendarClock,
   CheckCircle2,
+  Clock3,
   Download,
   FileText,
+  Hash,
   Loader2,
   Mail,
+  MapPin,
   QrCode,
   X,
-  XCircle,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
 import { patientBookingService } from "@/services/booking";
-import type { DoiLichRequest, PhieuKhamResponse } from "@/types/booking.type";
-import { getUpcomingBookingDays } from "./appointment.utils";
-import { ServiceTimeStep } from "./components/ServiceTimeStep";
-
-function createRescheduleValues(): AppointmentFormValues {
-  return {
-    specialtyId: "",
-    doctorId: "",
-    date: getUpcomingBookingDays(1)[0]?.dateStr ?? "",
-    slotId: "",
-    slotTime: "",
-    gioBatDauKhung: "",
-    patientName: "",
-    patientDob: "",
-    patientGender: "NAM",
-    patientPhone: "",
-    patientCccd: "",
-    reason: "",
-  };
-}
+import type { DatLichResponse, PhieuKhamResponse } from "@/types/booking.type";
+import {
+  formatDateTimeWithWeekday,
+  formatTimeAndDate,
+} from "@/utils/dateFormatting";
+import { RescheduleAppointmentModal } from "./components/RescheduleAppointmentModal";
 
 export function AppointmentTicketPage() {
   const { maPhieuKham = "" } = useParams();
@@ -50,9 +38,8 @@ export function AppointmentTicketPage() {
   const [qrError, setQrError] = useState("");
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
-  const [rescheduleValues, setRescheduleValues] =
-    useState<AppointmentFormValues>(createRescheduleValues);
-  const [mode, setMode] = useState<"cancel" | "reschedule" | null>(null);
+  const [mode, setMode] = useState<"cancel" | null>(null);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -67,13 +54,6 @@ export function AppointmentTicketPage() {
   const [resendError, setResendError] = useState("");
 
   const isPatientAccount = user?.role === "patient";
-
-  const updateRescheduleValue = <K extends keyof AppointmentFormValues>(
-    field: K,
-    value: AppointmentFormValues[K],
-  ) => {
-    setRescheduleValues((current) => ({ ...current, [field]: value }));
-  };
 
   const loadTicket = async () => {
     setLoading(true);
@@ -133,61 +113,22 @@ export function AppointmentTicketPage() {
 
   const submitAction = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!mode) return;
+    if (mode !== "cancel") return;
     setBusy(true);
     setError("");
     try {
-      if (mode === "cancel") {
-        const response =
-          isPatientAccount
-            ? await patientBookingService.huyLichHen(maPhieuKham, {
-                lyDo: reason || undefined,
-              })
-            : await patientBookingService.huyPhieuKhamKhach(maPhieuKham, {
-                soDienThoai: phone,
-                lyDo: reason || undefined,
-              });
-        if (!response.thanhCong) throw new Error(response.thongDiep);
-        await loadTicket();
-        setMode(null);
-      } else {
-        if (!rescheduleValues.gioBatDauKhung) {
-          throw new Error(
-            t({
-              en: "Choose an available appointment time.",
-              vi: "Vui lòng chọn một khung giờ còn chỗ.",
-            }),
-          );
-        }
-        if (
-          !rescheduleValues.idLichLamViec &&
-          !rescheduleValues.specialtyId
-        ) {
-          throw new Error(
-            t({
-              en: "Choose a specialty or doctor.",
-              vi: "Vui lòng chọn chuyên khoa hoặc bác sĩ.",
-            }),
-          );
-        }
-        const body: DoiLichRequest = {
-          ...(!isPatientAccount ? { soDienThoai: phone.trim() } : {}),
-          ...(rescheduleValues.idLichLamViec
-            ? { idLichLamViec: rescheduleValues.idLichLamViec }
-            : { idChuyenKhoa: Number(rescheduleValues.specialtyId) }),
-          gioBatDauKhung: rescheduleValues.gioBatDauKhung,
-        };
-        const response =
-          isPatientAccount
-            ? await patientBookingService.doiLichHen(maPhieuKham, body)
-            : await patientBookingService.doiPhieuKhamKhach(maPhieuKham, body);
-        if (!response.thanhCong || !response.duLieu)
-          throw new Error(response.thongDiep);
-        navigate(
-          `/phieu-kham/${response.duLieu.maPhieuKham}`,
-          { replace: true },
-        );
-      }
+      const response =
+        isPatientAccount
+          ? await patientBookingService.huyLichHen(maPhieuKham, {
+              lyDo: reason || undefined,
+            })
+          : await patientBookingService.huyPhieuKhamKhach(maPhieuKham, {
+              soDienThoai: phone,
+              lyDo: reason || undefined,
+            });
+      if (!response.thanhCong) throw new Error(response.thongDiep);
+      await loadTicket();
+      setMode(null);
     } catch (cause) {
       setError(
         (cause as { response?: { data?: { thongDiep?: string } } }).response
@@ -257,13 +198,19 @@ export function AppointmentTicketPage() {
     }
   };
 
-  const formatDateVN = (dateStr: string) => {
-    if (!dateStr) return "";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return dateStr;
+  const handleRescheduled = (result: DatLichResponse) => {
+    setIsRescheduleOpen(false);
+    setTicket(null);
+    setLoading(true);
+    navigate(`/phieu-kham/${encodeURIComponent(result.maPhieuKham)}`, {
+      replace: true,
+    });
+    message.success(
+      t({
+        en: "Appointment rescheduled successfully.",
+        vi: "Đổi lịch khám thành công!",
+      }),
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -362,7 +309,6 @@ export function AppointmentTicketPage() {
 
       {/* ─── E-Ticket Card Layout ─── */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
-        {/* Header section */}
         <div className="p-6 pb-5">
           <p className="text-xs font-black uppercase tracking-wider text-slate-500">
             {t({
@@ -388,117 +334,100 @@ export function AppointmentTicketPage() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
 
-            {calendarError && (
-              <p role="alert" className="text-xs font-semibold text-rose-700">
-                {calendarError}
+        <div className="grid gap-4 border-t border-slate-100 p-6 pt-5 md:grid-cols-[1.4fr_0.6fr]">
+          <section className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5">
+            <h2 className="text-xs font-black uppercase tracking-wider text-emerald-900">
+              {vi ? "Thời gian & địa điểm" : "Time & location"}
+            </h2>
+            <div className="mt-4 space-y-3">
+              <p className="flex items-start gap-3 text-sm font-bold text-slate-900">
+                <Clock3 size={18} className="mt-0.5 shrink-0 text-emerald-800" />
+                <span>{formatDateTimeWithWeekday(ticket.gioKhamDuKien, lang)}</span>
+              </p>
+              <p className="flex items-start gap-3 text-sm font-semibold text-slate-800">
+                <MapPin size={18} className="mt-0.5 shrink-0 text-emerald-800" />
+                <span>
+                  {ticket.phongKham.tenPhong}
+                  {ticket.phongKham.tang ? ` - ${ticket.phongKham.tang}` : ""}
+                </span>
+              </p>
+              <p className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                <Hash size={18} className="shrink-0 text-emerald-800" />
+                <span>{vi ? "Số thứ tự khám" : "Queue number"}</span>
+                <span className="rounded-lg bg-emerald-800 px-3 py-1 font-mono text-lg font-black text-white">
+                  {ticket.soThuTu}
+                </span>
+              </p>
+            </div>
+          </section>
+
+          <section className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-4">
+            {qrUrl ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
+                <img
+                  src={qrUrl}
+                  alt={t({
+                    en: "Appointment QR code",
+                    vi: "Mã QR phiếu khám",
+                  })}
+                  className="h-28 w-28 object-contain"
+                />
+              </div>
+            ) : (
+              <div className="grid h-28 w-28 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-center text-[10px] text-slate-500">
+                <QrCode size={24} className="mb-1 text-slate-400" />
+                {t({
+                  en: "QR unavailable",
+                  vi: "Chưa có mã QR",
+                })}
+              </div>
+            )}
+            <p className="mt-2 text-center text-xs font-medium text-slate-600">
+              {vi ? "Quét mã tại quầy tiếp đón" : "Scan at the reception desk"}
+            </p>
+            {qrError && (
+              <p role="alert" className="mt-2 max-w-48 text-center text-[10px] text-rose-700">
+                {qrError}
               </p>
             )}
-
-            {/* QR Code */}
-            <div className="flex flex-col items-center flex-shrink-0">
-              {qrUrl ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm">
-                  <img
-                    src={qrUrl}
-                    alt={t({
-                      en: "Appointment QR code",
-                      vi: "Mã QR phiếu khám",
-                    })}
-                    className="h-24 w-24 object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="grid h-24 w-24 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-2 text-center text-[10px] text-slate-500">
-                  <QrCode size={24} className="mb-1 text-slate-400" />
-                  {t({
-                    en: "QR unavailable",
-                    vi: "Chưa có mã QR",
-                  })}
-                </div>
-              )}
-              {qrError && (
-                <p role="alert" className="mt-2 max-w-24 text-center text-[10px] text-rose-700">
-                  {qrError}
-                </p>
-              )}
-            </div>
-          </div>
+          </section>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-slate-200" />
-
-        {/* Middle Info Rows */}
-        <div className="divide-y divide-slate-100 bg-slate-50/50 px-6 py-2 text-sm">
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">
-              {vi ? "Bệnh nhân" : "Patient"}
-            </span>
-            <span className="font-bold text-slate-900 text-right">
-              {ticket.benhNhan.hoTen}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Bác sĩ" : "Doctor"}</span>
-            <span className="font-semibold text-slate-800 text-right">
-              {ticket.bacSi.hocVi ? `${ticket.bacSi.hocVi} ` : ""}
-              {ticket.bacSi.hoTen}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">
-              {vi ? "Chuyên khoa" : "Specialty"}
-            </span>
-            <span className="font-semibold text-slate-800 text-right">
-              {ticket.tenChuyenKhoa}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Ngày khám" : "Date"}</span>
-            <span className="font-bold text-slate-900 text-right">
-              {formatDateVN(ticket.ngay)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "Giờ khám" : "Time"}</span>
-            <span className="font-bold text-slate-900 text-right">
-              {ticket.gioKhamDuKien}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">
-              {vi ? "Phòng khám" : "Clinic"}
-            </span>
-            <span className="font-semibold text-slate-800 text-right">
-              {ticket.phongKham.tenPhong}
-              {ticket.phongKham.tang ? ` - ${ticket.phongKham.tang}` : ""}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-slate-500">{vi ? "STT" : "Queue #"}</span>
-            <span className="rounded-md bg-emerald-100 px-2.5 py-0.5 font-mono text-base font-black text-emerald-800">
-              {ticket.soThuTu}
-            </span>
-          </div>
-
-          {ticket.lyDoKham && (
-            <div className="flex items-start justify-between py-2.5">
-              <span className="text-slate-500">
-                {vi ? "Lý do khám" : "Reason"}
-              </span>
-              <span className="max-w-[60%] text-right text-xs text-slate-700 italic">
-                {ticket.lyDoKham}
-              </span>
+        <section className="border-t border-slate-200 px-6 py-5">
+          <h2 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-500">
+            {vi ? "Chi tiết lịch hẹn" : "Appointment details"}
+          </h2>
+          <dl className="grid gap-x-8 gap-y-4 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-slate-500">{vi ? "Bệnh nhân" : "Patient"}</dt>
+              <dd className="mt-1 font-bold text-slate-900">{ticket.benhNhan.hoTen}</dd>
             </div>
-          )}
-        </div>
+            <div>
+              <dt className="text-xs text-slate-500">{vi ? "Bác sĩ" : "Doctor"}</dt>
+              <dd className="mt-1 font-semibold text-slate-800">
+                {ticket.bacSi.hocVi ? `${ticket.bacSi.hocVi} ` : ""}
+                {ticket.bacSi.hoTen}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">{vi ? "Chuyên khoa" : "Specialty"}</dt>
+              <dd className="mt-1 font-semibold text-slate-800">{ticket.tenChuyenKhoa}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-slate-500">{vi ? "Lý do khám" : "Reason"}</dt>
+              <dd className="mt-1 text-slate-700">{ticket.lyDoKham || (vi ? "Chưa cung cấp" : "Not provided")}</dd>
+            </div>
+          </dl>
+        </section>
+
+        {calendarError && (
+          <p role="alert" className="px-6 pb-2 text-xs font-semibold text-rose-700">
+            {calendarError}
+          </p>
+        )}
 
         {ticket.lyDoHuy && (
           <div className="border-t border-rose-200 bg-rose-50/80 px-6 py-3 text-xs text-rose-800">
@@ -542,19 +471,12 @@ export function AppointmentTicketPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                    <div className="text-xs text-slate-600">
-                      <span className="font-semibold text-slate-800">{vi ? "Mã tra cứu sổ khám: " : "Record Code: "}</span>
-                      <span className="font-mono font-bold text-teal-800">
-                        {ticket.maSoKham || ticket.maTraCuu}
-                      </span>
-                    </div>
-
                     <Link
-                      to={ticket.linkSoKham || `/so-kham/${ticket.maSoKham || ticket.maTraCuu}`}
+                      to="/so-kham"
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 py-2 text-xs font-bold text-white shadow hover:bg-teal-800 transition"
                     >
                       <FileText size={14} />
-                      {vi ? "Xem Sổ Khám Bệnh" : "View Medical Record"}
+                      {vi ? "Mở tra cứu sổ khám" : "Open medical record lookup"}
                     </Link>
                   </div>
 
@@ -564,8 +486,8 @@ export function AppointmentTicketPage() {
                     </p>
                     <p>
                       {vi
-                        ? "Khi mở sổ khám, quý khách chỉ cần nhập 4 số cuối số điện thoại đăng ký đặt khám để mở khóa xem đầy đủ chẩn đoán, sinh hiệu và đơn thuốc."
-                        : "Please prepare the last 4 digits of your phone number to unlock diagnosis and prescription."}
+                        ? "Mã hoặc liên kết sổ khám được gửi riêng qua email hoặc mã QR sau khi khám; phiếu khám không chứa mã sổ khám. Khi tra cứu, nhập 4 số cuối điện thoại liên hệ để xem kết quả đầy đủ."
+                        : "The medical record code or link is sent separately by email or QR after the visit; it is not included in this appointment ticket. Enter the last 4 digits of the contact phone to view the full record."}
                     </p>
                     {!user && (
                       <p className="pt-1 text-slate-700 font-medium">
@@ -584,30 +506,25 @@ export function AppointmentTicketPage() {
               {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" && (
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800! py-3 text-sm font-bold text-white! shadow-sm hover:bg-emerald-900! transition"
-                  onClick={() => setMode("reschedule")}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-800 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900"
+                  onClick={() => setIsRescheduleOpen(true)}
                 >
                   <CalendarClock size={17} />
                   {vi ? "Đổi lịch khám" : "Reschedule Appointment"}
                 </button>
               )}
 
-              {/* Secondary action buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" ? (
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50/50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition"
-                    onClick={() => setMode("cancel")}
-                  >
-                    <XCircle size={15} />
-                    {vi ? "Hủy lịch khám" : "Cancel"}
-                  </button>
-                ) : (
-                  <span />
-                )}
+              {ticket.duocHuyDoi && ticket.trangThai === "DA_XAC_NHAN" && (
+                <button
+                  type="button"
+                  className="w-full text-center text-xs font-semibold text-rose-700 underline decoration-rose-300 underline-offset-4 transition hover:text-rose-900"
+                  onClick={() => setMode("cancel")}
+                >
+                  {vi ? "Hủy lịch khám" : "Cancel appointment"}
+                </button>
+              )}
 
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl bg-slate-50 p-3">
                   <button
                     type="button"
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
@@ -643,31 +560,25 @@ export function AppointmentTicketPage() {
                     <Mail size={14} className="text-sky-700" />
                     {vi ? "Gửi lại link" : "Email link"}
                   </button>
-                </div>
               </div>
 
               {ticket.hanHuyDoi && ticket.duocHuyDoi && (
                 <p className="text-center text-[11px] text-slate-400">
                   {vi
-                    ? `Có thể đổi hoặc hủy trước: ${ticket.hanHuyDoi}`
-                    : `Can reschedule or cancel until: ${ticket.hanHuyDoi}`}
+                    ? `Có thể đổi hoặc hủy trước: ${formatTimeAndDate(ticket.hanHuyDoi, lang)}`
+                    : `Can reschedule or cancel until: ${formatTimeAndDate(ticket.hanHuyDoi, lang)}`}
                 </p>
               )}
             </div>
           ) : (
-            /* Mode Form (Cancel / Reschedule) */
+            /* Cancel form */
             <form
               className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4"
               onSubmit={(event) => void submitAction(event)}
             >
               <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                 <h2 className="text-sm font-bold text-slate-900">
-                  {mode === "cancel"
-                    ? t({ en: "Cancel appointment", vi: "Hủy lịch khám" })
-                    : t({
-                        en: "Choose a new appointment slot",
-                        vi: "Chọn khung giờ mới để đổi lịch",
-                      })}
+                  {t({ en: "Cancel appointment", vi: "Hủy lịch khám" })}
                 </h2>
                 <button
                   type="button"
@@ -699,33 +610,19 @@ export function AppointmentTicketPage() {
                 </label>
               )}
 
-              {mode === "cancel" ? (
-                <label className="grid gap-1 text-xs font-semibold text-slate-700">
-                  {t({
-                    en: "Reason (optional)",
-                    vi: "Lý do hủy (không bắt buộc)",
-                  })}
-                  <textarea
-                    rows={3}
-                    className="rounded-lg border  bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                    placeholder={
-                      vi ? "Nhập lý do nếu có..." : "Enter reason..."
-                    }
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                  />
-                </label>
-              ) : (
-                <div className="max-h-[55vh] overflow-y-auto pr-1">
-                  <ServiceTimeStep
-                    lang={lang}
-                    formValues={rescheduleValues}
-                    onChange={(field, value) =>
-                      updateRescheduleValue(field, value)
-                    }
-                  />
-                </div>
-              )}
+              <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                {t({
+                  en: "Reason (optional)",
+                  vi: "Lý do hủy (không bắt buộc)",
+                })}
+                <textarea
+                  rows={3}
+                  className="rounded-lg border bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                  placeholder={vi ? "Nhập lý do nếu có..." : "Enter reason..."}
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                />
+              </label>
 
               {error && (
                 <p role="alert" className="text-xs font-semibold text-rose-700">
@@ -747,19 +644,24 @@ export function AppointmentTicketPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800! px-4 py-2 text-xs font-bold text-white! shadow-sm hover:bg-emerald-900! disabled:opacity-60"
                 >
                   {busy && <Loader2 size={13} className="animate-spin" />}
-                  {mode === "cancel"
-                    ? vi
-                      ? "Xác nhận hủy"
-                      : "Confirm Cancel"
-                    : vi
-                      ? "Xác nhận đổi lịch"
-                      : "Confirm Reschedule"}
+                  {vi ? "Xác nhận hủy" : "Confirm Cancel"}
                 </button>
               </div>
             </form>
           )}
         </div>
       </div>
+
+      {ticket && (
+        <RescheduleAppointmentModal
+          isOpen={isRescheduleOpen}
+          ticket={ticket}
+          isPatientAccount={Boolean(isPatientAccount)}
+          lang={lang}
+          onClose={() => setIsRescheduleOpen(false)}
+          onRescheduled={handleRescheduled}
+        />
+      )}
 
       {/* ─── Modal Cấp lại liên kết qua Email ─── */}
       {showResendModal && (

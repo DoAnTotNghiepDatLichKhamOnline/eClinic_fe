@@ -14,6 +14,7 @@ import {
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { doctorBookingService } from "@/services/booking/doctorBookingService";
 import { notifyAuth } from "@/utils/authNotification";
+import { formatFullDateWithWeekday } from "@/utils/dateFormatting";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import styles from "../../DoctorWorkspace.module.css";
 
@@ -217,11 +218,13 @@ export function DoctorScheduleSection() {
     },
   );
 
-  const calendarTitle = new Intl.DateTimeFormat(lang, {
-    ...(scheduleView === "day"
-      ? { weekday: "long", day: "numeric", month: "long", year: "numeric" }
-      : { month: "long", year: "numeric" }),
-  }).format(scheduleDate);
+  const calendarTitle =
+    scheduleView === "day"
+      ? formatFullDateWithWeekday(scheduleDate, lang)
+      : new Intl.DateTimeFormat(lang, {
+          month: "long",
+          year: "numeric",
+        }).format(scheduleDate);
 
   const moveCalendar = (direction: number) => {
     setScheduleDate((current) => {

@@ -88,7 +88,7 @@ export interface NgaySomNhatResponse {
 
 export interface BenhNhanPhieuKhamResponse {
 	hoTen: string;
-	namSinh: number;
+	namSinh: number | null;
 	gioiTinh: GioiTinh;
 	cccd: string | null;
 	soDienThoai: string | null;
@@ -116,8 +116,6 @@ export interface DatLichResponse {
 	hoTenNguoiGiamHo: string | null;
 	luuVaoTaiKhoan: boolean;
 	bacSiDoPhongKhamXep: boolean;
-	maSoKham?: string | null;
-	linkSoKham?: string | null;
 }
 
 export interface PhieuKhamResponse {
@@ -140,10 +138,9 @@ export interface PhieuKhamResponse {
 	canNguoiGiamHoDiCung: boolean;
 	lyDoHuy: string | null;
 	duocHuyDoi: boolean;
-	hanHuyDoi: string;
+	hanHuyDoi: string | null;
 	canDoiLich: boolean;
-	maSoKham?: string | null;
-	linkSoKham?: string | null;
+	daDoiBacSi: boolean;
 }
 
 export interface LichHenCuaToiResponse {
@@ -552,8 +549,6 @@ export interface BenhNhanRequest {
 	email?: string | null;
 	soBaoHiemYTe?: string | null;
 	diaChi?: string | null;
-	namSinh?: number;
-	tienSuBenhLy?: string | null;
 }
 
 export interface NguoiGiamHoRequest {
@@ -562,7 +557,6 @@ export interface NguoiGiamHoRequest {
 	soDienThoai: string;
 	cccd: string;
 	ngaySinh?: string | null;
-	namSinh?: number | null;
 }
 
 export interface DatLichRequest {
@@ -574,10 +568,6 @@ export interface DatLichRequest {
 	nguoiGiamHo?: NguoiGiamHoRequest | null;
 	datChoBanThan?: boolean | null;
 	luuNguoiThan?: boolean | null;
-	// Các trường tương thích cũ (nếu có)
-	idCaKham?: number | null;
-	nguoiDat?: NguoiDatLich | null;
-	luuVaoTaiKhoan?: boolean | null;
 }
 
 export interface DoiLichRequest {
@@ -585,16 +575,11 @@ export interface DoiLichRequest {
 	idChuyenKhoa?: number;
 	gioBatDauKhung: string;
 	soDienThoai?: string;
-	lyDo?: string | null;
-	idCaKhamMoi?: number;
-	gioBatDauKhungMoi?: string;
-	lyDoDoi?: string | null;
 }
 
 export interface HuyLichRequest {
 	lyDo?: string;
 	soDienThoai?: string;
-	lyDoHuy?: string;
 }
 
 export interface DanhGiaRequest {
@@ -689,8 +674,8 @@ export interface TuChoiLienKetRequest {
 export interface GetNgayConChoParams {
 	idChuyenKhoa?: number;
 	idBacSi?: number;
-	tuNgay: string;
-	denNgay: string;
+	tuNgay?: string;
+	denNgay?: string;
 }
 
 export interface GetLichHenParams {
@@ -724,14 +709,6 @@ export interface GetDanhGiaQuanTriParams {
 // ==========================================
 // 8. ĐẶT LỊCH & SỔ KHÁM BỔ SUNG (PATIENT & GUEST)
 // ==========================================
-
-export interface NguoiGiamHoRequest {
-	hoTen: string;
-	quanHe: QuanHeGiamHo;
-	soDienThoai: string;
-	cccd: string;
-	ngaySinh?: string | null;
-}
 
 export interface NguoiThanDaLuuRequest {
 	hoTen: string;
@@ -781,12 +758,6 @@ export interface SoKhamChiTietResponse {
 	};
 	hoTenNguoiGiamHo: string | null;
 	ketQua: KetQuaKhamResponse;
-}
-
-export interface GetKhungGioTheoNgayParams {
-	ngay: string;
-	idBacSi?: number;
-	idChuyenKhoa?: number;
 }
 
 export interface GetKhungGioNhieuNgayParams {
@@ -866,6 +837,11 @@ export interface NgayNghiResponse {
   nguoiTao?: string | null;
   ngayTao?: string | null;
   soCaBiHuy?: number;
+}
+
+export interface NgayNghiCongKhaiResponse {
+	ngay: string;
+	lyDo: string;
 }
 
 export interface KhaiBaoNgayNghiRequest {
