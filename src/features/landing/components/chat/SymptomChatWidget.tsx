@@ -19,6 +19,7 @@ import {
   type ChatMessage,
   type ChatSession,
 } from "@/services/chatbotService";
+import { formatDateTime } from "@/utils/dateFormatting";
 import styles from "./SymptomChatWidget.module.css";
 
 interface StoredChat {
@@ -37,7 +38,7 @@ function getErrorMessage(cause: unknown, fallback: string) {
 }
 
 export function SymptomChatWidget() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -533,7 +534,7 @@ export function SymptomChatWidget() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "#64748b" }}>
                           <Calendar size={12} />
-                          <span>{new Date(s.thoiGianBatDau).toLocaleString("vi-VN")}</span>
+                          <span>{formatDateTime(s.thoiGianBatDau, lang)}</span>
                         </div>
                         {s.daDongYDuLieu && (
                           <span style={{ fontSize: "10px", color: "#0284c7" }}>
