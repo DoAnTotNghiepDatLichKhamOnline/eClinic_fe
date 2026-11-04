@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { isAxiosError } from "axios";
 import {
   Bot,
   Loader2,
@@ -27,6 +28,13 @@ interface StoredChat {
 
 const storageKey = (userId?: string) =>
   `eclinic_chat_${userId ? `user_${userId}` : "guest"}`;
+
+function getErrorMessage(cause: unknown, fallback: string) {
+  if (isAxiosError<{ thongDiep?: string }>(cause)) {
+    return cause.response?.data?.thongDiep ?? cause.message;
+  }
+  return cause instanceof Error ? cause.message : fallback;
+}
 
 export function SymptomChatWidget() {
   const { t } = useLanguage();
@@ -81,19 +89,24 @@ export function SymptomChatWidget() {
     setShowHistory(false);
     setError("");
     try {
-      const res = await chatbotService.getTinNhan(s.idPhien);
-      if (res.thanhCong && res.duLieu) {
-        const nextSession: StoredChat = { idPhien: s.idPhien };
-        setSession(nextSession);
-        sessionStorage.setItem(currentStorageKey, JSON.stringify(nextSession));
-        setMessages(res.duLieu);
+      const idPhien = String(s.idPhien);
+      const res = await chatbotService.getTinNhan(idPhien);
+      if (!res.thanhCong || !res.duLieu) {
+        throw new Error(res.thongDiep || "Could not load chat messages.");
       }
-    } catch {
+      const nextSession: StoredChat = { idPhien };
+      setSession(nextSession);
+      sessionStorage.setItem(currentStorageKey, JSON.stringify(nextSession));
+      setMessages(res.duLieu);
+    } catch (cause) {
       setError(
-        t({
-          en: "Failed to load session messages.",
-          vi: "Không thể tải tin nhắn phiên này.",
-        }),
+        getErrorMessage(
+          cause,
+          t({
+            en: "Failed to load session messages.",
+            vi: "Không thể tải tin nhắn phiên này.",
+          }),
+        ),
       );
     } finally {
       setIsLoading(false);
@@ -106,21 +119,25 @@ export function SymptomChatWidget() {
     setError("");
     try {
       const res = await chatbotService.taoPhien();
-      if (res.thanhCong && res.duLieu) {
-        const nextSession: StoredChat = {
-          idPhien: res.duLieu.idPhien,
-          maKhach: res.duLieu.maKhach,
-        };
-        setSession(nextSession);
-        sessionStorage.setItem(currentStorageKey, JSON.stringify(nextSession));
-        setMessages(res.duLieu.tinNhan ?? []);
+      if (!res.thanhCong || !res.duLieu) {
+        throw new Error(res.thongDiep || "Could not create chat session.");
       }
-    } catch {
+      const nextSession: StoredChat = {
+        idPhien: String(res.duLieu.idPhien),
+        maKhach: res.duLieu.maKhach,
+      };
+      setSession(nextSession);
+      sessionStorage.setItem(currentStorageKey, JSON.stringify(nextSession));
+      setMessages(res.duLieu.tinNhan ?? []);
+    } catch (cause) {
       setError(
-        t({
-          en: "Failed to create new chat session.",
-          vi: "Không thể tạo phiên trò chuyện mới.",
-        }),
+        getErrorMessage(
+          cause,
+          t({
+            en: "Failed to create new chat session.",
+            vi: "Không thể tạo phiên trò chuyện mới.",
+          }),
+        ),
       );
     } finally {
       setIsLoading(false);
@@ -139,35 +156,62 @@ export function SymptomChatWidget() {
       try {
         const saved = sessionStorage.getItem(currentStorageKey);
         const stored = saved ? (JSON.parse(saved) as StoredChat) : null;
-        const response = stored
-          ? await chatbotService.getTinNhan(stored.idPhien, stored.maKhach)
-          : await chatbotService.taoPhien();
-        const data = response.duLieu;
-        if (!response.thanhCong || !data || cancelled) return;
-
-        const nextSession: StoredChat = stored ?? {
-          idPhien: (data as ChatSession).idPhien,
-          maKhach: (data as ChatSession).maKhach,
-        };
-        if (!stored)
-          sessionStorage.setItem(
-            currentStorageKey,
-            JSON.stringify(nextSession),
+        if (stored) {
+          const nextSession = {
+            ...stored,
+            idPhien: String(stored.idPhien),
+          };
+          const response = await chatbotService.getTinNhan(
+            nextSession.idPhien,
+            nextSession.maKhach,
           );
-        setSession(nextSession);
-        setMessages(
-          stored
-            ? (data as ChatMessage[])
-            : ((data as ChatSession).tinNhan ?? []),
-        );
-      } catch {
+          if (!response.thanhCong || !response.duLieu) {
+            throw new Error(
+              response.thongDiep || "Could not restore chat session.",
+            );
+          }
+          if (!cancelled) {
+            setSession(nextSession);
+            setMessages(response.duLieu);
+          }
+        } else {
+          const response = await chatbotService.taoPhien();
+          if (!response.thanhCong || !response.duLieu) {
+            throw new Error(
+              response.thongDiep || "Could not create chat session.",
+            );
+          }
+          const nextSession: StoredChat = {
+            idPhien: String(response.duLieu.idPhien),
+            maKhach: response.duLieu.maKhach,
+          };
+          if (!cancelled) {
+            sessionStorage.setItem(
+              currentStorageKey,
+              JSON.stringify(nextSession),
+            );
+            setSession(nextSession);
+            setMessages(response.duLieu.tinNhan ?? []);
+          }
+        }
+      } catch (cause) {
         if (!cancelled) {
-          sessionStorage.removeItem(currentStorageKey);
+          const sessionNotFound =
+            isAxiosError<{ maLoi?: string }>(cause) &&
+            (cause.response?.status === 404 ||
+              cause.response?.data?.maLoi === "KHONG_TIM_THAY");
+          if (sessionNotFound) {
+            sessionStorage.removeItem(currentStorageKey);
+            setSession(null);
+          }
           setError(
-            t({
-              en: "Chat is temporarily unavailable.",
-              vi: "Chatbot hiện chưa khả dụng.",
-            }),
+            getErrorMessage(
+              cause,
+              t({
+                en: "Chat is temporarily unavailable.",
+                vi: "Chatbot hiện chưa khả dụng.",
+              }),
+            ),
           );
         }
       } finally {
@@ -198,11 +242,12 @@ export function SymptomChatWidget() {
       setMessages((current) => [...current, tinNhan, traLoi]);
       setPendingQuestion(traLoi.loai === "CAN_DONG_Y" ? question : "");
     } catch (cause) {
-      const errorCode = (
-        cause as {
-          response?: { data?: { maLoi?: string; thongDiep?: string } };
-        }
-      ).response?.data;
+      const errorCode = isAxiosError<{
+        maLoi?: string;
+        thongDiep?: string;
+      }>(cause)
+        ? cause.response?.data
+        : undefined;
       if (errorCode?.maLoi === "KHONG_TIM_THAY") {
         sessionStorage.removeItem(currentStorageKey);
         setSession(null);
@@ -210,7 +255,7 @@ export function SymptomChatWidget() {
       }
       setError(
         errorCode?.thongDiep ??
-          (cause instanceof Error ? cause.message : "Chat request failed"),
+          getErrorMessage(cause, "Chat request failed"),
       );
     } finally {
       setIsSending(false);
@@ -230,7 +275,10 @@ export function SymptomChatWidget() {
     setIsSending(true);
     setError("");
     try {
-      await chatbotService.dongYDuLieu(session.idPhien);
+      const consent = await chatbotService.dongYDuLieu(session.idPhien);
+      if (!consent.thanhCong) {
+        throw new Error(consent.thongDiep || "Could not record consent.");
+      }
       const response = await chatbotService.guiTinNhan(
         session.idPhien,
         pendingQuestion,
@@ -257,7 +305,10 @@ export function SymptomChatWidget() {
   const revokeConsent = async () => {
     if (!session) return;
     try {
-      await chatbotService.rutDongYDuLieu(session.idPhien);
+      const response = await chatbotService.rutDongYDuLieu(session.idPhien);
+      if (!response.thanhCong) {
+        throw new Error(response.thongDiep || "Could not revoke consent.");
+      }
       setPendingQuestion("");
     } catch (cause) {
       setError(
@@ -450,7 +501,7 @@ export function SymptomChatWidget() {
               ) : (
                 <div style={{ display: "grid", gap: "8px" }}>
                   {historySessions.map((s) => {
-                    const isCurrent = session?.idPhien === s.idPhien;
+                    const isCurrent = session?.idPhien === String(s.idPhien);
                     return (
                       <button
                         key={s.idPhien}
