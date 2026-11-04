@@ -22,7 +22,7 @@ import type {
   DanhGiaCuaToiResponse,
   LanKhamCuaToiResponse,
   TrangCaNhanResponse,
-  NgayNghiResponse,
+  NgayNghiCongKhaiResponse,
   QuyTacDatLichResponse,
   CapLaiLienKetRequest,
   SoKhamTomTatResponse,
@@ -144,7 +144,7 @@ export const patientBookingService = {
 
   /** GET /api/booking/ngay-nghi - Get clinic holidays list */
   getNgayNghi: async (params?: GetNgayNghiParams) => {
-    const response = await axiosClient.get<ApiResponse<NgayNghiResponse[]>>(
+    const response = await axiosClient.get<ApiResponse<NgayNghiCongKhaiResponse[]>>(
       "/api/booking/ngay-nghi",
       { params },
     );
