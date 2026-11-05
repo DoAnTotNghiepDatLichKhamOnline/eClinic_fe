@@ -339,6 +339,7 @@ export function UserProfile({ className }: UserProfileProps) {
       )}
       <ConfirmDialog
         isOpen={logoutConfirmOpen}
+        variant="logout"
         title={lang === "vi" ? "Xác nhận đăng xuất" : "Confirm sign out"}
         message={
           lang === "vi"
