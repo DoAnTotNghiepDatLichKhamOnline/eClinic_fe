@@ -254,7 +254,7 @@ export function RescheduleAppointmentModal({
           : "Choose a new date and time with the same doctor."
       }
       maxWidth="xl"
-      closeOnBackdropClick={!isSubmitting}
+      closeOnBackdropClick={false}
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
