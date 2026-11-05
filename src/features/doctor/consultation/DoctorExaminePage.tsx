@@ -64,11 +64,11 @@ export function DoctorExaminePage({
     }
   }, [isValidId, rawId, moHoSoTheoId]);
 
-  // Check if draft exists in localStorage
+  // Check if draft exists in sessionStorage
   useEffect(() => {
     if (rawId) {
       const draftKey = `eclinic_draft_exam_${rawId}`;
-      const saved = localStorage.getItem(draftKey);
+      const saved = sessionStorage.getItem(draftKey);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -89,7 +89,7 @@ export function DoctorExaminePage({
   const handleExamSuccess = () => {
     // Clear draft if any
     if (rawId) {
-      localStorage.removeItem(`eclinic_draft_exam_${rawId}`);
+      sessionStorage.removeItem(`eclinic_draft_exam_${rawId}`);
     }
     notifyAuth(
       "success",
@@ -125,7 +125,7 @@ export function DoctorExaminePage({
     });
 
     const draftKey = `eclinic_draft_exam_${rawId}`;
-    localStorage.setItem(draftKey, JSON.stringify(draftData));
+    sessionStorage.setItem(draftKey, JSON.stringify(draftData));
     setDraftSavedAt(String(draftData._savedAt));
     notifyAuth(
       "info",

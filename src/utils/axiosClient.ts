@@ -1,19 +1,22 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-// 1. Storage Access Token in memory & localStorage for seamless page reload
+// 1. Storage Access Token in memory & sessionStorage for session-scoped reload
 const TOKEN_STORAGE_KEY = "eclinic_access_token";
 
 let memoryAccessToken: string | null =
   typeof window !== "undefined"
-    ? window.localStorage.getItem(TOKEN_STORAGE_KEY)
+    ? window.sessionStorage.getItem(TOKEN_STORAGE_KEY) ||
+      window.localStorage.getItem(TOKEN_STORAGE_KEY)
     : null;
 
 export const setAccessToken = (token: string | null) => {
   memoryAccessToken = token;
   if (typeof window !== "undefined") {
     if (token) {
-      window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      window.sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
     } else {
+      window.sessionStorage.removeItem(TOKEN_STORAGE_KEY);
       window.localStorage.removeItem(TOKEN_STORAGE_KEY);
     }
   }

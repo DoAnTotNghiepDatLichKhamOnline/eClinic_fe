@@ -30,7 +30,12 @@ export function UserProfile({ className }: UserProfileProps) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [user?.avatarUrl]);
 
   useEffect(() => {
     const closeOnOutsideClick = (event: PointerEvent) => {
@@ -103,8 +108,12 @@ export function UserProfile({ className }: UserProfileProps) {
         onClick={() => setOpen((value) => !value)}
       >
         <span className={styles.avatar}>
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" />
+          {user.avatarUrl && !avatarFailed ? (
+            <img
+              src={user.avatarUrl}
+              alt=""
+              onError={() => setAvatarFailed(true)}
+            />
           ) : (
             initials || <UserRound size={18} />
           )}
@@ -339,6 +348,7 @@ export function UserProfile({ className }: UserProfileProps) {
       )}
       <ConfirmDialog
         isOpen={logoutConfirmOpen}
+        variant="logout"
         title={lang === "vi" ? "Xác nhận đăng xuất" : "Confirm sign out"}
         message={
           lang === "vi"

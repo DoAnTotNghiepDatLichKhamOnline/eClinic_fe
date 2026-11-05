@@ -25,7 +25,11 @@ export function DoctorWorkspace({ activeSection }: DoctorWorkspaceProps) {
     useState<CompletedRecord | null>(null);
 
   if (activeSection === "schedule") {
-    return <DoctorScheduleSection />;
+    return <DoctorScheduleSection viewMode="schedule" />;
+  }
+
+  if (activeSection === "shift-requests") {
+    return <DoctorScheduleSection viewMode="shift-requests" />;
   }
 
   if (activeSection === "consultation") {

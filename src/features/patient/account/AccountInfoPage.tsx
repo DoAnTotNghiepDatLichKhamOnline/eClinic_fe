@@ -20,6 +20,8 @@ import { PatientPortal } from "@/features/patient/PatientPortal";
 import { useHoSoCaNhan, useIdentityActions } from "@/hooks/useIdentity";
 import { userProfileService } from "@/services/identity";
 import { formatFullDate } from "@/utils/dateFormatting";
+import { validatePassword } from "@/utils/formValidators";
+import { validatePasswordMatch, FieldError } from "@/utils/passwordMatchValidator";
 import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
@@ -62,6 +64,8 @@ export function AccountInfoPage() {
   const [emailPw, setEmailPw] = useState("");
   const [pwSuccess, setPwSuccess] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
+  const [newPwError, setNewPwError] = useState<string | null>(null);
+  const [confirmPwError, setConfirmPwError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState("");
@@ -180,14 +184,11 @@ export function AccountInfoPage() {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwError(null);
-    if (newPw !== confirmPw) {
-      setPwError(
-        lang === "vi"
-          ? "Mật khẩu xác nhận không khớp"
-          : "Passwords do not match",
-      );
-      return;
-    }
+    const errNew = validatePassword(newPw, lang);
+    const errConfirm = validatePasswordMatch(newPw, confirmPw, lang);
+    setNewPwError(errNew);
+    setConfirmPwError(errConfirm);
+    if (errNew || errConfirm) return;
     try {
       await doiMatKhau({ matKhauHienTai: oldPw, matKhauMoi: newPw });
       setPwSuccess(true);
@@ -698,7 +699,11 @@ export function AccountInfoPage() {
                   id: "input-new-pw",
                   label: vi ? "Mật khẩu mới" : "New password",
                   value: newPw,
-                  setter: setNewPw,
+                  setter: (val: string) => {
+                    setNewPw(val);
+                    if (newPwError) setNewPwError(null);
+                  },
+                  error: newPwError,
                   show: showNew,
                   toggle: () => setShowNew((v) => !v),
                 },
@@ -706,7 +711,11 @@ export function AccountInfoPage() {
                   id: "input-confirm-pw",
                   label: vi ? "Xác nhận mật khẩu mới" : "Confirm new password",
                   value: confirmPw,
-                  setter: setConfirmPw,
+                  setter: (val: string) => {
+                    setConfirmPw(val);
+                    if (confirmPwError) setConfirmPwError(null);
+                  },
+                  error: confirmPwError,
                   show: showConfirm,
                   toggle: () => setShowConfirm((v) => !v),
                 },
@@ -718,7 +727,7 @@ export function AccountInfoPage() {
                   <div className={styles.passwordInputWrap}>
                     <input
                       id={f.id}
-                      className={styles.input}
+                      className={`${styles.input} ${(f as any).error ? "border-rose-400 ring-1 ring-rose-200" : ""}`}
                       type={f.show ? "text" : "password"}
                       value={f.value}
                       onChange={(e) => f.setter(e.target.value)}
@@ -736,6 +745,7 @@ export function AccountInfoPage() {
                       {f.show ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
+                  <FieldError error={(f as any).error} id={`${f.id}-error`} />
                 </div>
               ))}
               <div className={styles.formActions}>

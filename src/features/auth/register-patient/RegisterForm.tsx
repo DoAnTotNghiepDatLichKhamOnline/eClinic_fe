@@ -2,6 +2,14 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import {
+  validateFullName,
+  validateEmail,
+  validatePhoneNumber,
+  validatePassword,
+  validateCCCD,
+} from "@/utils/formValidators";
+import { validatePasswordMatch, FieldError } from "@/utils/passwordMatchValidator";
 import type { Lang } from "@/types/i18n";
 import styles from "@/features/auth/login/LoginPagePatient.module.css";
 
@@ -30,97 +38,50 @@ export function RegisterForm({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [soDienThoai, setSoDienThoai] = useState("");
   const [soCCCD, setSoCCCD] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+
+  const clearFieldError = (field: string) => {
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidationError(null);
 
-    const trimmedName = hoTen.trim();
-    if (!trimmedName) {
-      setValidationError(
-        lang === "vi"
-          ? "Họ và tên không được để trống."
-          : "Full name cannot be empty.",
-      );
-      return;
-    }
+    const errName = validateFullName(hoTen, lang);
+    const errEmail = validateEmail(email, lang);
+    const errPhone = validatePhoneNumber(soDienThoai, lang);
+    const errPw = validatePassword(matKhau, lang);
+    const errConfirm = validatePasswordMatch(matKhau, confirmPassword, lang);
+    const errCCCD = validateCCCD(soCCCD, lang, true);
 
-    if (trimmedName.length > 150) {
-      setValidationError(
-        lang === "vi"
-          ? "Họ và tên tối đa 150 ký tự."
-          : "Full name cannot exceed 150 characters.",
-      );
-      return;
-    }
+    const newErrors = {
+      hoTen: errName,
+      email: errEmail,
+      soDienThoai: errPhone,
+      matKhau: errPw,
+      confirmPassword: errConfirm,
+      soCCCD: errCCCD,
+    };
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(normalizedEmail) || normalizedEmail.length > 255) {
-      setValidationError(
-        lang === "vi"
-          ? "Email không hợp lệ (tối đa 255 ký tự)."
-          : "Invalid email address (max 255 chars).",
-      );
-      return;
-    }
+    setErrors(newErrors);
 
-    const phoneRegex = /^0\d{9}$/;
-    if (!phoneRegex.test(soDienThoai.trim())) {
-      setValidationError(
-        lang === "vi"
-          ? "Số điện thoại phải đúng 10 chữ số và bắt đầu bằng số 0 (ví dụ: 0912345678)."
-          : "Phone number must be exactly 10 digits starting with 0.",
-      );
-      return;
-    }
-
-    if (matKhau.length < 6 || matKhau.length > 72) {
-      setValidationError(
-        lang === "vi"
-          ? "Mật khẩu phải từ 6 đến 72 ký tự."
-          : "Password must be between 6 and 72 characters.",
-      );
-      return;
-    }
-
-    if (matKhau !== confirmPassword) {
-      setValidationError(
-        lang === "vi"
-          ? "Mật khẩu xác nhận không khớp."
-          : "Passwords do not match.",
-      );
-      return;
-    }
-
-    const trimmedCCCD = soCCCD.trim();
-    if (trimmedCCCD && !/^\d{12}$/.test(trimmedCCCD)) {
-      setValidationError(
-        lang === "vi"
-          ? "Số CCCD không hợp lệ (phải gồm đúng 12 chữ số)."
-          : "Invalid CCCD (must be exactly 12 digits).",
-      );
+    if (Object.values(newErrors).some(Boolean)) {
       return;
     }
 
     onSubmit({
-      hoTen: trimmedName,
-      email: normalizedEmail,
+      hoTen: hoTen.trim(),
+      email: email.trim().toLowerCase(),
       matKhau,
       soDienThoai: soDienThoai.trim(),
-      soCCCD: trimmedCCCD || undefined,
+      soCCCD: soCCCD.trim() || undefined,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      {validationError && (
-        <div className="p-3 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
-          {validationError}
-        </div>
-      )}
-
+    <form onSubmit={handleSubmit} className={styles.form} noValidate>
       {/* Họ và tên */}
       <div className={styles.fieldGroup}>
         <label htmlFor="reg-fullname" className={styles.label}>
@@ -132,20 +93,28 @@ export function RegisterForm({
           type="text"
           autoComplete="name"
           maxLength={150}
-          className={styles.input}
+          className={`${styles.input} ${errors.hoTen ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={
             lang === "vi" ? "Nhập họ và tên đầy đủ" : "Enter your full name"
           }
           value={hoTen}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("hoTen");
             setHoTen(event.target.value);
           }}
-          required
+          onBlur={() => {
+            if (hoTen.trim()) {
+              setErrors((prev) => ({ ...prev, hoTen: validateFullName(hoTen, lang) }));
+            }
+          }}
+          disabled={isLoading}
         />
-        <span className="text-xs text-slate-400 text-right">
-          {hoTen.length}/150
-        </span>
+        <div className="flex justify-between items-center mt-1">
+          <FieldError error={errors.hoTen} id="reg-fullname-error" />
+          <span className="text-xs text-slate-400 ml-auto">
+            {hoTen.length}/150
+          </span>
+        </div>
       </div>
 
       {/* Email */}
@@ -159,15 +128,21 @@ export function RegisterForm({
           type="email"
           autoComplete="email"
           maxLength={255}
-          className={styles.input}
+          className={`${styles.input} ${errors.email ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={lang === "vi" ? "ten@domain.com" : "name@example.com"}
           value={email}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("email");
             setEmail(event.target.value);
           }}
-          required
+          onBlur={() => {
+            if (email.trim()) {
+              setErrors((prev) => ({ ...prev, email: validateEmail(email, lang) }));
+            }
+          }}
+          disabled={isLoading}
         />
+        <FieldError error={errors.email} id="reg-email-error" />
       </div>
 
       {/* Số điện thoại */}
@@ -181,9 +156,8 @@ export function RegisterForm({
           type="tel"
           inputMode="numeric"
           autoComplete="tel"
-          pattern="^0\d{9}$"
           maxLength={10}
-          className={styles.input}
+          className={`${styles.input} ${errors.soDienThoai ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={
             lang === "vi"
               ? "Đúng 10 chữ số, bắt đầu bằng số 0 (VD: 0912345678)"
@@ -191,11 +165,17 @@ export function RegisterForm({
           }
           value={soDienThoai}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("soDienThoai");
             setSoDienThoai(event.target.value.replace(/\D/g, ""));
           }}
-          required
+          onBlur={() => {
+            if (soDienThoai.trim()) {
+              setErrors((prev) => ({ ...prev, soDienThoai: validatePhoneNumber(soDienThoai, lang) }));
+            }
+          }}
+          disabled={isLoading}
         />
+        <FieldError error={errors.soDienThoai} id="reg-phone-error" />
       </div>
 
       {/* Mật khẩu */}
@@ -210,7 +190,7 @@ export function RegisterForm({
           autoComplete="new-password"
           minLength={6}
           maxLength={72}
-          className={styles.input}
+          className={`${styles.input} ${errors.matKhau ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={
             lang === "vi"
               ? "Tối thiểu 6 ký tự, tối đa 72 ký tự"
@@ -218,11 +198,17 @@ export function RegisterForm({
           }
           value={matKhau}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("matKhau");
             setMatKhau(event.target.value);
           }}
-          required
+          onBlur={() => {
+            if (matKhau) {
+              setErrors((prev) => ({ ...prev, matKhau: validatePassword(matKhau, lang) }));
+            }
+          }}
+          disabled={isLoading}
         />
+        <FieldError error={errors.matKhau} id="reg-password-error" />
       </div>
 
       {/* Xác nhận mật khẩu */}
@@ -237,17 +223,23 @@ export function RegisterForm({
           autoComplete="new-password"
           minLength={6}
           maxLength={72}
-          className={styles.input}
+          className={`${styles.input} ${errors.confirmPassword ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={
             lang === "vi" ? "Nhập lại mật khẩu đã nhập" : "Re-enter password"
           }
           value={confirmPassword}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("confirmPassword");
             setConfirmPassword(event.target.value);
           }}
-          required
+          onBlur={() => {
+            if (confirmPassword) {
+              setErrors((prev) => ({ ...prev, confirmPassword: validatePasswordMatch(matKhau, confirmPassword, lang) }));
+            }
+          }}
+          disabled={isLoading}
         />
+        <FieldError error={errors.confirmPassword} id="reg-confirm-error" />
       </div>
 
       {/* Số CCCD (Tùy chọn) */}
@@ -267,7 +259,7 @@ export function RegisterForm({
           type="text"
           inputMode="numeric"
           maxLength={12}
-          className={styles.input}
+          className={`${styles.input} ${errors.soCCCD ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
           placeholder={
             lang === "vi"
               ? "Nhập số CCCD (12 chữ số)"
@@ -275,14 +267,21 @@ export function RegisterForm({
           }
           value={soCCCD}
           onChange={(event) => {
-            setValidationError(null);
+            clearFieldError("soCCCD");
             setSoCCCD(event.target.value.replace(/\D/g, ""));
           }}
+          onBlur={() => {
+            if (soCCCD.trim()) {
+              setErrors((prev) => ({ ...prev, soCCCD: validateCCCD(soCCCD, lang, true) }));
+            }
+          }}
+          disabled={isLoading}
         />
-        <p className="text-xs text-slate-500 leading-normal mt-0.5">
+        <FieldError error={errors.soCCCD} id="reg-cccd-error" />
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
           {lang === "vi"
-            ? "Dùng để hệ thống tra cứu và đối soát tự động liên kết các lịch hẹn/hồ sơ khám cũ đã đặt trước đó vào tài khoản mới."
-            : "Used by the system to automatically look up and link previous appointments/medical records to your new account."}
+            ? "Cung cấp CCCD giúp hệ thống tự động liên kết các hồ sơ và lịch hẹn đã khám trước đây của bạn."
+            : "Providing your CCCD links previous appointments automatically."}
         </p>
       </div>
 
@@ -296,14 +295,12 @@ export function RegisterForm({
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>
-              {lang === "vi" ? "Đang xử lý đăng ký..." : "Creating account..."}
-            </span>
+            <span>{lang === "vi" ? "Đang xử lý..." : "Processing..."}</span>
           </span>
         ) : lang === "vi" ? (
           "Đăng ký tài khoản"
         ) : (
-          "Create Account"
+          "Register Account"
         )}
       </Button>
     </form>

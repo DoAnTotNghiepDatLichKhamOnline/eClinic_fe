@@ -22,11 +22,7 @@ export function AccountDetailModal({ userId, onClose }: AccountDetailModalProps)
   const { chiTiet, isLoading, error } = useChiTietTaiKhoan(userId);
 
   return (
-    <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
     >
       <div
         role="dialog"

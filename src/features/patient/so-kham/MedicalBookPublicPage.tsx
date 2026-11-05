@@ -17,9 +17,13 @@ import {
   ShieldCheck,
   Stethoscope,
   User,
+  LogIn,
+  Star,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { patientBookingService } from "@/services/booking";
+import { validateMedicalBookCode, validatePhoneLast4 } from "@/utils/formValidators";
+import { FieldError } from "@/utils/passwordMatchValidator";
 import type {
   SoKhamChiTietResponse,
   SoKhamTomTatResponse,
@@ -32,6 +36,7 @@ export function MedicalBookPublicPage() {
   const vi = lang === "vi";
 
   const [searchCode, setSearchCode] = useState(paramMaSoKham);
+  const [searchCodeError, setSearchCodeError] = useState<string | null>(null);
   const [activeCode, setActiveCode] = useState(paramMaSoKham);
 
   // Dữ liệu tóm tắt và chi tiết
@@ -46,6 +51,7 @@ export function MedicalBookPublicPage() {
 
   // Xác minh 4 số cuối SĐT
   const [last4Digits, setLast4Digits] = useState("");
+  const [last4Error, setLast4Error] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
@@ -124,6 +130,9 @@ export function MedicalBookPublicPage() {
 
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const err = validateMedicalBookCode(searchCode, lang);
+    setSearchCodeError(err);
+    if (err) return;
     const trimmed = searchCode.trim();
     if (!trimmed) return;
     setActiveCode(trimmed);
@@ -132,6 +141,9 @@ export function MedicalBookPublicPage() {
 
   const handleVerifySubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const err = validatePhoneLast4(last4Digits, lang);
+    setLast4Error(err);
+    if (err) return;
     if (last4Digits.length !== 4) {
       setVerifyError(
         vi ? "Vui lòng nhập đúng 4 chữ số." : "Please enter exactly 4 digits."
@@ -193,24 +205,32 @@ export function MedicalBookPublicPage() {
         </p>
 
         {/* Search bar */}
-        <form onSubmit={handleSearchSubmit} className="mt-6 flex flex-col sm:flex-row gap-2 max-w-lg">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              required
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
-              placeholder={vi ? "Nhập mã sổ khám (Ví dụ: SK-1001)..." : "Enter medical book code (e.g., SK-1001)..."}
-              className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
-            />
+        <form onSubmit={handleSearchSubmit} className="mt-6 max-w-lg space-y-1.5" noValidate>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchCode}
+                onChange={(e) => {
+                  setSearchCode(e.target.value);
+                  if (searchCodeError) setSearchCodeError(null);
+                }}
+                onBlur={() => {
+                  if (searchCode.trim()) setSearchCodeError(validateMedicalBookCode(searchCode, lang));
+                }}
+                placeholder={vi ? "Nhập mã sổ khám (Ví dụ: SK-1001)..." : "Enter medical book code (e.g., SK-1001)..."}
+                className={`w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-400 ${searchCodeError ? "border-2 border-rose-400" : ""}`}
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition"
+            >
+              {vi ? "Tra cứu" : "Lookup"}
+            </button>
           </div>
-          <button
-            type="submit"
-            className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition"
-          >
-            {vi ? "Tra cứu" : "Lookup"}
-          </button>
+          <FieldError error={searchCodeError} id="search-code-error" className="text-white" />
         </form>
       </div>
 
@@ -328,20 +348,20 @@ export function MedicalBookPublicPage() {
                   <input
                     type="password"
                     maxLength={4}
-                    required
-                    pattern="^\d{4}$"
                     value={last4Digits}
-                    onChange={(e) => setLast4Digits(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => {
+                      setLast4Digits(e.target.value.replace(/\D/g, ""));
+                      if (last4Error) setLast4Error(null);
+                      if (verifyError) setVerifyError("");
+                    }}
+                    onBlur={() => {
+                      if (last4Digits) setLast4Error(validatePhoneLast4(last4Digits, lang));
+                    }}
                     placeholder="••••"
-                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-slate-900 focus:border-emerald-600 focus:outline-hidden"
+                    className={`w-full rounded-xl border bg-white py-2.5 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-slate-900 focus:border-emerald-600 focus:outline-hidden ${last4Error || verifyError ? "border-rose-400 ring-1 ring-rose-200" : "border-slate-300"}`}
                   />
                 </div>
-
-                {verifyError && (
-                  <p role="alert" className="text-xs font-semibold text-rose-700">
-                    {verifyError}
-                  </p>
-                )}
+                <FieldError error={last4Error || verifyError} id="last4-error" />
 
                 <button
                   type="submit"
@@ -585,24 +605,34 @@ export function MedicalBookPublicPage() {
 
               {/* Guest Account Sync CTA Banner */}
               <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 via-emerald-50/60 to-white p-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                  <div className="space-y-1.5">
                     <h3 className="text-sm font-bold text-teal-950 flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-white text-xs">✓</span>
-                      {vi ? "Đồng bộ sổ khám này vào tài khoản của bạn" : "Sync this record into your eClinic account"}
+                      {vi ? "Đồng bộ sổ khám & Đánh giá Bác sĩ" : "Sync Medical Record & Review Doctor"}
                     </h3>
-                    <p className="text-xs text-slate-600 max-w-xl">
+                    <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
                       {vi
-                        ? "Quý khách đang xem sổ khám với tư cách Khách. Đăng ký tài khoản với cùng số điện thoại và CCCD để lưu vĩnh viễn kết quả khám, đơn thuốc và lịch sử điều trị vào hồ sơ sức khỏe cá nhân."
-                        : "You are viewing this record as a Guest. Register an account with your phone and ID to permanently sync your medical history."}
+                        ? "Quý khách đang xem sổ khám với tư cách Khách. Đăng ký hoặc Đăng nhập tài khoản với cùng số CCCD và SĐT để hệ thống tự động liên kết hồ sơ (DA_LIEN_KET), quản lý tập trung toàn bộ lịch sử khám và gửi đánh giá, nhận xét chất lượng phục vụ cho Bác sĩ."
+                        : "You are viewing this record as a Guest. Sign in or register with your National ID (CCCD) and phone to auto-link your records, centrally manage past consultations, and submit a doctor review."}
                     </p>
                   </div>
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-teal-800 transition flex-shrink-0"
-                  >
-                    {vi ? "Đăng ký tài khoản ngay" : "Register Account Now"}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <Link
+                      to="/login"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+                    >
+                      <LogIn size={14} />
+                      {vi ? "Đăng nhập" : "Sign In"}
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-teal-800 transition"
+                    >
+                      <Star size={14} className="fill-amber-300 text-amber-200" />
+                      {vi ? "Đăng ký để đồng bộ & Đánh giá" : "Register to Sync & Review"}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

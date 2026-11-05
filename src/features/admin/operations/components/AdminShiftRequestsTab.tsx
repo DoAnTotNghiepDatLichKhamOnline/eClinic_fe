@@ -440,11 +440,7 @@ export function AdminShiftRequestsTab({
 
       {/* 3. Modal Xem Chi Tiết Yêu Cầu */}
       {selectedRequestForDetail && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setSelectedRequestForDetail(null);
-          }}
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
         >
           <div
             role="dialog"

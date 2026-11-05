@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Stethoscope,
   UserRound,
+  ArrowRightLeft,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -11,6 +12,7 @@ import styles from "./DoctorSidebar.module.css";
 export type DoctorSection =
   | "dashboard"
   | "schedule"
+  | "shift-requests"
   | "consultation"
   | "profile";
 
@@ -24,9 +26,15 @@ const items: { id: DoctorSection; en: string; vi: string; icon: LucideIcon }[] =
     },
     {
       id: "schedule",
-      en: "Work Schedule",
+      en: "Personal Schedule",
       vi: "Lịch làm việc cá nhân",
       icon: CalendarClock,
+    },
+    {
+      id: "shift-requests",
+      en: "Shift Requests",
+      vi: "Yêu cầu đổi / nghỉ ca",
+      icon: ArrowRightLeft,
     },
     {
       id: "consultation",
@@ -59,18 +67,24 @@ export function DoctorSidebar({ activeSection, onSelect }: DoctorSidebarProps) {
         className={styles.menu}
         aria-label={lang === "vi" ? "Menu bác sĩ" : "Doctor menu"}
       >
-        {items.map(({ id, en, vi, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={`${styles.item} ${activeSection === id ? styles.active : ""}`}
-            aria-current={activeSection === id ? "page" : undefined}
-            onClick={() => onSelect(id)}
-          >
-            <Icon aria-hidden="true" size={18} />
-            <span>{lang === "vi" ? vi : en}</span>
-          </button>
-        ))}
+        {items.map(({ id, en, vi, icon: Icon }) => {
+          const isActive =
+            id === "dashboard"
+              ? activeSection === null || activeSection === "dashboard"
+              : activeSection === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.item} ${isActive ? styles.active : ""}`}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => onSelect(id)}
+            >
+              <Icon size={18} aria-hidden="true" />
+              <span>{lang === "vi" ? vi : en}</span>
+            </button>
+          );
+        })}
       </nav>
     </aside>
   );
