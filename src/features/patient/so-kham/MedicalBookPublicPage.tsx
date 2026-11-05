@@ -195,24 +195,32 @@ export function MedicalBookPublicPage() {
         </p>
 
         {/* Search bar */}
-        <form onSubmit={handleSearchSubmit} className="mt-6 flex flex-col sm:flex-row gap-2 max-w-lg">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              required
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
-              placeholder={vi ? "Nhập mã sổ khám (Ví dụ: SK-1001)..." : "Enter medical book code (e.g., SK-1001)..."}
-              className="w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-400"
-            />
+        <form onSubmit={handleSearchSubmit} className="mt-6 max-w-lg space-y-1.5" noValidate>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchCode}
+                onChange={(e) => {
+                  setSearchCode(e.target.value);
+                  if (searchCodeError) setSearchCodeError(null);
+                }}
+                onBlur={() => {
+                  if (searchCode.trim()) setSearchCodeError(validateMedicalBookCode(searchCode, lang));
+                }}
+                placeholder={vi ? "Nhập mã sổ khám (Ví dụ: SK-1001)..." : "Enter medical book code (e.g., SK-1001)..."}
+                className={`w-full rounded-xl bg-white pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-400 ${searchCodeError ? "border-2 border-rose-400" : ""}`}
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition"
+            >
+              {vi ? "Tra cứu" : "Lookup"}
+            </button>
           </div>
-          <button
-            type="submit"
-            className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-500 transition"
-          >
-            {vi ? "Tra cứu" : "Lookup"}
-          </button>
+          <FieldError error={searchCodeError} id="search-code-error" className="text-white" />
         </form>
       </div>
 
@@ -330,20 +338,20 @@ export function MedicalBookPublicPage() {
                   <input
                     type="password"
                     maxLength={4}
-                    required
-                    pattern="^\d{4}$"
                     value={last4Digits}
-                    onChange={(e) => setLast4Digits(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => {
+                      setLast4Digits(e.target.value.replace(/\D/g, ""));
+                      if (last4Error) setLast4Error(null);
+                      if (verifyError) setVerifyError(null);
+                    }}
+                    onBlur={() => {
+                      if (last4Digits) setLast4Error(validatePhoneLast4(last4Digits, lang));
+                    }}
                     placeholder="••••"
-                    className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-slate-900 focus:border-emerald-600 focus:outline-hidden"
+                    className={`w-full rounded-xl border bg-white py-2.5 pl-10 pr-4 text-center text-lg font-mono tracking-widest text-slate-900 focus:border-emerald-600 focus:outline-hidden ${last4Error || verifyError ? "border-rose-400 ring-1 ring-rose-200" : "border-slate-300"}`}
                   />
                 </div>
-
-                {verifyError && (
-                  <p role="alert" className="text-xs font-semibold text-rose-700">
-                    {verifyError}
-                  </p>
-                )}
+                <FieldError error={last4Error || verifyError} id="last4-error" />
 
                 <button
                   type="submit"
