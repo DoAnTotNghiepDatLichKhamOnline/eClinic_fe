@@ -1143,11 +1143,7 @@ export function DoctorProfileSection() {
 
       {/* Modal sửa chú thích ảnh */}
       {editingPhoto && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !savingCaption) setEditingPhoto(null);
-          }}
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
         >
           <div
             role="dialog"
