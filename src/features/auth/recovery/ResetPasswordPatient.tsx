@@ -216,7 +216,7 @@ export function ResetPasswordPatient() {
                     variant="accent"
                     size="lg"
                     className={styles.submitBtn}
-                    disabled={isSubmitting || passwordsMismatch}
+                    disabled={isSubmitting || Boolean(newPasswordError) || Boolean(confirmPasswordError)}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
