@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  Heart,
-  Baby,
-  Eye,
-  Bone,
-  Brain,
-  Droplet,
-  Stethoscope,
-  Activity,
   Search,
   RotateCcw,
   ArrowRight,
@@ -18,34 +10,8 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useDanhSachChuyenKhoa } from "@/hooks/useCatalog";
+import { getSpecialtyVisual } from "@/utils/specialtyVisual";
 import styles from "./DoctorPages.module.css";
-
-// Helper chọn icon và màu nền theo tên chuyên khoa
-function getSpecialtyVisual(tenChuyenKhoa: string) {
-  const lower = tenChuyenKhoa.toLowerCase();
-  if (lower.includes("tim")) {
-    return { icon: Heart, tint: "#FBEAEC", color: "#e11d48" };
-  }
-  if (lower.includes("nhi")) {
-    return { icon: Baby, tint: "#FFF6E0", color: "#d97706" };
-  }
-  if (lower.includes("mắt") || lower.includes("nhãn")) {
-    return { icon: Eye, tint: "#E6F7F5", color: "#0d9488" };
-  }
-  if (lower.includes("xương") || lower.includes("khớp") || lower.includes("chỉnh hình")) {
-    return { icon: Bone, tint: "#EAF1FB", color: "#2563eb" };
-  }
-  if (lower.includes("não") || lower.includes("thần kinh")) {
-    return { icon: Brain, tint: "#F3EEE6", color: "#7c3aed" };
-  }
-  if (lower.includes("da") || lower.includes("liễu")) {
-    return { icon: Droplet, tint: "#E9F7EF", color: "#059669" };
-  }
-  if (lower.includes("nội") || lower.includes("tổng quát") || lower.includes("đa khoa")) {
-    return { icon: Stethoscope, tint: "#F1EEE9", color: "#475569" };
-  }
-  return { icon: Activity, tint: "#e8f3ef", color: "#1a7a67" };
-}
 
 export function SpecialtyDirectoryPage() {
   const { t } = useLanguage();
