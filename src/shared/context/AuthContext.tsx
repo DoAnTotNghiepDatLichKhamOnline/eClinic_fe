@@ -71,9 +71,11 @@ function mapVaiTroToRole(vaiTro: VaiTro): "patient" | "doctor" | "admin" {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved =
+        sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -86,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
     const restoreSession = async () => {
       const currentToken = getAccessToken();
-      const savedUserStr = localStorage.getItem(STORAGE_KEY);
+      const savedUserStr = sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
       const hasSavedUser = Boolean(savedUserStr);
 
       // 1. Chưa đăng nhập (khách vãng lai): không gọi refresh-token tránh lỗi 401
@@ -156,19 +158,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(STORAGE_KEY);
     } else {
+      sessionStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [user]);
 
   const login = (userData: User) => {
+    queryClient.clear();
     setUser(userData);
   };
 
   const loginWithCredentials = async (
     data: DangNhapRequest,
   ): Promise<DangNhapResponse> => {
+    queryClient.clear();
     const response = await authService.dangNhap(data);
     if (!response.thanhCong || !response.duLieu) {
       throw new Error(response.thongDiep || "Đăng nhập không thành công");
@@ -205,6 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (
     idToken: string,
   ): Promise<DangNhapResponse> => {
+    queryClient.clear();
     const response = await authService.dangNhapGoogle({ idToken });
     if (!response.thanhCong || !response.duLieu) {
       throw new Error(response.thongDiep || "Đăng nhập Google không thành công");
@@ -244,8 +251,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Bỏ qua lỗi mạng khi logout
     } finally {
+      queryClient.clear();
       setAccessToken(null);
       setUser(null);
+      sessionStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_KEY);
     }
   };
