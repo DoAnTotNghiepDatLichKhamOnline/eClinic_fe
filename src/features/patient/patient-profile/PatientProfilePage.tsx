@@ -343,9 +343,21 @@ export function PatientProfilePage() {
         {/* ─── Personal Identity Card ─── */}
         <div className={styles.card}>
           <div className={styles.cardTitleRow}>
-            <h2 className={styles.cardTitle}>
-              {vi ? "Thông tin nhân thân" : "Personal Identity"}
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className={styles.cardTitle}>
+                {vi ? "Thông tin nhân thân" : "Personal Identity"}
+              </h2>
+              {form.trangThaiLienKet === "DA_LIEN_KET" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                  <ShieldCheck size={12} />
+                  {vi ? "Đã liên kết CCCD" : "ID Linked"}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                  {vi ? "Chưa liên kết CCCD" : "Unlinked"}
+                </span>
+              )}
+            </div>
             {!editing && (
               <button
                 className={styles.btnOutline}
@@ -357,6 +369,26 @@ export function PatientProfilePage() {
               </button>
             )}
           </div>
+
+          {form.trangThaiLienKet === "DA_LIEN_KET" ? (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-900 flex items-start gap-2">
+              <ShieldCheck size={16} className="text-emerald-700 shrink-0 mt-0.5" />
+              <span>
+                {vi
+                  ? "Hồ sơ đã được liên kết chính thức với CCCD. Các lượt khám trước đây đặt dưới vai trò Khách trùng với CCCD này đã được tự động đồng bộ vào Lịch hẹn và Lịch sử khám của bạn."
+                  : "Your profile is officially linked with your Citizen ID. Past consultations booked as Guest matching this ID have been automatically synced to your appointments and history."}
+              </span>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2">
+              <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                {vi
+                  ? "Nhập chính xác số CCCD/CMND để hệ thống tự động quét và liên kết các lượt khám cũ bạn từng đặt dưới vai trò Khách vào tài khoản này."
+                  : "Enter your Citizen ID accurately so the system can automatically scan and link any past visits you booked as a Guest."}
+              </span>
+            </div>
+          )}
 
           {editing ? (
             <form onSubmit={handleSave}>
