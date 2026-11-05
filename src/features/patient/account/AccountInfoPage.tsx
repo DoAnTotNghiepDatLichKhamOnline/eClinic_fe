@@ -64,6 +64,8 @@ export function AccountInfoPage() {
   const [emailPw, setEmailPw] = useState("");
   const [pwSuccess, setPwSuccess] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
+  const [newPwError, setNewPwError] = useState<string | null>(null);
+  const [confirmPwError, setConfirmPwError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState("");
