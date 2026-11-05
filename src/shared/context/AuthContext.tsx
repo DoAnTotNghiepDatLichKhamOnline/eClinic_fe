@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/services/identity/authService";
 import { userProfileService } from "@/services/identity/userProfileService";
 import { setAccessToken, getAccessToken } from "@/utils/axiosClient";
