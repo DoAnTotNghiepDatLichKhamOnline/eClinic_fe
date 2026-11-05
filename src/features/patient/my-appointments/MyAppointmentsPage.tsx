@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   CalendarDays,
@@ -32,6 +33,7 @@ import {
   useLichSuKham,
 } from "@/hooks/useBooking";
 import { formatFullDate } from "@/utils/dateFormatting";
+import { AppointmentReviewSection } from "./components/AppointmentReviewSection";
 import styles from "./MyAppointmentsPage.module.css";
 
 type TabStatus = "upcoming" | "done" | "cancelled";
@@ -78,6 +80,23 @@ const toDateKey = (d: Date) => {
 export function MyAppointmentsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const ticketParam = searchParams.get("ticket");
+    if (ticketParam) {
+      setSelectedTicket(ticketParam);
+    }
+  }, [searchParams]);
+
+  const handleCloseModal = () => {
+    setSelectedTicket(null);
+    if (searchParams.get("ticket")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("ticket");
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
@@ -96,8 +115,6 @@ export function MyAppointmentsPage() {
   const [newShiftId, setNewShiftId] = useState("");
   const [newSpecialtyId, setNewSpecialtyId] = useState("");
   const [newSlot, setNewSlot] = useState("");
-  const [reviewStars, setReviewStars] = useState(5);
-  const [reviewText, setReviewText] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -155,21 +172,9 @@ export function MyAppointmentsPage() {
     isCancelling,
     doiLich,
     isRescheduling,
-    danhGia,
-    isSubmittingReview,
-    suaDanhGia,
-    isUpdatingReview,
   } = useBookingActions();
 
-  useEffect(() => {
-    if (chiTiet?.danhGia) {
-      setReviewStars(chiTiet.danhGia.soSao);
-      setReviewText(chiTiet.danhGia.nhanXet ?? "");
-    } else {
-      setReviewStars(5);
-      setReviewText("");
-    }
-  }, [chiTiet]);
+
 
   const handleCancel = async (maPhieuKham: string) => {
     if (
@@ -212,27 +217,6 @@ export function MyAppointmentsPage() {
         (error as { response?: { data?: { thongDiep?: string } } }).response
           ?.data?.thongDiep ??
           (vi ? "Không thể đổi lịch." : "Could not reschedule."),
-      );
-    }
-  };
-
-  const handleReview = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!selectedTicket) return;
-    setActionError("");
-    const data = {
-      soSao: reviewStars,
-      nhanXet: reviewText.trim() || undefined,
-    };
-    try {
-      if (chiTiet?.danhGia)
-        await suaDanhGia({ maPhieuKham: selectedTicket, data });
-      else await danhGia({ maPhieuKham: selectedTicket, data });
-    } catch (error) {
-      setActionError(
-        (error as { response?: { data?: { thongDiep?: string } } }).response
-          ?.data?.thongDiep ??
-          (vi ? "Không thể lưu đánh giá." : "Could not save the review."),
       );
     }
   };
@@ -398,13 +382,22 @@ export function MyAppointmentsPage() {
             </>
           )}
           {category === "done" && (
-            <button
-              type="button"
-              className={`${styles.btnSmall} ${styles.btnSmallPrimary}`}
-              onClick={() => setSelectedTicket(appt.maPhieuKham)}
-            >
-              {vi ? "Xem kết quả" : "View result"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                className={`${styles.btnSmall} ${styles.btnSmallOutline}`}
+                onClick={() => setSelectedTicket(appt.maPhieuKham)}
+              >
+                {vi ? "Đánh giá" : "Review"}
+              </button>
+              <button
+                type="button"
+                className={`${styles.btnSmall} ${styles.btnSmallPrimary}`}
+                onClick={() => setSelectedTicket(appt.maPhieuKham)}
+              >
+                {vi ? "Xem kết quả" : "View result"}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -750,7 +743,7 @@ export function MyAppointmentsPage() {
         <div
           className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSelectedTicket(null);
+            if (event.target === event.currentTarget) handleCloseModal();
           }}
         >
           <section
@@ -769,7 +762,7 @@ export function MyAppointmentsPage() {
               <button
                 type="button"
                 className="text-sm font-semibold text-slate-600"
-                onClick={() => setSelectedTicket(null)}
+                onClick={handleCloseModal}
               >
                 {vi ? "Đóng" : "Close"}
               </button>
@@ -1058,61 +1051,13 @@ export function MyAppointmentsPage() {
                       </button>
                     </form>
                   )}
-                  {chiTiet.duocDanhGia && (
-                    <form
-                      className="grid gap-3 border-t border-slate-200 pt-4"
-                      onSubmit={(event) => void handleReview(event)}
-                    >
-                      <h3 className="font-semibold">
-                        {chiTiet.danhGia
-                          ? vi
-                            ? "Cập nhật đánh giá"
-                            : "Update review"
-                          : vi
-                            ? "Đánh giá lượt khám"
-                            : "Rate this visit"}
-                      </h3>
-                      <label className="grid max-w-xs gap-1 text-xs">
-                        {vi ? "Số sao" : "Rating"}
-                        <select
-                          className="border border-slate-300 px-3 py-2 text-sm"
-                          value={reviewStars}
-                          onChange={(event) =>
-                            setReviewStars(Number(event.target.value))
-                          }
-                        >
-                          {[5, 4, 3, 2, 1].map((stars) => (
-                            <option value={stars} key={stars}>
-                              {stars} / 5
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <textarea
-                        className="min-h-24 border border-slate-300 px-3 py-2 text-sm"
-                        maxLength={1000}
-                        placeholder={
-                          vi
-                            ? "Nhận xét (không bắt buộc)"
-                            : "Comment (optional)"
-                        }
-                        value={reviewText}
-                        onChange={(event) => setReviewText(event.target.value)}
-                      />
-                      <button
-                        className="w-fit bg-emerald-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                        disabled={isSubmittingReview || isUpdatingReview}
-                      >
-                        {isSubmittingReview || isUpdatingReview ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : vi ? (
-                          "Lưu đánh giá"
-                        ) : (
-                          "Save review"
-                        )}
-                      </button>
-                    </form>
-                  )}
+                  <AppointmentReviewSection
+                    maPhieuKham={chiTiet.lichHen.maPhieuKham}
+                    trangThai={chiTiet.lichHen.trangThai}
+                    duocDanhGia={chiTiet.duocDanhGia}
+                    danhGia={chiTiet.danhGia}
+                    tenBacSi={chiTiet.lichHen.bacSi?.hoTen}
+                  />
                   {actionError && (
                     <p role="alert" className="text-sm text-rose-700">
                       {actionError}
