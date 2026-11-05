@@ -9,6 +9,8 @@ import { notifyAuth } from "@/utils/authNotification";
 import { authService } from "@/services/identity/authService";
 import { setAccessToken } from "@/utils/axiosClient";
 import { applyAccountLanguage } from "@/utils/languagePreference";
+import { validateEmail, validatePassword } from "@/utils/formValidators";
+import { validatePasswordMatch, FieldError } from "@/utils/passwordMatchValidator";
 import styles from "./LoginPageStaff.module.css";
 
 export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
@@ -23,10 +25,18 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
   const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
+  const [confirmNewPasswordError, setConfirmNewPasswordError] = useState<string | null>(null);
 
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) return;
+    const errEmail = validateEmail(email, lang);
+    const errPw = validatePassword(password, lang);
+    setEmailError(errEmail);
+    setPasswordError(errPw);
+    if (errEmail || errPw) return;
 
     setIsLoading(true);
     try {
@@ -107,16 +117,11 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
 
   const handleFirstPassword = async (event: FormEvent) => {
     event.preventDefault();
-    if (newPassword.length < 6 || newPassword !== confirmNewPassword) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Mật khẩu chưa hợp lệ" : "Password is invalid",
-        lang === "vi"
-          ? "Mật khẩu mới phải có ít nhất 6 ký tự và hai lần nhập phải khớp."
-          : "Use at least 6 characters and make both entries match.",
-      );
-      return;
-    }
+    const errNew = validatePassword(newPassword, lang);
+    const errConfirm = validatePasswordMatch(newPassword, confirmNewPassword, lang);
+    setNewPasswordError(errNew);
+    setConfirmNewPasswordError(errConfirm);
+    if (errNew || errConfirm) return;
     setIsLoading(true);
     try {
       const result = await authService.datMatKhauLanDau({
@@ -302,7 +307,7 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
                 </p>
               </div>
 
-              <form onSubmit={handleLoginSubmit} className={styles.form}>
+              <form onSubmit={handleLoginSubmit} className={styles.form} noValidate>
                 <div className={styles.fieldGroup}>
                   <label htmlFor="staff-email" className={styles.label}>
                     {lang === "vi" ? "Email nhân viên" : "Staff Email"}
@@ -311,17 +316,23 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
                     id="staff-email"
                     type="email"
                     autoComplete="email"
-                    className={styles.input}
+                    className={`${styles.input} ${emailError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                     placeholder={
                       role === "doctor"
                         ? "bacsi@eclinic.vn"
                         : "admin@eclinic.vn"
                     }
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError(null);
+                    }}
+                    onBlur={() => {
+                      if (email.trim()) setEmailError(validateEmail(email, lang));
+                    }}
                     disabled={isLoading}
                   />
+                  <FieldError error={emailError} id="staff-email-error" />
                 </div>
 
                 <div className={styles.fieldGroup}>
@@ -332,15 +343,21 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
                     id="staff-password"
                     type="password"
                     autoComplete="current-password"
-                    className={styles.input}
+                    className={`${styles.input} ${passwordError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                     placeholder={
                       lang === "vi" ? "Nhập mật khẩu" : "Enter password"
                     }
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError(null);
+                    }}
+                    onBlur={() => {
+                      if (password) setPasswordError(validatePassword(password, lang));
+                    }}
                     disabled={isLoading}
                   />
+                  <FieldError error={passwordError} id="staff-password-error" />
                   <div className={styles.forgotWrapper}>
                     <button
                       type="button"
@@ -387,38 +404,48 @@ export function LoginPageStaff({ role }: { role: "doctor" | "admin" }) {
                       ? "Đặt mật khẩu mới lần đầu"
                       : "Set your first password"}
                   </h3>
-                  <label className={styles.fieldGroup}>
-                    <span className={styles.label}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>
                       {lang === "vi" ? "Mật khẩu mới" : "New password"}
-                    </span>
+                    </label>
                     <input
-                      className={styles.input}
+                      className={`${styles.input} ${newPasswordError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                       type="password"
                       minLength={6}
                       maxLength={72}
-                      required
                       value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
+                      onChange={(event) => {
+                        setNewPassword(event.target.value);
+                        if (newPasswordError) setNewPasswordError(null);
+                      }}
+                      onBlur={() => {
+                        if (newPassword) setNewPasswordError(validatePassword(newPassword, lang));
+                      }}
                     />
-                  </label>
-                  <label className={styles.fieldGroup}>
-                    <span className={styles.label}>
+                    <FieldError error={newPasswordError} id="staff-new-pw-error" />
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label}>
                       {lang === "vi"
                         ? "Xác nhận mật khẩu mới"
                         : "Confirm new password"}
-                    </span>
+                    </label>
                     <input
-                      className={styles.input}
+                      className={`${styles.input} ${confirmNewPasswordError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                       type="password"
                       minLength={6}
                       maxLength={72}
-                      required
                       value={confirmNewPassword}
-                      onChange={(event) =>
-                        setConfirmNewPassword(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setConfirmNewPassword(event.target.value);
+                        if (confirmNewPasswordError) setConfirmNewPasswordError(null);
+                      }}
+                      onBlur={() => {
+                        if (confirmNewPassword) setConfirmNewPasswordError(validatePasswordMatch(newPassword, confirmNewPassword, lang));
+                      }}
                     />
-                  </label>
+                    <FieldError error={confirmNewPasswordError} id="staff-confirm-pw-error" />
+                  </div>
                   <Button
                     type="submit"
                     variant="accent"
