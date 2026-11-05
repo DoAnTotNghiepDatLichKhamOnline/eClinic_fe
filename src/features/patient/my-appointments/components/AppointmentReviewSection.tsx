@@ -184,7 +184,6 @@ export function AppointmentReviewSection({
 
   // Trường hợp 2: Đang chỉnh sửa đánh giá (PUT)
   if (danhGia && isEditing) {
-    const editUntilDate = new Date(danhGia.duocSuaDen);
     const activeStars = hoverStars ?? stars;
 
     const handleUpdateSubmit = async (e: FormEvent) => {
@@ -512,3 +511,4 @@ export function AppointmentReviewSection({
     </div>
   );
 }
+
