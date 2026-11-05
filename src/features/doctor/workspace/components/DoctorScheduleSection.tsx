@@ -22,7 +22,13 @@ function formatDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function DoctorScheduleSection() {
+export interface DoctorScheduleSectionProps {
+  viewMode?: "schedule" | "shift-requests";
+}
+
+export function DoctorScheduleSection({
+  viewMode,
+}: DoctorScheduleSectionProps = {}) {
   const { lang } = useLanguage();
   const queryClient = useQueryClient();
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
@@ -75,12 +81,14 @@ export function DoctorScheduleSection() {
         tuNgay: scheduleFrom,
         denNgay: scheduleTo,
       }),
+    enabled: viewMode !== "shift-requests",
   });
 
   const { data: ownShiftRequestsResponse } = useQuery({
     queryKey: ["booking", "doctor-shift-requests"],
     queryFn: () =>
       doctorBookingService.getYeuCauDoiLichBacSi({ trang: 0, kichThuoc: 100 }),
+    enabled: viewMode !== "schedule",
   });
 
   const { data: transferredShiftsResponse } = useQuery({
@@ -89,6 +97,7 @@ export function DoctorScheduleSection() {
       doctorBookingService.getYeuCauNhuongCaBacSi().catch(() => ({
         duLieu: { noiDung: [] },
       })),
+    enabled: viewMode !== "schedule",
   });
 
   const shifts = shiftsResponse?.duLieu ?? [];
@@ -529,55 +538,68 @@ export function DoctorScheduleSection() {
       <div className={styles.pageHeading}>
         <div>
           <h1>
-            {lang === "vi" ? "Lịch làm việc cá nhân" : "Personal Work Schedule"}
+            {viewMode === "shift-requests"
+              ? lang === "vi"
+                ? "Yêu cầu đổi / nghỉ ca"
+                : "Shift Requests"
+              : lang === "vi"
+                ? "Lịch làm việc cá nhân"
+                : "Personal Work Schedule"}
           </h1>
           <p>
-            {lang === "vi"
-              ? "Xem ca trực được phân công và số lượng bệnh nhân đã đặt."
-              : "Review your assigned duty shifts and confirmed patient bookings."}
+            {viewMode === "shift-requests"
+              ? lang === "vi"
+                ? "Gửi đơn xin nghỉ hoặc đổi ca, quản lý ca nhượng và theo dõi phê duyệt."
+                : "Submit leave or shift exchange requests, manage transferred shifts, and track approvals."
+              : lang === "vi"
+                ? "Xem ca trực được phân công và số lượng bệnh nhân đã đặt."
+                : "Review your assigned duty shifts and confirmed patient bookings."}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={handleExportPdf}
-            disabled={isExportingPdf}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            {isExportingPdf ? (
-              <Loader2 size={15} className="animate-spin" />
-            ) : (
-              <FileDown size={15} />
-            )}
-            <span>{lang === "vi" ? "Xuất PDF" : "Export PDF"}</span>
-          </button>
-          <div
-            className={styles.segmented}
-            role="group"
-            aria-label={lang === "vi" ? "Chế độ xem lịch" : "Schedule view"}
-          >
+        {viewMode !== "shift-requests" && (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <button
               type="button"
-              className={scheduleView === "day" ? styles.selected : ""}
-              aria-pressed={scheduleView === "day"}
-              onClick={() => setScheduleView("day")}
+              className={styles.secondaryButton}
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              {lang === "vi" ? "Ngày" : "Day"}
+              {isExportingPdf ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <FileDown size={15} />
+              )}
+              <span>{lang === "vi" ? "Xuất PDF" : "Export PDF"}</span>
             </button>
-            <button
-              type="button"
-              className={scheduleView === "week" ? styles.selected : ""}
-              aria-pressed={scheduleView === "week"}
-              onClick={() => setScheduleView("week")}
+            <div
+              className={styles.segmented}
+              role="group"
+              aria-label={lang === "vi" ? "Chế độ xem lịch" : "Schedule view"}
             >
-              {lang === "vi" ? "Tuần" : "Week"}
-            </button>
+              <button
+                type="button"
+                className={scheduleView === "day" ? styles.selected : ""}
+                aria-pressed={scheduleView === "day"}
+                onClick={() => setScheduleView("day")}
+              >
+                {lang === "vi" ? "Ngày" : "Day"}
+              </button>
+              <button
+                type="button"
+                className={scheduleView === "week" ? styles.selected : ""}
+                aria-pressed={scheduleView === "week"}
+                onClick={() => setScheduleView("week")}
+              >
+                {lang === "vi" ? "Tuần" : "Week"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
-      <section
-        className={styles.calendar}
+      {viewMode !== "shift-requests" && (
+        <section
+          className={styles.calendar}
         aria-label={lang === "vi" ? "Lịch làm việc" : "Work calendar"}
       >
         <div className={styles.calendarToolbar}>
@@ -683,8 +705,11 @@ export function DoctorScheduleSection() {
             );
           })}
         </div>
-      </section>
+        </section>
+      )}
 
+      {viewMode !== "schedule" && (
+        <>
       <section className={styles.panel}>
         <h2>{lang === "vi" ? "Đơn đã gửi" : "Submitted requests"}</h2>
         <div className={styles.requestList}>
@@ -1283,6 +1308,8 @@ export function DoctorScheduleSection() {
         onConfirm={() => void handleProcessTransfer()}
         onCancel={() => setConfirmTransferAction(null)}
       />
+        </>
+      )}
     </section>
   );
 }
