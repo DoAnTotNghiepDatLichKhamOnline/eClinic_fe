@@ -23,7 +23,7 @@ export function Modal({
   footer,
   maxWidth = "md",
   className,
-  closeOnBackdropClick = true,
+  closeOnBackdropClick = false,
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
