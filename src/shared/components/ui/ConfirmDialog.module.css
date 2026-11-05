@@ -1,16 +1,16 @@
-/* Ép kích thước modal vừa vặn (nếu component Modal hỗ trợ className) */
+/* Ép kích thước modal vừa vặn */
 .modalCustom {
-  max-width: 420px !important;
+  max-width: 440px !important;
   width: 90% !important;
   padding: 0 !important;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   overflow: hidden;
 }
 
 .dialogContainer {
-  padding: 24px;
+  padding: 28px;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -19,8 +19,14 @@
 /* Thân dialog */
 .body {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .iconWrap {
@@ -43,23 +49,32 @@
   color: #0284c7;
 }
 
-.textWrap {
-  flex: 1;
+.iconWrap.logout {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
 }
 
 .title {
-  margin: 0 0 6px 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: #101828;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
   line-height: 1.35;
 }
 
 .message {
   margin: 0;
   font-size: 14px;
-  color: #475467;
-  line-height: 1.5;
+  color: #475569;
+  line-height: 1.55;
+  padding-left: 58px;
+}
+
+@media (max-width: 640px) {
+  .message {
+    padding-left: 0;
+  }
 }
 
 /* Khu vực nút bấm */
@@ -71,32 +86,39 @@
 }
 
 .btnCancel {
-  padding: 9px 18px;
+  padding: 10px 20px;
   font-size: 14px;
-  font-weight: 500;
-  color: #344054;
+  font-weight: 600;
+  color: #475569;
   background-color: #ffffff;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   cursor: pointer;
-  text-transform: none; /* Bỏ in hoa cứng nhắc */
+  text-transform: none;
+  min-height: 40px;
   transition: all 0.15s ease;
 }
 
 .btnCancel:hover {
-  background-color: #f9fafb;
-  border-color: #c4c9d1;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
 }
 
 .btnConfirm {
-  padding: 9px 20px;
+  padding: 10px 22px;
   font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
+  font-weight: 600;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
-  text-transform: none; /* Bỏ in hoa cứng nhắc */
+  text-transform: none;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.15s ease;
 }
 
@@ -117,4 +139,14 @@
 
 .btn_primary:hover {
   background-color: #0369a1;
+}
+
+.btn_logout {
+  background-color: #0f766e;
+  color: #ffffff;
+}
+
+.btn_logout:hover {
+  background-color: #115e59;
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
 }
