@@ -27,6 +27,13 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const filteredNavLinks = navLinks.filter((link) => {
+    if (link.href === "/my-appointments" && user?.role === "patient") {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <header className={cx(styles.header, scrolled && styles.scrolled)}>
       <Container className={styles.row}>
@@ -42,7 +49,7 @@ export function Header() {
           className={cx(styles.nav, menuOpen && styles.navOpen)}
           aria-label="Primary"
         >
-          {navLinks.map((link) => (
+          {filteredNavLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
