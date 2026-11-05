@@ -17,6 +17,7 @@ import {
   formatSlotRange,
 } from "../appointment.utils";
 import { useDanhSachChuyenKhoa, useDanhSachBacSi } from "@/hooks/useCatalog";
+import { AvatarImage } from "@/shared/components/ui/AvatarImage";
 import {
   useCaKhamTheoNgay,
   useKhungGioGop,
@@ -512,17 +513,13 @@ export function ServiceTimeStep({
                   }`}
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 flex-shrink-0 border border-slate-200">
-                    {doc.anhDaiDien ? (
-                      <img
-                        src={doc.anhDaiDien}
-                        alt={doc.hoTen}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-bold text-sm">
-                        {doc.hoTen.split(" ").slice(-1)[0][0]}
-                      </div>
-                    )}
+                    <AvatarImage
+                      src={doc.anhDaiDien}
+                      alt={doc.hoTen}
+                      className="w-full h-full object-cover"
+                      fallbackInitials={doc.hoTen.split(" ").slice(-1)[0]?.[0] || "BS"}
+                      initialsClassName="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-bold text-sm"
+                    />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-900 truncate">
