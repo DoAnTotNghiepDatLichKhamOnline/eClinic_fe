@@ -641,11 +641,7 @@ export function AdminScheduleSection() {
 
       {/* Modal Danh sách bệnh nhân của 1 ca khám */}
       {selectedShiftForPatients && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setSelectedShiftForPatients(null);
-          }}
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
         >
           <div
             role="dialog"
@@ -815,11 +811,7 @@ export function AdminScheduleSection() {
 
       {/* Modal Sửa ca khám */}
       {editingShift && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setEditingShift(null);
-          }}
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
         >
           <div
             role="dialog"
