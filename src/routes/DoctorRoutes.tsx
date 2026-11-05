@@ -15,6 +15,8 @@ const DoctorWorkspace = lazy(() =>
 const sections: { path: string; section: DoctorSection | null }[] = [
   { path: "dashboard", section: null },
   { path: "work-schedule", section: "schedule" },
+  { path: "personal-schedule", section: "schedule" },
+  { path: "shift-requests", section: "shift-requests" },
   { path: "consultation", section: "consultation" },
   { path: "consultation/:appointmentId", section: "consultation" },
   { path: "profile", section: "profile" },
