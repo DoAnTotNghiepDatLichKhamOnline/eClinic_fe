@@ -4,6 +4,8 @@ import QrScanner from "qr-scanner";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { useQrScanner } from "@/features/doctor/workspace/hooks/useQrScanner";
+import { validateAppointmentCode } from "@/utils/formValidators";
+import { FieldError } from "@/utils/passwordMatchValidator";
 
 interface ConsultationLookupCardProps {
   onSearch: (code: string) => Promise<boolean>;
@@ -16,6 +18,7 @@ export function ConsultationLookupCard({
 }: ConsultationLookupCardProps) {
   const { lang } = useLanguage();
   const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isDecodingImage, setIsDecodingImage] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -34,7 +37,9 @@ export function ConsultationLookupCard({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) return;
+    const err = validateAppointmentCode(code, lang);
+    setCodeError(err);
+    if (err) return;
     await onSearch(code.trim());
   };
 
@@ -89,30 +94,40 @@ export function ConsultationLookupCard({
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder={
-              lang === "vi"
-                ? "VD: ECL-20261015-0001 hoặc dán link phiếu khám..."
-                : "e.g. ECL-20261015-0001 or appointment link..."
-            }
-            className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none transition"
-            disabled={isLoading}
-          />
-          {code && (
-            <button
-              type="button"
-              onClick={() => setCode("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                if (codeError) setCodeError(null);
+              }}
+              onBlur={() => {
+                if (code.trim()) setCodeError(validateAppointmentCode(code, lang));
+              }}
+              placeholder={
+                lang === "vi"
+                  ? "VD: ECL-20261015-0001 hoặc dán link phiếu khám..."
+                  : "e.g. ECL-20261015-0001 or appointment link..."
+              }
+              className={`w-full pl-3.5 pr-10 py-2.5 text-sm rounded-lg border ${codeError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : "border-slate-200 bg-slate-50/50 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100"} outline-none transition`}
+              disabled={isLoading}
+            />
+            {code && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCode("");
+                  setCodeError(null);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
