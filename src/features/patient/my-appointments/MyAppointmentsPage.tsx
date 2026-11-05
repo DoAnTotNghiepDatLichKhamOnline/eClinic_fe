@@ -740,12 +740,7 @@ export function MyAppointmentsPage() {
         </p>
       )}
       {selectedTicket && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) handleCloseModal();
-          }}
-        >
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4">
           <section
             role="dialog"
             aria-modal="true"
