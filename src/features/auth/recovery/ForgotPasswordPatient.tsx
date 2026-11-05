@@ -7,6 +7,8 @@ import { Footer } from "@/features/landing/components/footer/Footer";
 import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { authService } from "@/services/identity/authService";
+import { validateEmail } from "@/utils/formValidators";
+import { FieldError } from "@/utils/passwordMatchValidator";
 import styles from "@/features/auth/login/LoginPagePatient.module.css";
 import pageStyles from "./ForgotPasswordPatient.module.css";
 
@@ -16,12 +18,15 @@ const genericSuccessMessage =
 export function ForgotPasswordPatient() {
   const { lang } = useLanguage();
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim()) return;
+    const err = validateEmail(email, lang);
+    setEmailError(err);
+    if (err) return;
 
     setIsSubmitting(true);
     try {
@@ -107,17 +112,23 @@ export function ForgotPasswordPatient() {
                       type="email"
                       autoComplete="email"
                       maxLength={255}
-                      className={styles.input}
+                      className={`${styles.input} ${emailError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                       placeholder={
                         lang === "vi"
                           ? "Nhập email đã đăng ký"
                           : "Enter your registered email"
                       }
                       value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      required
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
+                      onBlur={() => {
+                        if (email.trim()) setEmailError(validateEmail(email, lang));
+                      }}
                       disabled={isSubmitting}
                     />
+                    <FieldError error={emailError} id="forgot-email-error" />
                   </div>
                   <p className={pageStyles.securityNote}>
                     {lang === "vi"
