@@ -8,6 +8,8 @@ import { Button } from "@/shared/components/ui/Button";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { authService } from "@/services/identity/authService";
 import { notifyAuth } from "@/utils/authNotification";
+import { validatePassword } from "@/utils/formValidators";
+import { validatePasswordMatch, FieldError } from "@/utils/passwordMatchValidator";
 import styles from "@/features/auth/login/LoginPagePatient.module.css";
 import pageStyles from "./ResetPasswordPatient.module.css";
 
@@ -17,14 +19,18 @@ export function ResetPasswordPatient() {
   const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const passwordsMismatch =
-    confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (newPassword !== confirmPassword) return;
+    const errPw = validatePassword(newPassword, lang);
+    const errConfirm = validatePasswordMatch(newPassword, confirmPassword, lang);
+    setNewPasswordError(errPw);
+    setConfirmPasswordError(errConfirm);
+    if (errPw || errConfirm) return;
 
     const token = searchParams.get("token") ?? "";
     if (!token) {
@@ -151,17 +157,23 @@ export function ResetPasswordPatient() {
                       autoComplete="new-password"
                       minLength={6}
                       maxLength={72}
-                      className={styles.input}
+                      className={`${styles.input} ${newPasswordError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                       placeholder={
                         lang === "vi"
                           ? "Nhập mật khẩu mới"
                           : "Enter a new password"
                       }
                       value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
-                      required
+                      onChange={(event) => {
+                        setNewPassword(event.target.value);
+                        if (newPasswordError) setNewPasswordError(null);
+                      }}
+                      onBlur={() => {
+                        if (newPassword) setNewPasswordError(validatePassword(newPassword, lang));
+                      }}
                       disabled={isSubmitting}
                     />
+                    <FieldError error={newPasswordError} id="new-password-error" />
                     <p className={pageStyles.hint}>
                       {lang === "vi"
                         ? "Mật khẩu từ 6 đến 72 ký tự."
@@ -180,34 +192,23 @@ export function ResetPasswordPatient() {
                       autoComplete="new-password"
                       minLength={6}
                       maxLength={72}
-                      className={styles.input}
+                      className={`${styles.input} ${confirmPasswordError ? "border-rose-400 focus:border-rose-500 ring-1 ring-rose-200" : ""}`}
                       placeholder={
                         lang === "vi"
                           ? "Nhập lại mật khẩu mới"
                           : "Enter the new password again"
                       }
                       value={confirmPassword}
-                      onChange={(event) =>
-                        setConfirmPassword(event.target.value)
-                      }
-                      aria-invalid={passwordsMismatch}
-                      aria-describedby={
-                        passwordsMismatch ? "password-mismatch" : undefined
-                      }
-                      required
+                      onChange={(event) => {
+                        setConfirmPassword(event.target.value);
+                        if (confirmPasswordError) setConfirmPasswordError(null);
+                      }}
+                      onBlur={() => {
+                        if (confirmPassword) setConfirmPasswordError(validatePasswordMatch(newPassword, confirmPassword, lang));
+                      }}
                       disabled={isSubmitting}
                     />
-                    {passwordsMismatch && (
-                      <p
-                        id="password-mismatch"
-                        className={pageStyles.error}
-                        role="alert"
-                      >
-                        {lang === "vi"
-                          ? "Mật khẩu xác nhận không khớp."
-                          : "The passwords do not match."}
-                      </p>
-                    )}
+                    <FieldError error={confirmPasswordError} id="confirm-password-error" />
                   </div>
 
                   <Button
