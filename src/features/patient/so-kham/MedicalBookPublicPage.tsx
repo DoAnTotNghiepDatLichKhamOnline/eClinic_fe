@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { patientBookingService } from "@/services/booking";
+import { validateMedicalBookCode, validatePhoneLast4 } from "@/utils/formValidators";
+import { FieldError } from "@/utils/passwordMatchValidator";
 import type {
   SoKhamChiTietResponse,
   SoKhamTomTatResponse,
@@ -34,6 +36,7 @@ export function MedicalBookPublicPage() {
   const vi = lang === "vi";
 
   const [searchCode, setSearchCode] = useState(paramMaSoKham);
+  const [searchCodeError, setSearchCodeError] = useState<string | null>(null);
   const [activeCode, setActiveCode] = useState(paramMaSoKham);
 
   // Dữ liệu tóm tắt và chi tiết
@@ -48,6 +51,7 @@ export function MedicalBookPublicPage() {
 
   // Xác minh 4 số cuối SĐT
   const [last4Digits, setLast4Digits] = useState("");
+  const [last4Error, setLast4Error] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
@@ -126,6 +130,9 @@ export function MedicalBookPublicPage() {
 
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const err = validateMedicalBookCode(searchCode, lang);
+    setSearchCodeError(err);
+    if (err) return;
     const trimmed = searchCode.trim();
     if (!trimmed) return;
     setActiveCode(trimmed);
@@ -134,6 +141,9 @@ export function MedicalBookPublicPage() {
 
   const handleVerifySubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const err = validatePhoneLast4(last4Digits, lang);
+    setLast4Error(err);
+    if (err) return;
     if (last4Digits.length !== 4) {
       setVerifyError(
         vi ? "Vui lòng nhập đúng 4 chữ số." : "Please enter exactly 4 digits."
@@ -342,7 +352,7 @@ export function MedicalBookPublicPage() {
                     onChange={(e) => {
                       setLast4Digits(e.target.value.replace(/\D/g, ""));
                       if (last4Error) setLast4Error(null);
-                      if (verifyError) setVerifyError(null);
+                      if (verifyError) setVerifyError("");
                     }}
                     onBlur={() => {
                       if (last4Digits) setLast4Error(validatePhoneLast4(last4Digits, lang));
