@@ -16,6 +16,9 @@ import {
   MapPin,
   QrCode,
   X,
+  LogIn,
+  Star,
+  UserPlus,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
@@ -478,6 +481,16 @@ export function AppointmentTicketPage() {
                       <FileText size={14} />
                       {vi ? "Mở tra cứu sổ khám" : "Open medical record lookup"}
                     </Link>
+
+                    {isPatientAccount && (
+                      <Link
+                        to={`/patient/my-appointments?ticket=${encodeURIComponent(ticket.maPhieuKham)}`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 shadow-xs hover:bg-amber-100 transition"
+                      >
+                        <Star size={14} className="fill-amber-400 text-amber-500" />
+                        {vi ? "Đánh giá lượt khám" : "Rate consultation"}
+                      </Link>
+                    )}
                   </div>
 
                   <div className="rounded-lg border border-teal-200/80 bg-white/80 p-3 text-xs text-slate-600 space-y-1">
@@ -490,13 +503,37 @@ export function AppointmentTicketPage() {
                         : "The medical record code or link is sent separately by email or QR after the visit; it is not included in this appointment ticket. Enter the last 4 digits of the contact phone to view the full record."}
                     </p>
                     {!user && (
-                      <p className="pt-1 text-slate-700 font-medium">
-                        💡 {vi ? "Muốn lưu vĩnh viễn lịch sử này?" : "Want to permanently save this history?"}{" "}
-                        <Link to="/register" className="font-bold text-teal-700 underline hover:text-teal-900">
-                          {vi ? "Đăng ký tài khoản" : "Register account"}
-                        </Link>{" "}
-                        {vi ? "với cùng CCCD / SĐT để quản lý tập trung mọi lần khám." : "with same ID/phone to sync all records."}
-                      </p>
+                      <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50/70 p-3 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Star size={15} className="text-amber-500 fill-amber-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-bold text-slate-800">
+                              {vi ? "Đánh giá Bác sĩ & Đồng bộ Lịch sử khám:" : "Doctor Review & History Sync:"}
+                            </p>
+                            <p className="mt-0.5 text-slate-600">
+                              {vi
+                                ? "Khách vãng lai không thể gửi đánh giá trực tiếp. Đăng ký hoặc Đăng nhập tài khoản với đúng số CCCD đã dùng để hệ thống tự động liên kết hồ sơ (DA_LIEN_KET), lưu vĩnh viễn kết quả khám và gửi đánh giá cho Bác sĩ."
+                                : "Guests cannot review directly. Sign in or register with your National ID (CCCD) to auto-link your records and rate the doctor."}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <Link
+                            to="/login"
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+                          >
+                            <LogIn size={13} />
+                            {vi ? "Đăng nhập" : "Sign In"}
+                          </Link>
+                          <Link
+                            to="/register"
+                            className="inline-flex items-center gap-1 rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-teal-800 transition"
+                          >
+                            <UserPlus size={13} />
+                            {vi ? "Đăng ký tài khoản mới" : "Register Account"}
+                          </Link>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
