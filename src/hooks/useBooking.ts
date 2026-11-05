@@ -292,8 +292,11 @@ export function useBookingActions() {
       maPhieuKham: string;
       data: DanhGiaRequest;
     }) => patientBookingService.taoDanhGia(maPhieuKham, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["booking", "lich-hen"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking", "lich-hen-detail", variables.maPhieuKham],
+      });
     },
   });
 
