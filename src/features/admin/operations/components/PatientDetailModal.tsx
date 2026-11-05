@@ -81,11 +81,7 @@ export function PatientDetailModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
     >
       <section
         role="dialog"
