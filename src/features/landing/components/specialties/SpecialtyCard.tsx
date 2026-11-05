@@ -1,30 +1,9 @@
 import { Link } from "react-router-dom";
-import {
-  Heart,
-  Baby,
-  Eye,
-  Bone,
-  Brain,
-  Droplet,
-  Stethoscope,
-  Activity,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ChuyenKhoaResponse } from "@/types/catalog.type";
+import { getSpecialtyVisual } from "@/utils/specialtyVisual";
 import styles from "./SpecialtyCard.module.css";
-
-function getSpecialtyIcon(name: string) {
-  const lower = name.toLowerCase();
-  if (lower.includes("tim")) return Heart;
-  if (lower.includes("nhi")) return Baby;
-  if (lower.includes("mắt") || lower.includes("nhãn")) return Eye;
-  if (lower.includes("xương") || lower.includes("khớp") || lower.includes("chỉnh hình")) return Bone;
-  if (lower.includes("não") || lower.includes("thần kinh")) return Brain;
-  if (lower.includes("da") || lower.includes("liễu")) return Droplet;
-  if (lower.includes("nội") || lower.includes("tổng quát") || lower.includes("đa khoa")) return Stethoscope;
-  return Activity;
-}
 
 export function SpecialtyCard({
   specialty,
@@ -34,11 +13,13 @@ export function SpecialtyCard({
   featured?: boolean;
 }) {
   const { t } = useLanguage();
-  const Icon = getSpecialtyIcon(specialty.tenChuyenKhoa);
+  const { icon: Icon, tint, color } = getSpecialtyVisual(specialty.tenChuyenKhoa);
 
   return (
     <article className={styles.card}>
-      <Icon className={styles.icon} />
+      <div style={{ backgroundColor: tint, color: color, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+        <Icon size={24} />
+      </div>
       <h3>{specialty.tenChuyenKhoa}</h3>
 
       <p className={styles.desc}>
