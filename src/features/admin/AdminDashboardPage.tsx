@@ -670,7 +670,13 @@ export function AdminDashboardPage({
                               <div className={styles.userCell}>
                                 <div className={styles.userAvatar}>
                                   {u.anhDaiDien ? (
-                                    <img src={u.anhDaiDien} alt="" />
+                                    <img
+                                      src={u.anhDaiDien}
+                                      alt=""
+                                      onError={(e) => {
+                                        (e.target as HTMLElement).style.display = "none";
+                                      }}
+                                    />
                                   ) : (
                                     (u.hoTen || "U")
                                       .trim()
