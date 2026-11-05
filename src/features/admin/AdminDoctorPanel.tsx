@@ -651,11 +651,7 @@ export function AdminDoctorPanel() {
         </>
       )}
       {selectedDoctor && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSelectedDoctor(null);
-          }}
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
         >
           <section
             role="dialog"
@@ -934,11 +930,7 @@ export function AdminDoctorPanel() {
       )}
       {/* MODAL THÊM BÁC SĨ */}
       {isAddDoctorOpen && (
-        <div
-          className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isAddingDoctor) setIsAddDoctorOpen(false);
-          }}
+        <div className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
         >
           <div
             role="dialog"
