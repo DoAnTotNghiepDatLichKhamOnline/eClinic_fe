@@ -180,6 +180,9 @@ export function DoctorDashboardPage({
   const cacCa = hangDoi?.cacCa ?? [];
   const activeShiftId = selectedShiftId ?? hangDoi?.idCaHienTai ?? cacCa[0]?.idLichLamViec;
   const currentShift = cacCa.find((c) => c.idLichLamViec === activeShiftId) ?? cacCa[0];
+  const totalWaitingCount =
+    currentShift?.soLuong?.choKham ??
+    cacCa.reduce((sum, ca) => sum + (ca.soLuong?.choKham || 0), 0);
 
   const navigateToSection = (section: DoctorSection) =>
     navigate(`/doctor/${sectionPaths[section]}`);
@@ -305,7 +308,7 @@ export function DoctorDashboardPage({
           onSelect={navigateToSection}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebarCollapse}
-          waitingCount={hangDoiResponse?.duLieu?.soLuong?.choKham}
+          waitingCount={totalWaitingCount}
         />
         <div className={styles.dashboardContent}>
           {activeSection ? (
