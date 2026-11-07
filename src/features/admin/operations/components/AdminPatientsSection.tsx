@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, PhoneCall } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientDetailModal } from "./PatientDetailModal";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import { notifyAuth } from "@/utils/authNotification";
 import { ReissueTicketModal } from "@/shared/components/booking/ReissueTicketModal";
+import { AdminBookOnBehalfModal } from "./AdminBookOnBehalfModal";
 import type { PendingVerificationItem } from "../operations.types";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import styles from "../../AdminDashboardPage.module.css";
@@ -34,6 +35,7 @@ export function AdminPatientsSection() {
     code?: string;
     name?: string;
   } | null>(null);
+  const [isBookOnBehalfOpen, setIsBookOnBehalfOpen] = useState(false);
 
   // Debounce search 400ms
   useEffect(() => {
@@ -174,8 +176,20 @@ export function AdminPatientsSection() {
     <section className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>
-          {vi ? "Hồ sơ bệnh nhân" : "Patient profiles"}
+          {vi ? "Hồ sơ bệnh nhân & Tiếp nhận" : "Patient profiles & Reception"}
         </h2>
+        <button
+          type="button"
+          onClick={() => setIsBookOnBehalfOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition"
+        >
+          <PhoneCall size={14} />
+          <span>
+            {vi
+              ? "Tiếp nhận & Đặt lịch tại quầy / Hotline"
+              : "Reception & Hotline Booking"}
+          </span>
+        </button>
       </div>
       {error && (
         <p role="alert" className="mb-3 text-sm text-rose-700">
@@ -493,6 +507,20 @@ export function AdminPatientsSection() {
               return res.duLieu;
             }
             throw new Error(res.thongDiep || (vi ? "Không thể cấp lại liên kết" : "Failed to reissue link"));
+          }}
+        />
+      )}
+      {isBookOnBehalfOpen && (
+        <AdminBookOnBehalfModal
+          isOpen={isBookOnBehalfOpen}
+          onClose={() => setIsBookOnBehalfOpen(false)}
+          onSuccess={() => {
+            void client.invalidateQueries({
+              queryKey: ["booking", "admin-patients"],
+            });
+            void client.invalidateQueries({
+              queryKey: ["booking", "admin-appointments"],
+            });
           }}
         />
       )}
