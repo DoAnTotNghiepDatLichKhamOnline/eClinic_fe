@@ -131,7 +131,12 @@ export function DoctorSidebar({
   });
 
   const liveWaiting =
-    waitingCount ?? queueResponse?.duLieu?.soLuong?.choKham ?? 0;
+    waitingCount ??
+    queueResponse?.duLieu?.cacCa?.reduce(
+      (sum, ca) => sum + (ca.soLuong?.choKham || 0),
+      0,
+    ) ??
+    0;
 
   return (
     <aside
