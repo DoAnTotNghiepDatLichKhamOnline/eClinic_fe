@@ -56,6 +56,25 @@ export function DoctorDashboardPage({
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
   const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("doctor_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("doctor_sidebar_collapsed", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
@@ -66,7 +85,7 @@ export function DoctorDashboardPage({
     queryKey: ["booking", "doctor-hang-doi", today],
     queryFn: () => doctorBookingService.getHangDoi(today),
     refetchInterval: 15000,
-    enabled: !activeSection,
+    enabled: true,
   });
 
   const { data: reviewsResponse } = useQuery({
@@ -278,10 +297,15 @@ export function DoctorDashboardPage({
         </div>
       </header>
 
-      <main className={styles.container}>
+      <main
+        className={`${styles.container} ${isSidebarCollapsed ? styles.containerCollapsed : ""}`}
+      >
         <DoctorSidebar
           activeSection={activeSection ?? "dashboard"}
           onSelect={navigateToSection}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
+          waitingCount={hangDoiResponse?.duLieu?.soLuong?.choKham}
         />
         <div className={styles.dashboardContent}>
           {activeSection ? (
