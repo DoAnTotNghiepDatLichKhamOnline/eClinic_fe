@@ -11,7 +11,7 @@ interface ClinicsTabProps {
   totalPages?: number;
   totalElements?: number;
   onPageChange?: (page: number) => void;
-  onOpenAddModal: () => void;
+  onOpenAddModal?: () => void;
   onSelectEdit: (clinic: PhongKhamQuanTriResponse) => void;
   onDeactivate: (clinicId: number) => void;
   onActivate: (clinicId: number) => void;
@@ -24,7 +24,6 @@ export function ClinicsTab({
   totalPages = 1,
   totalElements,
   onPageChange = () => {},
-  onOpenAddModal,
   onSelectEdit,
   onDeactivate,
   onActivate,
