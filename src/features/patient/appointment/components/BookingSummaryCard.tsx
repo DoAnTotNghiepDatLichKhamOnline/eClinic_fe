@@ -22,6 +22,8 @@ interface BookingSummaryCardProps {
   isPediatric?: boolean;
   onConfirm: () => void;
   isSubmitting?: boolean;
+  isStaffBlocked?: boolean;
+  staffRoleTitle?: string;
 }
 
 export function BookingSummaryCard({
@@ -32,6 +34,8 @@ export function BookingSummaryCard({
   isPediatric = false,
   onConfirm,
   isSubmitting = false,
+  isStaffBlocked = false,
+  staffRoleTitle,
 }: BookingSummaryCardProps) {
   const effectiveDob = isPediatric ? formValues.childDob : formValues.patientDob;
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
@@ -231,24 +235,46 @@ export function BookingSummaryCard({
       </div>
 
       <div className="pt-2">
+        {isStaffBlocked && (
+          <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <p className="font-bold flex items-center gap-1.5 text-amber-950 mb-1">
+              <span>⚠️</span>
+              <span>
+                {lang === "vi"
+                  ? `Tài khoản ${staffRoleTitle || "nhân viên"} không thể đặt lịch cá nhân`
+                  : `${staffRoleTitle || "Staff"} accounts cannot book personal appointments`}
+              </span>
+            </p>
+            <p className="text-[11.5px] text-amber-800 leading-relaxed">
+              {lang === "vi"
+                ? "Vui lòng bấm nút 'Đăng xuất để tiếp tục đặt như Khách' ở đầu trang để tiếp tục."
+                : "Please click 'Sign Out to Book as Guest' at the top banner to proceed."}
+            </p>
+          </div>
+        )}
+
         <Button
           type="button"
           variant="accent"
           size="lg"
           className="w-full flex items-center justify-center gap-2 font-bold shadow-md hover:shadow-lg transition-all"
           onClick={onConfirm}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isStaffBlocked}
         >
           <span>
             {isSubmitting
               ? lang === "vi"
                 ? "Đang xử lý..."
                 : "Processing..."
-              : lang === "vi"
-                ? "Xác nhận đặt lịch khám"
-                : "Confirm Booking"}
+              : isStaffBlocked
+                ? lang === "vi"
+                  ? "Tài khoản nhân viên bị khóa đặt lịch"
+                  : "Staff Booking Restricted"
+                : lang === "vi"
+                  ? "Xác nhận đặt lịch khám"
+                  : "Confirm Booking"}
           </span>
-          {!isSubmitting && <ArrowRight size={18} />}
+          {!isSubmitting && !isStaffBlocked && <ArrowRight size={18} />}
         </Button>
 
         <p className="text-[11px] text-slate-400 text-center mt-2.5 leading-normal">
