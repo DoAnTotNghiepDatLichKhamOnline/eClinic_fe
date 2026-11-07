@@ -18,7 +18,7 @@ interface MedicinesTabProps {
   totalPages?: number;
   totalElements?: number;
   onPageChange?: (page: number) => void;
-  onOpenAddModal: () => void;
+  onOpenAddModal?: () => void;
   onSelectEdit: (medicine: ThuocResponse) => void;
   onVerify: (medicineId: number) => void;
   onDisable: (medicineId: number) => void;
@@ -32,7 +32,6 @@ export function MedicinesTab({
   totalPages = 1,
   totalElements,
   onPageChange = () => {},
-  onOpenAddModal,
   onSelectEdit,
   onVerify,
   onDisable,
