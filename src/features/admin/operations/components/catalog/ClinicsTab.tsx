@@ -2,7 +2,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import type { PhongKhamQuanTriResponse } from "@/types/catalog.type";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
-import { Plus, Edit3, Lock, Check } from "lucide-react";
+import { Edit3, Lock, Check } from "lucide-react";
 
 interface ClinicsTabProps {
   clinics: PhongKhamQuanTriResponse[];
@@ -34,17 +34,6 @@ export function ClinicsTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={onOpenAddModal}
-          className={styles.actionBtnPrimary}
-        >
-          <Plus size={14} />
-          <span>{vi ? "Thêm phòng khám" : "Add Clinic"}</span>
-        </button>
-      </div>
-
       <div className={styles.tableScroll}>
         <table className={styles.adminTable}>
           <thead>
