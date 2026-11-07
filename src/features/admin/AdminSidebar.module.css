@@ -204,7 +204,7 @@
     width: 100%;
     height: auto;
     overflow-x: auto;
-    padding: 8px;
+    padding: 8px 12px;
     border-right: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
@@ -216,7 +216,8 @@
   .sidebarBody {
     flex-direction: row;
     padding: 0;
-    gap: 12px;
+    gap: 8px;
+    overflow-x: auto;
   }
 
   .groupHeader {
@@ -225,12 +226,26 @@
 
   .menuList {
     display: flex;
+    flex-direction: row;
     width: max-content;
+    gap: 6px;
   }
 
   .menuItem {
     width: auto;
     white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+
+  .sidebarCollapsed .menuItem {
+    justify-content: flex-start;
+    padding: 7px 12px;
+    gap: 8px;
+  }
+
+  .sidebarCollapsed .menuItem span {
+    display: inline-block;
   }
 
   .sidebarFooter {
