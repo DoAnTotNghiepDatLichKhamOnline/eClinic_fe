@@ -8,6 +8,7 @@ import {
   FileText,
   Lock,
   RotateCcw,
+  X,
 } from "lucide-react";
 import { adminBookingService } from "@/services/booking";
 import { doctorService } from "@/services/catalog";
@@ -391,40 +392,44 @@ export function AdminDoctorPanel() {
 
   return (
     <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>
-          {vi ? "Quản lý bác sĩ" : "Doctor management"}
-        </h2>
-        <div className="flex gap-2 items-center">
-          <button
-            type="button"
-            className={
-              tab === "directory" ? styles.actionBtn : styles.actionBtnOutline
-            }
-            aria-pressed={tab === "directory"}
-            onClick={() => setTab("directory")}
-          >
-            {vi ? "Danh bạ" : "Directory"}
-          </button>
-          <button
-            type="button"
-            className={
-              tab === "reviews" ? styles.actionBtn : styles.actionBtnOutline
-            }
-            aria-pressed={tab === "reviews"}
-            onClick={() => setTab("reviews")}
-          >
-            {vi ? "Đánh giá" : "Reviews"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsAddDoctorOpen(true)}
-            className={styles.actionBtnPrimary}
-          >
-            <UserPlus size={14} />
-            <span>{vi ? "Thêm bác sĩ" : "Add Doctor"}</span>
-          </button>
+      {/* Tabs with inline Action Button */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
+        <div className="flex gap-2">
+          {(["directory", "reviews"] as const).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={tab === value}
+              className={`border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                tab === value
+                  ? "border-emerald-800 text-emerald-900 bg-emerald-50/50"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
+              onClick={() => setTab(value)}
+            >
+              {value === "directory"
+                ? vi
+                  ? "Bác sĩ"
+                  : "Doctors"
+                : vi
+                  ? "Đánh giá"
+                  : "Reviews"}
+            </button>
+          ))}
         </div>
+
+        {tab === "directory" && (
+          <div className="pb-2">
+            <button
+              type="button"
+              onClick={() => setIsAddDoctorOpen(true)}
+              className={styles.actionBtnPrimary}
+            >
+              <UserPlus size={14} />
+              <span>{vi ? "Thêm bác sĩ" : "Add Doctor"}</span>
+            </button>
+          </div>
+        )}
       </div>
       {error && (
         <p className="mb-3 text-sm text-rose-700" role="alert">
@@ -651,71 +656,106 @@ export function AdminDoctorPanel() {
         </>
       )}
       {selectedDoctor && (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4"
-        >
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs">
           <section
             role="dialog"
             aria-modal="true"
             aria-label={vi ? "Hồ sơ bác sĩ" : "Doctor profile"}
-            className="max-h-[90vh] w-full max-w-4xl overflow-y-auto bg-white p-6"
+            className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
           >
-            <div className="mb-5 flex justify-between border-b border-slate-200 pb-3">
-              <h2 className="text-xl font-bold">
-                {detail?.hoTen ?? selectedDoctor.hoTen}
-              </h2>
-              <button type="button" onClick={() => setSelectedDoctor(null)}>
-                {vi ? "Đóng" : "Close"}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <span>{detail?.hoTen ?? selectedDoctor.hoTen}</span>
+                  {selectedDoctor.maBacSi && (
+                    <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                      #{selectedDoctor.maBacSi}
+                    </span>
+                  )}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {vi
+                    ? "Hồ sơ chuyên môn & thông tin hiển thị công khai"
+                    : "Professional profile & public details"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDoctor(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                <X size={20} />
               </button>
             </div>
+
             <form
-              className="mb-6 grid gap-3 border-b border-slate-200 pb-6 sm:grid-cols-2"
+              className="mb-6 rounded-xl border border-slate-200 bg-slate-50/50 p-4 grid gap-3 sm:grid-cols-2"
               onSubmit={(event) => void saveBasics(event)}
             >
-              <h3 className="font-semibold sm:col-span-2">
-                {vi ? "Thông tin cơ bản" : "Basic information"}
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700 sm:col-span-2">
+                {vi ? "Thông tin cơ bản" : "Basic Information"}
               </h3>
-              <input
-                name="hoTen"
-                aria-label="Full name"
-                defaultValue={detail?.hoTen ?? selectedDoctor.hoTen}
-                required
-              />
-              <input
-                name="soDienThoai"
-                aria-label="Phone"
-                defaultValue={detail?.soDienThoai ?? ""}
-              />
-              <select
-                name="idChuyenKhoa"
-                aria-label="Specialty"
-                defaultValue={
-                  detail?.idChuyenKhoa ?? selectedDoctor.idChuyenKhoa
-                }
-              >
-                {specialties.map((specialty) => (
-                  <option value={specialty.id} key={specialty.id}>
-                    {specialty.tenChuyenKhoa}
-                  </option>
-                ))}
-              </select>
-              <input
-                name="soGiayPhep"
-                aria-label="License number"
-                defaultValue={detail?.soGiayPhep ?? ""}
-              />
-              <button className={styles.actionBtn} type="submit">
-                {vi ? "Lưu thông tin" : "Save details"}
-              </button>
+              <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Họ và tên bác sĩ *" : "Full Name *"}</span>
+                <input
+                  name="hoTen"
+                  aria-label="Full name"
+                  defaultValue={detail?.hoTen ?? selectedDoctor.hoTen}
+                  required
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Số điện thoại liên hệ" : "Phone Number"}</span>
+                <input
+                  name="soDienThoai"
+                  aria-label="Phone"
+                  defaultValue={detail?.soDienThoai ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+              <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Chuyên khoa *" : "Specialty *"}</span>
+                <select
+                  name="idChuyenKhoa"
+                  aria-label="Specialty"
+                  defaultValue={
+                    detail?.idChuyenKhoa ?? selectedDoctor.idChuyenKhoa
+                  }
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  {specialties.map((specialty) => (
+                    <option value={specialty.id} key={specialty.id}>
+                      {specialty.tenChuyenKhoa}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Số giấy phép hành nghề" : "Medical License"}</span>
+                <input
+                  name="soGiayPhep"
+                  aria-label="License number"
+                  defaultValue={detail?.soGiayPhep ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+              <div className="sm:col-span-2 flex justify-end pt-1">
+                <button className={styles.actionBtnPrimary} type="submit">
+                  {vi ? "Lưu thông tin cơ bản" : "Save Basic Details"}
+                </button>
+              </div>
             </form>
+
             {detail && (
               <form
-                className="mb-6 grid gap-3 border-b border-slate-200 pb-6 sm:grid-cols-2"
+                className="mb-6 rounded-xl border border-slate-200 bg-slate-50/50 p-4 grid gap-3 sm:grid-cols-2"
                 onSubmit={(event) => void saveProfile(event)}
               >
-                <h3 className="font-semibold sm:col-span-2">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700 sm:col-span-2">
                   {vi
                     ? "Hồ sơ giới thiệu song ngữ"
-                    : "Bilingual public profile"}
+                    : "Bilingual Public Profile"}
                 </h3>
                 {(
                   [
@@ -739,22 +779,60 @@ export function AdminDoctorPanel() {
                     hocVi: { vi: "Học vị (Học hàm)", en: "Academic Degree" },
                     chucVu: { vi: "Chức vụ (VI)", en: "Position (VI)" },
                     chucVuEn: { vi: "Chức vụ (EN)", en: "Position (EN)" },
-                    namBatDauHanhNghe: { vi: "Năm bắt đầu hành nghề", en: "Practice Start Year" },
-                    gioiThieuNgan: { vi: "Giới thiệu ngắn (VI)", en: "Short Bio (VI)" },
-                    gioiThieuNganEn: { vi: "Giới thiệu ngắn (EN)", en: "Short Bio (EN)" },
-                    tieuSu: { vi: "Tiểu sử chuyên môn (VI)", en: "Biography (VI)" },
-                    tieuSuEn: { vi: "Tiểu sử chuyên môn (EN)", en: "Biography (EN)" },
-                    quaTrinhDaoTao: { vi: "Quá trình đào tạo (VI)", en: "Education & Training (VI)" },
-                    quaTrinhDaoTaoEn: { vi: "Quá trình đào tạo (EN)", en: "Education & Training (EN)" },
-                    quaTrinhCongTac: { vi: "Quá trình công tác (VI)", en: "Work Experience (VI)" },
-                    quaTrinhCongTacEn: { vi: "Quá trình công tác (EN)", en: "Work Experience (EN)" },
-                    linhVucKhamChua: { vi: "Lĩnh vực khám chữa bệnh (VI)", en: "Clinical Expertise (VI)" },
-                    linhVucKhamChuaEn: { vi: "Lĩnh vực khám chữa bệnh (EN)", en: "Clinical Expertise (EN)" },
+                    namBatDauHanhNghe: {
+                      vi: "Năm bắt đầu hành nghề",
+                      en: "Practice Start Year",
+                    },
+                    gioiThieuNgan: {
+                      vi: "Giới thiệu ngắn (VI)",
+                      en: "Short Bio (VI)",
+                    },
+                    gioiThieuNganEn: {
+                      vi: "Giới thiệu ngắn (EN)",
+                      en: "Short Bio (EN)",
+                    },
+                    tieuSu: {
+                      vi: "Tiểu sử chuyên môn (VI)",
+                      en: "Biography (VI)",
+                    },
+                    tieuSuEn: {
+                      vi: "Tiểu sử chuyên môn (EN)",
+                      en: "Biography (EN)",
+                    },
+                    quaTrinhDaoTao: {
+                      vi: "Quá trình đào tạo (VI)",
+                      en: "Education & Training (VI)",
+                    },
+                    quaTrinhDaoTaoEn: {
+                      vi: "Quá trình đào tạo (EN)",
+                      en: "Education & Training (EN)",
+                    },
+                    quaTrinhCongTac: {
+                      vi: "Quá trình công tác (VI)",
+                      en: "Work Experience (VI)",
+                    },
+                    quaTrinhCongTacEn: {
+                      vi: "Quá trình công tác (EN)",
+                      en: "Work Experience (EN)",
+                    },
+                    linhVucKhamChua: {
+                      vi: "Lĩnh vực khám chữa bệnh (VI)",
+                      en: "Clinical Expertise (VI)",
+                    },
+                    linhVucKhamChuaEn: {
+                      vi: "Lĩnh vực khám chữa bệnh (EN)",
+                      en: "Clinical Expertise (EN)",
+                    },
                   };
-                  const label = vi ? labelMap[name]?.vi || name : labelMap[name]?.en || name;
+                  const label = vi
+                    ? labelMap[name]?.vi || name
+                    : labelMap[name]?.en || name;
 
                   return (
-                    <label className="grid gap-1 text-xs font-semibold text-slate-700" key={name}>
+                    <label
+                      className="grid gap-1 text-xs font-semibold text-slate-700"
+                      key={name}
+                    >
                       <span>{label}</span>
                       {name.startsWith("quaTrinh") ||
                       name.startsWith("linhVuc") ||
@@ -768,97 +846,144 @@ export function AdminDoctorPanel() {
                               ? (detail[name] as string[]).join("\n")
                               : String(detail[name] ?? "")
                           }
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                         />
                       ) : (
                         <input
                           name={name}
                           defaultValue={String(detail[name] ?? "")}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                         />
                       )}
                     </label>
                   );
                 })}
-                <button className={styles.actionBtn} type="submit">
-                  {vi ? "Lưu hồ sơ" : "Save profile"}
-                </button>
+                <div className="sm:col-span-2 flex justify-end pt-1">
+                  <button className={styles.actionBtnPrimary} type="submit">
+                    {vi ? "Lưu hồ sơ" : "Save Profile Details"}
+                  </button>
+                </div>
               </form>
             )}
-            <form
-              className="mb-5 flex flex-wrap items-end gap-3"
-              onSubmit={(event) => void uploadPhoto(event)}
-            >
-              <label className="grid gap-1 text-xs">
-                {vi ? "Ảnh" : "Photo"}
-                <input
-                  name="anh"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-xs">
-                {vi ? "Loại ảnh" : "Photo type"}
-                <select
-                  value={uploadType}
-                  onChange={(event) => setUploadType(event.target.value)}
-                >
-                  <option value="ANH_CONG_VIEC">
-                    {vi ? "Ảnh công việc" : "Work photo"}
-                  </option>
-                  <option value="CHUNG_CHI">
-                    {vi ? "Chứng chỉ" : "Certificate"}
-                  </option>
-                </select>
-              </label>
-              <label className="grid gap-1 text-xs">
-                {vi ? "Chú thích (VI)" : "Caption (VI)"}
-                <input name="chuThich" />
-              </label>
-              <label className="grid gap-1 text-xs">
-                {vi ? "Chú thích (EN)" : "Caption (EN)"}
-                <input name="chuThichEn" />
-              </label>
-              <button className={styles.actionBtn} type="submit">
-                {vi ? "Tải ảnh" : "Upload photo"}
-              </button>
-            </form>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(detail?.anh ?? []).map((image, index) => (
-                <article
-                  className="flex items-center gap-3 border border-slate-200 p-3"
-                  key={image.id}
-                >
-                  <img
-                    src={image.url}
-                    alt={image.chuThich ?? ""}
-                    className="h-16 w-16 object-cover"
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 mb-4">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700 mb-3">
+                {vi ? "Ảnh công tác & Chứng chỉ" : "Photos & Certificates"}
+              </h3>
+              <form
+                className="mb-4 grid gap-3 sm:grid-cols-4 items-end"
+                onSubmit={(event) => void uploadPhoto(event)}
+              >
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  <span>{vi ? "Tập tin ảnh *" : "Photo File *"}</span>
+                  <input
+                    name="anh"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    required
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-normal text-slate-800 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700"
                   />
-                  <span className="min-w-0 flex-1 text-sm">
-                    {image.chuThich || image.loai}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => void reorderPhoto(index, -1)}
-                    aria-label="Move photo up"
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  <span>{vi ? "Loại ảnh" : "Photo Type"}</span>
+                  <select
+                    value={uploadType}
+                    onChange={(event) => setUploadType(event.target.value)}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none"
                   >
-                    ↑
+                    <option value="ANH_CONG_VIEC">
+                      {vi ? "Ảnh công việc" : "Work Photo"}
+                    </option>
+                    <option value="CHUNG_CHI">
+                      {vi ? "Chứng chỉ" : "Certificate"}
+                    </option>
+                  </select>
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  <span>{vi ? "Chú thích (VI)" : "Caption (VI)"}</span>
+                  <input
+                    name="chuThich"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none"
+                  />
+                </label>
+                <label className="grid gap-1 text-xs font-semibold text-slate-700">
+                  <span>{vi ? "Chú thích (EN)" : "Caption (EN)"}</span>
+                  <input
+                    name="chuThichEn"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none"
+                  />
+                </label>
+                <div className="sm:col-span-4 flex justify-end">
+                  <button className={styles.actionBtnPrimary} type="submit">
+                    {vi ? "Tải ảnh lên" : "Upload Photo"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void reorderPhoto(index, 1)}
-                    aria-label="Move photo down"
+                </div>
+              </form>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(detail?.anh ?? []).map((image, index) => (
+                  <article
+                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xs"
+                    key={image.id}
                   >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    className="text-rose-700"
-                    onClick={() => void deletePhoto(image.id)}
-                  >
-                    {vi ? "Xóa" : "Delete"}
-                  </button>
-                </article>
-              ))}
+                    <img
+                      src={image.url}
+                      alt={image.chuThich ?? ""}
+                      className="h-16 w-16 rounded-lg object-cover border border-slate-200 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        {image.chuThich ||
+                          (image.loai === "CHUNG_CHI"
+                            ? vi
+                              ? "Chứng chỉ"
+                              : "Certificate"
+                            : vi
+                              ? "Ảnh công tác"
+                              : "Work photo")}
+                      </p>
+                      <span className="text-[11px] text-slate-400">
+                        {image.loai}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => void reorderPhoto(index, -1)}
+                        className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                        title={vi ? "Đưa lên" : "Move up"}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void reorderPhoto(index, 1)}
+                        className="rounded p-1 text-slate-500 hover:bg-slate-100"
+                        title={vi ? "Đưa xuống" : "Move down"}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded p-1 text-rose-600 hover:bg-rose-50 text-xs font-bold"
+                        onClick={() => void deletePhoto(image.id)}
+                      >
+                        {vi ? "Xóa" : "Delete"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-200 pt-4 mt-6">
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setSelectedDoctor(null)}
+              >
+                {vi ? "Đóng" : "Close"}
+              </button>
             </div>
           </section>
         </div>
