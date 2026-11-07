@@ -11,7 +11,7 @@ interface SpecialtiesTabProps {
   totalPages: number;
   totalElements?: number;
   onPageChange: (page: number) => void;
-  onOpenAddModal: () => void;
+  onOpenAddModal?: () => void;
   onSelectEdit: (specialty: ChuyenKhoaResponse) => void;
   onDeleteSpecialty?: (specialty: ChuyenKhoaResponse) => void;
 }
@@ -23,7 +23,6 @@ export function SpecialtiesTab({
   totalPages,
   totalElements,
   onPageChange,
-  onOpenAddModal,
   onSelectEdit,
   onDeleteSpecialty,
 }: SpecialtiesTabProps) {
