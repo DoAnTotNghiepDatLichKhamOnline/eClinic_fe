@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Copy,
   PlusCircle,
-  Stethoscope,
 } from "lucide-react";
 import { Modal } from "@/shared/components/ui/Modal";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -236,7 +235,7 @@ export function AdminBookOnBehalfModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      maxWidth="2xl"
+      maxWidth="xl"
       title={
         <div className="flex items-center gap-2 text-slate-800">
           <PhoneCall className="w-5 h-5 text-teal-600" />
