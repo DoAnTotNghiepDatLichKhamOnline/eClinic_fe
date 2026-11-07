@@ -6,6 +6,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { PatientDetailModal } from "./PatientDetailModal";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import { notifyAuth } from "@/utils/authNotification";
+import { ReissueTicketModal } from "@/shared/components/booking/ReissueTicketModal";
 import type { PendingVerificationItem } from "../operations.types";
 import type { LichHenCuaToiResponse } from "@/types/booking.type";
 import styles from "../../AdminDashboardPage.module.css";
@@ -28,6 +29,11 @@ export function AdminPatientsSection() {
   const [lookupResult, setLookupResult] = useState<LichHenCuaToiResponse | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupError, setLookupError] = useState("");
+  const [reissueTarget, setReissueTarget] = useState<{
+    id: number;
+    code?: string;
+    name?: string;
+  } | null>(null);
 
   // Debounce search 400ms
   useEffect(() => {
@@ -256,6 +262,23 @@ export function AdminPatientsSection() {
                 )}
               </div>
             )}
+            {lookupResult.id && (
+              <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className={styles.actionBtnTeal}
+                  onClick={() =>
+                    setReissueTarget({
+                      id: Number(lookupResult.id),
+                      code: lookupResult.maTraCuu || lookupResult.maPhieuKham,
+                      name: lookupResult.hoTenBenhNhan,
+                    })
+                  }
+                >
+                  {vi ? "Cấp lại phiếu / sổ khám tại quầy" : "Reissue Ticket / EMR at Counter"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -456,6 +479,21 @@ export function AdminPatientsSection() {
             </div>
           </div>
         </div>
+      )}
+      {reissueTarget && (
+        <ReissueTicketModal
+          appointmentId={reissueTarget.id}
+          appointmentCode={reissueTarget.code}
+          patientName={reissueTarget.name}
+          onClose={() => setReissueTarget(null)}
+          onReissue={async (id, payload) => {
+            const res = await bookingService.capLaiLienKetPhieuKham(id, payload);
+            if (res.thanhCong && res.duLieu) {
+              return res.duLieu;
+            }
+            throw new Error(res.thongDiep || (vi ? "Không thể cấp lại liên kết" : "Failed to reissue link"));
+          }}
+        />
       )}
     </section>
   );
