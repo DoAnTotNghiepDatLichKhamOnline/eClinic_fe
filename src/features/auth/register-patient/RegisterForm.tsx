@@ -278,10 +278,10 @@ export function RegisterForm({
           disabled={isLoading}
         />
         <FieldError error={errors.soCCCD} id="reg-cccd-error" />
-        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-          {lang === "vi"
-            ? "Cung cấp CCCD giúp hệ thống tự động liên kết các hồ sơ và lịch hẹn đã khám trước đây của bạn."
-            : "Providing your CCCD links previous appointments automatically."}
+        <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-200/80 rounded-lg p-2.5 mt-1.5 leading-relaxed">
+          💡 {lang === "vi"
+            ? "Nhập số CCCD đã dùng khi đặt lịch khám vãng lai (Khách) để hệ thống tự động đồng bộ và liên kết toàn bộ lịch sử khám bệnh cũ vào tài khoản mới của bạn."
+            : "Enter the National ID (CCCD) used during guest bookings to automatically sync all your previous medical records into your new account."}
         </p>
       </div>
 
