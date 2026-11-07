@@ -95,6 +95,25 @@ export function AdminDashboardPage({
   const [deletingPendingUser, setDeletingPendingUser] =
     useState<TaiKhoanQuanTriResponse | null>(null);
   const [isDeletingPending, setIsDeletingPending] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("admin_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("admin_sidebar_collapsed", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   type AccountSortField = "id" | "hoTen" | "email" | "soDienThoai";
   const [sortField, setSortField] = useState<AccountSortField>("id");
@@ -381,10 +400,14 @@ export function AdminDashboardPage({
         </div>
       </header>
 
-      <main className={styles.container}>
+      <main
+        className={`${styles.container} ${isSidebarCollapsed ? styles.containerCollapsed : ""}`}
+      >
         <AdminSidebar
           activeSection={activeSection}
           onSelect={navigateToSection}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
         />
         <div className={styles.content}>
           <div className={styles.welcomeHeader}>
