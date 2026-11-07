@@ -28,7 +28,7 @@ export interface ReissuedData {
 }
 
 export interface ReissueTicketModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   appointmentId: number | string;
   appointmentCode?: string;
   patientName?: string;
@@ -40,7 +40,7 @@ export interface ReissueTicketModalProps {
 }
 
 export function ReissueTicketModal({
-  isOpen,
+  isOpen = true,
   appointmentId,
   appointmentCode,
   patientName,
