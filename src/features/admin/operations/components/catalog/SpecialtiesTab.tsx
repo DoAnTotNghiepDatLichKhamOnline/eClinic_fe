@@ -2,7 +2,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import type { ChuyenKhoaResponse } from "@/types/catalog.type";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
-import { Plus, Edit3, Trash2 } from "lucide-react";
+import { Edit3, Trash2 } from "lucide-react";
 
 interface SpecialtiesTabProps {
   specialties: ChuyenKhoaResponse[];
@@ -32,17 +32,6 @@ export function SpecialtiesTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={onOpenAddModal}
-          className={styles.actionBtnPrimary}
-        >
-          <Plus size={14} />
-          <span>{vi ? "Thêm chuyên khoa" : "Add Specialty"}</span>
-        </button>
-      </div>
-
       <div className={styles.tableScroll}>
         <table className={styles.adminTable}>
           <thead>
