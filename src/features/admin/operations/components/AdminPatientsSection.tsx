@@ -482,6 +482,7 @@ export function AdminPatientsSection() {
       )}
       {reissueTarget && (
         <ReissueTicketModal
+          isOpen={Boolean(reissueTarget)}
           appointmentId={reissueTarget.id}
           appointmentCode={reissueTarget.code}
           patientName={reissueTarget.name}
