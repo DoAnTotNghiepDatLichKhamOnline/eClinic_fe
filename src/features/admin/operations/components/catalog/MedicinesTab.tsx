@@ -3,7 +3,6 @@ import type { ThuocResponse } from "@/types/catalog.type";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../../AdminDashboardPage.module.css";
 import {
-  Plus,
   Edit3,
   ShieldCheck,
   CheckCircle2,
@@ -19,7 +18,7 @@ interface MedicinesTabProps {
   totalPages?: number;
   totalElements?: number;
   onPageChange?: (page: number) => void;
-  onOpenAddModal: () => void;
+  onOpenAddModal?: () => void;
   onSelectEdit: (medicine: ThuocResponse) => void;
   onVerify: (medicineId: number) => void;
   onDisable: (medicineId: number) => void;
@@ -33,7 +32,6 @@ export function MedicinesTab({
   totalPages = 1,
   totalElements,
   onPageChange = () => {},
-  onOpenAddModal,
   onSelectEdit,
   onVerify,
   onDisable,
@@ -44,17 +42,6 @@ export function MedicinesTab({
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={onOpenAddModal}
-          className={styles.actionBtnPrimary}
-        >
-          <Plus size={14} />
-          <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
-        </button>
-      </div>
-
       <div className={styles.tableScroll}>
         <table className={styles.adminTable}>
           <thead>

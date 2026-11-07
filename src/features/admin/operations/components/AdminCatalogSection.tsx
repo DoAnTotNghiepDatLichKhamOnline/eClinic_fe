@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import {
   specialtyService,
   clinicService,
@@ -180,33 +181,68 @@ export function AdminCatalogSection() {
         </p>
       )}
 
-      {/* Tabs */}
-      <div className="mb-5 flex gap-2 border-b border-slate-200">
-        {(["specialties", "clinics", "medicines"] as const).map((value) => (
-          <button
-            type="button"
-            key={value}
-            aria-pressed={tab === value}
-            className={`border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === value
-                ? "border-emerald-800 text-emerald-900 bg-emerald-50/50"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
-            onClick={() => setTab(value)}
-          >
-            {value === "specialties"
-              ? vi
-                ? "Chuyên khoa"
-                : "Specialties"
-              : value === "clinics"
+      {/* Tabs with inline Action Buttons */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
+        <div className="flex gap-2">
+          {(["specialties", "clinics", "medicines"] as const).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={tab === value}
+              className={`border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                tab === value
+                  ? "border-emerald-800 text-emerald-900 bg-emerald-50/50"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
+              onClick={() => setTab(value)}
+            >
+              {value === "specialties"
                 ? vi
-                  ? "Phòng khám"
-                  : "Clinics"
-                : vi
-                  ? "Danh mục thuốc"
-                  : "Medicines"}
-          </button>
-        ))}
+                  ? "Chuyên khoa"
+                  : "Specialties"
+                : value === "clinics"
+                  ? vi
+                    ? "Phòng khám"
+                    : "Clinics"
+                  : vi
+                    ? "Danh mục thuốc"
+                    : "Medicines"}
+            </button>
+          ))}
+        </div>
+
+        <div className="pb-2">
+          {tab === "specialties" && (
+            <button
+              type="button"
+              onClick={() => setIsAddSpecialtyOpen(true)}
+              className={styles.actionBtnPrimary}
+            >
+              <Plus size={14} />
+              <span>{vi ? "Thêm chuyên khoa" : "Add Specialty"}</span>
+            </button>
+          )}
+          {tab === "clinics" && (
+            <button
+              type="button"
+              onClick={() => setIsAddClinicOpen(true)}
+              className={styles.actionBtnPrimary}
+            >
+              <Plus size={14} />
+              <span>{vi ? "Thêm phòng khám" : "Add Clinic"}</span>
+            </button>
+          )}
+          {tab === "medicines" && (
+            <button
+              type="button"
+              onClick={() => setIsAddMedicineOpen(true)}
+              className={styles.actionBtnPrimary}
+            >
+              <Plus size={14} />
+              <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TAB 1: SPECIALTIES */}

@@ -10,6 +10,7 @@ import {
   Users,
   Edit3,
   Trash2,
+  PhoneCall,
 } from "lucide-react";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
@@ -17,6 +18,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import type { CaLamViecResponse, TrangThaiYeuCau } from "@/types/booking.type";
 import { CreateShiftModal } from "./CreateShiftModal";
 import { AdminShiftRequestsTab } from "./AdminShiftRequestsTab";
+import { AdminBookOnBehalfModal } from "./AdminBookOnBehalfModal";
 import { notifyAuth } from "@/utils/authNotification";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import styles from "../../AdminDashboardPage.module.css";
@@ -49,6 +51,7 @@ export function AdminScheduleSection() {
 
   const [selectedShiftForPatients, setSelectedShiftForPatients] =
     useState<CaLamViecResponse | null>(null);
+  const [bookingShift, setBookingShift] = useState<CaLamViecResponse | null>(null);
   const [editingShift, setEditingShift] = useState<CaLamViecResponse | null>(
     null,
   );
@@ -451,6 +454,14 @@ export function AdminScheduleSection() {
               )}
               <button
                 type="button"
+                onClick={() => setBookingShift({} as any)}
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-50 px-3 text-xs font-bold text-teal-800 shadow-2xs hover:bg-teal-100 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <PhoneCall size={14} />
+                <span>{vi ? "Đặt lịch thay (Hotline/Quầy)" : "Book on Behalf"}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsCreateShiftOpen(true)}
                 className="inline-flex h-[34px] items-center gap-1.5 rounded-lg bg-teal-700! px-3.5 text-xs font-bold! text-white shadow-sm! hover:bg-teal-800! transition-all hover:shadow-md whitespace-nowrap cursor-pointer"
               >
@@ -796,7 +807,19 @@ export function AdminScheduleSection() {
                 </div>
               )}
             </div>
-            <div className="border-t border-slate-100 px-6 py-3 bg-slate-50 flex justify-end">
+            <div className="border-t border-slate-100 px-6 py-3 bg-slate-50 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setBookingShift(selectedShiftForPatients)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition"
+              >
+                <PhoneCall size={14} />
+                <span>
+                  {vi
+                    ? "+ Đặt lịch vào ca này (Tại quầy / Hotline)"
+                    : "+ Book into Shift (Counter / Hotline)"}
+                </span>
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedShiftForPatients(null)}
@@ -1020,6 +1043,22 @@ export function AdminScheduleSection() {
             </form>
           </div>
         </div>
+      )}
+
+      {bookingShift && (
+        <AdminBookOnBehalfModal
+          isOpen={Boolean(bookingShift)}
+          initialShift={bookingShift.id ? bookingShift : null}
+          onClose={() => setBookingShift(null)}
+          onSuccess={() => {
+            void client.invalidateQueries({
+              queryKey: ["booking", "admin-schedule"],
+            });
+            void client.invalidateQueries({
+              queryKey: ["booking", "admin-shift-patients"],
+            });
+          }}
+        />
       )}
     </section>
   );

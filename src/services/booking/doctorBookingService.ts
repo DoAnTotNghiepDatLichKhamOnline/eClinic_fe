@@ -340,10 +340,22 @@ export const doctorBookingService = {
   },
 
   /** Re-issue appointment ticket link/code for front-desk patient */
-  capLaiLienKetPhieuKhamBacSi: async (idLichHen: number | string) => {
+  capLaiLienKetPhieuKhamBacSi: async (
+    idLichHen: number | string,
+    data: { cccd: string; cachGui: "EMAIL" | "MAN_HINH" },
+  ) => {
     const response = await axiosClient.post<
-      ApiResponse<{ maPhieuKham?: string; maTraCuu?: string; linkPhieuKham?: string }>
-    >(`/api/booking/bac-si/toi/lich-hen/${idLichHen}/cap-lai-lien-ket`);
+      ApiResponse<{
+        idLichHen: number;
+        maTraCuu: string;
+        cachGui: "EMAIL" | "MAN_HINH";
+        emailDaGui?: string;
+        maPhieuKham?: string;
+        lienKetPhieuKham?: string;
+        maSoKham?: string;
+        lienKetSoKham?: string;
+      }>
+    >(`/api/booking/bac-si/toi/lich-hen/${idLichHen}/cap-lai-lien-ket`, data);
     return response.data;
   },
 

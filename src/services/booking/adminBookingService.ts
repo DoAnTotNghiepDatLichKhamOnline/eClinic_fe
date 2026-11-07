@@ -462,11 +462,23 @@ export const adminBookingService = {
     return response.data;
   },
 
-  /** Cấp lại link phiếu khám/sổ khám qua email hoặc màn hình */
-  capLaiLienKetPhieuKham: async (id: number) => {
-    const response = await axiosClient.post<ApiResponse<{ url: string; maPhieuKham: string }>>(
-      `/api/booking/quan-tri/lich-hen/${id}/cap-lai-lien-ket`,
-    );
+  /** Cấp lại link phiếu khám/sổ khám qua email hoặc màn hình tại quầy tiếp đón */
+  capLaiLienKetPhieuKham: async (
+    id: number,
+    data: { cccd: string; cachGui: "EMAIL" | "MAN_HINH" },
+  ) => {
+    const response = await axiosClient.post<
+      ApiResponse<{
+        idLichHen: number;
+        maTraCuu: string;
+        cachGui: "EMAIL" | "MAN_HINH";
+        emailDaGui?: string;
+        maPhieuKham?: string;
+        lienKetPhieuKham?: string;
+        maSoKham?: string;
+        lienKetSoKham?: string;
+      }>
+    >(`/api/booking/quan-tri/lich-hen/${id}/cap-lai-lien-ket`, data);
     return response.data;
   },
 };

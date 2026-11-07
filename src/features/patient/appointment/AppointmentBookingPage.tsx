@@ -1,7 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ShieldCheck, Clock, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+  ShieldAlert,
+  LogOut,
+} from "lucide-react";
 import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { Container } from "@/shared/components/layout/Container";
@@ -26,9 +33,37 @@ import { useThongTinDatLich } from "@/hooks/useBooking";
 
 export function AppointmentBookingPage() {
   const { lang } = useLanguage();
-  const { user } = useAuth();
+  const vi = lang === "vi";
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isStaffRole = user?.role === "doctor" || user?.role === "admin";
+  const staffRoleTitle =
+    user?.role === "doctor"
+      ? vi
+        ? "Bác sĩ"
+        : "Doctor"
+      : user?.role === "admin"
+        ? vi
+          ? "Quản trị viên"
+          : "Administrator"
+        : "";
+
+  const handleLogoutAndBookAsGuest = async () => {
+    try {
+      await logout();
+      notifyAuth(
+        "info",
+        vi ? "Đã chuyển sang vai trò Khách" : "Switched to Guest",
+        vi
+          ? "Bạn đã đăng xuất tài khoản làm việc. Giờ đây bạn có thể hoàn tất đặt lịch khám như Khách."
+          : "You have signed out of your staff account. You can now complete booking as a Guest.",
+      );
+    } catch {
+      // ignore
+    }
+  };
   const queryParams = new URLSearchParams(location.search);
   const queryShiftId = queryParams.get("idLichLamViec");
   const querySlot = queryParams.get("gioBatDauKhung") || "";
@@ -412,6 +447,17 @@ export function AppointmentBookingPage() {
   };
 
   const handleBookingSubmit = async () => {
+    if (isStaffRole) {
+      notifyAuth(
+        "error",
+        vi ? "Không thể đặt lịch cá nhân" : "Staff Booking Restricted",
+        vi
+          ? `Tài khoản ${staffRoleTitle} không được phép đặt lịch cá nhân bằng tài khoản làm việc. Vui lòng bấm 'Đăng xuất để tiếp tục đặt như Khách'.`
+          : `${staffRoleTitle} accounts cannot book personal appointments. Please sign out to book as Guest.`,
+      );
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -490,13 +536,21 @@ export function AppointmentBookingPage() {
       }
     } catch (err: any) {
       // TUYỆT ĐỐI KHÔNG FALLBACK VÀO LOCAL STORAGE
-      const errorMessage =
-        err?.response?.data?.thongDiep ||
-        err?.response?.data?.maLoi ||
-        err?.message ||
-        (lang === "vi"
-          ? "Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại sau."
-          : "An error occurred while communicating with the server.");
+      const isForbiddenStaff =
+        err?.response?.status === 403 ||
+        err?.response?.data?.maLoi === "KHONG_CO_QUYEN" ||
+        err?.response?.data?.thongDiep?.toLowerCase().includes("vai trò");
+
+      const errorMessage = isForbiddenStaff
+        ? (vi
+            ? "Tài khoản Bác sĩ / Quản trị viên không thể đặt lịch khám cá nhân; vui lòng đăng xuất để đặt dưới vai trò Khách."
+            : "Staff accounts cannot book personal appointments; please sign out to book as a Guest.")
+        : (err?.response?.data?.thongDiep ||
+          err?.response?.data?.maLoi ||
+          err?.message ||
+          (lang === "vi"
+            ? "Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại sau."
+            : "An error occurred while communicating with the server."));
       notifyAuth(
         "error",
         lang === "vi" ? "Đặt lịch thất bại" : "Booking Failed",
@@ -601,6 +655,63 @@ export function AppointmentBookingPage() {
               </div>
             </div>
           </div>
+
+          {/* Policy Alert Banner for Staff Roles (BAC_SI / QUAN_TRI_VIEN) */}
+          {isStaffRole && (
+            <div className="mb-8 rounded-2xl border-2 border-amber-300 bg-amber-50 p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div className="p-3 rounded-xl bg-amber-100 text-amber-800 shrink-0">
+                  <ShieldAlert size={28} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-xs font-extrabold text-amber-900 uppercase tracking-wide">
+                      {vi ? "Quy định phân quyền eClinic" : "Access Control Policy"}
+                    </span>
+                    <h3 className="font-bold text-amber-950 text-base">
+                      {vi
+                        ? `Tài khoản ${staffRoleTitle} không thể đặt lịch khám cá nhân`
+                        : `${staffRoleTitle} accounts cannot book personal appointments`}
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-amber-900 leading-relaxed mb-4">
+                    {vi
+                      ? "Theo quy chế của hệ thống eClinic, tài khoản làm việc của Bác sĩ và Quản trị viên không được dùng để đặt lịch khám bệnh cho bản thân. Vui lòng đăng xuất để đặt lịch dưới vai trò Khách (KHACH), hoặc đăng nhập bằng tài khoản Bệnh nhân riêng."
+                      : "Staff accounts are restricted from booking personal appointments. Please sign out to book as a Guest, or sign in with a Patient account."}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleLogoutAndBookAsGuest}
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-800 transition-all cursor-pointer"
+                    >
+                      <LogOut size={15} />
+                      <span>
+                        {vi
+                          ? "Đăng xuất để tiếp tục đặt như Khách"
+                          : "Sign Out to Book as Guest"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          user?.role === "doctor"
+                            ? "/doctor/dashboard"
+                            : "/admin/dashboard",
+                        )
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-xs font-bold text-amber-900 hover:bg-amber-100/60 transition-all cursor-pointer"
+                    >
+                      <span>
+                        {vi ? "Quay lại Bàn làm việc" : "Back to Workspace"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Form and Summary Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -749,6 +860,8 @@ export function AppointmentBookingPage() {
                 isPediatric={isPediatric}
                 onConfirm={handleBookingSubmit}
                 isSubmitting={isSubmitting}
+                isStaffBlocked={isStaffRole}
+                staffRoleTitle={staffRoleTitle}
               />
             </div>
           </div>

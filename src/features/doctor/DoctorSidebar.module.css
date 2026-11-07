@@ -1,87 +1,339 @@
 .sidebar {
   position: fixed;
-  top: 84px;
-  left: 24px;
-  width: 240px;
-  max-height: calc(100vh - 104px);
-  overflow-y: auto;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: 256px;
+  height: calc(100vh - 64px);
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   z-index: 40;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.label {
+.sidebarCollapsed {
+  width: 72px;
+}
+
+.sidebarBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Custom scrollbar */
+.sidebarBody::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebarBody::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.groupHeader {
   display: block;
-  padding: 5px 9px 12px;
-  color: var(--ink-soft);
-  font-size: 11px;
+  padding: 6px 12px 6px;
+  color: #047857;
+  font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.menu {
+.sidebarCollapsed .groupHeader {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 8px;
+  letter-spacing: 0;
+  opacity: 0.6;
+}
+
+.menuList {
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
   width: 100%;
-  min-height: 42px;
-  padding: 9px 10px;
+  min-height: 40px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  color: var(--ink-soft);
+  color: #475569;
   font: inherit;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
-.item svg {
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.itemContent svg {
   flex: 0 0 auto;
 }
 
 .item:hover {
-  background: #f0f7f5;
-  color: var(--navy);
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .active,
 .active:hover {
-  background: #e4f3ee;
-  color: #12634d;
+  background: #ecfdf5;
+  color: #065f46;
+  border-left: 4px solid #059669;
+  padding-left: 8px;
+  font-weight: 700;
+}
+
+.badgeQueue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  line-height: 1.2;
+}
+
+.badgeQueueMuted {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.sidebarCollapsed .item {
+  justify-content: center;
+  padding: 10px 0;
+  position: relative;
+}
+
+.sidebarCollapsed .itemContent {
+  gap: 0;
+}
+
+.sidebarCollapsed .active {
+  border-left: 3px solid #059669;
+  padding-left: 0;
+}
+
+.sidebarCollapsed .itemContent span {
+  display: none;
+}
+
+.sidebarCollapsed .badgeQueue {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  padding: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+  font-size: 0;
+  text-indent: -9999px;
+}
+
+/* Footer Section */
+.sidebarFooter {
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 10px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.dutyToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dutyToggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.dutyStatusText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dutyDotActive {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+  flex-shrink: 0;
+}
+
+.dutyDotBreak {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+  flex-shrink: 0;
+}
+
+.footerVersion {
+  font-size: 10px;
+  color: #94a3b8;
+  font-family: monospace;
+  padding: 0 4px;
+}
+
+.collapseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.collapseBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sidebarCollapsed .dutyToggle {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.sidebarCollapsed .dutyToggle span:not(.dutyDotActive):not(.dutyDotBreak) {
+  display: none;
+}
+
+.sidebarCollapsed .footerVersion {
+  display: none;
+}
+
+.sidebarCollapsed .collapseBtn span {
+  display: none;
 }
 
 @media (max-width: 900px) {
   .sidebar {
     position: static;
-    width: auto;
-    max-height: none;
+    width: 100%;
+    height: auto;
     overflow-x: auto;
     padding: 8px;
-    box-shadow: none;
+    border-right: 0;
+    border-bottom: 1px solid #e2e8f0;
   }
 
-  .label {
+  .sidebarCollapsed {
+    width: 100%;
+  }
+
+  .sidebarBody {
+    flex-direction: row;
+    padding: 0;
+    gap: 12px;
+  }
+
+  .groupHeader {
     display: none;
   }
 
-  .menu {
+  .menuList {
     display: flex;
     width: max-content;
-    min-width: 100%;
   }
 
   .item {
     width: auto;
     white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+
+  .sidebarCollapsed .item {
+    justify-content: flex-start;
+    padding: 7px 12px;
+    position: static;
+  }
+
+  .sidebarCollapsed .itemContent {
+    gap: 8px;
+  }
+
+  .sidebarCollapsed .itemContent span {
+    display: inline-block;
+  }
+
+  .sidebarCollapsed .badgeQueue {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 1.5px 7px;
+    font-size: 11px;
+    border-radius: 9999px;
+    text-indent: 0;
+  }
+
+  .sidebarFooter {
+    display: none;
   }
 }

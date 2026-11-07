@@ -37,6 +37,7 @@ import {
   useDanhSachTaiKhoanQuanTri,
   useIdentityActions,
 } from "@/hooks/useIdentity";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import type {
   TrangThaiTaiKhoan,
   VaiTro,
@@ -95,6 +96,8 @@ export function AdminDashboardPage({
   const [deletingPendingUser, setDeletingPendingUser] =
     useState<TaiKhoanQuanTriResponse | null>(null);
   const [isDeletingPending, setIsDeletingPending] = useState(false);
+  const { isCollapsed: isSidebarCollapsed, toggle: handleToggleSidebarCollapse } =
+    useCollapsibleSidebar("admin_sidebar", "(max-width: 1200px)");
 
   type AccountSortField = "id" | "hoTen" | "email" | "soDienThoai";
   const [sortField, setSortField] = useState<AccountSortField>("id");
@@ -381,10 +384,14 @@ export function AdminDashboardPage({
         </div>
       </header>
 
-      <main className={styles.container}>
+      <main
+        className={`${styles.container} ${isSidebarCollapsed ? styles.containerCollapsed : ""}`}
+      >
         <AdminSidebar
           activeSection={activeSection}
           onSelect={navigateToSection}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
         />
         <div className={styles.content}>
           <div className={styles.welcomeHeader}>

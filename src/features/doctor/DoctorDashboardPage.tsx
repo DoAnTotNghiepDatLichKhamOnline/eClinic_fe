@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctorBookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import type { HangDoiLuot } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
@@ -56,6 +57,8 @@ export function DoctorDashboardPage({
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
   const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
+  const { isCollapsed: isSidebarCollapsed, toggle: handleToggleSidebarCollapse } =
+    useCollapsibleSidebar("doctor_sidebar", "(max-width: 1200px)");
 
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
@@ -66,7 +69,7 @@ export function DoctorDashboardPage({
     queryKey: ["booking", "doctor-hang-doi", today],
     queryFn: () => doctorBookingService.getHangDoi(today),
     refetchInterval: 15000,
-    enabled: !activeSection,
+    enabled: true,
   });
 
   const { data: reviewsResponse } = useQuery({
@@ -161,6 +164,9 @@ export function DoctorDashboardPage({
   const cacCa = hangDoi?.cacCa ?? [];
   const activeShiftId = selectedShiftId ?? hangDoi?.idCaHienTai ?? cacCa[0]?.idLichLamViec;
   const currentShift = cacCa.find((c) => c.idLichLamViec === activeShiftId) ?? cacCa[0];
+  const totalWaitingCount =
+    currentShift?.soLuong?.choKham ??
+    cacCa.reduce((sum, ca) => sum + (ca.soLuong?.choKham || 0), 0);
 
   const navigateToSection = (section: DoctorSection) =>
     navigate(`/doctor/${sectionPaths[section]}`);
@@ -278,10 +284,15 @@ export function DoctorDashboardPage({
         </div>
       </header>
 
-      <main className={styles.container}>
+      <main
+        className={`${styles.container} ${isSidebarCollapsed ? styles.containerCollapsed : ""}`}
+      >
         <DoctorSidebar
           activeSection={activeSection ?? "dashboard"}
           onSelect={navigateToSection}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
+          waitingCount={totalWaitingCount}
         />
         <div className={styles.dashboardContent}>
           {activeSection ? (

@@ -13,6 +13,7 @@ import {
   Loader2,
   Lock,
   Pill,
+  Printer,
   Search,
   ShieldCheck,
   Stethoscope,
@@ -183,14 +184,14 @@ export function MedicalBookPublicPage() {
     <main className="mx-auto max-w-4xl px-4 py-8 text-slate-800">
       <Link
         to="/home"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-950 transition"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-950 transition print:hidden"
       >
         <ArrowLeft size={16} />
         {t({ en: "Home", vi: "Trang chủ" })}
       </Link>
 
       {/* Header Banner */}
-      <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-800 to-teal-800 p-6 sm:p-8 text-white shadow-lg">
+      <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-800 to-teal-800 p-6 sm:p-8 text-white shadow-lg print:hidden">
         <div className="flex items-center gap-3 text-emerald-200 text-xs font-bold uppercase tracking-wider">
           <ShieldCheck size={18} />
           <span>{vi ? "Cổng Tra Cứu Y Tế Công Khai" : "Public Medical Portal"}</span>
@@ -378,11 +379,21 @@ export function MedicalBookPublicPage() {
             <div className="space-y-6 animate-fade-in">
               {/* Patient Full Details Card */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <User size={18} className="text-emerald-700" />
-                  <h3 className="text-base font-bold text-slate-900">
-                    {vi ? "Thông tin bệnh nhân" : "Patient Information"}
-                  </h3>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <User size={18} className="text-emerald-700" />
+                    <h3 className="text-base font-bold text-slate-900">
+                      {vi ? "Thông tin bệnh nhân" : "Patient Information"}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition print:hidden"
+                  >
+                    <Printer size={14} />
+                    <span>{vi ? "In sổ khám" : "Print Record"}</span>
+                  </button>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs">
@@ -554,9 +565,9 @@ export function MedicalBookPublicPage() {
                             <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
                             <td className="py-2.5 px-3 font-semibold">
                               <p className="text-slate-900">{thuoc.tenThuoc}</p>
-                              {thuoc.hoatChat && (
+                              {(thuoc.hoatChat || thuoc.hamLuong || thuoc.duongDung) && (
                                 <p className="text-[11px] font-normal text-slate-500 italic">
-                                  {thuoc.hoatChat}
+                                  {[thuoc.hoatChat, thuoc.hamLuong, thuoc.duongDung].filter(Boolean).join(" · ")}
                                 </p>
                               )}
                             </td>
@@ -587,14 +598,24 @@ export function MedicalBookPublicPage() {
                     </div>
                   </div>
 
-                  <a
-                    href={qrUrl}
-                    download={`so-kham-${activeCode}.png`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    <Download size={14} />
-                    {vi ? "Tải ảnh QR" : "Download QR"}
-                  </a>
+                  <div className="flex flex-wrap items-center gap-2 print:hidden">
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      <Printer size={14} />
+                      <span>{vi ? "In sổ khám bệnh" : "Print Record"}</span>
+                    </button>
+                    <a
+                      href={qrUrl}
+                      download={`so-kham-${activeCode}.png`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      <Download size={14} />
+                      {vi ? "Tải ảnh QR" : "Download QR"}
+                    </a>
+                  </div>
                 </div>
               )}
               {qrError && (
@@ -604,7 +625,7 @@ export function MedicalBookPublicPage() {
               )}
 
               {/* Guest Account Sync CTA Banner */}
-              <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 via-emerald-50/60 to-white p-6 shadow-sm">
+              <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 via-emerald-50/60 to-white p-6 shadow-sm print:hidden">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                   <div className="space-y-1.5">
                     <h3 className="text-sm font-bold text-teal-950 flex items-center gap-2">

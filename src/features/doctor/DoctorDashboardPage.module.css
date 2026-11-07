@@ -11,12 +11,17 @@
   z-index: 50;
   background: var(--navy);
   color: #fff;
-  padding: 16px 24px;
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
   box-shadow: 0 4px 12px rgba(11, 31, 22, 0.15);
+  box-sizing: border-box;
 }
 
 .topBarRow {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -79,16 +84,22 @@
 .container {
   display: block;
   width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 24px 24px 32px 288px;
+  margin: 0;
+  padding: 24px 32px 32px 280px;
   flex: 1;
   box-sizing: border-box;
+  transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.containerCollapsed {
+  padding-left: 96px;
 }
 
 .dashboardContent {
   min-width: 0;
   width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
 }
 
 .tableResponsive {
@@ -413,7 +424,9 @@
 
 @media (max-width: 640px) {
   .topBar {
-    padding: 14px 16px;
+    height: auto;
+    min-height: 56px;
+    padding: 12px 16px;
   }
 
   .topBarRow {
@@ -442,7 +455,8 @@
 }
 
 @media (max-width: 900px) {
-  .container {
+  .container,
+  .containerCollapsed {
     padding: 16px;
     margin-top: 12px;
   }
