@@ -5,6 +5,7 @@ import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { doctorBookingService } from "@/services/booking";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { ReissueTicketModal } from "@/shared/components/booking/ReissueTicketModal";
 import type { Appointment, AppointmentStatus } from "../doctor-workspace.types";
 import styles from "../../DoctorWorkspace.module.css";
 
@@ -21,7 +22,11 @@ export function DoctorUpcomingAppointmentsSection({
   const [cancellationReason, setCancellationReason] = useState("");
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [isReissuingId, setIsReissuingId] = useState<string | null>(null);
+  const [reissueAppt, setReissueAppt] = useState<{
+    id: number;
+    code?: string;
+    name?: string;
+  } | null>(null);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isSearchingCccd, setIsSearchingCccd] = useState(false);
   const [cccdSearchResult, setCccdSearchResult] = useState<Appointment[] | null>(null);
@@ -105,30 +110,12 @@ export function DoctorUpcomingAppointmentsSection({
     }
   };
 
-  const handleReissueTicket = async (appointmentId: string) => {
-    try {
-      setIsReissuingId(appointmentId);
-      const res = await doctorBookingService.capLaiLienKetPhieuKhamBacSi(
-        appointmentId,
-      );
-      notifyAuth(
-        "success",
-        lang === "vi" ? "Đã cấp lại phiếu khám" : "Ticket reissued",
-        lang === "vi"
-          ? `Mã phiếu / liên kết tra cứu đã được làm mới: ${res.duLieu?.maPhieuKham || res.duLieu?.maTraCuu || appointmentId}`
-          : `Ticket code has been refreshed: ${appointmentId}`,
-      );
-    } catch {
-      notifyAuth(
-        "info",
-        lang === "vi" ? "Cấp lại liên kết phiếu khám" : "Ticket reissued",
-        lang === "vi"
-          ? `Mã tra cứu phiếu khám: #${appointmentId} (hệ thống đã ghi nhận cấp lại liên kết).`
-          : `Appointment ticket #${appointmentId} link reissued.`,
-      );
-    } finally {
-      setIsReissuingId(null);
-    }
+  const handleReissueTicket = (appointment: Appointment) => {
+    setReissueAppt({
+      id: Number(appointment.id),
+      code: appointment.id,
+      name: appointment.patientName,
+    });
   };
 
   const executeCancelAppointment = async () => {
@@ -310,8 +297,7 @@ export function DoctorUpcomingAppointmentsSection({
                 <button
                   type="button"
                   className={styles.secondaryButton}
-                  onClick={() => handleReissueTicket(appointment.id)}
-                  disabled={isReissuingId === appointment.id}
+                  onClick={() => handleReissueTicket(appointment)}
                   title={
                     lang === "vi"
                       ? "Cấp lại liên kết / mã phiếu khám cho người đến quầy"
@@ -319,10 +305,7 @@ export function DoctorUpcomingAppointmentsSection({
                   }
                   style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
                 >
-                  <RefreshCw
-                    size={15}
-                    className={isReissuingId === appointment.id ? "animate-spin" : ""}
-                  />
+                  <RefreshCw size={15} />
                   <span>{lang === "vi" ? "Cấp lại mã" : "Re-issue"}</span>
                 </button>
                 <button
@@ -412,6 +395,22 @@ export function DoctorUpcomingAppointmentsSection({
         onConfirm={() => void executeCancelAppointment()}
         onCancel={() => setShowConfirmCancel(false)}
       />
+
+      {reissueAppt && (
+        <ReissueTicketModal
+          appointmentId={reissueAppt.id}
+          appointmentCode={reissueAppt.code}
+          patientName={reissueAppt.name}
+          onClose={() => setReissueAppt(null)}
+          onReissue={async (id, payload) => {
+            const res = await doctorBookingService.capLaiLienKetPhieuKhamBacSi(id, payload);
+            if (res.thanhCong && res.duLieu) {
+              return res.duLieu;
+            }
+            throw new Error(res.thongDiep || (lang === "vi" ? "Không thể cấp lại liên kết" : "Failed to reissue link"));
+          }}
+        />
+      )}
     </section>
   );
 }
