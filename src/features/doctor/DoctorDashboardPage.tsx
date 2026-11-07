@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { doctorBookingService } from "@/services/booking";
 import { notifyAuth } from "@/utils/authNotification";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import type { HangDoiLuot } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
@@ -56,25 +57,8 @@ export function DoctorDashboardPage({
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
   const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem("doctor_sidebar_collapsed") === "true";
-    } catch {
-      return false;
-    }
-  });
-
-  const handleToggleSidebarCollapse = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("doctor_sidebar_collapsed", String(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  };
+  const { isCollapsed: isSidebarCollapsed, toggle: handleToggleSidebarCollapse } =
+    useCollapsibleSidebar("doctor_sidebar", "(max-width: 1200px)");
 
   const { data: summaryResponse, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["booking", "doctor-summary"],
