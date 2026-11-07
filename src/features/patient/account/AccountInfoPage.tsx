@@ -22,6 +22,7 @@ import { userProfileService } from "@/services/identity";
 import { formatFullDate } from "@/utils/dateFormatting";
 import { validatePassword } from "@/utils/formValidators";
 import { validatePasswordMatch, FieldError } from "@/utils/passwordMatchValidator";
+import { AvatarCropPreviewModal } from "@/shared/components/ui/AvatarCropPreviewModal";
 import styles from "./AccountInfoPage.module.css";
 
 export function AccountInfoPage() {
@@ -70,6 +71,14 @@ export function AccountInfoPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState("");
   const [pendingEmailError, setPendingEmailError] = useState<string | null>(null);
+
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [avatarImgFailed, setAvatarImgFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarImgFailed(false);
+  }, [hoSo?.anhDaiDien]);
 
   useEffect(() => {
     const currentName = hoSo?.hoTen || user?.name || "";
@@ -138,29 +147,40 @@ export function AccountInfoPage() {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (
       !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 2 * 1024 * 1024
+      file.size > 5 * 1024 * 1024
     ) {
       alert(
         lang === "vi"
-          ? "Ảnh phải là JPEG, PNG hoặc WebP và không quá 2 MB."
-          : "Choose a JPEG, PNG or WebP image under 2 MB.",
+          ? "Ảnh phải là định dạng JPEG, PNG hoặc WebP và không quá 5 MB."
+          : "Choose a JPEG, PNG or WebP image under 5 MB.",
       );
       e.target.value = "";
       return;
     }
+    setSelectedAvatarFile(file);
+    setShowPreviewModal(true);
+    e.target.value = "";
+  };
+
+  const handleConfirmAvatarCrop = async (croppedBlob: Blob) => {
     try {
-      const res = await taiLenAnh(file);
+      const res = await taiLenAnh(croppedBlob);
       if (res?.duLieu?.anhDaiDien && user) {
         setUser({ ...user, avatarUrl: res.duLieu.anhDaiDien });
       }
+      setShowPreviewModal(false);
+      setSelectedAvatarFile(null);
     } catch (err: any) {
       alert(
-        err?.response?.data?.thongDiep || "Không thể tải lên ảnh đại diện.",
+        err?.response?.data?.thongDiep ||
+          (lang === "vi"
+            ? "Không thể tải lên ảnh đại diện."
+            : "Failed to upload avatar photo."),
       );
     }
   };
@@ -278,12 +298,27 @@ export function AccountInfoPage() {
             {vi ? "Ảnh đại diện" : "Profile Photo"}
           </h2>
           <div className={styles.avatarSection}>
-            <div className={styles.avatarLarge}>
-              {hoSo?.anhDaiDien ? (
-                <img src={hoSo.anhDaiDien} alt="" />
-              ) : (
-                <span>{initials || <User size={32} />}</span>
-              )}
+            {/* Fixed circular frame */}
+            <div className={styles.avatarWrapper}>
+              <div className={styles.avatarFrame}>
+                {hoSo?.anhDaiDien && !avatarImgFailed ? (
+                  <img
+                    src={hoSo.anhDaiDien}
+                    alt=""
+                    className={styles.avatarImg}
+                    onError={() => setAvatarImgFailed(true)}
+                  />
+                ) : (
+                  <span>{initials || <User size={32} />}</span>
+                )}
+
+                {isUploadingAvatar && (
+                  <div className={styles.avatarLoadingOverlay}>
+                    <Loader2 size={24} className="animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+
               <input
                 type="file"
                 ref={fileInputRef}
@@ -305,46 +340,49 @@ export function AccountInfoPage() {
                 )}
               </button>
             </div>
+
             <div className={styles.avatarInfo}>
               <p className={styles.avatarHint}>
                 {vi
-                  ? "Ảnh JPEG, PNG hoặc WebP, tối đa 2 MB."
-                  : "JPEG, PNG or WebP, up to 2 MB."}
+                  ? "Ảnh JPEG, PNG hoặc WebP. Hệ thống tự động căn giữa khung tròn 1:1."
+                  : "JPEG, PNG or WebP. Automatically centered in 1:1 circular frame."}
               </p>
-              <button
-                className={styles.btnOutline}
-                type="button"
-                disabled={isUploadingAvatar}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {isUploadingAvatar ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <Camera size={15} />
-                )}
-                {vi
-                  ? isUploadingAvatar
-                    ? "Đang tải..."
-                    : "Tải ảnh mới"
-                  : isUploadingAvatar
-                    ? "Uploading..."
-                    : "Upload photo"}
-              </button>
-              {hoSo?.anhDaiDien && (
+              <div className={styles.avatarActions}>
                 <button
                   className={styles.btnOutline}
                   type="button"
-                  disabled={isRemovingAvatar}
-                  onClick={() => void handleRemoveAvatar()}
+                  disabled={isUploadingAvatar}
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  {isRemovingAvatar ? (
+                  {isUploadingAvatar ? (
                     <Loader2 size={15} className="animate-spin" />
                   ) : (
-                    <X size={15} />
+                    <Camera size={15} />
                   )}
-                  {vi ? "Xóa ảnh" : "Remove photo"}
+                  {vi
+                    ? isUploadingAvatar
+                      ? "Đang tải..."
+                      : "Tải ảnh mới"
+                    : isUploadingAvatar
+                      ? "Uploading..."
+                      : "Upload photo"}
                 </button>
-              )}
+                {hoSo?.anhDaiDien && (
+                  <button
+                    className={styles.btnOutline}
+                    type="button"
+                    disabled={isRemovingAvatar}
+                    onClick={() => void handleRemoveAvatar()}
+                  >
+                    {isRemovingAvatar ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <X size={15} />
+                    )}
+                    {vi ? "Xóa ảnh" : "Remove photo"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -789,6 +827,18 @@ export function AccountInfoPage() {
             </div>
           )}
         </div>
+
+        {/* Crop & Preview Modal */}
+        <AvatarCropPreviewModal
+          isOpen={showPreviewModal}
+          imageFile={selectedAvatarFile}
+          isUploading={isUploadingAvatar}
+          onClose={() => {
+            setShowPreviewModal(false);
+            setSelectedAvatarFile(null);
+          }}
+          onConfirm={handleConfirmAvatarCrop}
+        />
       </div>
     </PatientPortal>
   );
