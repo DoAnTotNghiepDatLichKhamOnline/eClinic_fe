@@ -243,7 +243,7 @@ export function AvatarCropPreviewModal({
             type="button"
             disabled={isLoading}
             onClick={() => void handleConfirm()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-700 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600! px-5 py-2 text-xs font-bold text-white! shadow-sm hover:bg-teal-700! transition disabled:opacity-50"
           >
             {isLoading ? (
               <>
