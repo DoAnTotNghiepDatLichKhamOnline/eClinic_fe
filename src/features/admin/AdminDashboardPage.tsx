@@ -37,6 +37,7 @@ import {
   useDanhSachTaiKhoanQuanTri,
   useIdentityActions,
 } from "@/hooks/useIdentity";
+import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
 import type {
   TrangThaiTaiKhoan,
   VaiTro,
@@ -95,25 +96,8 @@ export function AdminDashboardPage({
   const [deletingPendingUser, setDeletingPendingUser] =
     useState<TaiKhoanQuanTriResponse | null>(null);
   const [isDeletingPending, setIsDeletingPending] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem("admin_sidebar_collapsed") === "true";
-    } catch {
-      return false;
-    }
-  });
-
-  const handleToggleSidebarCollapse = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("admin_sidebar_collapsed", String(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  };
+  const { isCollapsed: isSidebarCollapsed, toggle: handleToggleSidebarCollapse } =
+    useCollapsibleSidebar("admin_sidebar", "(max-width: 1200px)");
 
   type AccountSortField = "id" | "hoTen" | "email" | "soDienThoai";
   const [sortField, setSortField] = useState<AccountSortField>("id");
