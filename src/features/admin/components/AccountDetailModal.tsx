@@ -222,7 +222,7 @@ export function AccountDetailModal({ userId, onClose }: AccountDetailModalProps)
           <button
             type="button"
             onClick={onClose}
-            className={styles.secondaryButton}
+            className={styles.actionBtnOutline}
           >
             {vi ? "Đóng" : "Close"}
           </button>
