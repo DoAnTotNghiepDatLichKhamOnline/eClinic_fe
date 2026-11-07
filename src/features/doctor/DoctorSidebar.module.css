@@ -305,6 +305,32 @@
   .item {
     width: auto;
     white-space: nowrap;
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+
+  .sidebarCollapsed .item {
+    justify-content: flex-start;
+    padding: 7px 12px;
+    position: static;
+  }
+
+  .sidebarCollapsed .itemContent {
+    gap: 8px;
+  }
+
+  .sidebarCollapsed .itemContent span {
+    display: inline-block;
+  }
+
+  .sidebarCollapsed .badgeQueue {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 1.5px 7px;
+    font-size: 11px;
+    border-radius: 9999px;
+    text-indent: 0;
   }
 
   .sidebarFooter {
