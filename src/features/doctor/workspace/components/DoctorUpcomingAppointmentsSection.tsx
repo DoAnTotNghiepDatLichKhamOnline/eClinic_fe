@@ -398,6 +398,7 @@ export function DoctorUpcomingAppointmentsSection({
 
       {reissueAppt && (
         <ReissueTicketModal
+          isOpen={Boolean(reissueAppt)}
           appointmentId={reissueAppt.id}
           appointmentCode={reissueAppt.code}
           patientName={reissueAppt.name}
