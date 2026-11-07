@@ -325,10 +325,17 @@ export function MyAppointmentsPage() {
               {appt.phongKham.tenPhong}
             </span>
           </div>
-          <div className={styles.patientTag}>
-            <User size={10} />
-            {appt.hoTenBenhNhan}
-            {appt.laBanThan ? (vi ? " (Bản thân)" : " (Self)") : ""}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            <div className={styles.patientTag}>
+              <User size={10} />
+              {appt.hoTenBenhNhan}
+              {appt.laBanThan ? (vi ? " (Bản thân)" : " (Self)") : ""}
+            </div>
+            {appt.nguoiDat === "KHACH" && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                ✓ {vi ? "Đặt dạng Khách (Đã liên kết)" : "Booked as Guest (Synced)"}
+              </span>
+            )}
           </div>
           {appt.lyDoKham && (
             <p
@@ -769,6 +776,16 @@ export function MyAppointmentsPage() {
             ) : (
               chiTiet && (
                 <div className="space-y-6 py-5">
+                  {chiTiet.lichHen.nguoiDat === "KHACH" && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-medium flex items-center gap-2">
+                      <span className="font-bold flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">✓</span>
+                      <span>
+                        {vi
+                          ? "Lượt khám này ban đầu được đặt dưới dạng Khách và đã được tự động liên kết thành công vào tài khoản theo số CCCD."
+                          : "This visit was originally booked as a Guest and has been automatically linked to your account via National ID."}
+                      </span>
+                    </div>
+                  )}
                   <div className="grid gap-3 text-sm sm:grid-cols-2">
                     <p>
                       <b>{vi ? "Bác sĩ" : "Doctor"}:</b>{" "}
