@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import {
   Stethoscope,
   Activity,
@@ -9,6 +9,8 @@ import {
   History,
   AlertCircle,
   Printer,
+  ShieldCheck,
+  ArrowUpDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -95,6 +97,27 @@ export function ClinicalExamForm({
   );
   const [medicineKeyword, setMedicineKeyword] = useState("");
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
+  const [prescriptionFilter, setPrescriptionFilter] = useState<"ALL" | "BHYT" | "NON_BHYT">("ALL");
+  const [prescriptionSort, setPrescriptionSort] = useState<"DEFAULT" | "BHYT_FIRST" | "NAME_ASC">("DEFAULT");
+
+  const countBhyt = prescriptionRows.filter((r) => r.coBaoHiem).length;
+  const countNonBhyt = prescriptionRows.length - countBhyt;
+
+  const displayPrescriptionRows = useMemo(() => {
+    let list = [...prescriptionRows];
+    if (prescriptionFilter === "BHYT") {
+      list = list.filter((r) => r.coBaoHiem);
+    } else if (prescriptionFilter === "NON_BHYT") {
+      list = list.filter((r) => !r.coBaoHiem);
+    }
+
+    if (prescriptionSort === "BHYT_FIRST") {
+      list.sort((a, b) => (b.coBaoHiem ? 1 : 0) - (a.coBaoHiem ? 1 : 0));
+    } else if (prescriptionSort === "NAME_ASC") {
+      list.sort((a, b) => a.tenThuoc.localeCompare(b.tenThuoc));
+    }
+    return list;
+  }, [prescriptionRows, prescriptionFilter, prescriptionSort]);
 
   // Sync when hoSoKham changes
   useEffect(() => {
@@ -167,6 +190,8 @@ export function ClinicalExamForm({
       soNgayDung: defaultDays,
       soLuong: defaultDays * defaultDosePerDay,
       ghiChuSuDung: "",
+      coBaoHiem: Boolean(med.coBaoHiem),
+      donGia: med.donGia,
     };
     setPrescriptionRows((prev) => [...prev, newRow]);
     setMedicineKeyword("");
@@ -334,7 +359,7 @@ export function ClinicalExamForm({
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100 sticky top-0 z-10 bg-white/95 backdrop-blur-xs">
         <div>
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-teal-600" />
@@ -719,18 +744,72 @@ export function ClinicalExamForm({
 
         {/* 6. Đơn thuốc chuẩn (Prescription) */}
         <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-200/70">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
-              <FileCheck2 className="w-4 h-4 text-teal-600" />
-              {lang === "vi"
-                ? "Đơn thuốc (chọn từ danh mục chuẩn Bộ Y tế)"
-                : "Prescription"}
-            </h3>
-            <span className="text-[11px] font-semibold text-slate-500">
-              {lang === "vi"
-                ? `Thời hạn tối đa: ${maxAllowedDays} ngày / thuốc`
-                : `Max duration: ${maxAllowedDays} days / drug`}
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                <FileCheck2 className="w-4 h-4 text-teal-600" />
+                {lang === "vi"
+                  ? "Đơn thuốc (chọn từ danh mục chuẩn Bộ Y tế)"
+                  : "Prescription"}
+              </h3>
+              <span className="text-[11px] font-semibold text-slate-500">
+                {lang === "vi"
+                  ? `Thời hạn tối đa: ${maxAllowedDays} ngày / thuốc`
+                  : `Max duration: ${maxAllowedDays} days / drug`}
+              </span>
+            </div>
+
+            {/* Bộ lọc & Sắp xếp theo BHYT */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-lg bg-white border border-slate-200 p-0.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setPrescriptionFilter("ALL")}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    prescriptionFilter === "ALL"
+                      ? "bg-teal-600 text-white"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {lang === "vi" ? `Tất cả (${prescriptionRows.length})` : `All (${prescriptionRows.length})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrescriptionFilter("BHYT")}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    prescriptionFilter === "BHYT"
+                      ? "bg-emerald-600 text-white"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {lang === "vi" ? `BHYT (${countBhyt})` : `Covered (${countBhyt})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrescriptionFilter("NON_BHYT")}
+                  className={`px-2 py-1 rounded font-semibold transition ${
+                    prescriptionFilter === "NON_BHYT"
+                      ? "bg-slate-700 text-white"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  {lang === "vi" ? `Ngoài BHYT (${countNonBhyt})` : `Non-covered (${countNonBhyt})`}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]">
+                <ArrowUpDown size={12} className="text-slate-400" />
+                <select
+                  value={prescriptionSort}
+                  onChange={(e) => setPrescriptionSort(e.target.value as any)}
+                  className="bg-transparent text-slate-700 font-semibold outline-none cursor-pointer"
+                >
+                  <option value="DEFAULT">{lang === "vi" ? "Sắp xếp: Mặc định" : "Sort: Default"}</option>
+                  <option value="BHYT_FIRST">{lang === "vi" ? "Ưu tiên BHYT trước" : "Insurance first"}</option>
+                  <option value="NAME_ASC">{lang === "vi" ? "Tên thuốc (A-Z)" : "Name (A-Z)"}</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Autocomplete tìm thuốc */}
@@ -763,19 +842,30 @@ export function ClinicalExamForm({
                         onClick={() => handleSelectMedicine(med)}
                         className="w-full p-2.5 text-left text-xs hover:bg-teal-50 flex items-center justify-between transition"
                       >
-                        <div>
-                          <strong className="text-slate-800">
-                            {med.tenThuoc}
-                          </strong>{" "}
-                          {med.hamLuong && (
-                            <span className="text-slate-500">
-                              ({med.hamLuong})
-                            </span>
-                          )}{" "}
-                          ·{" "}
-                          <span className="text-slate-600 font-medium">
-                            {med.hoatChat || "—"}
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              med.coBaoHiem
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
+                            }`}
+                          >
+                            {med.coBaoHiem ? "BHYT" : lang === "vi" ? "Tự túc" : "Self-pay"}
                           </span>
+                          <div>
+                            <strong className="text-slate-800">
+                              {med.tenThuoc}
+                            </strong>{" "}
+                            {med.hamLuong && (
+                              <span className="text-slate-500">
+                                ({med.hamLuong})
+                              </span>
+                            )}{" "}
+                            ·{" "}
+                            <span className="text-slate-600 font-medium">
+                              {med.hoatChat || "—"}
+                            </span>
+                          </div>
                         </div>
                         <span className="text-xs font-bold text-teal-600 shrink-0 ml-2">
                           + Thêm
@@ -800,6 +890,7 @@ export function ClinicalExamForm({
                 <thead className="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200">
                   <tr>
                     <th className="py-2 px-3">Tên thuốc & Hoạt chất</th>
+                    <th className="py-2 px-3 w-20">BHYT</th>
                     <th className="py-2 px-3">Liều dùng</th>
                     <th className="py-2 px-3 w-20">Lần/ngày</th>
                     <th className="py-2 px-3 w-24">Số ngày</th>
@@ -811,7 +902,7 @@ export function ClinicalExamForm({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {prescriptionRows.map((row, index) => (
+                  {displayPrescriptionRows.map((row) => (
                     <tr key={row.idThuoc} className="hover:bg-slate-50/50">
                       <td className="py-2 px-3">
                         <div className="font-bold text-slate-800">
@@ -824,6 +915,18 @@ export function ClinicalExamForm({
                       </td>
 
                       <td className="py-2 px-3">
+                        <span
+                          className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            row.coBaoHiem
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
+                          }`}
+                        >
+                          {row.coBaoHiem ? "Có BHYT" : (lang === "vi" ? "Tự túc" : "Self-pay")}
+                        </span>
+                      </td>
+
+                      <td className="py-2 px-3">
                         <input
                           type="text"
                           disabled={isLocked || !canRecord}
@@ -831,8 +934,8 @@ export function ClinicalExamForm({
                           onChange={(e) => {
                             const val = e.target.value;
                             setPrescriptionRows((prev) =>
-                              prev.map((r, i) =>
-                                i === index ? { ...r, lieuDung: val } : r,
+                              prev.map((r) =>
+                                r.idThuoc === row.idThuoc ? { ...r, lieuDung: val } : r,
                               ),
                             );
                           }}
@@ -849,8 +952,8 @@ export function ClinicalExamForm({
                           onChange={(e) => {
                             const times = Math.max(1, Number(e.target.value));
                             setPrescriptionRows((prev) =>
-                              prev.map((r, i) =>
-                                i === index
+                              prev.map((r) =>
+                                r.idThuoc === row.idThuoc
                                   ? {
                                       ...r,
                                       soLanMoiNgay: times,
@@ -874,8 +977,8 @@ export function ClinicalExamForm({
                           onChange={(e) => {
                             const days = Math.max(1, Number(e.target.value));
                             setPrescriptionRows((prev) =>
-                              prev.map((r, i) =>
-                                i === index
+                              prev.map((r) =>
+                                r.idThuoc === row.idThuoc
                                   ? {
                                       ...r,
                                       soNgayDung: days,
@@ -899,8 +1002,8 @@ export function ClinicalExamForm({
                             onChange={(e) => {
                               const qty = Math.max(1, Number(e.target.value));
                               setPrescriptionRows((prev) =>
-                                prev.map((r, i) =>
-                                  i === index ? { ...r, soLuong: qty } : r,
+                                prev.map((r) =>
+                                  r.idThuoc === row.idThuoc ? { ...r, soLuong: qty } : r,
                                 ),
                               );
                             }}
@@ -923,8 +1026,8 @@ export function ClinicalExamForm({
                           onChange={(e) => {
                             const val = e.target.value;
                             setPrescriptionRows((prev) =>
-                              prev.map((r, i) =>
-                                i === index ? { ...r, ghiChuSuDung: val } : r,
+                              prev.map((r) =>
+                                r.idThuoc === row.idThuoc ? { ...r, ghiChuSuDung: val } : r,
                               ),
                             );
                           }}
