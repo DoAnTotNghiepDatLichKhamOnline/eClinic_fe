@@ -24,6 +24,8 @@ export interface ThuocGoiYItem {
   dangBaoChe?: string | null;
   duongDung?: string | null;
   donVi: string | null;
+  coBaoHiem?: boolean;
+  donGia?: number;
 }
 
 export interface DongThuocRequest {
@@ -42,6 +44,8 @@ export interface DongThuocChiTiet extends DongThuocRequest {
   dangBaoChe?: string | null;
   duongDung?: string | null;
   donVi?: string | null;
+  coBaoHiem?: boolean;
+  donGia?: number;
 }
 
 export interface GhiKetQuaKhamRequest {
