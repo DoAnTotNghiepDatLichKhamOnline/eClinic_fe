@@ -1162,6 +1162,7 @@ export function MyAppointmentsPage() {
                 </div>
               )
             )}
+            </div>
           </section>
         </div>
       )}
