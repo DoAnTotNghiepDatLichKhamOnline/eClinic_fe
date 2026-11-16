@@ -84,6 +84,14 @@ const toDateKey = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
+const getAppointmentDateKey = (value: string) => {
+  const datePrefix = /^(\d{4}-\d{2}-\d{2})/.exec(value.trim())?.[1];
+  if (datePrefix) return datePrefix;
+
+  const parsedDate = new Date(value);
+  return Number.isNaN(parsedDate.getTime()) ? "" : toDateKey(parsedDate);
+};
+
 export function MyAppointmentsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
@@ -324,9 +332,12 @@ export function MyAppointmentsPage() {
   const appointmentsByDate = useMemo(() => {
     const grouped = new Map<string, LichHenCuaToiResponse[]>();
     filtered.forEach((appointment) => {
-      const group = grouped.get(appointment.ngay) ?? [];
+      const dateKey = getAppointmentDateKey(appointment.ngay);
+      if (!dateKey) return;
+
+      const group = grouped.get(dateKey) ?? [];
       group.push(appointment);
-      grouped.set(appointment.ngay, group);
+      grouped.set(dateKey, group);
     });
     return grouped;
   }, [filtered]);
@@ -369,13 +380,14 @@ export function MyAppointmentsPage() {
         }).format(scheduleDate);
 
   const moveCalendar = (direction: number) => {
-    setScheduleDate((current) => {
-      const next = new Date(current);
-      next.setDate(
-        next.getDate() + direction * (scheduleView === "day" ? 1 : 7),
-      );
-      return next;
-    });
+    const offset = direction * (scheduleView === "day" ? 1 : 7);
+    const nextScheduleDate = new Date(scheduleDate);
+    nextScheduleDate.setDate(nextScheduleDate.getDate() + offset);
+    const nextSelectedDate = new Date(`${selectedDate}T00:00:00`);
+    nextSelectedDate.setDate(nextSelectedDate.getDate() + offset);
+
+    setScheduleDate(nextScheduleDate);
+    setSelectedDate(toDateKey(nextSelectedDate));
   };
 
   const isToday = (date: Date) =>
@@ -791,7 +803,7 @@ export function MyAppointmentsPage() {
                       </strong>
 
                       {dayAppts.length > 0 ? (
-                        <div className={styles.calendarApptList}>
+                        <span className={styles.calendarApptList}>
                           {dayAppts.map((appt) => {
                             const category = getApptCategory(appt.trangThai);
                             const apptClass =
@@ -802,7 +814,7 @@ export function MyAppointmentsPage() {
                                   : styles.calendarApptUpcoming;
 
                             return (
-                              <div
+                              <span
                                 key={appt.maPhieuKham}
                                 className={`${styles.calendarApptItem} ${apptClass}`}
                               >
@@ -819,10 +831,10 @@ export function MyAppointmentsPage() {
                                 <span className={styles.calendarApptPatient}>
                                   {appt.hoTenBenhNhan}
                                 </span>
-                              </div>
+                              </span>
                             );
                           })}
-                        </div>
+                        </span>
                       ) : (
                         <span className={styles.calendarOff}>
                           {vi ? "Không có lịch" : "No appointments"}
