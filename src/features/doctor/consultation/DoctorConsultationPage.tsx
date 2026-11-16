@@ -60,7 +60,7 @@ export function DoctorConsultationPage() {
           const ticket = fallbackRes.duLieu;
           const assignedDoctor = ticket.bacSi?.hoTen;
           notifyAuth(
-            "warning",
+            "info",
             lang === "vi" ? "Cảnh báo phân công" : "Assignment Warning",
             lang === "vi"
               ? `Hồ sơ này không thuộc lịch phân công của bạn (BS phụ trách: ${assignedDoctor || "Khác"}). Đang mở hồ sơ...`
