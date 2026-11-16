@@ -137,6 +137,8 @@ export function AppointmentBookingPage() {
         patientEmail: bookingInfo.emailTaiKhoan || previous.patientEmail,
         childDob: profile.ngaySinh ?? previous.childDob,
         childGender: profile.gioiTinh ?? previous.childGender,
+        hasHealthInsurance: Boolean(profile.soBaoHiemYTe),
+        healthInsuranceNumber: profile.soBaoHiemYTe ?? previous.healthInsuranceNumber,
       }));
   }, [bookingInfo, user?.role]);
 
@@ -505,6 +507,10 @@ export function AppointmentBookingPage() {
             (formValues.guardianPhone?.trim() ?? ""),
           cccd: formValues.patientCccd?.trim() || undefined,
           email: formValues.patientEmail?.trim() || user?.email || undefined,
+          soBaoHiemYTe:
+            formValues.hasHealthInsurance && formValues.healthInsuranceNumber?.trim()
+              ? formValues.healthInsuranceNumber.trim().toUpperCase()
+              : undefined,
         },
         nguoiGiamHo: isMinor
           ? {
@@ -581,6 +587,8 @@ export function AppointmentBookingPage() {
       guardianName: "",
       guardianCccd: "",
       guardianPhone: "",
+      hasHealthInsurance: false,
+      healthInsuranceNumber: "",
     }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -761,6 +769,8 @@ export function AppointmentBookingPage() {
                             patientEmail: bookingInfo.emailTaiKhoan ?? "",
                             childDob: profile.ngaySinh ?? "",
                             childGender: profile.gioiTinh ?? "",
+                            hasHealthInsurance: Boolean(profile.soBaoHiemYTe),
+                            healthInsuranceNumber: profile.soBaoHiemYTe ?? "",
                           }));
                       }}
                     >
@@ -808,6 +818,8 @@ export function AppointmentBookingPage() {
                                   relative.nguoiGiamHo?.soDienThoai ?? "",
                                 guardianRelationship:
                                   relative.nguoiGiamHo?.quanHe ?? "CHA",
+                                hasHealthInsurance: Boolean(relative.soBaoHiemYTe),
+                                healthInsuranceNumber: relative.soBaoHiemYTe ?? "",
                               }));
                           }}
                         >
