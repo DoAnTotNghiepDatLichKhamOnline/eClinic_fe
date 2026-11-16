@@ -9,7 +9,6 @@ import {
   History,
   AlertCircle,
   Printer,
-  ShieldCheck,
   ArrowUpDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
