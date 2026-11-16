@@ -114,6 +114,7 @@ export function MyAppointmentsPage() {
   const [newSlot, setNewSlot] = useState("");
   const selectedTicket = searchParams.get("ticket") || null;
   const dialogRef = useRef<HTMLElement>(null);
+  const calendarFilterFocusKey = useRef("");
 
   const setSelectedTicket = useCallback((ticket: string | null) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -370,6 +371,57 @@ export function MyAppointmentsPage() {
       return date;
     },
   );
+
+  useEffect(() => {
+    if (isAppointmentsLoading || isAppointmentsError) return;
+
+    const filterKey = JSON.stringify([activeTab, scope, debouncedSearch]);
+    if (calendarFilterFocusKey.current === filterKey) return;
+    calendarFilterFocusKey.current = filterKey;
+
+    if (calendarDays.some((date) => appointmentsByDate.has(toDateKey(date)))) {
+      return;
+    }
+
+    const todayKey = toDateKey(new Date());
+    const nextUpcomingDate = Array.from(appointmentsByDate.entries())
+      .filter(
+        ([dateKey, dayAppointments]) =>
+          dateKey >= todayKey &&
+          dayAppointments.some(
+            (appointment) =>
+              getApptCategory(appointment.trangThai) === "upcoming",
+          ),
+      )
+      .map(([dateKey]) => dateKey)
+      .sort()[0];
+
+    const nearestAppointmentDate =
+      nextUpcomingDate ??
+      Array.from(appointmentsByDate.keys()).sort((left, right) => {
+        const leftDistance = Math.abs(
+          new Date(`${left}T00:00:00`).getTime() - Date.now(),
+        );
+        const rightDistance = Math.abs(
+          new Date(`${right}T00:00:00`).getTime() - Date.now(),
+        );
+        return leftDistance - rightDistance;
+      })[0];
+
+    if (nearestAppointmentDate) {
+      const date = new Date(`${nearestAppointmentDate}T00:00:00`);
+      setScheduleDate(date);
+      setSelectedDate(nearestAppointmentDate);
+    }
+  }, [
+    activeTab,
+    appointmentsByDate,
+    calendarDays,
+    debouncedSearch,
+    isAppointmentsError,
+    isAppointmentsLoading,
+    scope,
+  ]);
 
   const calendarTitle =
     scheduleView === "day"
