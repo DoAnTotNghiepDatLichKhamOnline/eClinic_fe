@@ -8,7 +8,10 @@ import {
   Users,
   Calendar,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
 import { calculateAge, calculateAgeInYears } from "../appointment.utils";
@@ -136,18 +139,19 @@ export function PatientInfoStep({
               </span>
               <span className="text-rose-500 font-bold">*</span>
             </label>
-            <input
+            <DatePicker
               id="patient-dob"
-              type="date"
-              max={new Date().toISOString().split("T")[0]}
-              value={effectiveDob || ""}
-              onChange={(e) => {
-                const val = e.target.value;
+              format="DD/MM/YYYY"
+              disabledDate={(current) => current && current.isAfter(dayjs())}
+              value={effectiveDob ? dayjs(effectiveDob, "YYYY-MM-DD") : null}
+              onChange={(date) => {
+                const val = date ? date.format("YYYY-MM-DD") : "";
                 onChange("patientDob", val);
                 if (isPediatric) {
                   onChange("childDob", val);
                 }
               }}
+              placeholder={lang === "vi" ? "Chọn hoặc nhập ngày (DD/MM/YYYY)" : "DD/MM/YYYY"}
               className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 bg-white transition-all outline-none ${
                 errors.patientDob || (isPediatric && errors.childDob)
                   ? "border-rose-300 ring-2 ring-rose-100"
@@ -324,6 +328,80 @@ export function PatientInfoStep({
                 <AlertCircle size={13} />
                 {errors.patientCccd}
               </p>
+            )}
+          </div>
+
+          {/* Bảo hiểm y tế (BHYT) */}
+          <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <CreditCard size={14} className="text-emerald-700" />
+                <span>
+                  {lang === "vi"
+                    ? "Bảo hiểm y tế (BHYT)"
+                    : "Health Insurance"}
+                </span>
+              </label>
+              <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange("hasHealthInsurance", false);
+                    onChange("healthInsuranceNumber", "");
+                  }}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    !formValues.hasHealthInsurance
+                      ? "bg-white text-slate-800 shadow-xs"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {lang === "vi" ? "Không có BHYT" : "No Insurance"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange("hasHealthInsurance", true)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    formValues.hasHealthInsurance
+                      ? "bg-emerald-700 text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {lang === "vi" ? "Có thẻ BHYT" : "Has Insurance"}
+                </button>
+              </div>
+            </div>
+
+            {formValues.hasHealthInsurance && (
+              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/80 space-y-2 animate-fade-in">
+                <div className="space-y-1">
+                  <label
+                    htmlFor="health-insurance-number"
+                    className="text-xs font-semibold text-emerald-950 flex items-center gap-1.5"
+                  >
+                    <span>{lang === "vi" ? "Số thẻ BHYT (15 ký tự)" : "Insurance Card Number"}</span>
+                    <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  <input
+                    id="health-insurance-number"
+                    type="text"
+                    maxLength={15}
+                    value={formValues.healthInsuranceNumber || ""}
+                    onChange={(e) =>
+                      onChange(
+                        "healthInsuranceNumber",
+                        e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+                      )
+                    }
+                    placeholder="VD: DN4797931800123"
+                    className="w-full h-10 px-3 rounded-lg border border-emerald-300 bg-white font-mono text-sm tracking-wider uppercase text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+                  />
+                  <p className="text-[11px] text-emerald-800">
+                    {lang === "vi"
+                      ? "Mã thẻ BHYT hợp lệ gồm 15 ký tự (chữ in hoa và số) theo quy định của BHXH Việt Nam."
+                      : "Valid Vietnam health insurance code consists of 15 alphanumeric characters."}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
