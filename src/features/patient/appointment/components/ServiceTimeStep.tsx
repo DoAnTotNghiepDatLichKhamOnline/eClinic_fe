@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import {
   Calendar,
   Clock,
@@ -682,24 +684,31 @@ export function ServiceTimeStep({
             <Calendar size={14} />
             {lang === "vi" ? "Hoặc chọn ngày khác:" : "Or choose another date:"}
           </label>
-          <input
+          <DatePicker
             id="custom-appointment-date"
-            type="date"
-            value={formValues.date}
-            min={dateToKey(new Date())}
-            max={
-              quyTac
-                ? (() => {
-                    const maxDate = new Date();
-                    maxDate.setDate(
-                      maxDate.getDate() + quyTac.soNgayDatTruocToiDa,
-                    );
-                    return dateToKey(maxDate);
-                  })()
-                : undefined
-            }
-            onChange={(e) => {
-              const holidayReason = holidays.get(e.target.value);
+            format="DD/MM/YYYY"
+            value={formValues.date ? dayjs(formValues.date, "YYYY-MM-DD") : null}
+            disabledDate={(current) => {
+              if (!current) return false;
+              const today = dayjs().startOf("day");
+              if (current.isBefore(today)) return true;
+              if (quyTac?.soNgayDatTruocToiDa) {
+                const maxDate = today.add(quyTac.soNgayDatTruocToiDa, "day");
+                if (current.isAfter(maxDate)) return true;
+              }
+              return false;
+            }}
+            onChange={(date) => {
+              if (!date) {
+                setHolidayError("");
+                onChange("date", "");
+                onChange("slotId", "");
+                onChange("slotTime", "");
+                onChange("gioBatDauKhung", "");
+                return;
+              }
+              const dateStr = date.format("YYYY-MM-DD");
+              const holidayReason = holidays.get(dateStr);
               if (holidayReason !== undefined) {
                 setHolidayError(
                   lang === "vi"
@@ -709,11 +718,12 @@ export function ServiceTimeStep({
                 return;
               }
               setHolidayError("");
-              onChange("date", e.target.value);
+              onChange("date", dateStr);
               onChange("slotId", "");
               onChange("slotTime", "");
               onChange("gioBatDauKhung", "");
             }}
+            placeholder={lang === "vi" ? "Chọn hoặc nhập ngày (DD/MM/YYYY)" : "DD/MM/YYYY"}
             className="text-sm font-semibold text-slate-800 border border-slate-300 rounded-lg px-3 py-1.5 bg-slate-50 focus:bg-white focus:border-[#0f4d3a] outline-none"
           />
         </div>
