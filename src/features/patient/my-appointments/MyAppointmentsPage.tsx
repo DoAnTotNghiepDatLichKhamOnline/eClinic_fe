@@ -747,63 +747,147 @@ export function MyAppointmentsPage() {
         </p>
       )}
       {selectedTicket && (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/50 p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-fade-in">
           <section
             role="dialog"
             aria-modal="true"
             aria-label={vi ? "Chi tiết lịch hẹn" : "Appointment details"}
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-white p-6 shadow-2xl"
+            className="flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+            {/* Header Cố Định */}
+            <div className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-xs">
               <div>
-                <p className="text-xs font-bold uppercase text-emerald-800">
-                  {vi ? "Phiếu khám" : "Appointment ticket"}
-                </p>
-                <h2 className="mt-1 text-xl font-bold">{selectedTicket}</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                    {vi ? "Phiếu khám điện tử" : "Electronic Ticket"}
+                  </span>
+                  <span className="text-xs font-mono font-semibold text-slate-500">
+                    #{selectedTicket}
+                  </span>
+                </div>
+                <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 font-display">
+                  {vi ? "Chi tiết lịch hẹn khám" : "Appointment Details"}
+                </h2>
               </div>
               <button
                 type="button"
-                className="text-sm font-semibold text-slate-600"
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
                 onClick={handleCloseModal}
+                aria-label={vi ? "Đóng modal" : "Close modal"}
               >
-                {vi ? "Đóng" : "Close"}
+                <X size={20} />
               </button>
             </div>
-            {loadingDetail ? (
-              <p className="py-8 text-sm text-slate-500">
-                {vi ? "Đang tải..." : "Loading..."}
-              </p>
-            ) : (
-              chiTiet && (
-                <div className="space-y-6 py-5">
-                  {chiTiet.lichHen.nguoiDat === "KHACH" && (
-                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-medium flex items-center gap-2">
-                      <span className="font-bold flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[11px]">✓</span>
-                      <span>
-                        {vi
-                          ? "Lượt khám này ban đầu được đặt dưới dạng Khách và đã được tự động liên kết thành công vào tài khoản theo số CCCD."
-                          : "This visit was originally booked as a Guest and has been automatically linked to your account via National ID."}
-                      </span>
+
+            {/* Body Cuộn Nội Bộ */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {loadingDetail ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <Loader2 size={32} className="animate-spin text-emerald-700" />
+                  <p className="text-xs font-medium">{vi ? "Đang tải thông tin phiếu khám..." : "Loading appointment details..."}</p>
+                </div>
+              ) : (
+                chiTiet && (
+                  <div className="space-y-5">
+                    {/* Guest linked banner */}
+                    {chiTiet.lichHen.nguoiDat === "KHACH" && (
+                      <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-950 font-medium flex items-center gap-2.5">
+                        <span className="font-bold flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white text-[11px]">✓</span>
+                        <span>
+                          {vi
+                            ? "Lượt khám này ban đầu được đặt dưới dạng Khách và đã được tự động liên kết thành công vào tài khoản theo số CCCD."
+                            : "This visit was originally booked as a Guest and has been automatically linked to your account via National ID."}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Section 1: Thông tin Lịch hẹn & Bác sĩ */}
+                    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 space-y-3">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-200/60 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800">
+                            STT: {chiTiet.lichHen.soThuTu || "—"}
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium">
+                            {formatFullDateWithWeekday(chiTiet.lichHen.ngay, lang)}
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">
+                          {chiTiet.lichHen.trangThai}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-slate-100">
+                          <Stethoscope size={16} className="text-emerald-700 mt-0.5 shrink-0" />
+                          <div>
+                            <span className="text-[11px] text-slate-400 block font-medium uppercase">
+                              {vi ? "Bác sĩ phụ trách" : "Doctor"}
+                            </span>
+                            <strong className="text-slate-800 text-sm">
+                              {chiTiet.lichHen.bacSi.hoTen}
+                            </strong>
+                            <span className="text-[11px] text-emerald-800 block font-semibold mt-0.5">
+                              {chiTiet.lichHen.tenChuyenKhoa}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-slate-100">
+                          <Clock size={16} className="text-emerald-700 mt-0.5 shrink-0" />
+                          <div>
+                            <span className="text-[11px] text-slate-400 block font-medium uppercase">
+                              {vi ? "Giờ khám dự kiến" : "Estimated Time"}
+                            </span>
+                            <strong className="text-slate-800 text-sm">
+                              {chiTiet.lichHen.gioKhamDuKien}
+                            </strong>
+                            {chiTiet.lichHen.phongKham && (
+                              <span className="text-[11px] text-slate-600 block mt-0.5">
+                                <MapPin size={11} className="inline mr-1 text-slate-400" />
+                                {chiTiet.lichHen.phongKham.tenPhong} {chiTiet.lichHen.phongKham.tang ? `(${chiTiet.lichHen.phongKham.tang})` : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  <div className="grid gap-3 text-sm sm:grid-cols-2">
-                    <p>
-                      <b>{vi ? "Bác sĩ" : "Doctor"}:</b>{" "}
-                      {chiTiet.lichHen.bacSi.hoTen}
-                    </p>
-                    <p>
-                      <b>{vi ? "Bệnh nhân" : "Patient"}:</b>{" "}
-                      {chiTiet.lichHen.hoTenBenhNhan}
-                    </p>
-                    <p>
-                      <b>{vi ? "Ngày giờ" : "Date/time"}:</b>{" "}
-                      {chiTiet.lichHen.ngay} · {chiTiet.lichHen.gioKhamDuKien}
-                    </p>
-                    <p>
-                      <b>{vi ? "Trạng thái" : "Status"}:</b>{" "}
-                      {chiTiet.lichHen.trangThai}
-                    </p>
-                  </div>
+
+                    {/* Section 2: Thông tin Người khám */}
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 space-y-3">
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                        <User size={15} className="text-emerald-700" />
+                        {vi ? "Thông tin người đến khám" : "Patient Information"}
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div className="p-2.5 bg-slate-50 rounded-xl">
+                          <span className="text-slate-400 block text-[11px]">{vi ? "Họ và tên" : "Full Name"}</span>
+                          <strong className="text-slate-800 text-sm">{chiTiet.lichHen.hoTenBenhNhan}</strong>
+                        </div>
+                        <div className="p-2.5 bg-slate-50 rounded-xl">
+                          <span className="text-slate-400 block text-[11px]">{vi ? "Ngày sinh" : "Date of Birth"}</span>
+                          <span className="text-slate-800 font-semibold">{chiTiet.ngaySinhBenhNhan || "—"}</span>
+                        </div>
+                        <div className="p-2.5 bg-slate-50 rounded-xl">
+                          <span className="text-slate-400 block text-[11px]">{vi ? "Giới tính" : "Gender"}</span>
+                          <span className="text-slate-800 font-semibold">
+                            {chiTiet.gioiTinhBenhNhan === "NAM" ? (vi ? "Nam" : "Male") : chiTiet.gioiTinhBenhNhan === "NU" ? (vi ? "Nữ" : "Female") : (vi ? "Khác" : "Other")}
+                          </span>
+                        </div>
+                        {chiTiet.soDienThoaiLienHe && (
+                          <div className="p-2.5 bg-slate-50 rounded-xl">
+                            <span className="text-slate-400 block text-[11px]">{vi ? "Điện thoại liên hệ" : "Phone"}</span>
+                            <span className="text-slate-800 font-semibold font-mono">{chiTiet.soDienThoaiLienHe}</span>
+                          </div>
+                        )}
+                        {chiTiet.lichHen.lyDoKham && (
+                          <div className="p-2.5 bg-slate-50 rounded-xl sm:col-span-2">
+                            <span className="text-slate-400 block text-[11px]">{vi ? "Lý do khám" : "Reason"}</span>
+                            <span className="text-slate-700">{chiTiet.lichHen.lyDoKham}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   {chiTiet.ketQua && (
                     <section className="border-t border-slate-200 pt-5 space-y-4">
                       <div className="flex items-center justify-between">
