@@ -327,6 +327,8 @@ export interface ThuocResponse {
   moTa: string | null;
   daXacMinh: boolean;
   trangThai: "DANG_DUNG" | "NGUNG_DUNG";
+  coBaoHiem?: boolean;
+  donGia?: number | null;
   tenBacSiTao?: string | null;
   soLanKe: number;
   donViEn?: string | null;

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import { CalendarDays, Search, RotateCcw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Container } from "@/shared/components/layout/Container";
@@ -207,20 +209,29 @@ export function DoctorPage() {
               </select>
             </label>
 
-            <label className={styles.field}>
+            <div className={styles.field}>
               <CalendarDays aria-hidden="true" />
-              <input
-                type="date"
-                value={ngay}
-                onChange={(event) =>
-                  handleScheduleFilterChange(event.target.value, buoi)
+              <DatePicker
+                format="DD/MM/YYYY"
+                value={ngay ? dayjs(ngay, "YYYY-MM-DD") : null}
+                onChange={(date) =>
+                  handleScheduleFilterChange(
+                    date ? date.format("YYYY-MM-DD") : "",
+                    buoi,
+                  )
                 }
+                placeholder={t({
+                  en: "DD/MM/YYYY",
+                  vi: "Chọn ngày khám",
+                })}
+                variant="borderless"
+                className="w-full text-sm outline-none"
                 aria-label={t({
                   en: "Filter by available date",
                   vi: "Lọc theo ngày khám",
                 })}
               />
-            </label>
+            </div>
 
             <label className={styles.field}>
               <select

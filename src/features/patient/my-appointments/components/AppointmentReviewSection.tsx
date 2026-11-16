@@ -80,7 +80,7 @@ export function AppointmentReviewSection({
 
     return (
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 sticky top-0 z-10 bg-white/95 backdrop-blur-xs">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
               <Star size={18} className="fill-amber-400 text-amber-400" />
@@ -372,7 +372,7 @@ export function AppointmentReviewSection({
 
     return (
       <section className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/40 via-white to-slate-50/50 p-5 shadow-xs space-y-4">
-        <div className="flex items-center gap-2 border-b border-emerald-100 pb-3">
+        <div className="flex items-center gap-2 border-b border-emerald-100 pb-3 sticky top-0 z-10 bg-white/95 backdrop-blur-xs">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
             <MessageSquare size={18} />
           </div>

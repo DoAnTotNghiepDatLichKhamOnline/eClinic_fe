@@ -75,9 +75,20 @@ export function MedicinesTab({
               medicines.map((medicine) => (
                 <tr key={medicine.id}>
                   <td className="font-semibold text-slate-900">
-                    {medicine.tenThuoc}
+                    <div className="flex items-center gap-2">
+                      <span>{medicine.tenThuoc}</span>
+                      {medicine.coBaoHiem ? (
+                        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                          BHYT
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {vi ? "Ngoài BHYT" : "Non-BHYT"}
+                        </span>
+                      )}
+                    </div>
                     {medicine.tenBacSiTao && (
-                      <div className="text-[11px] text-slate-500 font-normal">
+                      <div className="text-[11px] text-slate-500 font-normal mt-0.5">
                         {vi ? "Bác sĩ tạo:" : "Created by:"}{" "}
                         {medicine.tenBacSiTao}
                       </div>

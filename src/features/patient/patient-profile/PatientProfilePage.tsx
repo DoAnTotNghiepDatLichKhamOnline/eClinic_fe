@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import {
   ClipboardList,
   Edit3,
@@ -52,6 +54,7 @@ export function PatientProfilePage() {
   const [saveError, setSaveError] = useState("");
   const [editingRelative, setEditingRelative] = useState<number | null>(null);
   const [familyError, setFamilyError] = useState("");
+  const [relativeDobMap, setRelativeDobMap] = useState<Record<number, string>>({});
 
   const [form, setForm] = useState<HoSoCuaToiResponse>(initialForm);
   const [draft, setDraft] = useState<HoSoCuaToiResponse>(initialForm);
@@ -421,12 +424,16 @@ export function PatientProfilePage() {
                   <label className={styles.fieldLabel} htmlFor="pp-dob">
                     {vi ? "Ngày sinh" : "Date of birth"}
                   </label>
-                  <input
+                  <DatePicker
                     id="pp-dob"
+                    format="DD/MM/YYYY"
                     className={styles.input}
-                    type="date"
-                    value={draft.ngaySinh || ""}
-                    onChange={(e) => setDraftField("ngaySinh", e.target.value)}
+                    value={draft.ngaySinh ? dayjs(draft.ngaySinh, "YYYY-MM-DD") : null}
+                    disabledDate={(c) => c && c.isAfter(dayjs())}
+                    onChange={(date) =>
+                      setDraftField("ngaySinh", date ? date.format("YYYY-MM-DD") : "")
+                    }
+                    placeholder={vi ? "DD/MM/YYYY" : "DD/MM/YYYY"}
                   />
                 </div>
                 <div className={styles.fieldGroup}>
@@ -780,11 +787,22 @@ export function PatientProfilePage() {
                           {vi ? "Ngày sinh" : "Date of birth"}
                         </label>
                         <input
+                          type="hidden"
                           name="ngaySinh"
-                          type="date"
-                          required
+                          value={relativeDobMap[relative.id] ?? relative.ngaySinh}
+                        />
+                        <DatePicker
+                          format="DD/MM/YYYY"
                           className={styles.input}
-                          defaultValue={relative.ngaySinh}
+                          value={dayjs(relativeDobMap[relative.id] ?? relative.ngaySinh, "YYYY-MM-DD")}
+                          disabledDate={(c) => c && c.isAfter(dayjs())}
+                          onChange={(date) =>
+                            setRelativeDobMap((prev) => ({
+                              ...prev,
+                              [relative.id]: date ? date.format("YYYY-MM-DD") : "",
+                            }))
+                          }
+                          placeholder={vi ? "DD/MM/YYYY" : "DD/MM/YYYY"}
                         />
                       </div>
                       <div className={styles.fieldGroup}>

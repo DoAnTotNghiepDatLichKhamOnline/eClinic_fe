@@ -81,232 +81,228 @@ export function PatientDetailModal({
     }
   };
 
+  const rawData = patientDetailQuery.data?.duLieu as any;
+  const patient = (rawData?.hoSo ?? rawData) || {};
+
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs"
-    >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-fade-in">
       <section
         role="dialog"
         aria-modal="true"
         aria-label={vi ? "Chi tiết hồ sơ bệnh nhân" : "Patient profile detail"}
-        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        className="flex flex-col max-h-[90vh] w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden"
       >
-        {(() => {
-          const rawData = patientDetailQuery.data?.duLieu as any;
-          const patient = (rawData?.hoSo ?? rawData) || {};
+        <div className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-xs">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 font-display">
+              {patient.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {vi ? "Mã hồ sơ bệnh nhân:" : "Patient record ID:"} #{patientId}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+            aria-label={vi ? "Đóng" : "Close"}
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-          return (
-            <>
-              <div className="mb-5 flex items-center justify-between border-b border-slate-200 pb-3">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
-                    {patient.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {vi ? "Mã hồ sơ bệnh nhân:" : "Patient record ID:"} #{patientId}
-                  </p>
-                </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {modalError && (
+            <p role="alert" className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">
+              {modalError}
+            </p>
+          )}
+          {modalMessage && (
+            <p role="status" className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs font-medium text-emerald-800">
+              {modalMessage}
+            </p>
+          )}
+
+          {patientDetailQuery.isLoading ? (
+            <div className="py-12 text-center text-xs text-slate-500">
+              {vi ? "Đang tải thông tin hồ sơ..." : "Loading patient record..."}
+            </div>
+          ) : patientDetailQuery.data?.duLieu ? (
+            <form
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4"
+              onSubmit={(event) => void savePatient(event)}
+            >
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Họ và tên bệnh nhân" : "Full Name"} <span className="text-rose-500">*</span></span>
+                <input
+                  name="hoTen"
+                  type="text"
+                  required
+                  defaultValue={patient.hoTen ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Ngày sinh" : "Date of Birth"}</span>
+                <input
+                  name="ngaySinh"
+                  type="date"
+                  defaultValue={patient.ngaySinh ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Giới tính" : "Gender"}</span>
+                <select
+                  name="gioiTinh"
+                  defaultValue={patient.gioiTinh ?? "NAM"}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  <option value="NAM">{vi ? "Nam" : "Male"}</option>
+                  <option value="NU">{vi ? "Nữ" : "Female"}</option>
+                  <option value="KHAC">{vi ? "Khác" : "Other"}</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Số điện thoại liên hệ" : "Phone Number"}</span>
+                <input
+                  name="soDienThoai"
+                  type="tel"
+                  defaultValue={patient.soDienThoai ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Số CCCD / Định danh cá nhân" : "National ID / Citizen ID"}</span>
+                <input
+                  name="cccd"
+                  type="text"
+                  defaultValue={patient.cccd ?? (patient as any).soCccdGoc ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+                <span>{vi ? "Số thẻ Bảo hiểm y tế (BHYT)" : "Health Insurance Card"}</span>
+                <input
+                  name="soBaoHiemYTe"
+                  type="text"
+                  defaultValue={patient.soBaoHiemYTe ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
+                <span>{vi ? "Địa chỉ thường trú" : "Residential Address"}</span>
+                <input
+                  name="diaChi"
+                  type="text"
+                  defaultValue={patient.diaChi ?? ""}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </label>
+
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                  className={styles.actionBtnOutline}
                 >
-                  <X size={20} />
+                  {vi ? "Đóng" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className={styles.actionBtnPrimary}
+                >
+                  {vi ? "Lưu thay đổi hồ sơ" : "Save Changes"}
                 </button>
               </div>
+            </form>
+          ) : null}
 
-              {modalError && (
-                <p role="alert" className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs font-medium text-rose-700">
-                  {modalError}
-                </p>
-              )}
-              {modalMessage && (
-                <p role="status" className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs font-medium text-emerald-800">
-                  {modalMessage}
-                </p>
-              )}
-
-              {patientDetailQuery.isLoading ? (
-                <div className="py-12 text-center text-xs text-slate-500">
-                  {vi ? "Đang tải thông tin hồ sơ..." : "Loading patient record..."}
-                </div>
-              ) : patientDetailQuery.data?.duLieu ? (
-                <form
-                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 rounded-xl border border-slate-200 bg-slate-50/50 p-4"
-                  onSubmit={(event) => void savePatient(event)}
-                >
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Họ và tên bệnh nhân" : "Full Name"} <span className="text-rose-500">*</span></span>
-                    <input
-                      name="hoTen"
-                      type="text"
-                      required
-                      defaultValue={patient.hoTen ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Ngày sinh" : "Date of Birth"}</span>
-                    <input
-                      name="ngaySinh"
-                      type="date"
-                      defaultValue={patient.ngaySinh ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Giới tính" : "Gender"}</span>
-                    <select
-                      name="gioiTinh"
-                      defaultValue={patient.gioiTinh ?? "NAM"}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    >
-                      <option value="NAM">{vi ? "Nam" : "Male"}</option>
-                      <option value="NU">{vi ? "Nữ" : "Female"}</option>
-                      <option value="KHAC">{vi ? "Khác" : "Other"}</option>
-                    </select>
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Số điện thoại liên hệ" : "Phone Number"}</span>
-                    <input
-                      name="soDienThoai"
-                      type="tel"
-                      defaultValue={patient.soDienThoai ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Số CCCD / Định danh cá nhân" : "National ID / Citizen ID"}</span>
-                    <input
-                      name="cccd"
-                      type="text"
-                      defaultValue={patient.cccd ?? patient.soCccdGoc ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-                    <span>{vi ? "Số thẻ Bảo hiểm y tế (BHYT)" : "Health Insurance Card"}</span>
-                    <input
-                      name="soBaoHiemYTe"
-                      type="text"
-                      defaultValue={patient.soBaoHiemYTe ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700 sm:col-span-2">
-                    <span>{vi ? "Địa chỉ thường trú" : "Residential Address"}</span>
-                    <input
-                      name="diaChi"
-                      type="text"
-                      defaultValue={patient.diaChi ?? ""}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </label>
-
-                  <div className="sm:col-span-2 flex justify-end gap-2 pt-3 border-t border-slate-200">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className={styles.actionBtnOutline}
-                    >
-                      {vi ? "Đóng" : "Cancel"}
-                    </button>
-                    <button
-                      type="submit"
-                      className={styles.actionBtnPrimary}
-                    >
-                      {vi ? "Lưu thay đổi hồ sơ" : "Save Changes"}
-                    </button>
+          {patientAppointmentsQuery.data?.duLieu?.noiDung && (
+            <div className="mt-6">
+              <h3 className="mb-2 font-semibold">
+                {vi ? "Lịch sử lịch hẹn" : "Appointment history"}
+              </h3>
+              <div className="grid gap-2">
+                {patientAppointmentsQuery.data.duLieu.noiDung.map((appointment) => (
+                  <div
+                    className="border-b border-slate-100 py-3 flex flex-wrap items-center justify-between gap-2 text-sm"
+                    key={appointment.maPhieuKham}
+                  >
+                    <div>
+                      <strong>
+                        {appointment.ngay} · {appointment.gioKhamDuKien}
+                      </strong>
+                      <p className="text-xs text-slate-600 m-0">
+                        {appointment.bacSi.hoTen} · Mã: {appointment.maPhieuKham} · {appointment.trangThai}
+                      </p>
+                      {appointment.doiChieu?.canDoiChieu && (
+                        <span className="inline-block mt-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                          {vi
+                            ? "Cần đối chiếu giấy tờ (Họ tên / Ngày sinh)"
+                            : "Document verification needed"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {appointment.id && appointment.trangThai === "DA_HOAN_THANH" && (
+                        <button
+                          type="button"
+                          className={`${styles.actionBtn} text-teal-700 bg-teal-50 hover:bg-teal-100 border-teal-200`}
+                          onClick={() => setViewHistoryAppointmentId(appointment.id ?? null)}
+                        >
+                          {vi ? "Lịch sử sửa bệnh án" : "Record History"}
+                        </button>
+                      )}
+                      {appointment.doiChieu?.canDoiChieu && appointment.id && (
+                        <button
+                          type="button"
+                          className={styles.actionBtn}
+                          onClick={async () => {
+                            if (!appointment.id) return;
+                            try {
+                              const res = await bookingService.danhDauDaDoiChieuQuanTri(
+                                appointment.id,
+                              );
+                              if (!res.thanhCong) throw new Error(res.thongDiep);
+                              setModalMessage(
+                                res.thongDiep ||
+                                  (vi
+                                    ? "Đã xác nhận đối chiếu giấy tờ thành công"
+                                    : "Document verified"),
+                              );
+                              await client.invalidateQueries({
+                                queryKey: [
+                                  "booking",
+                                  "admin-patient-appointments",
+                                  patientId,
+                                ],
+                              });
+                            } catch (err: any) {
+                              setModalError(
+                                err.response?.data?.thongDiep ||
+                                  err.message ||
+                                  "Error",
+                              );
+                            }
+                          }}
+                        >
+                          {vi ? "Đã đối chiếu" : "Mark Verified"}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </form>
-              ) : null}
-            </>
-          );
-        })()}
-
-        {patientAppointmentsQuery.data?.duLieu?.noiDung && (
-          <div className="mt-6">
-            <h3 className="mb-2 font-semibold">
-              {vi ? "Lịch sử lịch hẹn" : "Appointment history"}
-            </h3>
-            <div className="grid gap-2">
-              {patientAppointmentsQuery.data.duLieu.noiDung.map((appointment) => (
-                <div
-                  className="border-b border-slate-100 py-3 flex flex-wrap items-center justify-between gap-2 text-sm"
-                  key={appointment.maPhieuKham}
-                >
-                  <div>
-                    <strong>
-                      {appointment.ngay} · {appointment.gioKhamDuKien}
-                    </strong>
-                    <p className="text-xs text-slate-600 m-0">
-                      {appointment.bacSi.hoTen} · Mã: {appointment.maPhieuKham} · {appointment.trangThai}
-                    </p>
-                    {appointment.doiChieu?.canDoiChieu && (
-                      <span className="inline-block mt-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
-                        {vi
-                          ? "Cần đối chiếu giấy tờ (Họ tên / Ngày sinh)"
-                          : "Document verification needed"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {appointment.id && appointment.trangThai === "DA_HOAN_THANH" && (
-                      <button
-                        type="button"
-                        className={`${styles.actionBtn} text-teal-700 bg-teal-50 hover:bg-teal-100 border-teal-200`}
-                        onClick={() => setViewHistoryAppointmentId(appointment.id ?? null)}
-                      >
-                        {vi ? "Lịch sử sửa bệnh án" : "Record History"}
-                      </button>
-                    )}
-                    {appointment.doiChieu?.canDoiChieu && appointment.id && (
-                      <button
-                        type="button"
-                        className={styles.actionBtn}
-                        onClick={async () => {
-                          if (!appointment.id) return;
-                          try {
-                            const res = await bookingService.danhDauDaDoiChieuQuanTri(
-                              appointment.id,
-                            );
-                            if (!res.thanhCong) throw new Error(res.thongDiep);
-                            setModalMessage(
-                              res.thongDiep ||
-                                (vi
-                                  ? "Đã xác nhận đối chiếu giấy tờ thành công"
-                                  : "Document verified"),
-                            );
-                            await client.invalidateQueries({
-                              queryKey: [
-                                "booking",
-                                "admin-patient-appointments",
-                                patientId,
-                              ],
-                            });
-                          } catch (err: any) {
-                            setModalError(
-                              err.response?.data?.thongDiep ||
-                                err.message ||
-                                "Error",
-                            );
-                          }
-                        }}
-                      >
-                        {vi ? "Đã đối chiếu" : "Mark Verified"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {viewHistoryAppointmentId && (
           <MedicalRecordHistoryModal

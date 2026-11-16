@@ -64,11 +64,11 @@ export function Modal({
       }}
     >
       <div
-        className={`w-full ${maxWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all ${className ?? ""}`}
+        className={`w-full ${maxWidthClass} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all flex flex-col max-h-[90vh] ${className ?? ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-xs flex-shrink-0 sticky top-0 z-10">
           <div>
             {title && (
               <h4 className="text-xl font-bold text-[#0f4d3a] font-display">
@@ -90,11 +90,11 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto">{children}</div>
+        <div className="p-6 flex-1 overflow-y-auto">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-4 px-6 border-t border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-end gap-3 px-6 py-3.5 border-t border-slate-100 bg-slate-50/90 backdrop-blur-xs flex-shrink-0 sticky bottom-0 z-10">
             {footer}
           </div>
         )}

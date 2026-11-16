@@ -33,6 +33,7 @@ import type { AdminSection } from "./AdminSidebar";
 import { AdminNotificationCenter } from "./AdminNotificationCenter";
 import { AccountDetailModal } from "./components/AccountDetailModal";
 import { DisableAccountModal } from "./components/DisableAccountModal";
+import { AdminAnalyticsCharts } from "./components/AdminAnalyticsCharts";
 import {
   useDanhSachTaiKhoanQuanTri,
   useIdentityActions,
@@ -507,6 +508,10 @@ export function AdminDashboardPage({
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-6">
+                <AdminAnalyticsCharts />
               </div>
             </>
           )}

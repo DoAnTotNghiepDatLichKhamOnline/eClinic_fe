@@ -44,6 +44,10 @@ export interface AppointmentFormValues {
   childDob?: string; // Ngày sinh của trẻ
   childGender?: string;
 
+  // Bảo hiểm y tế
+  hasHealthInsurance?: boolean; // Có thẻ BHYT hay không
+  healthInsuranceNumber?: string; // Mã thẻ BHYT (nếu có)
+
   // 3. Thông tin người giám hộ (Bắt buộc khi < 18 tuổi hoặc Khoa Nhi)
   guardianName?: string;
   guardianCccd?: string;

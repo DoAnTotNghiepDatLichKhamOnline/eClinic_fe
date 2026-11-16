@@ -4,6 +4,7 @@ import { Stethoscope, X } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { consultationService } from "@/services/consultationService";
+import { patientBookingService } from "@/services/booking";
 import { useConsultation } from "@/hooks/useConsultation";
 import { ConsultationLookupCard } from "./components/ConsultationLookupCard";
 import { TodayPatientsTable } from "./components/TodayPatientsTable";
@@ -31,21 +32,52 @@ export function DoctorConsultationPage() {
 
   // Search by code or QR and redirect to dedicated examine page
   const handleSearchCode = async (code: string): Promise<boolean> => {
-    if (!code.trim()) return false;
+    let cleanCode = code.trim();
+    if (!cleanCode) return false;
+
+    // Chuẩn hóa nếu quét được URL phiếu khám
+    if (cleanCode.includes("/phieu-kham/")) {
+      cleanCode = cleanCode.split("/phieu-kham/").pop()?.split(/[?#]/)[0] || cleanCode;
+    } else if (cleanCode.includes("ticket=")) {
+      cleanCode = new URLSearchParams(cleanCode.split("?")[1] || "").get("ticket") || cleanCode;
+    }
+
     setIsSearching(true);
     setSearchError(null);
     try {
-      const res = await consultationService.traCuuHoSoKham(code.trim());
+      // 1. Thử tra cứu hồ sơ trong ca của bác sĩ
+      const res = await consultationService.traCuuHoSoKham(cleanCode);
       if (res?.thanhCong && res?.duLieu?.lichHen?.id) {
         navigate(`/doctor/consultation/${res.duLieu.lichHen.id}`);
         return true;
       }
-      throw new Error(res?.thongDiep || "Không tìm thấy hồ sơ khám");
-    } catch (err: unknown) {
+      throw new Error(res?.thongDiep || "Không tìm thấy hồ sơ trong ca trực");
+    } catch (primaryErr: unknown) {
+      // 2. Mở rộng cho phép quét mã QR của mọi hồ sơ (kể cả không thuộc ca trực bác sĩ)
+      try {
+        const fallbackRes = await patientBookingService.traCuuPhieuKham(cleanCode);
+        if (fallbackRes?.thanhCong && fallbackRes?.duLieu) {
+          const ticket = fallbackRes.duLieu;
+          const assignedDoctor = ticket.bacSi?.hoTen;
+          notifyAuth(
+            "info",
+            lang === "vi" ? "Cảnh báo phân công" : "Assignment Warning",
+            lang === "vi"
+              ? `Hồ sơ này không thuộc lịch phân công của bạn (BS phụ trách: ${assignedDoctor || "Khác"}). Đang mở hồ sơ...`
+              : `This record is assigned to ${assignedDoctor || "another doctor"}. Opening record...`,
+          );
+          // Điều hướng trực tiếp không chặn luồng
+          navigate(`/doctor/consultation/${ticket.maTraCuu || ticket.maPhieuKham || cleanCode}`);
+          return true;
+        }
+      } catch (_fallbackErr) {
+        // Cả 2 đều thất bại
+      }
+
       const msg =
-        (err as { response?: { data?: { thongDiep?: string } } }).response?.data
+        (primaryErr as { response?: { data?: { thongDiep?: string } } }).response?.data
           ?.thongDiep ||
-        (err instanceof Error ? err.message : "Không tìm thấy hồ sơ khám");
+        (primaryErr instanceof Error ? primaryErr.message : "Không tìm thấy hồ sơ khám");
       setSearchError(msg);
       notifyAuth("error", lang === "vi" ? "Lỗi tra cứu" : "Lookup error", msg);
       return false;

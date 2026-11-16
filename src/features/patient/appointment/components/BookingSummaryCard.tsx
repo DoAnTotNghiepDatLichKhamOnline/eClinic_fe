@@ -8,6 +8,7 @@ import {
   Phone,
   ArrowRight,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import type { Lang } from "@/types/i18n";
@@ -179,6 +180,15 @@ export function BookingSummaryCard({
             <p className="text-slate-600 flex items-center gap-1">
               <span className="font-semibold">CCCD:</span>{" "}
               {formValues.patientCccd}
+            </p>
+          )}
+          {formValues.hasHealthInsurance && (
+            <p className="text-emerald-800 flex items-center gap-1.5 font-medium">
+              <CreditCard size={12} className="text-emerald-700" />
+              <span>BHYT:</span>{" "}
+              <span className="font-mono font-bold tracking-wider">
+                {formValues.healthInsuranceNumber || (lang === "vi" ? "Có thẻ BHYT" : "Has Insurance")}
+              </span>
             </p>
           )}
         </div>
