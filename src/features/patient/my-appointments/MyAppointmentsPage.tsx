@@ -1,5 +1,12 @@
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import {
   CalendarDays,
   Calendar,
@@ -81,23 +88,6 @@ export function MyAppointmentsPage() {
   const { lang } = useLanguage();
   const vi = lang === "vi";
   const [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    const ticketParam = searchParams.get("ticket");
-    if (ticketParam) {
-      setSelectedTicket(ticketParam);
-    }
-  }, [searchParams]);
-
-  const handleCloseModal = () => {
-    setSelectedTicket(null);
-    if (searchParams.get("ticket")) {
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete("ticket");
-      setSearchParams(nextParams, { replace: true });
-    }
-  };
-
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [scheduleView, setScheduleView] = useState<"day" | "week">("week");
   const [scheduleDate, setScheduleDate] = useState(() => new Date());
@@ -110,11 +100,79 @@ export function MyAppointmentsPage() {
   const [scope, setScope] = useState<"TAT_CA" | "BAN_THAN" | "NGUOI_KHAC">(
     "TAT_CA",
   );
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
   const [newShiftId, setNewShiftId] = useState("");
   const [newSpecialtyId, setNewSpecialtyId] = useState("");
   const [newSlot, setNewSlot] = useState("");
+  const selectedTicket = searchParams.get("ticket") || null;
+  const dialogRef = useRef<HTMLElement>(null);
+
+  const setSelectedTicket = useCallback((ticket: string | null) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (ticket) {
+      nextParams.set("ticket", ticket);
+    } else {
+      nextParams.delete("ticket");
+    }
+    setSearchParams(nextParams, { replace: ticket === null });
+  }, [searchParams, setSearchParams]);
+
+  const handleCloseModal = useCallback(
+    () => setSelectedTicket(null),
+    [setSelectedTicket],
+  );
+
+  useEffect(() => {
+    setActionError("");
+    setNewShiftId("");
+    setNewSpecialtyId("");
+    setNewSlot("");
+  }, [selectedTicket]);
+
+  useEffect(() => {
+    if (!selectedTicket) return;
+
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    dialogRef.current?.focus();
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") handleCloseModal();
+      if (event.key !== "Tab") return;
+
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusable = dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+
+      if (
+        event.shiftKey &&
+        (document.activeElement === first || document.activeElement === dialog)
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        (document.activeElement === last || document.activeElement === dialog)
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      previouslyFocused?.focus();
+    };
+  }, [handleCloseModal, selectedTicket]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -124,7 +182,12 @@ export function MyAppointmentsPage() {
   }, [search]);
 
   // Overall appointments for tab counters
-  const { danhSach: allAppointments } = useDanhSachLichHen({
+  const {
+    danhSach: allAppointments,
+    isLoading: isLoadingAllAppointments,
+    isError: isAllAppointmentsError,
+    refetch: refetchAllAppointments,
+  } = useDanhSachLichHen({
     loc: "TAT_CA",
     cuaAi: scope,
     kichThuoc: 100,
@@ -136,7 +199,12 @@ export function MyAppointmentsPage() {
       : "TAT_CA";
 
   // Filtered appointments from API
-  const { danhSach: listedAppointments } = useDanhSachLichHen({
+  const {
+    danhSach: listedAppointments,
+    isLoading: isLoadingListedAppointments,
+    isError: isListedAppointmentsError,
+    refetch: refetchListedAppointments,
+  } = useDanhSachLichHen({
     loc: locParam,
     cuaAi: scope,
     tuKhoa: debouncedSearch || undefined,
@@ -146,27 +214,31 @@ export function MyAppointmentsPage() {
     lichSu,
     isLoading: isLoadingHistory,
     isError: isHistoryError,
+    refetch: refetchHistory,
   } = useLichSuKham(
     { cuaAi: scope, trang: 0, kichThuoc: 100 },
     activeTab === "done",
   );
-  const appointments =
-    activeTab === "done"
-      ? lichSu
-          .map((visit) => visit.lichHen)
-          .filter((appointment) => {
-            const query = debouncedSearch.toLocaleLowerCase();
-            return (
-              !query ||
-              appointment.hoTenBenhNhan.toLocaleLowerCase().includes(query) ||
-              appointment.bacSi.hoTen.toLocaleLowerCase().includes(query) ||
-              appointment.tenChuyenKhoa.toLocaleLowerCase().includes(query)
-            );
-          })
-      : listedAppointments;
-  const { chiTiet, isLoading: loadingDetail } = useChiTietLichHen(
-    selectedTicket ?? undefined,
-  );
+  const appointments = useMemo(() => {
+    if (activeTab !== "done") return listedAppointments;
+
+    const query = debouncedSearch.toLocaleLowerCase();
+    return lichSu
+      .map((visit) => visit.lichHen)
+      .filter(
+        (appointment) =>
+          !query ||
+          appointment.hoTenBenhNhan.toLocaleLowerCase().includes(query) ||
+          appointment.bacSi.hoTen.toLocaleLowerCase().includes(query) ||
+          appointment.tenChuyenKhoa.toLocaleLowerCase().includes(query),
+      );
+  }, [activeTab, debouncedSearch, lichSu, listedAppointments]);
+  const {
+    chiTiet,
+    isLoading: loadingDetail,
+    isError: isDetailError,
+    refetch: refetchDetail,
+  } = useChiTietLichHen(selectedTicket ?? undefined);
   const {
     huyLich,
     isCancelling,
@@ -211,7 +283,7 @@ export function MyAppointmentsPage() {
           gioBatDauKhung: newSlot,
         },
       });
-      setSelectedTicket(null);
+      handleCloseModal();
     } catch (error) {
       setActionError(
         (error as { response?: { data?: { thongDiep?: string } } }).response
@@ -221,24 +293,51 @@ export function MyAppointmentsPage() {
     }
   };
 
-  const filtered: LichHenCuaToiResponse[] = appointments.filter((a) => {
-    if (activeTab === "cancelled") {
-      return getApptCategory(a.trangThai) === "cancelled";
-    }
-    return true;
-  });
+  const filtered = useMemo<LichHenCuaToiResponse[]>(
+    () =>
+      activeTab === "cancelled"
+        ? appointments.filter(
+            (appointment) =>
+              getApptCategory(appointment.trangThai) === "cancelled",
+          )
+        : appointments,
+    [activeTab, appointments],
+  );
 
-  const counts = {
-    all: allAppointments.length,
-    upcoming: allAppointments.filter(
-      (a) => getApptCategory(a.trangThai) === "upcoming",
-    ).length,
-    done: allAppointments.filter((a) => getApptCategory(a.trangThai) === "done")
-      .length,
-    cancelled: allAppointments.filter(
-      (a) => getApptCategory(a.trangThai) === "cancelled",
-    ).length,
-  };
+  const counts = useMemo(
+    () => ({
+      all: allAppointments.length,
+      upcoming: allAppointments.filter(
+        (appointment) => getApptCategory(appointment.trangThai) === "upcoming",
+      ).length,
+      done: allAppointments.filter(
+        (appointment) => getApptCategory(appointment.trangThai) === "done",
+      ).length,
+      cancelled: allAppointments.filter(
+        (appointment) =>
+          getApptCategory(appointment.trangThai) === "cancelled",
+      ).length,
+    }),
+    [allAppointments],
+  );
+
+  const appointmentsByDate = useMemo(() => {
+    const grouped = new Map<string, LichHenCuaToiResponse[]>();
+    filtered.forEach((appointment) => {
+      const group = grouped.get(appointment.ngay) ?? [];
+      group.push(appointment);
+      grouped.set(appointment.ngay, group);
+    });
+    return grouped;
+  }, [filtered]);
+
+  const selectedDayAppointments = appointmentsByDate.get(selectedDate) ?? [];
+  const isAppointmentsLoading =
+    activeTab === "done" ? isLoadingHistory : isLoadingListedAppointments;
+  const isAppointmentsError =
+    activeTab === "done" ? isHistoryError : isListedAppointmentsError;
+  const refetchAppointments =
+    activeTab === "done" ? refetchHistory : refetchListedAppointments;
 
   const tabs: { key: TabStatus | "all"; label: { vi: string; en: string } }[] =
     [
@@ -281,10 +380,6 @@ export function MyAppointmentsPage() {
 
   const isToday = (date: Date) =>
     date.toDateString() === new Date().toDateString();
-
-  const selectedDayAppointments = filtered.filter(
-    (a) => a.ngay === selectedDate,
-  );
 
   const renderAppointmentCard = (appt: LichHenCuaToiResponse) => {
     const d = new Date(appt.ngay);
@@ -338,14 +433,7 @@ export function MyAppointmentsPage() {
             )}
           </div>
           {appt.lyDoKham && (
-            <p
-              style={{
-                margin: "4px 0 0",
-                fontSize: 12,
-                color: "#667068",
-                fontStyle: "italic",
-              }}
-            >
+            <p className="mt-1 text-xs italic text-slate-500">
               {appt.lyDoKham}
             </p>
           )}
@@ -363,6 +451,7 @@ export function MyAppointmentsPage() {
                 type="button"
                 className={`${styles.btnSmall} ${styles.btnSmallOutline}`}
                 onClick={() => setSelectedTicket(appt.maPhieuKham)}
+                aria-label={`${vi ? "Chi tiết lịch hẹn" : "Appointment details"} ${appt.maPhieuKham}`}
               >
                 {vi ? "Chi tiết" : "Details"}
               </button>
@@ -371,6 +460,7 @@ export function MyAppointmentsPage() {
                   type="button"
                   className={`${styles.btnSmall} ${styles.btnSmallOutline}`}
                   onClick={() => setSelectedTicket(appt.maPhieuKham)}
+                  aria-label={`${vi ? "Đổi lịch hẹn" : "Reschedule appointment"} ${appt.maPhieuKham}`}
                 >
                   {vi ? "Đổi lịch" : "Reschedule"}
                 </button>
@@ -381,6 +471,7 @@ export function MyAppointmentsPage() {
                   className={`${styles.btnSmall} ${styles.btnSmallDanger}`}
                   disabled={isCancelling}
                   onClick={() => void handleCancel(appt.maPhieuKham)}
+                  aria-label={`${vi ? "Hủy lịch hẹn" : "Cancel appointment"} ${appt.maPhieuKham}`}
                 >
                   <X size={11} />
                   {vi ? "Hủy lịch" : "Cancel"}
@@ -394,6 +485,7 @@ export function MyAppointmentsPage() {
                 type="button"
                 className={`${styles.btnSmall} ${styles.btnSmallOutline}`}
                 onClick={() => setSelectedTicket(appt.maPhieuKham)}
+                aria-label={`${vi ? "Đánh giá lịch hẹn" : "Review appointment"} ${appt.maPhieuKham}`}
               >
                 {vi ? "Đánh giá" : "Review"}
               </button>
@@ -401,6 +493,7 @@ export function MyAppointmentsPage() {
                 type="button"
                 className={`${styles.btnSmall} ${styles.btnSmallPrimary}`}
                 onClick={() => setSelectedTicket(appt.maPhieuKham)}
+                aria-label={`${vi ? "Xem kết quả lịch hẹn" : "View appointment result"} ${appt.maPhieuKham}`}
               >
                 {vi ? "Xem kết quả" : "View result"}
               </button>
@@ -460,40 +553,83 @@ export function MyAppointmentsPage() {
         </div>
 
         {/* ─── Tabs ─── */}
-        <div className={styles.tabBar} role="tablist">
+        <div
+          className={styles.tabBar}
+          role="tablist"
+          aria-label={vi ? "Lọc theo trạng thái lịch hẹn" : "Filter by appointment status"}
+        >
           {tabs.map((t) => (
             <button
               key={t.key}
+              id={`appointments-tab-${t.key}`}
+              type="button"
               role="tab"
               aria-selected={activeTab === t.key}
+              aria-controls="appointments-panel"
+              tabIndex={activeTab === t.key ? 0 : -1}
               className={`${styles.tab} ${activeTab === t.key ? styles.tabActive : ""}`}
               onClick={() => setActiveTab(t.key)}
+              onKeyDown={(event) => {
+                const currentIndex = tabs.findIndex((tab) => tab.key === t.key);
+                let nextTab: TabStatus | "all" | undefined;
+                if (event.key === "ArrowRight") {
+                  nextTab = tabs[(currentIndex + 1) % tabs.length].key;
+                } else if (event.key === "ArrowLeft") {
+                  nextTab =
+                    tabs[(currentIndex - 1 + tabs.length) % tabs.length].key;
+                } else if (event.key === "Home") {
+                  nextTab = tabs[0].key;
+                } else if (event.key === "End") {
+                  nextTab = tabs[tabs.length - 1].key;
+                }
+                if (nextTab) {
+                  event.preventDefault();
+                  setActiveTab(nextTab);
+                  document.getElementById(`appointments-tab-${nextTab}`)?.focus();
+                }
+              }}
             >
               {t.label[lang]}
-              <span className={styles.tabCount}>{counts[t.key]}</span>
+              <span className={styles.tabCount} aria-live="polite">
+                {isLoadingAllAppointments
+                  ? "…"
+                  : isAllAppointmentsError
+                    ? "—"
+                    : counts[t.key]}
+              </span>
             </button>
           ))}
         </div>
-        {activeTab === "done" && isLoadingHistory && (
-          <p role="status" className={styles.emptyStateDesc}>
-            {vi ? "Đang tải lịch sử khám..." : "Loading visit history..."}
-          </p>
-        )}
-        {activeTab === "done" && isHistoryError && (
+        {isAllAppointmentsError && (
           <p role="alert" className="text-sm text-rose-700">
             {vi
-              ? "Không thể tải lịch sử khám. Vui lòng thử lại."
-              : "Could not load visit history. Please try again."}
+              ? "Không thể tải số lượng lịch hẹn."
+              : "Could not load appointment counts."}
           </p>
+        )}
+        {isAllAppointmentsError && (
+          <button
+            type="button"
+            className="mt-1 text-sm font-semibold text-emerald-800 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            onClick={() => void refetchAllAppointments()}
+          >
+            {vi ? "Thử tải lại số lượng" : "Retry loading counts"}
+          </button>
         )}
 
         {/* ─── Filter bar ─── */}
         <div className={styles.filterBar}>
           <div className={styles.searchWrap}>
-            <Search size={15} className={styles.searchIcon} />
+            <Search
+              size={15}
+              className={styles.searchIcon}
+              aria-hidden="true"
+            />
             <input
               id="appointment-search"
               className={styles.searchInput}
+              type="search"
+              aria-label={vi ? "Tìm kiếm lịch hẹn" : "Search appointments"}
               placeholder={
                 vi
                   ? "Tìm bác sĩ, chuyên khoa, bệnh nhân..."
@@ -524,7 +660,37 @@ export function MyAppointmentsPage() {
         </div>
 
         {/* ─── Main Content ─── */}
-        {viewMode === "calendar" ? (
+        <div
+          id="appointments-panel"
+          role="tabpanel"
+          aria-labelledby={`appointments-tab-${activeTab}`}
+          tabIndex={0}
+        >
+        {isAppointmentsLoading ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500"
+          >
+            <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+            {vi ? "Đang tải lịch hẹn..." : "Loading appointments..."}
+          </div>
+        ) : isAppointmentsError ? (
+          <div role="alert" className="py-12 text-center">
+            <p className="text-sm text-rose-700">
+              {vi
+                ? "Không thể tải lịch hẹn. Vui lòng thử lại."
+                : "Could not load appointments. Please try again."}
+            </p>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold text-emerald-800 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+              onClick={() => void refetchAppointments()}
+            >
+              {vi ? "Thử lại" : "Try again"}
+            </button>
+          </div>
+        ) : viewMode === "calendar" ? (
           <>
             {/* Calendar Widget (like Doctor Workspace) */}
             <section
@@ -596,7 +762,7 @@ export function MyAppointmentsPage() {
                 {calendarDays.map((date) => {
                   const dateKey = toDateKey(date);
                   const isSelected = selectedDate === dateKey;
-                  const dayAppts = filtered.filter((a) => a.ngay === dateKey);
+                  const dayAppts = appointmentsByDate.get(dateKey) ?? [];
                   const dayLabel = new Intl.DateTimeFormat(lang, {
                     weekday: "short",
                   }).format(date);
@@ -676,9 +842,7 @@ export function MyAppointmentsPage() {
                   {vi
                     ? `Lịch hẹn ngày ${formatFullDateWithWeekday(selectedDate, lang)}`
                     : `Appointments on ${formatFullDateWithWeekday(selectedDate, lang)}`}
-                  <span
-                    style={{ fontSize: 12, fontWeight: 500, color: "#5d7367" }}
-                  >
+                  <span className="text-xs font-medium text-slate-500">
                     ({selectedDayAppointments.length}{" "}
                     {vi ? "lịch hẹn" : "appointments"})
                   </span>
@@ -698,14 +862,7 @@ export function MyAppointmentsPage() {
               </div>
 
               {selectedDayAppointments.length === 0 ? (
-                <div
-                  style={{
-                    padding: "18px 0",
-                    color: "#66786e",
-                    fontSize: 13,
-                    textAlign: "center",
-                  }}
-                >
+                <div className="py-5 text-center text-sm text-slate-500">
                   {vi
                     ? "Không có lịch hẹn nào trong ngày này. Bạn có thể chọn ngày khác trên lịch để xem."
                     : "No appointments scheduled for this day. Select another date on the calendar."}
@@ -737,8 +894,9 @@ export function MyAppointmentsPage() {
             {filtered.map((appt) => renderAppointmentCard(appt))}
           </div>
         )}
+        </div>
       </div>
-      {actionError && (
+      {actionError && !selectedTicket && (
         <p
           role="alert"
           className="mx-auto max-w-5xl px-5 pb-4 text-sm text-rose-700"
@@ -747,48 +905,82 @@ export function MyAppointmentsPage() {
         </p>
       )}
       {selectedTicket && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-fade-in">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) handleCloseModal();
+          }}
+        >
           <section
             role="dialog"
             aria-modal="true"
-            aria-label={vi ? "Chi tiết lịch hẹn" : "Appointment details"}
-            className="flex flex-col w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all"
+            aria-labelledby="appointment-dialog-title"
+            aria-busy={loadingDetail}
+            tabIndex={-1}
+            ref={dialogRef}
+            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl"
           >
-            {/* Header Cố Định */}
-            <div className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-xs">
+            <header className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-slate-100 bg-white px-6 py-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                    {vi ? "Phiếu khám điện tử" : "Electronic Ticket"}
-                  </span>
-                  <span className="text-xs font-mono font-semibold text-slate-500">
-                    #{selectedTicket}
-                  </span>
-                </div>
-                <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 font-display">
+                <p className="text-xs font-bold uppercase text-emerald-800">
+                  {vi ? "Phiếu khám" : "Appointment ticket"}
+                </p>
+                <h2
+                  id="appointment-dialog-title"
+                  className="mt-1 text-lg font-bold text-slate-900 sm:text-xl"
+                >
                   {vi ? "Chi tiết lịch hẹn khám" : "Appointment Details"}
                 </h2>
+                <p className="mt-1 text-xs font-mono font-semibold text-slate-500">
+                  #{selectedTicket}
+                </p>
               </div>
               <button
                 type="button"
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+                className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
                 onClick={handleCloseModal}
-                aria-label={vi ? "Đóng modal" : "Close modal"}
+                aria-label={vi ? "Đóng chi tiết lịch hẹn" : "Close appointment details"}
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
-            </div>
-
-            {/* Body Cuộn Nội Bộ */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              {loadingDetail ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
-                  <Loader2 size={32} className="animate-spin text-emerald-700" />
-                  <p className="text-xs font-medium">{vi ? "Đang tải thông tin phiếu khám..." : "Loading appointment details..."}</p>
-                </div>
-              ) : (
-                chiTiet && (
-                  <div className="space-y-5">
+            </header>
+            <div
+              className="flex-1 space-y-5 overflow-y-auto p-6"
+              aria-live="polite"
+            >
+            {loadingDetail ? (
+              <div
+                role="status"
+                className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500"
+              >
+                <Loader2
+                  size={32}
+                  className="animate-spin text-emerald-700"
+                  aria-hidden="true"
+                />
+                <p className="text-sm">
+                  {vi
+                    ? "Đang tải thông tin phiếu khám..."
+                    : "Loading appointment details..."}
+                </p>
+              </div>
+            ) : isDetailError ? (
+              <div role="alert" className="py-8 text-center">
+                <p className="text-sm text-rose-700">
+                  {vi
+                    ? "Không thể tải chi tiết lịch hẹn."
+                    : "Could not load appointment details."}
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-800 underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  onClick={() => void refetchDetail()}
+                >
+                  {vi ? "Thử lại" : "Try again"}
+                </button>
+              </div>
+            ) : chiTiet ? (
+              <div className="space-y-5">
                     {/* Guest linked banner */}
                     {chiTiet.lichHen.nguoiDat === "KHACH" && (
                       <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-950 font-medium flex items-center gap-2.5">
@@ -852,7 +1044,6 @@ export function MyAppointmentsPage() {
                         </div>
                       </div>
                     </div>
-
                     {/* Section 2: Thông tin Người khám */}
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4 space-y-3">
                       <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
@@ -1103,6 +1294,10 @@ export function MyAppointmentsPage() {
                           ? "Mã ca (hoặc dùng chuyên khoa)"
                           : "Shift ID (or use specialty)"}
                         <input
+                          type="number"
+                          min="1"
+                          inputMode="numeric"
+                          aria-label={vi ? "Mã ca" : "Shift ID"}
                           className="border border-slate-300 px-3 py-2 text-sm"
                           value={newShiftId}
                           onChange={(event) =>
@@ -1115,6 +1310,10 @@ export function MyAppointmentsPage() {
                           {vi ? "Mã chuyên khoa" : "Specialty ID"}
                           <input
                             required
+                            type="number"
+                            min="1"
+                            inputMode="numeric"
+                            aria-label={vi ? "Mã chuyên khoa" : "Specialty ID"}
                             className="border border-slate-300 px-3 py-2 text-sm"
                             value={newSpecialtyId}
                             onChange={(event) =>
@@ -1128,17 +1327,33 @@ export function MyAppointmentsPage() {
                         <input
                           required
                           type="datetime-local"
+                          aria-label={vi ? "Khung giờ bắt đầu" : "Slot start"}
                           className="border border-slate-300 px-3 py-2 text-sm"
                           value={newSlot}
                           onChange={(event) => setNewSlot(event.target.value)}
                         />
                       </label>
                       <button
+                        type="submit"
                         className="self-end bg-emerald-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                         disabled={isRescheduling}
+                        aria-busy={isRescheduling}
+                        aria-label={
+                          isRescheduling
+                            ? vi
+                              ? "Đang đổi lịch"
+                              : "Rescheduling"
+                            : vi
+                              ? "Xác nhận đổi lịch"
+                              : "Confirm reschedule"
+                        }
                       >
                         {isRescheduling ? (
-                          <Loader2 size={16} className="animate-spin" />
+                          <Loader2
+                            size={16}
+                            className="animate-spin"
+                            aria-label={vi ? "Đang đổi lịch" : "Rescheduling"}
+                          />
                         ) : vi ? (
                           "Xác nhận đổi lịch"
                         ) : (
@@ -1155,12 +1370,17 @@ export function MyAppointmentsPage() {
                     tenBacSi={chiTiet.lichHen.bacSi?.hoTen}
                   />
                   {actionError && (
-                    <p role="alert" className="text-sm text-rose-700">
+                    <p id="appointment-action-error" role="alert" className="text-sm text-rose-700">
                       {actionError}
                     </p>
                   )}
-                </div>
-              )
+              </div>
+            ) : (
+              <p role="status" className="py-8 text-center text-sm text-slate-500">
+                {vi
+                  ? "Không tìm thấy chi tiết lịch hẹn."
+                  : "Appointment details were not found."}
+              </p>
             )}
             </div>
           </section>
