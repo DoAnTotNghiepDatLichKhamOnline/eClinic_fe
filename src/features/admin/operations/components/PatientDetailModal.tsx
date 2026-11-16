@@ -81,6 +81,9 @@ export function PatientDetailModal({
     }
   };
 
+  const rawData = patientDetailQuery.data?.duLieu as any;
+  const patient = (rawData?.hoSo ?? rawData) || {};
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-fade-in">
       <section
@@ -89,31 +92,24 @@ export function PatientDetailModal({
         aria-label={vi ? "Chi tiết hồ sơ bệnh nhân" : "Patient profile detail"}
         className="flex flex-col max-h-[90vh] w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden"
       >
-        {(() => {
-          const rawData = patientDetailQuery.data?.duLieu as any;
-          const patient = (rawData?.hoSo ?? rawData) || {};
-
-          return (
-            <div className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-xs">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 font-display">
-                  {patient.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {vi ? "Mã hồ sơ bệnh nhân:" : "Patient record ID:"} #{patientId}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
-                aria-label={vi ? "Đóng" : "Close"}
-              >
-                <X size={20} />
-              </button>
-            </div>
-          );
-        })()}
+        <div className="flex-shrink-0 sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-xs">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 font-display">
+              {patient.hoTen ?? (vi ? "Hồ sơ bệnh nhân" : "Patient profile")}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {vi ? "Mã hồ sơ bệnh nhân:" : "Patient record ID:"} #{patientId}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+            aria-label={vi ? "Đóng" : "Close"}
+          >
+            <X size={20} />
+          </button>
+        </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {modalError && (
@@ -142,7 +138,7 @@ export function PatientDetailModal({
                   name="hoTen"
                   type="text"
                   required
-                  defaultValue={patientDetailQuery.data.duLieu.hoTen ?? ""}
+                  defaultValue={patient.hoTen ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
@@ -152,7 +148,7 @@ export function PatientDetailModal({
                 <input
                   name="ngaySinh"
                   type="date"
-                  defaultValue={patientDetailQuery.data.duLieu.ngaySinh ?? ""}
+                  defaultValue={patient.ngaySinh ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
@@ -161,7 +157,7 @@ export function PatientDetailModal({
                 <span>{vi ? "Giới tính" : "Gender"}</span>
                 <select
                   name="gioiTinh"
-                  defaultValue={patientDetailQuery.data.duLieu.gioiTinh ?? "NAM"}
+                  defaultValue={patient.gioiTinh ?? "NAM"}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 >
                   <option value="NAM">{vi ? "Nam" : "Male"}</option>
@@ -175,7 +171,7 @@ export function PatientDetailModal({
                 <input
                   name="soDienThoai"
                   type="tel"
-                  defaultValue={patientDetailQuery.data.duLieu.soDienThoai ?? ""}
+                  defaultValue={patient.soDienThoai ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
@@ -185,7 +181,7 @@ export function PatientDetailModal({
                 <input
                   name="cccd"
                   type="text"
-                  defaultValue={patientDetailQuery.data.duLieu.cccd ?? (patientDetailQuery.data.duLieu as any).soCccdGoc ?? ""}
+                  defaultValue={patient.cccd ?? (patient as any).soCccdGoc ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
@@ -195,7 +191,7 @@ export function PatientDetailModal({
                 <input
                   name="soBaoHiemYTe"
                   type="text"
-                  defaultValue={patientDetailQuery.data.duLieu.soBaoHiemYTe ?? ""}
+                  defaultValue={patient.soBaoHiemYTe ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
@@ -205,7 +201,7 @@ export function PatientDetailModal({
                 <input
                   name="diaChi"
                   type="text"
-                  defaultValue={patientDetailQuery.data.duLieu.diaChi ?? ""}
+                  defaultValue={patient.diaChi ?? ""}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </label>
