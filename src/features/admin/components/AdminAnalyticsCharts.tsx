@@ -2,10 +2,6 @@ import { useState } from "react";
 import {
   BarChart3,
   TrendingUp,
-  Calendar,
-  Users,
-  CheckCircle,
-  Clock,
   ArrowUpRight,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
