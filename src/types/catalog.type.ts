@@ -25,6 +25,7 @@ export interface ChuyenKhoaResponse {
   moTaEn?: string | null;
   trieuChung?: string | null;
   trieuChungEn?: string | null;
+  anhMinhHoa?: string | null;
 }
 
 export interface ChuyenKhoaRequest {
@@ -264,6 +265,12 @@ export interface CapNhatAnhBacSiRequest {
   chuThichEn?: string | null;
 }
 
+export interface ChuThichAnhBacSiToiRequest {
+  chuThich?: string;
+  chuThichEn?: string;
+  loai?: LoaiAnhBacSi;
+}
+
 export interface SapXepAnhBacSiRequest {
   idAnh: number[];
 }
@@ -346,6 +353,8 @@ export interface ThuocRequest {
   moTa?: string | null;
   donViEn?: string | null;
   moTaEn?: string | null;
+  coBaoHiem: boolean;
+  donGia: number;
 }
 
 export interface GetThuocParams {
