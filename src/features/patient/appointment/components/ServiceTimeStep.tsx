@@ -18,6 +18,13 @@ import {
   isSpecialtyPediatric,
   formatSlotRange,
 } from "../appointment.utils";
+import {
+  SPECIALTY_TABS,
+  matchesTab,
+  getPopularSpecialties,
+  findGeneralInternal,
+  type SpecialtyTab,
+} from "../specialtyGroups";
 import { useDanhSachChuyenKhoa, useDanhSachBacSi } from "@/hooks/useCatalog";
 import { AvatarImage } from "@/shared/components/ui/AvatarImage";
 import {
@@ -53,13 +60,39 @@ export function ServiceTimeStep({
   const upcomingDays = useMemo(() => getUpcomingBookingDays(7), []);
   const [holidayError, setHolidayError] = useState("");
 
-  // 1. Fetch danh sách chuyên khoa từ API catalog-service
+  // 1. Fetch danh sách chuyên khoa từ API catalog-service (v2: tải tối đa 100 chuyên khoa)
   const {
     danhSach: danhSachChuyenKhoa,
     isLoading: loadingChuyenKhoa,
     isError: chuyenKhoaError,
     refetch: refetchChuyenKhoa,
-  } = useDanhSachChuyenKhoa({ kichThuoc: 50 });
+  } = useDanhSachChuyenKhoa({ kichThuoc: 100 });
+
+  const [specialtyTab, setSpecialtyTab] = useState<SpecialtyTab>("POPULAR");
+
+  const countsByTab = useMemo(() => {
+    return {
+      POPULAR: Math.min(8, danhSachChuyenKhoa.length),
+      ALL: danhSachChuyenKhoa.length,
+      NOI: danhSachChuyenKhoa.filter((s) => matchesTab(s.tenChuyenKhoa, "NOI")).length,
+      NGOAI: danhSachChuyenKhoa.filter((s) => matchesTab(s.tenChuyenKhoa, "NGOAI")).length,
+      ME_BE: danhSachChuyenKhoa.filter((s) => matchesTab(s.tenChuyenKhoa, "ME_BE")).length,
+    };
+  }, [danhSachChuyenKhoa]);
+
+  const displayedSpecialties = useMemo(() => {
+    if (specialtyTab === "POPULAR") {
+      return getPopularSpecialties(danhSachChuyenKhoa, 8);
+    }
+    if (specialtyTab === "ALL") {
+      return danhSachChuyenKhoa;
+    }
+    return danhSachChuyenKhoa.filter((s) => matchesTab(s.tenChuyenKhoa, specialtyTab));
+  }, [danhSachChuyenKhoa, specialtyTab]);
+
+  const generalInternal = useMemo(() => {
+    return findGeneralInternal(danhSachChuyenKhoa);
+  }, [danhSachChuyenKhoa]);
 
   // 2. Fetch danh sách bác sĩ thuộc chuyên khoa đã chọn
   const idChuyenKhoaNum = formValues.specialtyId
@@ -330,57 +363,151 @@ export function ServiceTimeStep({
             </div>
           )
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {danhSachChuyenKhoa.map((spec) => {
-              const Icon = getSpecialtyIcon(spec.tenChuyenKhoa);
-              const isSelected = formValues.specialtyId === String(spec.id);
-              const isChildSpec = isSpecialtyPediatric(spec.tenChuyenKhoa);
-
-              return (
-                <button
-                  key={spec.id}
-                  type="button"
-                  onClick={() => {
-                    onChange("specialtyId", String(spec.id));
-                    // Reset doctor khi đổi chuyên khoa
-                    onChange("doctorId", "");
-                    onChange("slotId", "");
-                    onChange("slotTime", "");
-                    onChange("gioBatDauKhung", "");
-                  }}
-                  className={`relative flex flex-col items-center text-center p-3.5 rounded-xl border transition-all ${
-                    isSelected
-                      ? "border-[#0f4d3a] bg-emerald-50/60 ring-2 ring-[#0f4d3a]/20 shadow-sm"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
-                  }`}
-                >
-                  {isChildSpec && (
-                    <span className="absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                      {lang === "vi" ? "Trẻ em" : "Kids"}
-                    </span>
-                  )}
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-colors ${
-                      isSelected
-                        ? "bg-[#0f4d3a] text-white"
-                        : "bg-slate-100 text-slate-700"
+          <div className="space-y-3">
+            {/* Pill Tabs phân nhóm chuyên khoa */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {SPECIALTY_TABS.map((tab) => {
+                const count = countsByTab[tab.key];
+                if (count === 0 && tab.key !== "ALL" && tab.key !== "POPULAR") return null;
+                const isActive = specialtyTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setSpecialtyTab(tab.key)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                      isActive
+                        ? "bg-[#0f4d3a] text-white shadow-xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800"
                     }`}
                   >
-                    <Icon size={20} />
-                  </div>
-                  <span className="text-sm font-bold text-slate-800 leading-tight">
-                    {spec.tenChuyenKhoa}
-                  </span>
-                  {spec.moTa && (
-                    <span className="text-[11px] text-slate-400 mt-1 line-clamp-1">
-                      {spec.moTa}
+                    <span>{lang === "vi" ? tab.labelVi : tab.labelEn}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-slate-200/80 text-slate-500"
+                      }`}
+                    >
+                      {count}
                     </span>
-                  )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Bố cục Card ngang (Horizontal Card) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {displayedSpecialties.map((spec) => {
+                const Icon = getSpecialtyIcon(spec.tenChuyenKhoa);
+                const isSelected = formValues.specialtyId === String(spec.id);
+                const isChildSpec = isSpecialtyPediatric(spec.tenChuyenKhoa);
+
+                return (
+                  <button
+                    key={spec.id}
+                    type="button"
+                    onClick={() => {
+                      onChange("specialtyId", String(spec.id));
+                      // Reset doctor khi đổi chuyên khoa
+                      onChange("doctorId", "");
+                      onChange("slotId", "");
+                      onChange("slotTime", "");
+                      onChange("gioBatDauKhung", "");
+                    }}
+                    className={`relative flex items-center gap-3 p-3 text-left rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-[#0f4d3a] bg-[#ECFDF5] ring-2 ring-[#0f4d3a]/20 shadow-sm"
+                        : "border-slate-200/90 bg-white hover:border-emerald-300 hover:bg-slate-50/60"
+                    }`}
+                  >
+                    {isChildSpec && (
+                      <span className="absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                        {lang === "vi" ? "Trẻ em" : "Kids"}
+                      </span>
+                    )}
+                    {spec.anhMinhHoa ? (
+                      <img
+                        src={spec.anhMinhHoa}
+                        alt={spec.tenChuyenKhoa}
+                        className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-100"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected
+                            ? "bg-[#0f4d3a] text-white"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        <Icon size={22} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1 pr-6">
+                      <span className="block text-sm font-bold text-slate-800 leading-tight">
+                        {spec.tenChuyenKhoa}
+                      </span>
+                      {spec.moTa ? (
+                        <span className="block text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                          {spec.moTa}
+                        </span>
+                      ) : (
+                        <span className="block text-xs text-slate-400 mt-1 italic">
+                          {lang === "vi" ? "Thăm khám & điều trị chuyên sâu" : "Specialized consultation"}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Nút Xem tất cả (Progressive Disclosure) */}
+            {specialtyTab === "POPULAR" && danhSachChuyenKhoa.length > 8 && (
+              <div className="mt-3.5 text-center">
+                <button
+                  type="button"
+                  onClick={() => setSpecialtyTab("ALL")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0f4d3a] hover:text-emerald-800 hover:underline cursor-pointer py-1 px-3.5 rounded-lg bg-emerald-50/80 border border-emerald-100 transition"
+                >
+                  <span>
+                    {lang === "vi"
+                      ? `Xem tất cả ${danhSachChuyenKhoa.length} chuyên khoa`
+                      : `View all ${danhSachChuyenKhoa.length} specialties`}
+                  </span>
+                  <span>↓</span>
                 </button>
-              );
-            })}
+              </div>
+            )}
           </div>
         )}
+
+        {/* Nút tắt: Chưa rõ chuyên khoa? Chọn Nội tổng quát */}
+        {generalInternal && formValues.specialtyId !== String(generalInternal.id) && (
+          <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs text-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">💡</span>
+              <span>
+                {lang === "vi"
+                  ? "Không chắc chắn nên khám khoa nào?"
+                  : "Unsure which specialty fits your symptoms?"}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onChange("specialtyId", String(generalInternal.id));
+                onChange("doctorId", "");
+                onChange("slotId", "");
+                onChange("slotTime", "");
+                onChange("gioBatDauKhung", "");
+              }}
+              className="font-bold text-[#0f4d3a] hover:text-[#0b382a] hover:underline cursor-pointer"
+            >
+              {lang === "vi" ? "[Chọn khám Nội tổng quát]" : "[Select General Internal Medicine]"}
+            </button>
+          </div>
 
         {isPediatric && (
           <div className="mt-4 p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 flex items-start gap-2.5 text-xs text-amber-900 animate-fade-in">
