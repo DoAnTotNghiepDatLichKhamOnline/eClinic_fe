@@ -18,6 +18,7 @@ import type {
   GetBacSiQuanTriParams,
   LoaiAnhBacSi,
   AnhBacSiResponse,
+  ChuThichAnhBacSiToiRequest,
 } from "@/types/catalog.type";
 
 export const doctorService = {
@@ -170,6 +171,7 @@ export const doctorService = {
     file: File | Blob,
     chuThich?: string,
     chuThichEn?: string,
+    loai: LoaiAnhBacSi = "ANH_CONG_VIEC",
   ) => {
     const formData = new FormData();
     formData.append("anh", file);
@@ -181,6 +183,7 @@ export const doctorService = {
           "Content-Type": "multipart/form-data",
         },
         params: {
+          loai,
           ...(chuThich ? { chuThich } : {}),
           ...(chuThichEn ? { chuThichEn } : {}),
         },
@@ -191,7 +194,7 @@ export const doctorService = {
 
   suaChuThichAnhToi: async (
     idAnh: number,
-    data: { chuThich?: string; chuThichEn?: string },
+    data: ChuThichAnhBacSiToiRequest,
   ) => {
     const res = await axiosClient.put<ApiResponse<AnhBacSiResponse>>(
       `/api/catalog/bac-si/toi/anh/${idAnh}`,
