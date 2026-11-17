@@ -95,10 +95,10 @@ export function AdminAnalyticsCharts() {
           <button
             type="button"
             onClick={() => setTimeframe("WEEK")}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-3.5! py-1.5! text-xs! font-bold! rounded-lg! transition-all! cursor-pointer! ${
               timeframe === "WEEK"
-                ? "bg-emerald-800 text-white shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-emerald-800! text-white! shadow-xs!"
+                : "text-slate-600! hover:text-slate-900!"
             }`}
           >
             {vi ? "Theo Tuần" : "Weekly"}
@@ -106,10 +106,10 @@ export function AdminAnalyticsCharts() {
           <button
             type="button"
             onClick={() => setTimeframe("MONTH")}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-3.5! py-1.5! text-xs! font-bold! rounded-lg! transition-all! cursor-pointer! ${
               timeframe === "MONTH"
-                ? "bg-emerald-800 text-white shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-emerald-800! text-white shadow-xs!"
+                : "text-slate-600! hover:text-slate-900!"
             }`}
           >
             {vi ? "Theo Tháng" : "Monthly"}
