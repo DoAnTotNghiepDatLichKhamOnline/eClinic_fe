@@ -24,6 +24,12 @@ import type {
   HoSoBacSiQuanTriResponse,
   AnhBacSiResponse,
 } from "@/types/catalog.type";
+import type { LoaiAnhBacSi } from "@/types/common.type";
+import {
+  LOAI_ANH_OPTIONS,
+  getLoaiAnhLabel,
+  getLoaiAnhColor,
+} from "@/utils/doctorPhotoType";
 import styles from "../../DoctorWorkspace.module.css";
 
 const AVAILABLE_LANGUAGES: { code: string; labelVi: string; labelEn: string }[] = [
@@ -79,10 +85,12 @@ export function DoctorProfileSection() {
   const [newResearch, setNewResearch] = useState("");
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadPhotoType, setUploadPhotoType] = useState<LoaiAnhBacSi>("ANH_CONG_VIEC");
   const [imageCaption, setImageCaption] = useState("");
 
   // State chỉnh sửa chú thích ảnh
   const [editingPhoto, setEditingPhoto] = useState<AnhBacSiResponse | null>(null);
+  const [editPhotoType, setEditPhotoType] = useState<LoaiAnhBacSi>("ANH_CONG_VIEC");
   const [editCaption, setEditCaption] = useState("");
   const [editCaptionEn, setEditCaptionEn] = useState("");
   const [savingCaption, setSavingCaption] = useState(false);
@@ -236,13 +244,15 @@ export function DoctorProfileSection() {
       const res = await doctorService.themAnhCongViecToi(
         file,
         imageCaption.trim() || undefined,
+        undefined,
+        uploadPhotoType,
       );
       if (res.thanhCong) {
         notifyAuth(
           "success",
           lang === "vi"
-            ? "Tải ảnh công việc thành công"
-            : "Work image uploaded successfully",
+            ? "Tải ảnh thành công"
+            : "Image uploaded successfully",
           "",
         );
         setImageCaption("");
@@ -297,9 +307,10 @@ export function DoctorProfileSection() {
     }
   };
 
-  // Handle edit image caption
+  // Handle edit image caption and type
   const handleStartEditPhoto = (photo: AnhBacSiResponse) => {
     setEditingPhoto(photo);
+    setEditPhotoType(photo.loai || "ANH_CONG_VIEC");
     setEditCaption(photo.chuThich || "");
     setEditCaptionEn(photo.chuThichEn || "");
   };
@@ -311,13 +322,14 @@ export function DoctorProfileSection() {
       const res = await doctorService.suaChuThichAnhToi(editingPhoto.id, {
         chuThich: editCaption.trim() || undefined,
         chuThichEn: editCaptionEn.trim() || undefined,
+        loai: editPhotoType,
       });
       if (res.thanhCong) {
         notifyAuth(
           "success",
           lang === "vi"
-            ? "Cập nhật chú thích ảnh thành công"
-            : "Photo caption updated successfully",
+            ? "Cập nhật thông tin ảnh thành công"
+            : "Photo details updated successfully",
           "",
         );
         setEditingPhoto(null);
@@ -952,6 +964,30 @@ export function DoctorProfileSection() {
               alignItems: "center",
             }}
           >
+            <select
+              value={uploadPhotoType}
+              onChange={(e) => setUploadPhotoType(e.target.value as LoaiAnhBacSi)}
+              disabled={uploadingImage}
+              style={{
+                padding: "8px 12px",
+                fontSize: "13px",
+                borderRadius: "8px",
+                border: "1px solid var(--line)",
+                background: "#fff",
+                color: "#1e293b",
+                fontWeight: 500,
+              }}
+            >
+              <option value="ANH_CONG_VIEC">
+                {lang === "vi" ? "Ảnh công tác" : "Work Activity"}
+              </option>
+              <option value="CHUNG_CHI">
+                {lang === "vi" ? "Chứng chỉ y khoa" : "Medical Certificate"}
+              </option>
+              <option value="GIAI_THUONG">
+                {lang === "vi" ? "Giải thưởng & Danh hiệu" : "Award & Honor"}
+              </option>
+            </select>
             <input
               type="text"
               value={imageCaption}
@@ -1038,8 +1074,7 @@ export function DoctorProfileSection() {
                       position: "absolute",
                       top: "6px",
                       left: "6px",
-                      background:
-                        photo.loai === "CHUNG_CHI" ? "#0369a1" : "#12634d",
+                      background: getLoaiAnhColor(photo.loai).hex,
                       color: "#fff",
                       padding: "2px 6px",
                       borderRadius: "4px",
@@ -1051,13 +1086,7 @@ export function DoctorProfileSection() {
                     }}
                   >
                     <CheckCircle2 size={10} aria-hidden="true" />
-                    {photo.loai === "CHUNG_CHI"
-                      ? lang === "vi"
-                        ? "Chứng chỉ"
-                        : "Certificate"
-                      : lang === "vi"
-                        ? "Hoạt động"
-                        : "Practice"}
+                    {getLoaiAnhLabel(photo.loai, lang === "vi")}
                   </span>
                 </div>
                 <div
@@ -1153,7 +1182,7 @@ export function DoctorProfileSection() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Pencil size={16} className="text-blue-600" />
-                {lang === "vi" ? "Sửa chú thích ảnh" : "Edit Photo Caption"}
+                {lang === "vi" ? "Chỉnh sửa ảnh hồ sơ" : "Edit Profile Photo"}
               </h3>
               <button
                 type="button"
@@ -1172,6 +1201,28 @@ export function DoctorProfileSection() {
                   alt=""
                   className="h-full w-full object-contain"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {lang === "vi" ? "Phân loại ảnh" : "Photo Category"}
+                </label>
+                <select
+                  value={editPhotoType}
+                  onChange={(e) => setEditPhotoType(e.target.value as LoaiAnhBacSi)}
+                  disabled={savingCaption}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-blue-500 focus:outline-none bg-white font-medium"
+                >
+                  <option value="ANH_CONG_VIEC">
+                    {lang === "vi" ? "Ảnh hoạt động công tác" : "Work Activity"}
+                  </option>
+                  <option value="CHUNG_CHI">
+                    {lang === "vi" ? "Chứng chỉ y khoa" : "Medical Certificate"}
+                  </option>
+                  <option value="GIAI_THUONG">
+                    {lang === "vi" ? "Giải thưởng & Danh hiệu" : "Award & Honor"}
+                  </option>
+                </select>
               </div>
 
               <div>
