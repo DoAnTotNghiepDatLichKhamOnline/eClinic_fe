@@ -21,7 +21,6 @@ import type {
 } from "@/types/catalog.type";
 import type { LoaiAnhBacSi } from "@/types/common.type";
 import {
-  LOAI_ANH_OPTIONS,
   getLoaiAnhLabel,
   getLoaiAnhColor,
 } from "@/utils/doctorPhotoType";
