@@ -21,12 +21,13 @@ import { Header } from "@/features/landing/components/header/Header";
 import { Footer } from "@/features/landing/components/footer/Footer";
 import { useChiTietBacSi } from "@/hooks/useCatalog";
 import type { AnhBacSiResponse } from "@/types/catalog.type";
+import { getLoaiAnhLabel } from "@/utils/doctorPhotoType";
 import defaultDoctorAvatar from "@/features/landing/assets/images/doctors/doctor-rafi-kot.jpg";
 import styles from "./DoctorPages.module.css";
 
 export function DoctorDetailPage() {
   const { doctorId } = useParams();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
 
   // Modal xem ảnh chứng chỉ / công tác phóng to
@@ -444,9 +445,7 @@ export function DoctorDetailPage() {
                           </div>
                           <div className={styles.galleryCaption}>
                             <span className={styles.galleryTypeBadge}>
-                              {item.loai === "CHUNG_CHI"
-                                ? t({ en: "Medical Certificate", vi: "Chứng chỉ y khoa" })
-                                : t({ en: "Work Activity", vi: "Hình ảnh công tác" })}
+                              {getLoaiAnhLabel(item.loai, lang === "vi")}
                             </span>
                             {item.chuThich && (
                               <p style={{ margin: "2px 0 0", color: "#33473c" }}>
@@ -550,9 +549,7 @@ export function DoctorDetailPage() {
                   marginBottom: "4px",
                 }}
               >
-                {selectedImage.loai === "CHUNG_CHI"
-                  ? t({ en: "Medical Certificate", vi: "Chứng chỉ y khoa" })
-                  : t({ en: "Work Activity", vi: "Ảnh công tác" })}
+                {getLoaiAnhLabel(selectedImage.loai, lang === "vi")}
               </span>
               {selectedImage.chuThich && (
                 <p style={{ margin: 0, fontWeight: 500 }}>{selectedImage.chuThich}</p>
