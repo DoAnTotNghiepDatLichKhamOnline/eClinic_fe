@@ -19,6 +19,12 @@ import type {
   ThemBacSiRequest,
   CapNhatHoSoBacSiRequest,
 } from "@/types/catalog.type";
+import type { LoaiAnhBacSi } from "@/types/common.type";
+import {
+  LOAI_ANH_OPTIONS,
+  getLoaiAnhLabel,
+  getLoaiAnhColor,
+} from "@/utils/doctorPhotoType";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Pagination } from "@/shared/components/ui/Pagination";
 import { notifyAuth } from "@/utils/authNotification";
@@ -41,7 +47,7 @@ export function AdminDoctorPanel() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [lowRatingOnly, setLowRatingOnly] = useState(false);
-  const [uploadType, setUploadType] = useState("ANH_CONG_VIEC");
+  const [uploadType, setUploadType] = useState<LoaiAnhBacSi>("ANH_CONG_VIEC");
   const [deactivatingDoctor, setDeactivatingDoctor] = useState<{
     doctor: BacSiQuanTriResponse;
     impact: { soCaSapToi: number; soLichHenBiAnhHuong: number };
@@ -329,7 +335,7 @@ export function AdminDoctorPanel() {
       const result = await doctorService.themAnhBacSi(
         selectedDoctor.id,
         file,
-        uploadType as "ANH_CONG_VIEC" | "CHUNG_CHI",
+        uploadType,
         String(values.get("chuThich") || "") || undefined,
         String(values.get("chuThichEn") || "") || undefined,
       );
@@ -888,14 +894,17 @@ export function AdminDoctorPanel() {
                   <span>{vi ? "Loại ảnh" : "Photo Type"}</span>
                   <select
                     value={uploadType}
-                    onChange={(event) => setUploadType(event.target.value)}
+                    onChange={(event) => setUploadType(event.target.value as LoaiAnhBacSi)}
                     className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-normal text-slate-800 focus:border-teal-500 focus:outline-none"
                   >
                     <option value="ANH_CONG_VIEC">
                       {vi ? "Ảnh công việc" : "Work Photo"}
                     </option>
                     <option value="CHUNG_CHI">
-                      {vi ? "Chứng chỉ" : "Certificate"}
+                      {vi ? "Chứng chỉ y khoa" : "Medical Certificate"}
+                    </option>
+                    <option value="GIAI_THUONG">
+                      {vi ? "Giải thưởng & Danh hiệu" : "Award & Honor"}
                     </option>
                   </select>
                 </label>
@@ -933,17 +942,10 @@ export function AdminDoctorPanel() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-slate-800 truncate">
-                        {image.chuThich ||
-                          (image.loai === "CHUNG_CHI"
-                            ? vi
-                              ? "Chứng chỉ"
-                              : "Certificate"
-                            : vi
-                              ? "Ảnh công tác"
-                              : "Work photo")}
+                        {image.chuThich || getLoaiAnhLabel(image.loai, vi)}
                       </p>
-                      <span className="text-[11px] text-slate-400">
-                        {image.loai}
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${getLoaiAnhColor(image.loai).bg} ${getLoaiAnhColor(image.loai).text}`}>
+                        {getLoaiAnhLabel(image.loai, vi)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
