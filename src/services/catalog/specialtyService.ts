@@ -54,6 +54,28 @@ export const specialtyService = {
     );
     return res.data;
   },
+
+  doiAnhChuyenKhoa: async (id: number, file: File | Blob) => {
+    const formData = new FormData();
+    formData.append("anh", file);
+    const res = await axiosClient.post<ApiResponse<ChuyenKhoaResponse>>(
+      `/api/catalog/chuyen-khoa/${id}/anh`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return res.data;
+  },
+
+  xoaAnhChuyenKhoa: async (id: number) => {
+    const res = await axiosClient.delete<ApiResponse<ChuyenKhoaResponse>>(
+      `/api/catalog/chuyen-khoa/${id}/anh`,
+    );
+    return res.data;
+  },
 };
 
 export default specialtyService;

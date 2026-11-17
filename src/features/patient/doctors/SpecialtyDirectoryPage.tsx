@@ -120,9 +120,28 @@ export function SpecialtyDirectoryPage() {
                   >
                     <span
                       className={styles.specialtyIcon}
-                      style={{ backgroundColor: visual.tint, color: visual.color }}
+                      style={{
+                        backgroundColor: visual.tint,
+                        color: visual.color,
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
                     >
-                      <Icon aria-hidden="true" />
+                      {specialty.anhMinhHoa ? (
+                        <img
+                          src={specialty.anhMinhHoa}
+                          alt={specialty.tenChuyenKhoa}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <Icon aria-hidden="true" />
+                      )}
                     </span>
                     <strong>{specialty.tenChuyenKhoa}</strong>
                     <span>

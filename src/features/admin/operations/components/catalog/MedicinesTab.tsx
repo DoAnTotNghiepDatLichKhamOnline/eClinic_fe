@@ -111,7 +111,16 @@ export function MedicinesTab({
                         .join(" · ") || "—"}
                     </div>
                   </td>
-                  <td>{medicine.donVi || "—"}</td>
+                  <td>
+                    <div className="text-xs font-medium text-slate-800">
+                      {medicine.donVi || "—"}
+                    </div>
+                    {medicine.donGia !== undefined && medicine.donGia !== null && (
+                      <div className="text-[11px] text-slate-500 font-mono">
+                        {new Intl.NumberFormat("vi-VN").format(medicine.donGia)} đ
+                      </div>
+                    )}
+                  </td>
                   <td>
                     {medicine.daXacMinh ? (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">

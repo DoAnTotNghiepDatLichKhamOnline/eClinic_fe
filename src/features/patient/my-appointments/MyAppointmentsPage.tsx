@@ -1,4 +1,6 @@
 import { useSearchParams } from "react-router-dom";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import {
   useCallback,
   useEffect,
@@ -791,6 +793,23 @@ export function MyAppointmentsPage() {
                   >
                     <ChevronRight size={17} aria-hidden="true" />
                   </button>
+
+                  <div className="hidden sm:inline-block ml-1">
+                    <DatePicker
+                      value={selectedDate ? dayjs(selectedDate) : dayjs(scheduleDate)}
+                      format="DD/MM/YYYY"
+                      allowClear={false}
+                      size="small"
+                      placeholder={vi ? "Chọn ngày" : "Select date"}
+                      className="w-32 text-xs"
+                      onChange={(date) => {
+                        if (!date) return;
+                        const nextDate = date.toDate();
+                        setScheduleDate(nextDate);
+                        setSelectedDate(date.format("YYYY-MM-DD"));
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <h2>{calendarTitle}</h2>
@@ -1387,14 +1406,19 @@ export function MyAppointmentsPage() {
                         </label>
                       )}
                       <label className="grid gap-1 text-xs">
-                        {vi ? "Khung giờ bắt đầu" : "Slot start"}
-                        <input
-                          required
-                          type="datetime-local"
-                          aria-label={vi ? "Khung giờ bắt đầu" : "Slot start"}
-                          className="border border-slate-300 px-3 py-2 text-sm"
-                          value={newSlot}
-                          onChange={(event) => setNewSlot(event.target.value)}
+                        <span>{vi ? "Khung giờ bắt đầu *" : "Slot start *"}</span>
+                        <DatePicker
+                          showTime={{ format: "HH:mm", minuteStep: 5 }}
+                          format="DD/MM/YYYY HH:mm"
+                          placeholder={vi ? "Chọn ngày và giờ khám" : "Select date & time"}
+                          value={newSlot ? dayjs(newSlot) : null}
+                          disabledDate={(current) =>
+                            current && current.isBefore(dayjs().startOf("day"))
+                          }
+                          onChange={(val) => {
+                            setNewSlot(val ? val.format("YYYY-MM-DDTHH:mm") : "");
+                          }}
+                          className="w-full px-3 py-2 text-sm border-slate-300 rounded-lg"
                         />
                       </label>
                       <button

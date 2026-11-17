@@ -48,7 +48,7 @@ export type LocLichHen = "TAT_CA" | "SAP_TOI" | "LICH_SU";
 export type PhamViLichHen = "TAT_CA" | "BAN_THAN" | "NGUOI_KHAC";
 export type NguoiDatLich = "TOI" | "KHACH" | "TAI_KHOAN_KHAC";
 export type QuanHeGiamHo = "CHA" | "ME" | "NGUOI_GIAM_HO_HOP_PHAP" | "KHAC";
-export type LoaiAnhBacSi = "ANH_CONG_VIEC" | "CHUNG_CHI";
+export type LoaiAnhBacSi = "ANH_CONG_VIEC" | "CHUNG_CHI" | "GIAI_THUONG";
 export type LoaiThongBao =
   | "LICH_HEN_DA_XAC_NHAN"
   | "LICH_HEN_BI_TU_CHOI"

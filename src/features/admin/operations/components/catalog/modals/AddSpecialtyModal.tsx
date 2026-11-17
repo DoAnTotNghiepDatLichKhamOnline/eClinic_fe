@@ -129,6 +129,11 @@ export function AddSpecialtyModal({
               placeholder="Common symptoms in English..."
             />
           </label>
+          <div className="rounded-xl border border-teal-100 bg-teal-50/60 p-3 text-xs text-teal-900">
+            💡 {vi
+              ? "Ảnh minh họa chuyên khoa có thể tải lên ngay sau khi tạo tại nút Chỉnh sửa chuyên khoa."
+              : "Specialty illustration image can be uploaded right after creation in Edit Specialty."}
+          </div>
           <div className="flex justify-end gap-2 mt-2 pt-3 border-t">
             <button
               type="button"
