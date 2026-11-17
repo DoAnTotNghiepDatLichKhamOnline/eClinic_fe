@@ -63,12 +63,29 @@ export function SpecialtiesTab({
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td className="font-semibold text-slate-900">
-                    {item.tenChuyenKhoa}
-                    {item.tenChuyenKhoaEn && (
-                      <div className="text-xs text-slate-500 font-normal">
-                        {item.tenChuyenKhoaEn}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                        {item.anhMinhHoa ? (
+                          <img
+                            src={item.anhMinhHoa}
+                            alt={item.tenChuyenKhoa}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-slate-400 font-bold text-xs">
+                            {item.tenChuyenKhoa.charAt(0).toUpperCase()}
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <div>
+                        <div>{item.tenChuyenKhoa}</div>
+                        {item.tenChuyenKhoaEn && (
+                          <div className="text-xs text-slate-500 font-normal">
+                            {item.tenChuyenKhoaEn}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>{item.moTa || "—"}</td>
                   <td className="text-xs text-slate-600 max-w-xs truncate">
