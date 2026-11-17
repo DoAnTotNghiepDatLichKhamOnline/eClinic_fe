@@ -508,6 +508,7 @@ export function ServiceTimeStep({
               {lang === "vi" ? "[Chọn khám Nội tổng quát]" : "[Select General Internal Medicine]"}
             </button>
           </div>
+        )}
 
         {isPediatric && (
           <div className="mt-4 p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 flex items-start gap-2.5 text-xs text-amber-900 animate-fade-in">
