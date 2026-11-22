@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   User,
   Phone,
@@ -14,7 +15,15 @@ import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import type { Lang } from "@/types/i18n";
 import type { AppointmentFormValues } from "../appointment.types";
-import { calculateAge, calculateAgeInYears } from "../appointment.utils";
+import {
+  calculateAge,
+  calculateAgeInYears,
+  formatPhoneNumber,
+  formatCccdNumber,
+  formatDobInput,
+  parseDobToIso,
+  formatIsoToDob,
+} from "../appointment.utils";
 
 interface PatientInfoStepProps {
   lang: Lang;
@@ -23,6 +32,13 @@ interface PatientInfoStepProps {
   errors?: Partial<Record<keyof AppointmentFormValues, string>>;
   isPediatric?: boolean;
 }
+
+const QUICK_REASONS = [
+  { vi: "Khám tổng quát", en: "General check-up" },
+  { vi: "Tái khám", en: "Follow-up visit" },
+  { vi: "Đau đầu / Sốt", en: "Headache / Fever" },
+  { vi: "Khám theo chỉ định", en: "Prescribed consultation" },
+];
 
 export function PatientInfoStep({
   lang,
@@ -38,6 +54,40 @@ export function PatientInfoStep({
   const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
   const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
   const ageDisplay = calculateAge(effectiveDob, lang);
+
+  // Quản lý hiển thị và gõ trực tiếp ngày sinh với auto-masking (15081995 -> 15/08/1995)
+  const [dobInput, setDobInput] = useState(() => formatIsoToDob(effectiveDob));
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  useEffect(() => {
+    setDobInput(formatIsoToDob(effectiveDob));
+  }, [effectiveDob]);
+
+  const handleDobTextChange = (text: string) => {
+    const masked = formatDobInput(text);
+    setDobInput(masked);
+    const iso = parseDobToIso(masked);
+    if (iso) {
+      onChange("patientDob", iso);
+      if (isPediatric) {
+        onChange("childDob", iso);
+      }
+    } else if (!masked) {
+      onChange("patientDob", "");
+      if (isPediatric) {
+        onChange("childDob", "");
+      }
+    }
+  };
+
+  const handleAddReasonChip = (chipText: string) => {
+    const current = formValues.reason?.trim() || "";
+    if (!current) {
+      onChange("reason", chipText);
+    } else if (!current.includes(chipText)) {
+      onChange("reason", `${current}, ${chipText}`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -121,10 +171,10 @@ export function PatientInfoStep({
             )}
           </div>
 
-          {/* Ngày sinh */}
+          {/* Ngày sinh: Ô nhập trực tiếp hỗ trợ Auto-masking số + icon Lịch phụ trợ (Khắc phục lỗi lồng viền) */}
           <div className="space-y-1.5">
             <label
-              htmlFor="patient-dob"
+              htmlFor="patient-dob-input"
               className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
             >
               <Calendar size={14} className="text-slate-500" />
@@ -139,25 +189,51 @@ export function PatientInfoStep({
               </span>
               <span className="text-rose-500 font-bold">*</span>
             </label>
-            <DatePicker
-              id="patient-dob"
-              format="DD/MM/YYYY"
-              disabledDate={(current) => current && current.isAfter(dayjs())}
-              value={effectiveDob ? dayjs(effectiveDob, "YYYY-MM-DD") : null}
-              onChange={(date) => {
-                const val = date ? date.format("YYYY-MM-DD") : "";
-                onChange("patientDob", val);
-                if (isPediatric) {
-                  onChange("childDob", val);
-                }
-              }}
-              placeholder={lang === "vi" ? "Chọn hoặc nhập ngày (DD/MM/YYYY)" : "DD/MM/YYYY"}
-              className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 bg-white transition-all outline-none ${
+            <div
+              className={`w-full h-11 px-3.5 rounded-xl border bg-white flex items-center justify-between transition-all ${
                 errors.patientDob || (isPediatric && errors.childDob)
                   ? "border-rose-300 ring-2 ring-rose-100"
-                  : "border-slate-300 focus:border-[#0f4d3a] focus:ring-2 focus:ring-[#0f4d3a]/15"
+                  : "border-slate-300 focus-within:border-[#0f4d3a] focus-within:ring-2 focus-within:ring-[#0f4d3a]/15"
               }`}
-            />
+            >
+              <input
+                id="patient-dob-input"
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                value={dobInput}
+                onChange={(e) => handleDobTextChange(e.target.value)}
+                placeholder={lang === "vi" ? "Chọn hoặc nhập ngày (DD/MM/YYYY)" : "DD/MM/YYYY"}
+                className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none border-none p-0 focus:ring-0"
+              />
+              <div className="relative shrink-0 flex items-center">
+                <DatePicker
+                  open={isPickerOpen}
+                  onOpenChange={(open) => setIsPickerOpen(open)}
+                  disabledDate={(current) => current && current.isAfter(dayjs())}
+                  value={effectiveDob ? dayjs(effectiveDob, "YYYY-MM-DD") : null}
+                  onChange={(date) => {
+                    const val = date ? date.format("YYYY-MM-DD") : "";
+                    onChange("patientDob", val);
+                    if (isPediatric) {
+                      onChange("childDob", val);
+                    }
+                    setDobInput(formatIsoToDob(val));
+                    setIsPickerOpen(false);
+                  }}
+                  format="DD/MM/YYYY"
+                  className="absolute right-0 opacity-0 pointer-events-none w-0 h-0 p-0 border-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsPickerOpen((prev) => !prev)}
+                  title={lang === "vi" ? "Mở lịch chọn ngày" : "Open calendar"}
+                  className="p-1 text-slate-400 hover:text-emerald-700 transition-colors focus:outline-none cursor-pointer"
+                >
+                  <Calendar size={18} />
+                </button>
+              </div>
+            </div>
             {ageDisplay && (
               <p className="text-[11px] text-[#0f4d3a] font-semibold flex items-center gap-1">
                 <Sparkles size={12} />
@@ -216,7 +292,7 @@ export function PatientInfoStep({
             )}
           </div>
 
-          {/* Số điện thoại (Chỉ bắt buộc nếu >= 18 tuổi) */}
+          {/* Số điện thoại (Chỉ bắt buộc nếu >= 18 tuổi, tự động tách khoảng trắng 0912 345 678) */}
           <div className="space-y-1.5">
             <label
               htmlFor="patient-phone"
@@ -237,12 +313,12 @@ export function PatientInfoStep({
               id="patient-phone"
               type="tel"
               inputMode="numeric"
-              maxLength={10}
-              value={formValues.patientPhone}
+              maxLength={12}
+              value={formatPhoneNumber(formValues.patientPhone)}
               onChange={(e) =>
-                onChange("patientPhone", e.target.value.replace(/\D/g, ""))
+                onChange("patientPhone", formatPhoneNumber(e.target.value))
               }
-              placeholder={lang === "vi" ? "Ví dụ: 0912345678" : "0912345678"}
+              placeholder={lang === "vi" ? "Ví dụ: 0912 345 678" : "0912 345 678"}
               className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
                 errors.patientPhone
                   ? "border-rose-300 ring-2 ring-rose-100"
@@ -257,6 +333,7 @@ export function PatientInfoStep({
             )}
           </div>
 
+          {/* Email liên hệ */}
           <div className="space-y-1.5 md:col-span-2">
             <label
               htmlFor="patient-email"
@@ -282,7 +359,7 @@ export function PatientInfoStep({
             </p>
           </div>
 
-          {/* Số CCCD (Bắt buộc nếu >= 18 tuổi, trẻ em bỏ trống) */}
+          {/* Số CCCD (Bắt buộc nếu >= 18 tuổi, trẻ em bỏ trống, tự động tách khoảng trắng 0792 0100 1234) */}
           <div className="space-y-1.5">
             <label
               htmlFor="patient-cccd"
@@ -309,13 +386,13 @@ export function PatientInfoStep({
               id="patient-cccd"
               type="text"
               inputMode="numeric"
-              maxLength={12}
-              value={formValues.patientCccd}
+              maxLength={14}
+              value={formatCccdNumber(formValues.patientCccd)}
               onChange={(e) =>
-                onChange("patientCccd", e.target.value.replace(/\D/g, ""))
+                onChange("patientCccd", formatCccdNumber(e.target.value))
               }
               placeholder={
-                lang === "vi" ? "12 chữ số CCCD" : "12-digit Citizen ID"
+                lang === "vi" ? "0792 0100 xxxx (12 chữ số)" : "12-digit Citizen ID"
               }
               className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
                 errors.patientCccd
@@ -331,7 +408,7 @@ export function PatientInfoStep({
             )}
           </div>
 
-          {/* Bảo hiểm y tế (BHYT) */}
+          {/* Bảo hiểm y tế (BHYT) - Trượt mở mượt mà (Smooth Accordion Expand) */}
           <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -349,7 +426,7 @@ export function PatientInfoStep({
                     onChange("hasHealthInsurance", false);
                     onChange("healthInsuranceNumber", "");
                   }}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     !formValues.hasHealthInsurance
                       ? "bg-white text-slate-800 shadow-xs"
                       : "text-slate-500 hover:text-slate-700"
@@ -360,7 +437,7 @@ export function PatientInfoStep({
                 <button
                   type="button"
                   onClick={() => onChange("hasHealthInsurance", true)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     formValues.hasHealthInsurance
                       ? "bg-emerald-700 text-white shadow-xs"
                       : "text-slate-500 hover:text-slate-700"
@@ -371,54 +448,95 @@ export function PatientInfoStep({
               </div>
             </div>
 
-            {formValues.hasHealthInsurance && (
-              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/80 space-y-2 animate-fade-in">
-                <div className="space-y-1">
-                  <label
-                    htmlFor="health-insurance-number"
-                    className="text-xs font-semibold text-emerald-950 flex items-center gap-1.5"
-                  >
-                    <span>{lang === "vi" ? "Số thẻ BHYT (15 ký tự)" : "Insurance Card Number"}</span>
-                    <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <input
-                    id="health-insurance-number"
-                    type="text"
-                    maxLength={15}
-                    value={formValues.healthInsuranceNumber || ""}
-                    onChange={(e) =>
-                      onChange(
-                        "healthInsuranceNumber",
-                        e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
-                      )
-                    }
-                    placeholder="VD: DN4797931800123"
-                    className="w-full h-10 px-3 rounded-lg border border-emerald-300 bg-white font-mono text-sm tracking-wider uppercase text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
-                  />
-                  <p className="text-[11px] text-emerald-800">
-                    {lang === "vi"
-                      ? "Mã thẻ BHYT hợp lệ gồm 15 ký tự (chữ in hoa và số) theo quy định của BHXH Việt Nam."
-                      : "Valid Vietnam health insurance code consists of 15 alphanumeric characters."}
-                  </p>
+            {/* Khung trượt mở êm dịu theo transition grid-rows */}
+            <div
+              className={`grid transition-all duration-300 ease-in-out ${
+                formValues.hasHealthInsurance
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0 pointer-events-none"
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/80 space-y-2 mt-2">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="health-insurance-number"
+                      className="text-xs font-semibold text-emerald-950 flex items-center gap-1.5"
+                    >
+                      <span>{lang === "vi" ? "Số thẻ BHYT (15 ký tự)" : "Insurance Card Number"}</span>
+                      <span className="text-rose-500 font-bold">*</span>
+                    </label>
+                    <input
+                      id="health-insurance-number"
+                      type="text"
+                      maxLength={15}
+                      value={formValues.healthInsuranceNumber || ""}
+                      onChange={(e) =>
+                        onChange(
+                          "healthInsuranceNumber",
+                          e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+                        )
+                      }
+                      placeholder="VD: DN4797931800123"
+                      className="w-full h-10 px-3 rounded-lg border border-emerald-300 bg-white font-mono text-sm tracking-wider uppercase text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20"
+                    />
+                    <p className="text-[11px] text-emerald-800">
+                      {lang === "vi"
+                        ? "Mã thẻ BHYT hợp lệ gồm 15 ký tự (chữ in hoa và số) theo quy định của BHXH Việt Nam."
+                        : "Valid Vietnam health insurance code consists of 15 alphanumeric characters."}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Lý do khám / Triệu chứng */}
-          <div className="space-y-1.5 md:col-span-2">
-            <label
-              htmlFor="patient-reason"
-              className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
-            >
-              <FileText size={14} className="text-slate-500" />
-              <span>
-                {lang === "vi"
-                  ? "Lý do khám / Triệu chứng bệnh lý"
-                  : "Reason for Visit / Symptoms"}
-              </span>
-              <span className="text-rose-500 font-bold">*</span>
-            </label>
+          {/* Lý do khám / Triệu chứng - Không bắt buộc + Quick-select Chips gợi ý nhanh */}
+          <div className="space-y-2 md:col-span-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label
+                htmlFor="patient-reason"
+                className="text-xs font-bold text-slate-700 flex items-center gap-1.5"
+              >
+                <FileText size={14} className="text-slate-500" />
+                <span>
+                  {lang === "vi"
+                    ? "Lý do khám / Triệu chứng bệnh lý"
+                    : "Reason for Visit / Symptoms"}
+                </span>
+                <span className="text-slate-400 font-normal">
+                  ({lang === "vi" ? "tùy chọn" : "optional"})
+                </span>
+              </label>
+
+              {/* Quick-select suggestion chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-medium text-slate-400 mr-0.5 hidden sm:inline-flex items-center gap-1">
+                  <Sparkles size={11} className="text-emerald-600" />
+                  {lang === "vi" ? "Gợi ý:" : "Quick:"}
+                </span>
+                {QUICK_REASONS.map((chip) => {
+                  const text = lang === "vi" ? chip.vi : chip.en;
+                  const isSelected = formValues.reason?.includes(text);
+                  return (
+                    <button
+                      key={chip.vi}
+                      type="button"
+                      onClick={() => handleAddReasonChip(text)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold"
+                          : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 border border-emerald-200/60"
+                      }`}
+                    >
+                      <span>+</span>
+                      <span>{text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <textarea
               id="patient-reason"
               rows={3}
@@ -451,7 +569,7 @@ export function PatientInfoStep({
       {isMinor && (
         <section className="bg-amber-50/70 rounded-2xl p-6 border-2 border-amber-300/80 shadow-sm animate-fade-in">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
               <ShieldCheck size={20} />
             </div>
             <div>
@@ -514,7 +632,7 @@ export function PatientInfoStep({
               )}
             </div>
 
-            {/* Số CCCD người giám hộ */}
+            {/* Số CCCD người giám hộ (Tự động tách khoảng trắng 0792 0100 1234) */}
             <div className="space-y-1.5">
               <label
                 htmlFor="guardian-cccd"
@@ -532,14 +650,14 @@ export function PatientInfoStep({
                 id="guardian-cccd"
                 type="text"
                 inputMode="numeric"
-                maxLength={12}
-                value={formValues.guardianCccd || ""}
+                maxLength={14}
+                value={formatCccdNumber(formValues.guardianCccd)}
                 onChange={(e) =>
-                  onChange("guardianCccd", e.target.value.replace(/\D/g, ""))
+                  onChange("guardianCccd", formatCccdNumber(e.target.value))
                 }
                 placeholder={
                   lang === "vi"
-                    ? "12 chữ số CCCD người giám hộ"
+                    ? "0792 0100 xxxx (12 chữ số)"
                     : "12-digit Citizen ID"
                 }
                 className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
@@ -556,7 +674,7 @@ export function PatientInfoStep({
               )}
             </div>
 
-            {/* Số điện thoại người giám hộ */}
+            {/* Số điện thoại người giám hộ (Tự động tách khoảng trắng 0912 345 678) */}
             <div className="space-y-1.5">
               <label
                 htmlFor="guardian-phone"
@@ -574,12 +692,12 @@ export function PatientInfoStep({
                 id="guardian-phone"
                 type="tel"
                 inputMode="numeric"
-                maxLength={10}
-                value={formValues.guardianPhone || ""}
+                maxLength={12}
+                value={formatPhoneNumber(formValues.guardianPhone)}
                 onChange={(e) =>
-                  onChange("guardianPhone", e.target.value.replace(/\D/g, ""))
+                  onChange("guardianPhone", formatPhoneNumber(e.target.value))
                 }
-                placeholder={lang === "vi" ? "Ví dụ: 0987654321" : "0987654321"}
+                placeholder={lang === "vi" ? "Ví dụ: 0987 654 321" : "0987 654 321"}
                 className={`w-full h-11 px-3.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-white transition-all outline-none ${
                   errors.guardianPhone
                     ? "border-rose-400 ring-2 ring-rose-100"
