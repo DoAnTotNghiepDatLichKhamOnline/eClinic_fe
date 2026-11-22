@@ -428,8 +428,8 @@ export function PatientInfoStep({
                   }}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     !formValues.hasHealthInsurance
-                      ? "bg-white text-slate-800 shadow-xs"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-white! text-slate-800! shadow-xs!"
+                      : "text-slate-500! hover:text-slate-700!"
                   }`}
                 >
                   {lang === "vi" ? "Không có BHYT" : "No Insurance"}
@@ -439,8 +439,8 @@ export function PatientInfoStep({
                   onClick={() => onChange("hasHealthInsurance", true)}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     formValues.hasHealthInsurance
-                      ? "bg-emerald-700 text-white shadow-xs"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-emerald-700! text-white! shadow-xs!"
+                      : "text-slate-500! hover:text-slate-700!"
                   }`}
                 >
                   {lang === "vi" ? "Có thẻ BHYT" : "Has Insurance"}
@@ -501,15 +501,15 @@ export function PatientInfoStep({
                 <FileText size={14} className="text-slate-500" />
                 <span>
                   {lang === "vi"
-                    ? "Lý do khám / Triệu chứng bệnh lý"
+                    ? "Lý do khám / Triệu chứng"
                     : "Reason for Visit / Symptoms"}
                 </span>
                 <span className="text-slate-400 font-normal">
                   ({lang === "vi" ? "tùy chọn" : "optional"})
                 </span>
               </label>
-
-              {/* Quick-select suggestion chips */}
+            </div>
+            {/* Quick-select suggestion chips */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-medium text-slate-400 mr-0.5 hidden sm:inline-flex items-center gap-1">
                   <Sparkles size={11} className="text-emerald-600" />
@@ -535,7 +535,6 @@ export function PatientInfoStep({
                   );
                 })}
               </div>
-            </div>
 
             <textarea
               id="patient-reason"
