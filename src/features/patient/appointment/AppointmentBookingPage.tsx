@@ -355,13 +355,8 @@ export function AppointmentBookingPage() {
         lang === "vi" ? "Vui lòng chọn giới tính." : "Please select gender.";
     }
 
-    // 5. Lý do khám
-    if (!formValues.reason.trim()) {
-      errors.reason =
-        lang === "vi"
-          ? "Vui lòng mô tả sơ bộ lý do khám hoặc triệu chứng."
-          : "Please describe symptoms or reason for visit.";
-    } else if (formValues.reason.trim().length > 500) {
+    // 5. Lý do khám (Tùy chọn, chỉ kiểm tra độ dài tối đa)
+    if (formValues.reason?.trim() && formValues.reason.trim().length > 500) {
       errors.reason =
         lang === "vi"
           ? "Lý do khám tối đa 500 ký tự."
@@ -372,6 +367,11 @@ export function AppointmentBookingPage() {
     const ageYears = calculateAgeInYears(effectiveDob, formValues.date);
     const isMinor = isPediatric || (effectiveDob ? ageYears < 18 : false);
 
+    const cleanPatientPhone = formValues.patientPhone.replace(/\s+/g, "");
+    const cleanPatientCccd = formValues.patientCccd.replace(/\s+/g, "");
+    const cleanGuardianPhone = (formValues.guardianPhone || "").replace(/\s+/g, "");
+    const cleanGuardianCccd = (formValues.guardianCccd || "").replace(/\s+/g, "");
+
     if (isMinor) {
       // Người giám hộ bắt buộc
       if (!formValues.guardianName?.trim()) {
@@ -381,24 +381,24 @@ export function AppointmentBookingPage() {
             : "Guardian name is required for minors.";
       }
 
-      if (!formValues.guardianCccd?.trim()) {
+      if (!cleanGuardianCccd) {
         errors.guardianCccd =
           lang === "vi"
             ? "Vui lòng nhập số CCCD của người giám hộ (12 chữ số)."
             : "Guardian Citizen ID (12 digits) is required.";
-      } else if (!/^\d{12}$/.test(formValues.guardianCccd.trim())) {
+      } else if (!/^\d{12}$/.test(cleanGuardianCccd)) {
         errors.guardianCccd =
           lang === "vi"
             ? "Số CCCD người giám hộ phải gồm đúng 12 chữ số."
             : "Guardian ID must be exactly 12 digits.";
       }
 
-      if (!formValues.guardianPhone?.trim()) {
+      if (!cleanGuardianPhone) {
         errors.guardianPhone =
           lang === "vi"
             ? "Vui lòng nhập số điện thoại người giám hộ."
             : "Guardian phone is required.";
-      } else if (!phoneRegex.test(formValues.guardianPhone.trim())) {
+      } else if (!phoneRegex.test(cleanGuardianPhone)) {
         errors.guardianPhone =
           lang === "vi"
             ? "Số điện thoại người giám hộ phải đúng 10 chữ số, bắt đầu bằng số 0."
@@ -406,24 +406,24 @@ export function AppointmentBookingPage() {
       }
     } else {
       // Người lớn (>= 18 tuổi): Bắt buộc Số điện thoại & CCCD 12 số
-      if (!formValues.patientPhone.trim()) {
+      if (!cleanPatientPhone) {
         errors.patientPhone =
           lang === "vi"
             ? "Số điện thoại bắt buộc để nhận thông tin lịch hẹn."
             : "Phone number is required.";
-      } else if (!phoneRegex.test(formValues.patientPhone.trim())) {
+      } else if (!phoneRegex.test(cleanPatientPhone)) {
         errors.patientPhone =
           lang === "vi"
-            ? "Số điện thoại phải đúng 10 chữ số, bắt đầu bằng số 0 (VD: 0912345678)."
+            ? "Số điện thoại phải đúng 10 chữ số, bắt đầu bằng số 0 (VD: 0912 345 678)."
             : "Phone number must be exactly 10 digits starting with 0.";
       }
 
-      if (!formValues.patientCccd.trim()) {
+      if (!cleanPatientCccd) {
         errors.patientCccd =
           lang === "vi"
             ? "Số CCCD là định danh bắt buộc đối với người khám từ đủ 18 tuổi."
             : "Citizen ID (CCCD) is required for adult patients.";
-      } else if (!/^\d{12}$/.test(formValues.patientCccd.trim())) {
+      } else if (!/^\d{12}$/.test(cleanPatientCccd)) {
         errors.patientCccd =
           lang === "vi"
             ? "Số CCCD phải gồm đúng 12 chữ số hợp lệ."
@@ -489,11 +489,20 @@ export function AppointmentBookingPage() {
         gioBatDauKhung = `${formValues.date}T${timePart}:00`;
       }
 
+      const cleanPatientPhone = formValues.patientPhone.replace(/\s+/g, "");
+      const cleanGuardianPhone = (formValues.guardianPhone || "").replace(/\s+/g, "");
+      const cleanPatientCccd = formValues.patientCccd?.replace(/\s+/g, "");
+      const cleanGuardianCccd = formValues.guardianCccd?.replace(/\s+/g, "");
+
       const requestPayload: DatLichRequest = {
         idLichLamViec: idLichLamViecNum,
         idChuyenKhoa: idChuyenKhoaNum,
         gioBatDauKhung,
-        lyDoKham: formValues.reason.trim(),
+        lyDoKham:
+          formValues.reason?.trim() ||
+          (isPediatric
+            ? "Khám bệnh cho trẻ"
+            : "Khám sức khỏe tổng quát / Theo yêu cầu"),
         datChoBanThan: Boolean(user?.role === "patient" && bookForSelf),
         luuNguoiThan: Boolean(
           user?.role === "patient" && !bookForSelf && saveRelative,
@@ -502,10 +511,8 @@ export function AppointmentBookingPage() {
           hoTen: formValues.patientName.trim(),
           ngaySinh: effectiveDob!,
           gioiTinh: formValues.patientGender,
-          soDienThoai:
-            formValues.patientPhone.trim() ||
-            (formValues.guardianPhone?.trim() ?? ""),
-          cccd: formValues.patientCccd?.trim() || undefined,
+          soDienThoai: cleanPatientPhone || cleanGuardianPhone,
+          cccd: cleanPatientCccd || undefined,
           email: formValues.patientEmail?.trim() || user?.email || undefined,
           soBaoHiemYTe:
             formValues.hasHealthInsurance && formValues.healthInsuranceNumber?.trim()
@@ -515,9 +522,9 @@ export function AppointmentBookingPage() {
         nguoiGiamHo: isMinor
           ? {
               hoTen: formValues.guardianName!.trim(),
-            quanHe: formValues.guardianRelationship ?? "CHA",
-              soDienThoai: formValues.guardianPhone!.trim(),
-              cccd: formValues.guardianCccd!.trim(),
+              quanHe: formValues.guardianRelationship ?? "CHA",
+              soDienThoai: cleanGuardianPhone,
+              cccd: cleanGuardianCccd!,
             }
           : undefined,
       };
@@ -863,7 +870,7 @@ export function AppointmentBookingPage() {
             </div>
 
             {/* Right Column: Sticky Summary & Confirmation */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 lg:sticky lg:top-24 self-start h-fit">
               <BookingSummaryCard
                 lang={lang}
                 formValues={formValues}
