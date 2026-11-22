@@ -49,6 +49,8 @@ local.properties
 **/.env*
 *.pem
 *.key
+!.env.example
+!**/.env.example
 
 # ==========================================
 # FRONTEND (React / Node.js)

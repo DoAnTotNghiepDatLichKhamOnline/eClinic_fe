@@ -174,3 +174,74 @@ export function formatSlotRange(startIso: string, endIso?: string): string {
     return startIso;
   }
 }
+
+/**
+ * Định dạng số điện thoại tách khoảng trắng dễ đọc (0912 345 678)
+ */
+export function formatPhoneNumber(value?: string | null): string {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 10)}`;
+}
+
+/**
+ * Định dạng số CCCD tách khoảng trắng dễ đọc (0792 0100 1234)
+ */
+export function formatCccdNumber(value?: string | null): string {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "").slice(0, 12);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 8) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8, 12)}`;
+}
+
+/**
+ * Tự động chèn dấu gạch chéo khi gõ ngày sinh (15081995 -> 15/08/1995)
+ */
+export function formatDobInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+}
+
+/**
+ * Chuyển đổi chuỗi DD/MM/YYYY hợp lệ sang ISO YYYY-MM-DD, nếu chưa đủ/không hợp lệ trả về null
+ */
+export function parseDobToIso(dobDisplay: string): string | null {
+  const parts = dobDisplay.trim().split("/");
+  if (parts.length !== 3) return null;
+  const day = Number(parts[0]);
+  const month = Number(parts[1]);
+  const year = Number(parts[2]);
+
+  if (!day || !month || !year || parts[2].length !== 4) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) return null;
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  const yyyy = String(year);
+  const mm = String(month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * Chuyển đổi ISO YYYY-MM-DD sang DD/MM/YYYY hiển thị
+ */
+export function formatIsoToDob(isoDate?: string | null): string {
+  if (!isoDate || !isoDate.includes("-")) return isoDate || "";
+  const parts = isoDate.split("-");
+  if (parts.length < 3) return isoDate;
+  return `${parts[2].slice(0, 2)}/${parts[1]}/${parts[0]}`;
+}
+
