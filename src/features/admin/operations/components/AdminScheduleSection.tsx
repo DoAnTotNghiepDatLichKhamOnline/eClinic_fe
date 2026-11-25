@@ -476,7 +476,7 @@ export function AdminScheduleSection() {
               <button
                 type="button"
                 onClick={() => setIsCreateShiftOpen(true)}
-                className="inline-flex h-[34px] items-center gap-1.5 rounded-lg bg-teal-700! px-3.5 text-xs font-bold! text-white shadow-sm! hover:bg-teal-800! transition-all hover:shadow-md whitespace-nowrap cursor-pointer"
+                className="inline-flex h-[34px] items-center gap-1.5 rounded-lg bg-teal-700 px-3.5 text-xs font-bold text-white shadow-sm hover:bg-teal-800 transition-all hover:shadow-md whitespace-nowrap cursor-pointer"
               >
                 <CalendarPlus size={15} />
                 <span>{vi ? "Xếp ca lịch mới" : "Schedule New Shift"}</span>
