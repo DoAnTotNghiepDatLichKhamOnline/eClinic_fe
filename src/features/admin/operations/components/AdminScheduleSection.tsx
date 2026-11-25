@@ -11,7 +11,9 @@ import {
   Edit3,
   Trash2,
   PhoneCall,
+  MoreVertical,
 } from "lucide-react";
+import { Dropdown } from "antd";
 import { adminBookingService as bookingService } from "@/services/booking";
 import { doctorService, clinicService } from "@/services/catalog";
 import { useLanguage } from "@/shared/context/LanguageContext";
@@ -25,6 +27,17 @@ import styles from "../../AdminDashboardPage.module.css";
 
 function currentDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatDateDisplay(dateStr?: string | null): string {
+  if (!dateStr) return "—";
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+  return dateStr;
 }
 
 export function AdminScheduleSection() {
@@ -500,21 +513,19 @@ export function AdminScheduleSection() {
             <table className={styles.adminTable}>
               <thead>
                 <tr>
-                  <th>{vi ? "Ngày" : "Date"}</th>
-                  <th>{vi ? "Bác sĩ" : "Doctor"}</th>
-                  <th>{vi ? "Chuyên khoa" : "Specialty"}</th>
-                  <th>{vi ? "Ca" : "Shift"}</th>
+                  <th>{vi ? "Thời gian" : "Time"}</th>
+                  <th>{vi ? "Bác sĩ phụ trách" : "Attending Doctor"}</th>
                   <th>{vi ? "Phòng" : "Clinic"}</th>
                   <th>{vi ? "Đã đặt" : "Booked"}</th>
                   <th>{vi ? "Trạng thái" : "Status"}</th>
-                  <th />
+                  <th className="w-40 text-center">{vi ? "Thao tác" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody>
                 {allShifts.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={6}
                       className="py-8 text-center text-xs text-slate-500"
                     >
                       {shiftQuery.isLoading
@@ -529,36 +540,45 @@ export function AdminScheduleSection() {
                 ) : (
                   paginatedShifts.map((shift) => (
                     <tr key={shift.id}>
-                      <td>{shift.ngay}</td>
-                      <td className="font-medium text-slate-800">
-                        <div>
+                      {/* Cột 1: THỜI GIAN (Gộp Ngày + Ca) */}
+                      <td>
+                        <div className="font-bold text-slate-800">
+                          {formatDateDisplay(shift.ngay)}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-normal">
+                          {shift.gioBatDau?.slice(0, 5)} -{" "}
+                          {shift.gioKetThuc?.slice(0, 5)}
+                        </div>
+                      </td>
+
+                      {/* Cột 2: BÁC SĨ PHỤ TRÁCH (Gộp Bác sĩ + Chuyên khoa) */}
+                      <td>
+                        <div className="font-bold text-slate-800">
+                          {shift.bacSi?.hocVi ? `${shift.bacSi.hocVi} ` : ""}
                           {shift.bacSi?.hoTen ?? shift.hoTenBacSi ?? "—"}
                         </div>
-                        {shift.bacSi?.hocVi && (
-                          <span className="text-[11px] text-slate-500 font-normal">
-                            {shift.bacSi.hocVi}
-                          </span>
-                        )}
+                        <div className="text-[11px] text-slate-500 font-normal">
+                          {shift.tenChuyenKhoa ??
+                            (shift.bacSi as { tenChuyenKhoa?: string })
+                              ?.tenChuyenKhoa ??
+                            "—"}
+                        </div>
                       </td>
-                      <td className="text-slate-600">
-                        {shift.tenChuyenKhoa ??
-                          (shift.bacSi as { tenChuyenKhoa?: string })
-                            ?.tenChuyenKhoa ??
-                          "—"}
-                      </td>
-                      <td>
-                        {shift.gioBatDau?.slice(0, 5)} -{" "}
-                        {shift.gioKetThuc?.slice(0, 5)}
-                      </td>
+
+                      {/* Cột 3: Phòng */}
                       <td>
                         {shift.phongKham?.tenPhong ?? shift.tenPhongKham ?? "—"}
                       </td>
+
+                      {/* Cột 4: Đã đặt */}
                       <td>
                         <span className="font-semibold text-slate-700">
                           {shift.soLuotDaDat ?? shift.soChoDaDat ?? 0}
                         </span>{" "}
                         / {shift.tongSoLuot ?? shift.tongSoCho ?? 0}
                       </td>
+
+                      {/* Cột 5: Trạng thái */}
                       <td>
                         {shift.trangThai === "HOAT_DONG" ? (
                           <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -574,8 +594,10 @@ export function AdminScheduleSection() {
                           </span>
                         )}
                       </td>
+
+                      {/* Cột 6: Thao tác (Nút Bệnh nhân ngoài + Nút 3 chấm Dropdown) */}
                       <td>
-                        <div className="flex gap-1.5 items-center flex-wrap">
+                        <div className="flex gap-1.5 items-center justify-center">
                           <button
                             className={styles.actionBtnTeal}
                             type="button"
@@ -585,27 +607,42 @@ export function AdminScheduleSection() {
                             {vi ? "Bệnh nhân" : "Patients"}
                           </button>
                           {shift.trangThai === "HOAT_DONG" && (
-                            <>
+                            <Dropdown
+                              menu={{
+                                items: [
+                                  {
+                                    key: "edit",
+                                    label: vi ? "Sửa ca" : "Edit Shift",
+                                    icon: <Edit3 size={14} />,
+                                    onClick: () => setEditingShift(shift),
+                                  },
+                                  {
+                                    type: "divider",
+                                  },
+                                  {
+                                    key: "cancel",
+                                    label: vi ? "Hủy ca" : "Cancel Shift",
+                                    icon: <Trash2 size={14} />,
+                                    danger: true,
+                                    onClick: () => {
+                                      setCancellingShift(shift);
+                                      setCancelReason("");
+                                    },
+                                  },
+                                ],
+                              }}
+                              trigger={["click"]}
+                              placement="bottomRight"
+                            >
                               <button
-                                className={styles.actionBtn}
                                 type="button"
-                                onClick={() => setEditingShift(shift)}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-300 transition-colors cursor-pointer"
+                                title={vi ? "Thao tác khác" : "More actions"}
+                                aria-label={vi ? "Thao tác khác" : "More actions"}
                               >
-                                <Edit3 size={13} />
-                                {vi ? "Sửa" : "Edit"}
+                                <MoreVertical size={14} />
                               </button>
-                              <button
-                                className={styles.actionBtnDanger}
-                                type="button"
-                                onClick={() => {
-                                  setCancellingShift(shift);
-                                  setCancelReason("");
-                                }}
-                              >
-                                <Trash2 size={13} />
-                                {vi ? "Hủy ca" : "Cancel"}
-                              </button>
-                            </>
+                            </Dropdown>
                           )}
                         </div>
                       </td>
