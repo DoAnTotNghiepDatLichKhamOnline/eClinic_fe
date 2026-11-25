@@ -12,7 +12,9 @@ import {
   RotateCcw,
   Info,
   Eye,
+  MoreVertical,
 } from "lucide-react";
+import { Dropdown } from "antd";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import styles from "../../AdminDashboardPage.module.css";
 import type {
@@ -196,35 +198,34 @@ export function AdminShiftRequestsTab({
         </div>
       </div>
 
-      {/* 2. Data Table */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
-              <tr>
-                <th className="py-3 px-3.5 w-12 text-center">ID</th>
-                <th className="py-3 px-3.5 min-w-[180px]">
-                  {vi ? "Bác sĩ yêu cầu" : "Doctor"}
-                </th>
-                <th className="py-3 px-3.5 w-28">{vi ? "Loại đơn" : "Type"}</th>
-                <th className="py-3 px-3.5 min-w-[180px]">
-                  {vi ? "Ca làm việc liên quan" : "Shift"}
-                </th>
-                <th className="py-3 px-3.5 min-w-[160px]">
-                  {vi ? "Ca mong muốn / Thay thế" : "Target Shift"}
-                </th>
-                <th className="py-3 px-3.5 max-w-[200px]">
-                  {vi ? "Lý do" : "Reason"}
-                </th>
-                <th className="py-3 px-3.5 w-44">
-                  {vi ? "Bệnh nhân ảnh hưởng" : "Affected Patients"}
-                </th>
-                <th className="py-3 px-3.5 w-36 text-center">
-                  {vi ? "Hành động" : "Action"}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+      {/* 2. Data Table (Bordered & Scrollable tương tự bảng Lịch trực) */}
+      <div className={styles.tableScroll}>
+        <table className={styles.adminTable}>
+          <thead>
+            <tr>
+              <th className="w-12 text-center">ID</th>
+              <th className="min-w-[180px]">
+                {vi ? "Bác sĩ yêu cầu" : "Doctor"}
+              </th>
+              <th className="w-28">{vi ? "Loại đơn" : "Type"}</th>
+              <th className="min-w-[180px]">
+                {vi ? "Ca làm việc liên quan" : "Shift"}
+              </th>
+              <th className="min-w-[160px]">
+                {vi ? "Ca mong muốn / Thay thế" : "Target Shift"}
+              </th>
+              <th className="max-w-[200px]">
+                {vi ? "Lý do" : "Reason"}
+              </th>
+              <th className="w-44">
+                {vi ? "Bệnh nhân ảnh hưởng" : "Affected Patients"}
+              </th>
+              <th className="w-36 text-center">
+                {vi ? "Hành động" : "Action"}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
               {isLoading ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
@@ -382,9 +383,9 @@ export function AdminShiftRequestsTab({
                         )}
                       </td>
 
-                      {/* Hành động */}
-                      <td className="py-3 px-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      {/* Hành động (Giữ nút Chi tiết ngoài, gom Phê duyệt / Từ chối vào menu 3 chấm) */}
+                      <td className="text-center">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => setSelectedRequestForDetail(r)}
@@ -395,33 +396,46 @@ export function AdminShiftRequestsTab({
                             {vi ? "Chi tiết" : "Detail"}
                           </button>
                           {r.trangThai === "CHO_DUYET" ? (
-                            <>
+                            <Dropdown
+                              menu={{
+                                items: [
+                                  {
+                                    key: "approve",
+                                    label: vi ? "Phê duyệt" : "Approve",
+                                    icon: <Check size={14} className="text-emerald-600" />,
+                                    onClick: () => void onApprove(r.id),
+                                  },
+                                  {
+                                    type: "divider",
+                                  },
+                                  {
+                                    key: "reject",
+                                    label: vi ? "Từ chối" : "Reject",
+                                    icon: <X size={14} />,
+                                    danger: true,
+                                    onClick: () => handleOpenRejectModal(r.id),
+                                  },
+                                ],
+                              }}
+                              trigger={["click"]}
+                              placement="bottomRight"
+                            >
                               <button
                                 type="button"
-                                onClick={() => void onApprove(r.id)}
-                                className={styles.actionBtnSuccess}
-                                title={vi ? "Phê duyệt yêu cầu" : "Approve"}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 hover:border-slate-300 transition-colors cursor-pointer"
+                                title={vi ? "Thao tác khác" : "More actions"}
+                                aria-label={vi ? "Thao tác khác" : "More actions"}
                               >
-                                <Check size={13} />
-                                {vi ? "Duyệt" : "Approve"}
+                                <MoreVertical size={14} />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenRejectModal(r.id)}
-                                className={styles.actionBtnDanger}
-                                title={vi ? "Từ chối yêu cầu" : "Reject"}
-                              >
-                                <X size={13} />
-                                {vi ? "Từ chối" : "Reject"}
-                              </button>
-                            </>
+                            </Dropdown>
                           ) : r.trangThai === "DA_DUYET" ? (
-                            <span className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-block px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                               {vi ? "Đã duyệt" : "Approved"}
                             </span>
                           ) : (
                             <span
-                              className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+                              className="inline-block px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200"
                               title={r.ghiChuXuLy || r.phanHoi || undefined}
                             >
                               {vi ? "Đã từ chối" : "Rejected"}
@@ -435,7 +449,6 @@ export function AdminShiftRequestsTab({
               )}
             </tbody>
           </table>
-        </div>
       </div>
 
       {/* 3. Modal Xem Chi Tiết Yêu Cầu */}
