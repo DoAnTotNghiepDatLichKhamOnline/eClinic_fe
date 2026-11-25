@@ -50,7 +50,7 @@ const menuGroups: DoctorMenuGroup[] = [
       {
         id: "consultation",
         en: "Consultation / EMR",
-        vi: "Tiếp nhận & khám bệnh",
+        vi: "Khám bệnh",
         icon: Stethoscope,
         hasQueueBadge: true,
       },
