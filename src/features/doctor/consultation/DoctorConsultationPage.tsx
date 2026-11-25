@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stethoscope, X } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { notifyAuth } from "@/utils/authNotification";
 import { consultationService } from "@/services/consultationService";
-import { patientBookingService } from "@/services/booking";
+import { patientBookingService, doctorBookingService } from "@/services/booking";
 import { useConsultation } from "@/hooks/useConsultation";
 import { ConsultationLookupCard } from "./components/ConsultationLookupCard";
 import { TodayPatientsTable } from "./components/TodayPatientsTable";
@@ -12,10 +13,12 @@ import { TodayPatientsTable } from "./components/TodayPatientsTable";
 export function DoctorConsultationPage() {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [isCallingNext, setIsCallingNext] = useState(false);
 
   // Parse URL search params
   const paramId = searchParams.get("id");
@@ -29,6 +32,15 @@ export function DoctorConsultationPage() {
     dailyPatients,
     isLoadingDailyPatients,
   } = useConsultation();
+
+  // Fetch queue and shifts of the selected date
+  const { data: hangDoiResponse } = useQuery({
+    queryKey: ["booking", "doctor-hang-doi", filters.ngay],
+    queryFn: () => doctorBookingService.getHangDoi(filters.ngay),
+    refetchInterval: 15000,
+  });
+
+  const shifts = hangDoiResponse?.duLieu?.cacCa ?? [];
 
   // Search by code or QR and redirect to dedicated examine page
   const handleSearchCode = async (code: string): Promise<boolean> => {
@@ -112,22 +124,67 @@ export function DoctorConsultationPage() {
     navigate(`/doctor/consultation/${id}`);
   };
 
+  const handleCallNext = async () => {
+    const shiftId =
+      filters.idLichLamViec ??
+      hangDoiResponse?.duLieu?.idCaHienTai ??
+      shifts[0]?.idLichLamViec;
+
+    if (!shiftId) {
+      notifyAuth(
+        "warning",
+        lang === "vi" ? "Chưa chọn ca trực" : "No shift selected",
+        lang === "vi"
+          ? "Vui lòng chọn một ca trực cụ thể trong bộ lọc để gọi bệnh nhân."
+          : "Please select a specific shift to call next patient.",
+      );
+      return;
+    }
+
+    try {
+      setIsCallingNext(true);
+      const res = await doctorBookingService.goiTiepHangDoi(shiftId);
+      if (res?.thanhCong) {
+        notifyAuth(
+          "success",
+          lang === "vi" ? "Đã gọi bệnh nhân tiếp theo" : "Called next patient",
+          res.thongDiep,
+        );
+        await queryClient.invalidateQueries({
+          queryKey: ["consultation", "daily-patients"],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["booking", "doctor-hang-doi"],
+        });
+      }
+    } catch (err: unknown) {
+      notifyAuth(
+        "error",
+        lang === "vi" ? "Lỗi gọi khám" : "Call error",
+        (err as { response?: { data?: { thongDiep?: string } } }).response
+          ?.data?.thongDiep || "Could not call next patient",
+      );
+    } finally {
+      setIsCallingNext(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-16">
       {/* Page Header */}
-      <div className="bg-white border-b border-slate-200/80 px-6 py-5 mb-6 shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border-b border-slate-200/80 px-6 py-4 mb-5 shadow-xs">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
               <Stethoscope className="w-6 h-6 text-teal-600" />
               {lang === "vi"
-                ? "Tiếp nhận & khám bệnh"
-                : "Reception & Consultation"}
+                ? "Khám bệnh"
+                : "Clinical Consultation"}
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-0.5">
               {lang === "vi"
-                ? "Tiếp nhận bệnh nhân bằng mã hoặc quét QR, theo dõi danh sách bệnh nhân chờ khám trong ngày."
-                : "Check in patients by code or QR, monitor today's patient consultation queue."}
+                ? "Điều phối hàng đợi, gọi bệnh nhân vào khám và mở nhanh hồ sơ bệnh án."
+                : "Coordinate queue, call patients into consultation, and examine records."}
             </p>
           </div>
         </div>
@@ -136,7 +193,7 @@ export function DoctorConsultationPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Error banner if search fails */}
         {searchError && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center justify-between shadow-xs">
+          <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center justify-between shadow-xs">
             <span>{searchError}</span>
             <button
               type="button"
@@ -148,19 +205,22 @@ export function DoctorConsultationPage() {
           </div>
         )}
 
-        {/* 1. Mở hồ sơ khám bằng mã hoặc QR */}
+        {/* 1. Thanh công cụ mở nhanh hồ sơ khám (Compact Toolbar) */}
         <ConsultationLookupCard
           onSearch={handleSearchCode}
           isLoading={isSearching}
         />
 
-        {/* 2. Danh sách bệnh nhân trong ngày (Queue Table) */}
+        {/* 2. Danh sách bệnh nhân trong ngày (Queue Table với tabs và dropdown ca) */}
         <TodayPatientsTable
           patients={dailyPatients}
           isLoading={isLoadingDailyPatients}
           filters={filters}
           onFilterChange={setFilters}
           onSelectPatient={handleSelectPatient}
+          shifts={shifts}
+          onCallNext={handleCallNext}
+          isCallingNext={isCallingNext}
         />
       </div>
     </div>
