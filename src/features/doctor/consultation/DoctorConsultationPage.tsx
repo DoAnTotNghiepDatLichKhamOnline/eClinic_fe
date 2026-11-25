@@ -132,7 +132,7 @@ export function DoctorConsultationPage() {
 
     if (!shiftId) {
       notifyAuth(
-        "warning",
+        "info",
         lang === "vi" ? "Chưa chọn ca trực" : "No shift selected",
         lang === "vi"
           ? "Vui lòng chọn một ca trực cụ thể trong bộ lọc để gọi bệnh nhân."
