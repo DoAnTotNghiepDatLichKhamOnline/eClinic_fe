@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Calendar,
   AlertTriangle,
+  AlertCircle,
   RefreshCw,
   CalendarDays,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import {
   type ChatMessage,
   type ChatSession,
 } from "@/services/chatbotService";
+import type { LichHenCuaToi, LanKham } from "@/types/chatbot.type";
 import { formatDateTime } from "@/utils/dateFormatting";
 import styles from "./SymptomChatWidget.module.css";
 
@@ -52,7 +54,7 @@ export function SymptomChatWidget() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [lastFailedQuestion, setLastFailedQuestion] = useState("");
-  const [failedErrorType, setFailedErrorType] = useState<"503" | "OTHER" | null>(null);
+  const [failedErrorType, setFailedErrorType] = useState<"503" | "429" | "OTHER" | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historySessions, setHistorySessions] = useState<ChatSession[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -175,17 +177,23 @@ export function SymptomChatWidget() {
 
   useEffect(() => {
     let cancelled = false;
-    setSession(null);
-    setMessages([]);
-    setPendingQuestion("");
-    setError("");
-    setIsLoading(true);
 
-    const restoreSession = async () => {
-      try {
-        const saved = sessionStorage.getItem(currentStorageKey);
-        const stored = saved ? (JSON.parse(saved) as StoredChat) : null;
-        if (stored) {
+    const initOrRestoreSession = async () => {
+      const saved = sessionStorage.getItem(currentStorageKey);
+      const stored = saved ? (JSON.parse(saved) as StoredChat) : null;
+
+      // Nếu widget chưa mở và chưa có session đã lưu, không chủ động gọi taoPhien() để tiết kiệm quota phiên (10/giờ)
+      if (!open && !stored) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+      setFailedErrorType(null);
+
+      if (stored) {
+        try {
           const nextSession = {
             ...stored,
             idPhien: String(stored.idPhien),
@@ -202,8 +210,63 @@ export function SymptomChatWidget() {
           if (!cancelled) {
             setSession(nextSession);
             setMessages(response.duLieu);
+            setIsLoading(false);
           }
-        } else {
+          return;
+        } catch (cause) {
+          const sessionNotFound =
+            isAxiosError<{ maLoi?: string }>(cause) &&
+            (cause.response?.status === 404 ||
+              cause.response?.data?.maLoi === "KHONG_TIM_THAY");
+
+          sessionStorage.removeItem(currentStorageKey);
+
+          // Tự hồi phục (Auto-heal): nếu phiên cũ không tìm thấy (404), tự động tạo phiên mới
+          if (sessionNotFound && !cancelled) {
+            try {
+              const freshRes = await chatbotService.taoPhien();
+              if (freshRes.thanhCong && freshRes.duLieu) {
+                const freshSession: StoredChat = {
+                  idPhien: String(freshRes.duLieu.idPhien),
+                  maKhach: freshRes.duLieu.maKhach,
+                };
+                sessionStorage.setItem(
+                  currentStorageKey,
+                  JSON.stringify(freshSession),
+                );
+                if (!cancelled) {
+                  setSession(freshSession);
+                  setMessages(freshRes.duLieu.tinNhan ?? []);
+                  setError("");
+                  setIsLoading(false);
+                }
+                return;
+              }
+            } catch {
+              // fall through
+            }
+          }
+
+          if (!cancelled) {
+            setSession(null);
+            setError(
+              getErrorMessage(
+                cause,
+                t({
+                  en: "Chat is temporarily unavailable.",
+                  vi: "Chatbot hiện chưa khả dụng.",
+                }),
+              ),
+            );
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+
+      // Khi widget được mở và chưa có session, tạo phiên mới
+      if (open && !stored) {
+        try {
           const response = await chatbotService.taoPhien();
           if (!response.thanhCong || !response.duLieu) {
             throw new Error(
@@ -222,37 +285,29 @@ export function SymptomChatWidget() {
             setSession(nextSession);
             setMessages(response.duLieu.tinNhan ?? []);
           }
-        }
-      } catch (cause) {
-        if (!cancelled) {
-          const sessionNotFound =
-            isAxiosError<{ maLoi?: string }>(cause) &&
-            (cause.response?.status === 404 ||
-              cause.response?.data?.maLoi === "KHONG_TIM_THAY");
-          if (sessionNotFound) {
-            sessionStorage.removeItem(currentStorageKey);
-            setSession(null);
+        } catch (cause) {
+          if (!cancelled) {
+            setError(
+              getErrorMessage(
+                cause,
+                t({
+                  en: "Chat is temporarily unavailable.",
+                  vi: "Chatbot hiện chưa khả dụng.",
+                }),
+              ),
+            );
           }
-          setError(
-            getErrorMessage(
-              cause,
-              t({
-                en: "Chat is temporarily unavailable.",
-                vi: "Chatbot hiện chưa khả dụng.",
-              }),
-            ),
-          );
+        } finally {
+          if (!cancelled) setIsLoading(false);
         }
-      } finally {
-        if (!cancelled) setIsLoading(false);
       }
     };
 
-    void restoreSession();
+    void initOrRestoreSession();
     return () => {
       cancelled = true;
     };
-  }, [currentStorageKey, t]);
+  }, [open, currentStorageKey, t]);
 
   const sendQuestion = async (question: string) => {
     if (!session || isSending) return;
@@ -290,6 +345,7 @@ export function SymptomChatWidget() {
       setPendingQuestion(traLoi.loai === "CAN_DONG_Y" ? question : "");
     } catch (cause) {
       let is503 = false;
+      let is429 = false;
       let errorMsg = getErrorMessage(cause, "Chat request failed");
 
       if (
@@ -298,13 +354,17 @@ export function SymptomChatWidget() {
           thongDiep?: string;
         }>(cause)
       ) {
-        is503 =
-          cause.response?.status === 503 ||
-          cause.response?.data?.maLoi === "CHATBOT_KHONG_KHA_DUNG";
+        const status = cause.response?.status;
+        const maLoi = cause.response?.data?.maLoi;
+        is503 = status === 503 || maLoi === "CHATBOT_KHONG_KHA_DUNG";
+        is429 =
+          status === 429 ||
+          (typeof maLoi === "string" && maLoi.startsWith("CHAT_QUA_NHIEU"));
+
         if (cause.response?.data?.thongDiep) {
           errorMsg = cause.response.data.thongDiep;
         }
-        if (cause.response?.data?.maLoi === "KHONG_TIM_THAY") {
+        if (maLoi === "KHONG_TIM_THAY") {
           sessionStorage.removeItem(currentStorageKey);
           setSession(null);
           setMessages([]);
@@ -312,7 +372,7 @@ export function SymptomChatWidget() {
       }
 
       setLastFailedQuestion(question);
-      setFailedErrorType(is503 ? "503" : "OTHER");
+      setFailedErrorType(is503 ? "503" : is429 ? "429" : "OTHER");
       setError(errorMsg);
     } finally {
       setIsSending(false);
@@ -331,6 +391,7 @@ export function SymptomChatWidget() {
     if (!session || !pendingQuestion || isSending) return;
     setIsSending(true);
     setError("");
+    setFailedErrorType(null);
     try {
       const consent = await chatbotService.dongYDuLieu(session.idPhien);
       if (!consent.thanhCong) {
@@ -339,6 +400,7 @@ export function SymptomChatWidget() {
       const response = await chatbotService.guiTinNhan(
         session.idPhien,
         pendingQuestion,
+        session.maKhach,
       );
       if (!response.thanhCong || !response.duLieu)
         throw new Error(response.thongDiep);
@@ -349,11 +411,31 @@ export function SymptomChatWidget() {
       ]);
       setPendingQuestion("");
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Could not continue the conversation",
-      );
+      let is503 = false;
+      let is429 = false;
+      let errorMsg = getErrorMessage(cause, "Could not continue the conversation");
+
+      if (
+        isAxiosError<{
+          maLoi?: string;
+          thongDiep?: string;
+        }>(cause)
+      ) {
+        const status = cause.response?.status;
+        const maLoi = cause.response?.data?.maLoi;
+        is503 = status === 503 || maLoi === "CHATBOT_KHONG_KHA_DUNG";
+        is429 =
+          status === 429 ||
+          (typeof maLoi === "string" && maLoi.startsWith("CHAT_QUA_NHIEU"));
+
+        if (cause.response?.data?.thongDiep) {
+          errorMsg = cause.response.data.thongDiep;
+        }
+      }
+
+      setLastFailedQuestion(pendingQuestion);
+      setFailedErrorType(is503 ? "503" : is429 ? "429" : "OTHER");
+      setError(errorMsg);
     } finally {
       setIsSending(false);
     }
@@ -433,29 +515,55 @@ export function SymptomChatWidget() {
               ),
             ),
         )}
-        {suggestions.lichHenCuaToi?.map((visit: unknown, index: number) => {
-          const ticket = (visit as { maPhieuKham?: string })?.maPhieuKham;
-          return ticket ? (
+        {suggestions.lichHenCuaToi?.map((item: LichHenCuaToi, index: number) => {
+          const ticket = item.maPhieuKham || item.maTraCuu;
+          return (
             <Link
-              key={`${ticket}-${index}`}
+              key={`lich-hen-${ticket || index}`}
               to={`/phieu-kham/${ticket}`}
+              className={styles.suggestionCard}
               onClick={() => setOpen(false)}
             >
-              {t({ en: "Open appointment ticket", vi: "Mở phiếu khám" })}
+              <div className={styles.suggestionCardHeader}>
+                <span className={styles.suggestionCardTitle}>
+                  📅 {t({ en: "Appointment", vi: "Lịch hẹn" })}: {item.hoTenBacSi ? `BS ${item.hoTenBacSi}` : item.tenChuyenKhoa}
+                </span>
+                {item.trangThai && (
+                  <span className={styles.suggestionBadge}>{item.trangThai}</span>
+                )}
+              </div>
+              <div className={styles.suggestionCardMeta}>
+                <span>{item.ngay}</span>
+                {item.gioBatDauKhung && (
+                  <span>· {item.gioBatDauKhung}{item.gioKetThucKhung ? ` - ${item.gioKetThucKhung}` : ""}</span>
+                )}
+                {item.tenPhong && <span>· {item.tenPhong}</span>}
+              </div>
             </Link>
-          ) : null;
+          );
         })}
-        {suggestions.lanKham?.map((visit: unknown, index: number) => {
-          const ticket = (visit as { maPhieuKham?: string })?.maPhieuKham;
-          return ticket ? (
+        {suggestions.lanKham?.map((item: LanKham, index: number) => {
+          return (
             <Link
-              key={`${ticket}-${index}`}
-              to={`/patient/my-appointments?ticket=${ticket}`}
+              key={`lan-kham-${item.maPhieuKham || item.maTraCuu || index}`}
+              to={`/patient/my-appointments`}
+              className={styles.suggestionCard}
               onClick={() => setOpen(false)}
             >
-              {t({ en: "Open visit history", vi: "Mở lịch sử khám" })}
+              <div className={styles.suggestionCardHeader}>
+                <span className={styles.suggestionCardTitle}>
+                  📋 {t({ en: "Visit Record", vi: "Lịch sử khám" })}: {item.tenChuyenKhoa || (item.hoTenBacSi ? `BS ${item.hoTenBacSi}` : "")}
+                </span>
+                <span className={styles.suggestionBadge}>{t({ en: "Completed", vi: "Đã khám" })}</span>
+              </div>
+              <div className={styles.suggestionCardMeta}>
+                <span>{t({ en: "Date", vi: "Ngày" })}: {item.ngay}</span>
+                {item.ngayTaiKhamDeXuat && (
+                  <span>· {t({ en: "Follow-up", vi: "Tái khám" })}: {item.ngayTaiKhamDeXuat}</span>
+                )}
+              </div>
             </Link>
-          ) : null;
+          );
         })}
       </div>
     );
@@ -692,8 +800,24 @@ export function SymptomChatWidget() {
                   </div>
                 )}
 
-                {/* Graceful 503 / Error Handling */}
-                {error && (
+                {/* Rate limit 429 Warning */}
+                {error && failedErrorType === "429" && (
+                  <div className={styles.warningBubble} role="alert">
+                    <div className={styles.warningHeader}>
+                      <AlertCircle size={14} />
+                      <span>
+                        {t({
+                          en: "Rate limit reached",
+                          vi: "Đã đạt giới hạn tin nhắn",
+                        })}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0 }}>{error}</p>
+                  </div>
+                )}
+
+                {/* Graceful 503 / General Error Handling */}
+                {error && failedErrorType !== "429" && (
                   <div className={styles.errorBubble} role="alert">
                     <div className={styles.errorHeader}>
                       <AlertTriangle size={14} />
