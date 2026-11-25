@@ -288,6 +288,63 @@
   border-radius: 5px;
   background: #fff;
   text-decoration: none;
+  transition: all 0.15s ease;
+}
+.suggestions a:hover {
+  background: #f0fdf4;
+  border-color: #0f4d3a;
+}
+.suggestionCard {
+  display: flex !important;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+.suggestionCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.suggestionCardTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f4d3a;
+}
+.suggestionCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #475569;
+}
+.suggestionBadge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.warningBubble {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.warningHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #b45309;
 }
 .consentButton,
 .revoke {
