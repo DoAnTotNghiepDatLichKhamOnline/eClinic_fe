@@ -1,18 +1,12 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
-  CalendarRange,
-  CircleCheck,
   Clock3,
-  FolderOpen,
   House,
-  PhoneCall,
   Star,
   Stethoscope,
-  UserCheck,
   Users,
-  UserX,
+  ArrowRight,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { UserProfile } from "@/shared/components/ui/UserProfile";
@@ -21,12 +15,9 @@ import styles from "./DoctorDashboardPage.module.css";
 import { DoctorNotificationCenter } from "./DoctorNotificationCenter";
 import { DoctorSidebar, type DoctorSection } from "./DoctorSidebar";
 import { DoctorSearchBar } from "./DoctorSearchBar";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { doctorBookingService } from "@/services/booking";
-import { notifyAuth } from "@/utils/authNotification";
-import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { useCollapsibleSidebar } from "@/hooks/useCollapsibleSidebar";
-import type { HangDoiLuot } from "@/types/booking.type";
 
 function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -51,12 +42,8 @@ export function DoctorDashboardPage({
 }: DoctorDashboardPageProps) {
   const { lang } = useLanguage();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const today = localDateKey(new Date());
 
-  const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
-  const [confirmAbsentId, setConfirmAbsentId] = useState<number | null>(null);
-  const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
   const { isCollapsed: isSidebarCollapsed, toggle: handleToggleSidebarCollapse } =
     useCollapsibleSidebar("doctor_sidebar", "(max-width: 1200px)");
 
@@ -65,7 +52,7 @@ export function DoctorDashboardPage({
     queryFn: () => doctorBookingService.getTongQuanBacSi(),
   });
 
-  const { data: hangDoiResponse, isLoading: isLoadingHangDoi } = useQuery({
+  const { data: hangDoiResponse } = useQuery({
     queryKey: ["booking", "doctor-hang-doi", today],
     queryFn: () => doctorBookingService.getHangDoi(today),
     refetchInterval: 15000,
@@ -162,7 +149,7 @@ export function DoctorDashboardPage({
   const summary = summaryResponse?.duLieu;
   const hangDoi = hangDoiResponse?.duLieu;
   const cacCa = hangDoi?.cacCa ?? [];
-  const activeShiftId = selectedShiftId ?? hangDoi?.idCaHienTai ?? cacCa[0]?.idLichLamViec;
+  const activeShiftId = hangDoi?.idCaHienTai ?? cacCa[0]?.idLichLamViec;
   const currentShift = cacCa.find((c) => c.idLichLamViec === activeShiftId) ?? cacCa[0];
   const totalWaitingCount =
     currentShift?.soLuong?.choKham ??
@@ -170,89 +157,6 @@ export function DoctorDashboardPage({
 
   const navigateToSection = (section: DoctorSection) =>
     navigate(`/doctor/${sectionPaths[section]}`);
-
-  const handleCallNext = async (idLichLamViec: number) => {
-    try {
-      const res = await doctorBookingService.goiTiepHangDoi(idLichLamViec);
-      if (res.thanhCong) {
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-hang-doi"],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-summary"],
-        });
-        notifyAuth(
-          "success",
-          lang === "vi" ? "Đã gọi bệnh nhân tiếp theo" : "Called next patient",
-          res.thongDiep,
-        );
-      }
-    } catch (err) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Lỗi gọi khám" : "Call error",
-        (err as { response?: { data?: { thongDiep?: string } } }).response
-          ?.data?.thongDiep || "Could not call next patient",
-      );
-    }
-  };
-
-  const handleCallPatient = async (idLichHen: number) => {
-    try {
-      const res = await doctorBookingService.goiKham(idLichHen);
-      if (res.thanhCong) {
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-hang-doi"],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-summary"],
-        });
-        notifyAuth(
-          "success",
-          lang === "vi" ? "Đã gọi bệnh nhân vào khám" : "Patient called",
-          res.thongDiep,
-        );
-      }
-    } catch (err) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Lỗi gọi khám" : "Call error",
-        (err as { response?: { data?: { thongDiep?: string } } }).response
-          ?.data?.thongDiep || "Could not call patient",
-      );
-    }
-  };
-
-  const executeMarkAbsent = async () => {
-    if (!confirmAbsentId) return;
-    try {
-      setIsMarkingAbsent(true);
-      const res = await doctorBookingService.danhDauVangMat(confirmAbsentId);
-      if (res.thanhCong) {
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-hang-doi"],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["booking", "doctor-summary"],
-        });
-        notifyAuth(
-          "info",
-          lang === "vi" ? "Đã đánh dấu vắng mặt" : "Marked absent",
-          res.thongDiep,
-        );
-      }
-    } catch (err) {
-      notifyAuth(
-        "error",
-        lang === "vi" ? "Lỗi thao tác" : "Error",
-        (err as { response?: { data?: { thongDiep?: string } } }).response
-          ?.data?.thongDiep || "Failed to mark absent",
-      );
-    } finally {
-      setIsMarkingAbsent(false);
-      setConfirmAbsentId(null);
-    }
-  };
 
   return (
     <div className={styles.pageWrapper}>
@@ -312,73 +216,63 @@ export function DoctorDashboardPage({
                 </p>
               </div>
 
+              {/* 4 CORE KPI CARDS (25% EACH) */}
               <div className={styles.statsGrid}>
+                {/* 1. Lịch khám hôm nay */}
                 <div className={styles.statCard}>
                   <div className={styles.statIcon}>
                     <CalendarDays aria-hidden="true" />
                   </div>
-                  <div className={styles.statInfo}>
+                  <div className={styles.statInfo} style={{ width: "100%" }}>
                     <span className={styles.statValue}>
                       {isLoadingSummary
                         ? "..."
-                        : (summary?.lichHenHomNay ?? summary?.caHomNay ?? 0)}
+                        : `${summary?.daKham ?? 0} / ${summary?.lichHenHomNay ?? summary?.caHomNay ?? 0}`}
                     </span>
                     <span className={styles.statLabel}>
                       {lang === "vi"
-                        ? "Lịch khám hôm nay"
-                        : "Today's Appointments"}
+                        ? "Lịch khám hôm nay (Đã khám / Tổng)"
+                        : "Today's Progress (Done / Total)"}
                     </span>
+                    <div className={styles.statProgressWrapper}>
+                      <div className={styles.statProgressTrack}>
+                        <div
+                          className={styles.statProgressBar}
+                          style={{
+                            width: `${
+                              (summary?.lichHenHomNay ?? summary?.caHomNay ?? 0) > 0
+                                ? Math.min(
+                                    100,
+                                    Math.round(
+                                      ((summary?.daKham ?? 0) /
+                                        (summary?.lichHenHomNay ?? summary?.caHomNay ?? 1)) *
+                                        100,
+                                    ),
+                                  )
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <span className={styles.statSubtext}>
+                        {(summary?.lichHenHomNay ?? summary?.caHomNay ?? 0) > 0
+                          ? `${Math.min(
+                              100,
+                              Math.round(
+                                ((summary?.daKham ?? 0) /
+                                  (summary?.lichHenHomNay ?? summary?.caHomNay ?? 1)) *
+                                  100,
+                              ),
+                            )}% ${lang === "vi" ? "hoàn thành" : "completed"}`
+                          : lang === "vi"
+                            ? "Chưa có ca hôm nay"
+                            : "No shifts today"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className={styles.statCard}>
-                  <div className={styles.statIcon}>
-                    <Clock3 aria-hidden="true" />
-                  </div>
-                  <div className={styles.statInfo}>
-                    <span className={styles.statValue}>
-                      {isLoadingSummary ? "..." : (summary?.dangCho ?? 0)}
-                    </span>
-                    <span className={styles.statLabel}>
-                      {lang === "vi"
-                        ? "Bệnh nhân chờ khám"
-                        : "Patients Waiting"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={styles.statCard}>
-                  <div className={styles.statIcon}>
-                    <CircleCheck aria-hidden="true" />
-                  </div>
-                  <div className={styles.statInfo}>
-                    <span className={styles.statValue}>
-                      {isLoadingSummary ? "..." : (summary?.daKham ?? 0)}
-                    </span>
-                    <span className={styles.statLabel}>
-                      {lang === "vi" ? "Đã hoàn thành" : "Completed Exams"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={styles.statCard}>
-                  <div className={styles.statIcon}>
-                    <Star aria-hidden="true" />
-                  </div>
-                  <div className={styles.statInfo}>
-                    <span className={styles.statValue}>
-                      {isLoadingSummary
-                        ? "..."
-                        : (summary?.diemDanhGia ?? summary?.danhGiaTrungBinh)
-                          ? `${summary?.diemDanhGia ?? summary?.danhGiaTrungBinh} ★ (${summary?.soDanhGia ?? summary?.tongSoDanhGia ?? 0})`
-                          : "—"}
-                    </span>
-                    <span className={styles.statLabel}>
-                      {lang === "vi" ? "Đánh giá trung bình" : "Average Rating"}
-                    </span>
-                  </div>
-                </div>
-
+                {/* 2. Bệnh nhân trong tháng */}
                 <div className={styles.statCard}>
                   <div className={styles.statIcon}>
                     <Users aria-hidden="true" />
@@ -394,30 +288,18 @@ export function DoctorDashboardPage({
                         ? "Bệnh nhân trong tháng"
                         : "Monthly Patients"}
                     </span>
+                    <span className={styles.statSubtext}>
+                      {lang === "vi"
+                        ? "Tổng ca tiếp nhận tháng này"
+                        : "Total visits this month"}
+                    </span>
                   </div>
                 </div>
 
+                {/* 3. Tổng giờ làm tháng này */}
                 <div className={styles.statCard}>
                   <div className={styles.statIcon}>
                     <Clock3 aria-hidden="true" />
-                  </div>
-                  <div className={styles.statInfo}>
-                    <span className={styles.statValue}>
-                      {isLoadingMonthShifts
-                        ? "..."
-                        : `${Math.round(weeklyHours * 10) / 10}h`}
-                    </span>
-                    <span className={styles.statLabel}>
-                      {lang === "vi"
-                        ? "Số giờ làm trong tuần"
-                        : "Weekly Work Hours"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={styles.statCard}>
-                  <div className={styles.statIcon}>
-                    <CalendarRange aria-hidden="true" />
                   </div>
                   <div className={styles.statInfo}>
                     <span className={styles.statValue}>
@@ -427,250 +309,155 @@ export function DoctorDashboardPage({
                     </span>
                     <span className={styles.statLabel}>
                       {lang === "vi"
-                        ? "Số giờ làm trong tháng"
+                        ? "Tổng giờ làm tháng này"
                         : "Monthly Work Hours"}
                     </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* HÀNG ĐỢI KHÁM THEO CA (QUEUE) */}
-              <div className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h2 className={styles.sectionTitle}>
+                    <span className={styles.statSubtext}>
                       {lang === "vi"
-                        ? "Hàng đợi khám hôm nay"
-                        : "Today's Consultation Queue"}
-                    </h2>
-                    <span className={styles.welcomeSub}>
-                      {lang === "vi"
-                        ? "Tự động làm mới mỗi 15 giây. Trực tiếp điều phối và gọi bệnh nhân vào khám."
-                        : "Auto-refreshes every 15s. Coordinate and call patients."}
+                        ? `Tuần này: ${Math.round(weeklyHours * 10) / 10}h`
+                        : `This week: ${Math.round(weeklyHours * 10) / 10}h`}
                     </span>
                   </div>
-                  {currentShift && (
-                    <button
-                      type="button"
-                      className={styles.callNextBtn}
-                      onClick={() => handleCallNext(currentShift.idLichLamViec)}
-                      disabled={currentShift.soLuong.choKham === 0}
-                    >
-                      <PhoneCall size={16} aria-hidden="true" />
-                      {lang === "vi" ? "Gọi tiếp bệnh nhân" : "Call next patient"}
-                    </button>
-                  )}
                 </div>
 
-                {cacCa.length > 0 && (
-                  <div className={styles.shiftTabs}>
-                    {cacCa.map((ca) => (
-                      <button
-                        key={ca.idLichLamViec}
-                        type="button"
-                        className={`${styles.shiftTab} ${ca.idLichLamViec === currentShift?.idLichLamViec ? styles.shiftTabActive : ""}`}
-                        onClick={() => setSelectedShiftId(ca.idLichLamViec)}
-                      >
-                        <span className={styles.shiftTime}>
-                          {ca.buoi === "SANG"
-                            ? lang === "vi"
-                              ? "Buổi Sáng"
-                              : "Morning"
-                            : ca.buoi === "CHIEU"
-                              ? lang === "vi"
-                                ? "Buổi Chiều"
-                                : "Afternoon"
-                              : lang === "vi"
-                                ? "Buổi Tối"
-                                : "Evening"}{" "}
-                          ({ca.gioBatDau.slice(0, 5)} - {ca.gioKetThuc.slice(0, 5)})
-                        </span>
-                        <span className={styles.shiftStats}>
-                          {typeof ca.phongKham === "object" && ca.phongKham !== null
-                            ? (ca.phongKham as any).tenPhong
-                            : ca.phongKham} · {ca.soLuong.choKham} {lang === "vi" ? "chờ" : "waiting"} ·{" "}
-                          {ca.soLuong.dangKham} {lang === "vi" ? "đang khám" : "in room"} ·{" "}
-                          {ca.soLuong.daKham} {lang === "vi" ? "xong" : "done"}
-                        </span>
-                      </button>
-                    ))}
+                {/* 4. Đánh giá trung bình */}
+                <div className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Star aria-hidden="true" />
                   </div>
-                )}
+                  <div className={styles.statInfo}>
+                    <span className={styles.statValue}>
+                      {isLoadingSummary
+                        ? "..."
+                        : (summary?.diemDanhGia ?? summary?.danhGiaTrungBinh)
+                          ? `${summary?.diemDanhGia ?? summary?.danhGiaTrungBinh} ★`
+                          : "—"}
+                    </span>
+                    <span className={styles.statLabel}>
+                      {lang === "vi" ? "Đánh giá trung bình" : "Average Rating"}
+                    </span>
+                    <span className={styles.statSubtext}>
+                      {summary?.soDanhGia ?? summary?.tongSoDanhGia ?? 0}{" "}
+                      {lang === "vi" ? "lượt đánh giá" : "reviews"}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                <div className={styles.tableResponsive}>
-                  <table className={styles.patientTable}>
-                  <thead>
-                    <tr>
-                      <th>STT</th>
-                      <th>{lang === "vi" ? "Giờ khám" : "Time"}</th>
-                      <th>{lang === "vi" ? "Mã tra cứu" : "Code"}</th>
-                      <th>{lang === "vi" ? "Tên bệnh nhân" : "Patient"}</th>
-                      <th>{lang === "vi" ? "Lý do khám" : "Reason"}</th>
-                      <th>{lang === "vi" ? "Trạng thái" : "Status"}</th>
-                      <th>{lang === "vi" ? "Thao tác" : "Actions"}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoadingHangDoi ? (
-                      <tr>
-                        <td colSpan={7}>
-                          {lang === "vi"
-                            ? "Đang tải hàng đợi..."
-                            : "Loading queue..."}
-                        </td>
-                      </tr>
-                    ) : !currentShift || currentShift.cacLuot.length === 0 ? (
-                      <tr>
-                        <td colSpan={7}>
-                          {lang === "vi"
-                            ? "Ca trực này chưa có bệnh nhân nào trong hàng đợi."
-                            : "No patients in queue for this shift."}
-                        </td>
-                      </tr>
-                    ) : (
-                      currentShift.cacLuot.map((luot: HangDoiLuot) => {
-                        const apt = luot.lichHen;
-                        return (
-                          <tr key={apt.maPhieuKham}>
-                            <td>
-                              <strong>#{apt.soThuTu}</strong>
-                            </td>
-                            <td>{apt.gioKhamDuKien}</td>
-                            <td>
-                              <strong>{apt.maTraCuu}</strong>
-                            </td>
-                            <td>
-                              <strong>{apt.hoTenBenhNhan}</strong>
-                            </td>
-                            <td>{apt.lyDoKham}</td>
-                            <td>
-                              {luot.trangThaiHangDoi === "CHO_KHAM" && (
-                                <span
-                                  className={`${styles.badge} ${styles.badgeWaiting}`}
-                                >
-                                  <Clock3 aria-hidden="true" size={14} />{" "}
-                                  {lang === "vi" ? "Chờ khám" : "Waiting"}
-                                </span>
-                              )}
-                              {luot.trangThaiHangDoi === "DANG_KHAM" && (
-                                <span
-                                  className={`${styles.badge} ${styles.badgeProgress}`}
-                                >
-                                  <Stethoscope aria-hidden="true" size={14} />{" "}
-                                  {lang === "vi" ? "Đang khám" : "In Progress"}
-                                </span>
-                              )}
-                              {luot.trangThaiHangDoi === "VANG_MAT" && (
-                                <span
-                                  className={`${styles.badge} ${styles.badgeAbsent}`}
-                                >
-                                  <UserX aria-hidden="true" size={14} />{" "}
-                                  {lang === "vi" ? "Vắng mặt" : "Absent"}
-                                </span>
-                              )}
-                              {luot.trangThaiHangDoi === "DA_KHAM" && (
-                                <span
-                                  className={`${styles.badge} ${styles.badgeDone}`}
-                                >
-                                  <CircleCheck aria-hidden="true" size={14} />{" "}
-                                  {lang === "vi" ? "Đã khám" : "Completed"}
-                                </span>
-                              )}
-                            </td>
-                            <td>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                {(luot.trangThaiHangDoi === "CHO_KHAM" ||
-                                  luot.trangThaiHangDoi === "VANG_MAT") && (
-                                  <button
-                                    type="button"
-                                    className={styles.actionBtn}
-                                    onClick={() =>
-                                      handleCallPatient(Number(apt.id))
-                                    }
-                                  >
-                                    <UserCheck size={14} aria-hidden="true" />
-                                    {lang === "vi" ? "Gọi khám" : "Call In"}
-                                  </button>
-                                )}
-
-                                {luot.trangThaiHangDoi === "DANG_KHAM" && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className={styles.dangerBtn}
-                                      onClick={() =>
-                                        setConfirmAbsentId(Number(apt.id))
-                                      }
-                                    >
-                                      <UserX size={14} aria-hidden="true" />
-                                      {lang === "vi" ? "Vắng mặt" : "Absent"}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className={styles.actionBtn}
-                                      onClick={() =>
-                                        navigate(
-                                          `/doctor/consultation/${apt.id}`,
-                                        )
-                                      }
-                                    >
-                                      <Stethoscope
-                                        size={14}
-                                        aria-hidden="true"
-                                      />
-                                      {lang === "vi" ? "Khám bệnh" : "Consult"}
-                                    </button>
-                                  </>
-                                )}
-
-                                {luot.trangThaiHangDoi === "DA_KHAM" && (
-                                  <button
-                                    type="button"
-                                    className={styles.secondaryBtn}
-                                    onClick={() =>
-                                      navigate(
-                                        `/doctor/consultation/${apt.id}`,
-                                      )
-                                    }
-                                  >
-                                    <FolderOpen size={14} aria-hidden="true" />
-                                    {lang === "vi" ? "Xem bệnh án" : "Record"}
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+              {/* CA TRỰC HÔM NAY / SẮP TỚI & LỐI TẮT KHÁM BỆNH */}
+              <div className={styles.shiftOverviewCard}>
+                <div className={styles.shiftOverviewInfo}>
+                  <div className={styles.shiftOverviewTitle}>
+                    <Clock3 className="text-teal-600 shrink-0" size={22} />
+                    <span>
+                      {currentShift
+                        ? `${lang === "vi" ? "Ca trực hiện tại" : "Current Shift"}: ${
+                            currentShift.buoi === "SANG"
+                              ? lang === "vi"
+                                ? "Buổi Sáng"
+                                : "Morning"
+                              : currentShift.buoi === "CHIEU"
+                                ? lang === "vi"
+                                  ? "Buổi Chiều"
+                                  : "Afternoon"
+                                : lang === "vi"
+                                  ? "Buổi Tối"
+                                  : "Evening"
+                          } (${currentShift.gioBatDau.slice(0, 5)} - ${currentShift.gioKetThuc.slice(0, 5)})`
+                        : lang === "vi"
+                          ? "Hôm nay không có ca trực phân công"
+                          : "No assigned shift today"}
+                    </span>
+                    {currentShift && (
+                      <span className={styles.shiftOverviewBadge}>
+                        {typeof currentShift.phongKham === "object" &&
+                        currentShift.phongKham !== null
+                          ? (currentShift.phongKham as any).tenPhong
+                          : currentShift.phongKham || (lang === "vi" ? "Phòng khám" : "Clinic")}
+                      </span>
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                  <div className={styles.shiftOverviewMeta}>
+                    {currentShift ? (
+                      <>
+                        <span>
+                          <strong>{currentShift.soLuong?.choKham ?? 0}</strong>{" "}
+                          {lang === "vi" ? "bệnh nhân đang chờ" : "waiting"}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          <strong>{currentShift.soLuong?.dangKham ?? 0}</strong>{" "}
+                          {lang === "vi" ? "đang trong phòng khám" : "in examination"}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          <strong>{currentShift.soLuong?.daKham ?? 0}</strong>{" "}
+                          {lang === "vi" ? "đã hoàn tất" : "completed"}
+                        </span>
+                      </>
+                    ) : (
+                      <span>
+                        {lang === "vi"
+                          ? "Kiểm tra lịch trực các ngày tới hoặc tạo đơn yêu cầu nhận/đổi ca trực."
+                          : "Check your upcoming schedule or request shift assignments."}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.goToConsultationBtn}
+                  onClick={() => navigate("/doctor/consultation")}
+                >
+                  <Stethoscope size={18} />
+                  <span>
+                    {lang === "vi"
+                      ? "Đến phòng Khám bệnh & Hàng đợi"
+                      : "Go to Consultation Queue"}
+                  </span>
+                  <ArrowRight size={16} />
+                </button>
               </div>
 
-              {/* ĐÁNH GIÁ ẨN DANH CỦA BỆNH NHÂN */}
+              {/* ĐÁNH GIÁ GẦN ĐÂY TỪ BỆNH NHÂN (LƯỚI 2 CỘT) */}
               {reviewsResponse?.duLieu?.noiDung &&
                 reviewsResponse.duLieu.noiDung.length > 0 && (
                   <div className={styles.sectionCard}>
                     <div className={styles.sectionHeader}>
-                      <h2 className={styles.sectionTitle}>
-                        {lang === "vi"
-                          ? "Đánh giá gần đây từ bệnh nhân (Ẩn danh)"
-                          : "Recent Patient Reviews (Anonymous)"}
-                      </h2>
+                      <div>
+                        <h2 className={styles.sectionTitle}>
+                          {lang === "vi"
+                            ? "Đánh giá gần đây từ bệnh nhân (Ẩn danh)"
+                            : "Recent Patient Reviews (Anonymous)"}
+                        </h2>
+                        <span className={styles.welcomeSub}>
+                          {lang === "vi"
+                            ? "Phản hồi thực tế từ các lượt khám đã hoàn tất."
+                            : "Verified feedback from completed consultations."}
+                        </span>
+                      </div>
                     </div>
-                    <div>
+                    <div className={styles.reviewsGrid2Col}>
                       {reviewsResponse.duLieu.noiDung.map((rev) => (
-                        <div className={styles.reviewItem} key={rev.id}>
-                          <div className={styles.reviewStars}>
-                            {"★".repeat(rev.soSao)}
-                            {"☆".repeat(5 - rev.soSao)}
+                        <div className={styles.reviewCard2Col} key={rev.id}>
+                          <div className={styles.reviewCardHeader}>
+                            <div className={styles.reviewStars}>
+                              {"★".repeat(rev.soSao)}
+                              {"☆".repeat(5 - rev.soSao)}
+                            </div>
+                            <span className={styles.reviewTag}>
+                              {lang === "vi" ? "Khám chuyên khoa" : "Specialist Care"}
+                            </span>
                           </div>
-                          {rev.nhanXet && (
-                            <p className={styles.reviewComment}>"{rev.nhanXet}"</p>
-                          )}
-                          <div className={styles.reviewMeta}>
-                            {lang === "vi" ? "Ngày đánh giá:" : "Reviewed:"}{" "}
+                          <p className={styles.reviewComment}>
+                            {rev.nhanXet
+                              ? `"${rev.nhanXet}"`
+                              : lang === "vi"
+                                ? "(Bệnh nhân không để lại nhận xét bằng lời)"
+                                : "(No written comment left)"}
+                          </p>
+                          <div className={styles.reviewDate}>
+                            {lang === "vi" ? "Ngày:" : "Date:"}{" "}
                             {rev.ngayTao?.slice(0, 10)}
                           </div>
                         </div>
@@ -682,23 +469,6 @@ export function DoctorDashboardPage({
           )}
         </div>
       </main>
-
-      {/* Confirm Dialog for Marking Patient Absent */}
-      <ConfirmDialog
-        isOpen={confirmAbsentId !== null}
-        title={lang === "vi" ? "Xác nhận đánh dấu vắng mặt" : "Confirm Mark Absent"}
-        message={
-          lang === "vi"
-            ? `Bạn có chắc chắn muốn đánh dấu bệnh nhân #${confirmAbsentId} là vắng mặt cho ca khám này?`
-            : `Are you sure you want to mark patient #${confirmAbsentId} as absent for this queue?`
-        }
-        confirmLabel={lang === "vi" ? "Đánh dấu vắng mặt" : "Mark Absent"}
-        cancelLabel={lang === "vi" ? "Hủy" : "Cancel"}
-        variant="danger"
-        isLoading={isMarkingAbsent}
-        onConfirm={() => void executeMarkAbsent()}
-        onCancel={() => setConfirmAbsentId(null)}
-      />
     </div>
   );
 }

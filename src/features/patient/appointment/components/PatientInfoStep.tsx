@@ -275,7 +275,7 @@ export function PatientInfoStep({
                     }}
                     className={`h-full rounded-xl text-xs transition-all ${
                       isSelected
-                        ? "border-2 border-emerald-800 bg-white text-slate-900 font-bold shadow-sm ring-2 ring-emerald-600/20"
+                        ? "border-2 border-emerald-800 bg-white text-slate-900 ring-2 ring-emerald-600/20"
                         : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800 font-medium"
                     }`}
                   >
@@ -428,8 +428,8 @@ export function PatientInfoStep({
                   }}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     !formValues.hasHealthInsurance
-                      ? "bg-white! text-slate-800! shadow-xs!"
-                      : "text-slate-500! hover:text-slate-700!"
+                      ? "bg-white text-slate-800 shadow-xs"
+                      : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
                   {lang === "vi" ? "Không có BHYT" : "No Insurance"}
@@ -439,8 +439,8 @@ export function PatientInfoStep({
                   onClick={() => onChange("hasHealthInsurance", true)}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                     formValues.hasHealthInsurance
-                      ? "bg-emerald-700! text-white! shadow-xs!"
-                      : "text-slate-500! hover:text-slate-700!"
+                      ? "bg-emerald-700 text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
                   {lang === "vi" ? "Có thẻ BHYT" : "Has Insurance"}
@@ -525,7 +525,7 @@ export function PatientInfoStep({
                       onClick={() => handleAddReasonChip(text)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 cursor-pointer ${
                         isSelected
-                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
                           : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 border border-emerald-200/60"
                       }`}
                     >

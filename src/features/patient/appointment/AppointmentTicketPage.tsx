@@ -678,7 +678,7 @@ export function AppointmentTicketPage() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800! px-4 py-2 text-xs font-bold text-white! shadow-sm hover:bg-emerald-900! disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-900 disabled:opacity-60"
                 >
                   {busy && <Loader2 size={13} className="animate-spin" />}
                   {vi ? "Xác nhận hủy" : "Confirm Cancel"}

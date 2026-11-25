@@ -461,6 +461,37 @@
   color: #19714f;
 }
 
+.status_cho_duyet {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status_da_duyet {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status_tu_choi {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status_da_rut {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.status_dong_nghiep_tu_choi {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status_cho_dong_y,
+.status_cho_dong_nghiep_duyet {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 .patientFacts {
   display: flex;
   flex-wrap: wrap;
@@ -738,3 +769,207 @@
     height: 96px;
   }
 }
+
+/* ================== CALENDAR SHIFT ACCENT & DRAWER ================== */
+.calendarShiftsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.calendarShiftCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  text-align: left;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.calendarShiftCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.calendarShiftMorning {
+  border-left: 4px solid #0d9488 !important;
+  background: #f0fdfa !important;
+  color: #134e4a !important;
+}
+
+.calendarShiftAfternoon {
+  border-left: 4px solid #f59e0b !important;
+  background: #fffbeb !important;
+  color: #78350f !important;
+}
+
+.calendarShiftTime {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendarShiftRoom {
+  font-size: 10px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shiftProgressBar {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.shiftProgressFill {
+  height: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.weekSummaryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+/* ================== SHIFT REQUESTS 2-COLUMN LAYOUT ================== */
+.shiftRequests2Col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .shiftRequests2Col {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stickyFormWrapper {
+  position: sticky;
+  top: 16px;
+}
+
+.requestFilterTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.requestFilterTab {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.requestFilterTab:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.requestFilterTabActive {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  border-color: #0d9488 !important;
+}
+
+/* ================== DRAWER ================== */
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawerContent {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawerHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.drawerCloseBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawerCloseBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.drawerBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawerFooter {
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+  background: #f8fafc;
+}
+

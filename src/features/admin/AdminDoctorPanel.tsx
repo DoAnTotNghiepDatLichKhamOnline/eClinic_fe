@@ -59,8 +59,9 @@ export function AdminDoctorPanel() {
   const [reactivatingDoctor, setReactivatingDoctor] = useState<BacSiQuanTriResponse | null>(null);
   const [isReactivating, setIsReactivating] = useState(false);
 
-  type DoctorSortField = "maBacSi" | "hoTen" | "email";
-  const [sortField, setSortField] = useState<DoctorSortField>("maBacSi");
+  const PAGE_SIZE = 20;
+  type DoctorSortField = "id" | "maBacSi" | "hoTen" | "email";
+  const [sortField, setSortField] = useState<DoctorSortField>("id");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Debounce search 400ms
@@ -76,22 +77,53 @@ export function AdminDoctorPanel() {
   const doctorsQuery = useQuery({
     queryKey: [
       "catalog",
-      "admin-doctors",
+      "admin-doctors-all",
       debouncedQuery,
       specialtyFilter,
       statusFilter,
-      page,
     ],
-    queryFn: () =>
-      doctorService.getDanhSachBacSiQuanTri({
+    queryFn: async () => {
+      const firstRes = await doctorService.getDanhSachBacSiQuanTri({
         tuKhoa: debouncedQuery || undefined,
         idChuyenKhoa: specialtyFilter ? Number(specialtyFilter) : undefined,
         trangThai: statusFilter
           ? (statusFilter as "DANG_CONG_TAC" | "NGUNG_CONG_TAC")
           : undefined,
-        trang: page,
-        kichThuoc: 20,
-      }),
+        trang: 0,
+        kichThuoc: 100,
+      });
+      const firstData = firstRes.duLieu;
+      if (!firstData) return [];
+
+      let allDocs = [...(firstData.noiDung ?? [])];
+      const totalPages = firstData.tongSoTrang ?? 1;
+
+      if (totalPages > 1) {
+        const remainingPromises = [];
+        for (let p = 1; p < totalPages; p++) {
+          remainingPromises.push(
+            doctorService.getDanhSachBacSiQuanTri({
+              tuKhoa: debouncedQuery || undefined,
+              idChuyenKhoa: specialtyFilter
+                ? Number(specialtyFilter)
+                : undefined,
+              trangThai: statusFilter
+                ? (statusFilter as "DANG_CONG_TAC" | "NGUNG_CONG_TAC")
+                : undefined,
+              trang: p,
+              kichThuoc: 100,
+            }),
+          );
+        }
+        const results = await Promise.all(remainingPromises);
+        for (const res of results) {
+          if (res.duLieu?.noiDung) {
+            allDocs = allDocs.concat(res.duLieu.noiDung);
+          }
+        }
+      }
+      return allDocs;
+    },
     enabled: tab === "directory",
   });
   const detailQuery = useQuery({
@@ -109,11 +141,13 @@ export function AdminDoctorPanel() {
       }),
     enabled: tab === "reviews",
   });
-  const doctors = doctorsQuery.data?.duLieu?.noiDung ?? [];
+  const allDoctors = doctorsQuery.data ?? [];
   const detail = detailQuery.data?.duLieu;
 
   const refreshDoctors = async () => {
-    await client.invalidateQueries({ queryKey: ["catalog", "admin-doctors"] });
+    await client.invalidateQueries({
+      queryKey: ["catalog", "admin-doctors-all"],
+    });
     await client.invalidateQueries({
       queryKey: ["catalog", "admin-doctor-detail"],
     });
@@ -159,15 +193,28 @@ export function AdminDoctorPanel() {
   };
 
   const sortedDoctors = useMemo(() => {
-    const list = [...doctors];
+    const list = [...allDoctors];
     list.sort((a, b) => {
       const aVal = a[sortField] ?? "";
       const bVal = b[sortField] ?? "";
-      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", { sensitivity: "base" });
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", {
+        sensitivity: "base",
+        numeric: true,
+      });
       return sortDirection === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [doctors, sortField, sortDirection, vi]);
+  }, [allDoctors, sortField, sortDirection, vi]);
+
+  const totalElements = sortedDoctors.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
+  const pagedDoctors = useMemo(() => {
+    const start = page * PAGE_SIZE;
+    return sortedDoctors.slice(start, start + PAGE_SIZE);
+  }, [sortedDoctors, page]);
 
   const addDoctor = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -498,11 +545,11 @@ export function AdminDoctorPanel() {
                   <th>
                     <button
                       type="button"
-                      onClick={() => handleSort("maBacSi")}
+                      onClick={() => handleSort("id")}
                       className="group inline-flex items-center gap-1.5 font-bold hover:text-teal-800 transition-colors"
                     >
-                      <span>{vi ? "Mã" : "Code"}</span>
-                      {renderSortIndicator("maBacSi")}
+                      <span>ID / {vi ? "Mã" : "Code"}</span>
+                      {renderSortIndicator("id")}
                     </button>
                   </th>
                   <th>
@@ -532,7 +579,7 @@ export function AdminDoctorPanel() {
                 </tr>
               </thead>
               <tbody>
-                {sortedDoctors.length === 0 ? (
+                {pagedDoctors.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-8 text-xs text-slate-500">
                       {doctorsQuery.isLoading
@@ -541,7 +588,7 @@ export function AdminDoctorPanel() {
                     </td>
                   </tr>
                 ) : (
-                  sortedDoctors.map((doctor) => (
+                  pagedDoctors.map((doctor) => (
                     <tr key={doctor.id}>
                       <td className="font-mono text-xs">{doctor.maBacSi}</td>
                       <td>
@@ -618,9 +665,9 @@ export function AdminDoctorPanel() {
           </div>
           <Pagination
             currentPage={page}
-            totalPages={doctorsQuery.data?.duLieu?.tongSoTrang ?? 1}
-            totalElements={doctorsQuery.data?.duLieu?.tongSoPhanTu}
-            pageSize={20}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={PAGE_SIZE}
             onPageChange={setPage}
           />
         </>

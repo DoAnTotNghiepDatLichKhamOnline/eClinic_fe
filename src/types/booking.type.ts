@@ -335,6 +335,7 @@ export interface TrangCaNhanResponse {
 
 export interface CaLamViecResponse {
 	id: number;
+	buoi?: string;
 	ngay: string;
 	gioBatDau: string;
 	gioKetThuc: string;
@@ -623,13 +624,14 @@ export interface HuyCaRequest {
 
 export interface GuiYeuCauDoiLichRequest {
 	idLichLamViec: number;
-	loaiYeuCau: 'XIN_NGHI' | 'DOI_CA';
+	loaiYeuCau: 'XIN_NGHI' | 'DOI_CA' | 'NHUONG_CA';
 	lyDo: string;
 	ngayMongMuon?: string;
 	gioBatDauMongMuon?: string;
 	gioKetThucMongMuon?: string;
 	idPhongKhamMongMuon?: number;
 	idCaHienTai?: number;
+	idBacSiNhan?: number;
 }
 
 export interface XuLyYeuCauRequest {

@@ -1,11 +1,19 @@
-import { useState, type FormEvent } from "react";
-import { Users, Filter, RotateCcw, AlertTriangle, Clock } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Users, RotateCcw, AlertTriangle, Clock, PhoneCall } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import type {
   LichHenTrongNgayItem,
   LichHenTrongNgayParams,
 } from "@/types/consultation.type";
 import type { TrangThaiLichHen } from "@/types/common.type";
+
+export interface ShiftOption {
+  idLichLamViec: number;
+  buoi: string;
+  gioBatDau: string;
+  gioKetThuc: string;
+  phongKham?: any;
+}
 
 interface TodayPatientsTableProps {
   patients: LichHenTrongNgayItem[];
@@ -14,7 +22,12 @@ interface TodayPatientsTableProps {
   onFilterChange: (filters: LichHenTrongNgayParams) => void;
   onSelectPatient: (id: number) => void;
   selectedAppointmentId?: number;
+  shifts?: ShiftOption[];
+  onCallNext?: () => void;
+  isCallingNext?: boolean;
 }
+
+type StatusTabKey = "ALL" | "WAITING" | "IN_PROGRESS" | "DONE";
 
 const TRANG_THAI_LABELS: Record<
   TrangThaiLichHen,
@@ -69,14 +82,46 @@ export function TodayPatientsTable({
   onFilterChange,
   onSelectPatient,
   selectedAppointmentId,
+  shifts = [],
+  onCallNext,
+  isCallingNext = false,
 }: TodayPatientsTableProps) {
   const { lang } = useLanguage();
   const [formFilters, setFormFilters] =
     useState<LichHenTrongNgayParams>(filters);
+  const [selectedTab, setSelectedTab] = useState<StatusTabKey>("ALL");
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
-    onFilterChange(formFilters);
+  // Keep local state in sync if parent changes filters
+  useEffect(() => {
+    setFormFilters(filters);
+  }, [filters]);
+
+  // Debounced search for keyword and STT
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        formFilters.tuKhoa !== filters.tuKhoa ||
+        formFilters.soThuTu !== filters.soThuTu
+      ) {
+        onFilterChange(formFilters);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [formFilters.tuKhoa, formFilters.soThuTu]);
+
+  const handleDateChange = (newDate: string) => {
+    const updated = { ...formFilters, ngay: newDate };
+    setFormFilters(updated);
+    onFilterChange(updated);
+  };
+
+  const handleShiftChange = (shiftIdStr: string) => {
+    const updated = {
+      ...formFilters,
+      idLichLamViec: shiftIdStr ? Number(shiftIdStr) : undefined,
+    };
+    setFormFilters(updated);
+    onFilterChange(updated);
   };
 
   const handleReset = () => {
@@ -87,11 +132,62 @@ export function TodayPatientsTable({
       tuKhoa: "",
     };
     setFormFilters(defaultFilters);
+    setSelectedTab("ALL");
     onFilterChange(defaultFilters);
   };
 
+  // Status Counts
+  const counts = useMemo(() => {
+    const total = patients.length;
+    let waiting = 0;
+    let inProgress = 0;
+    let done = 0;
+
+    for (const p of patients) {
+      if (p.trangThai === "DA_HOAN_THANH" || p.trangThai === "DA_KHAM") {
+        done++;
+      } else if (
+        (p as any).trangThaiHangDoi === "DANG_KHAM" ||
+        (p as any).trangThaiHangDoi === "CHO_KET_QUA_CLS"
+      ) {
+        inProgress++;
+      } else {
+        waiting++;
+      }
+    }
+    return { total, waiting, inProgress, done };
+  }, [patients]);
+
+  // Filtered list by status tab
+  const filteredPatients = useMemo(() => {
+    if (selectedTab === "ALL") return patients;
+    if (selectedTab === "WAITING") {
+      return patients.filter(
+        (p) =>
+          p.trangThai !== "DA_HOAN_THANH" &&
+          p.trangThai !== "DA_KHAM" &&
+          (p as any).trangThaiHangDoi !== "DANG_KHAM" &&
+          (p as any).trangThaiHangDoi !== "CHO_KET_QUA_CLS",
+      );
+    }
+    if (selectedTab === "IN_PROGRESS") {
+      return patients.filter(
+        (p) =>
+          (p as any).trangThaiHangDoi === "DANG_KHAM" ||
+          (p as any).trangThaiHangDoi === "CHO_KET_QUA_CLS",
+      );
+    }
+    if (selectedTab === "DONE") {
+      return patients.filter(
+        (p) => p.trangThai === "DA_HOAN_THANH" || p.trangThai === "DA_KHAM",
+      );
+    }
+    return patients;
+  }, [patients, selectedTab]);
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 mb-6">
+    <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 mb-6">
+      {/* Header with Title and CTA Call Next Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
         <div>
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -102,21 +198,108 @@ export function TodayPatientsTable({
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
             {lang === "vi"
-              ? "Lọc theo ca làm việc, số thứ tự khám hoặc họ tên bệnh nhân. Bấm vào dòng để mở hồ sơ."
-              : "Filter by shift, queue number, or name. Click any row to open the consultation."}
+              ? "Lọc tự động theo ca, STT hoặc tên. Chọn bệnh nhân để mở hồ sơ khám."
+              : "Live filtering by shift, queue no. or name. Click patient to examine."}
           </p>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full w-fit">
-          {lang === "vi" ? "Tổng số: " : "Total: "}
-          {patients.length} {lang === "vi" ? "ca" : "visits"}
-        </span>
+
+        <div className="flex items-center gap-2.5">
+          {onCallNext && (
+            <button
+              type="button"
+              onClick={onCallNext}
+              disabled={isCallingNext || counts.waiting === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-sm transition"
+            >
+              <PhoneCall className="w-4 h-4 shrink-0" />
+              <span>
+                {isCallingNext
+                  ? lang === "vi"
+                    ? "Đang gọi..."
+                    : "Calling..."
+                  : lang === "vi"
+                    ? "Gọi bệnh nhân tiếp theo"
+                    : "Call Next Patient"}
+              </span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleReset}
+            title={lang === "vi" ? "Làm mới & đặt lại bộ lọc" : "Reset filters"}
+            className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg transition"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Filter Form */}
-      <form
-        onSubmit={handleSearch}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5 p-3.5 bg-slate-50 rounded-lg border border-slate-100"
-      >
+      {/* Status Tabs */}
+      <div className="flex flex-wrap items-center gap-2 mb-4 border-b border-slate-100 pb-2.5">
+        <button
+          type="button"
+          onClick={() => setSelectedTab("ALL")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            selectedTab === "ALL"
+              ? "bg-teal-600 text-white shadow-xs"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span>{lang === "vi" ? "Tất cả" : "All"}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/25">
+            {counts.total}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedTab("WAITING")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            selectedTab === "WAITING"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span>{lang === "vi" ? "Chờ khám" : "Waiting"}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/25">
+            {counts.waiting}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedTab("IN_PROGRESS")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            selectedTab === "IN_PROGRESS"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span>{lang === "vi" ? "Đang khám / Chờ CLS" : "In Progress / Labs"}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/25">
+            {counts.inProgress}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedTab("DONE")}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            selectedTab === "DONE"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          <span>{lang === "vi" ? "Đã khám xong" : "Done"}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/25">
+            {counts.done}
+          </span>
+        </button>
+      </div>
+
+      {/* Live Filter Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5 p-3.5 bg-slate-50/80 rounded-lg border border-slate-100">
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">
             {lang === "vi" ? "Ngày khám" : "Date"}
@@ -124,30 +307,48 @@ export function TodayPatientsTable({
           <input
             type="date"
             value={formFilters.ngay || ""}
-            onChange={(e) =>
-              setFormFilters({ ...formFilters, ngay: e.target.value })
-            }
+            onChange={(e) => handleDateChange(e.target.value)}
             className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-200 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
           />
         </div>
 
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">
-            {lang === "vi" ? "Mã ca làm việc (ID)" : "Shift ID"}
+            {lang === "vi" ? "Ca làm việc" : "Shift"}
           </label>
-          <input
-            type="number"
-            min="1"
-            placeholder={lang === "vi" ? "Bỏ trống = cả ngày" : "Empty = all day"}
-            value={formFilters.idLichLamViec || ""}
-            onChange={(e) =>
-              setFormFilters({
-                ...formFilters,
-                idLichLamViec: e.target.value ? Number(e.target.value) : undefined,
-              })
-            }
-            className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-200 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
-          />
+          <select
+            value={formFilters.idLichLamViec ?? ""}
+            onChange={(e) => handleShiftChange(e.target.value)}
+            className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-200 bg-white focus:ring-1 focus:ring-teal-500 outline-none font-medium"
+          >
+            <option value="">
+              {lang === "vi" ? "Tất cả các ca trong ngày" : "All shifts today"}
+            </option>
+            {shifts.map((s) => {
+              const buoiLabel =
+                s.buoi === "SANG"
+                  ? lang === "vi"
+                    ? "Ca sáng"
+                    : "Morning"
+                  : s.buoi === "CHIEU"
+                    ? lang === "vi"
+                      ? "Ca chiều"
+                      : "Afternoon"
+                    : lang === "vi"
+                      ? "Ca tối"
+                      : "Evening";
+              const timeLabel = `${s.gioBatDau.slice(0, 5)} - ${s.gioKetThuc.slice(0, 5)}`;
+              const room =
+                typeof s.phongKham === "object" && s.phongKham !== null
+                  ? (s.phongKham as any).tenPhong
+                  : s.phongKham || "";
+              return (
+                <option key={s.idLichLamViec} value={s.idLichLamViec}>
+                  {buoiLabel} ({timeLabel}) {room ? `• ${room}` : ""}
+                </option>
+              );
+            })}
+          </select>
         </div>
 
         <div>
@@ -185,25 +386,7 @@ export function TodayPatientsTable({
             className="w-full px-2.5 py-1.5 text-xs rounded border border-slate-200 bg-white focus:ring-1 focus:ring-teal-500 outline-none"
           />
         </div>
-
-        <div className="flex items-end gap-1.5">
-          <button
-            type="submit"
-            className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded transition shadow-xs"
-          >
-            <Filter className="w-3.5 h-3.5" />
-            {lang === "vi" ? "Lọc" : "Filter"}
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            title={lang === "vi" ? "Đặt lại bộ lọc" : "Reset filter"}
-            className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-medium rounded transition"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </form>
+      </div>
 
       {/* Table Data */}
       <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -246,7 +429,7 @@ export function TodayPatientsTable({
                   </p>
                 </td>
               </tr>
-            ) : patients.length === 0 ? (
+            ) : filteredPatients.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-slate-400">
                   <Clock className="w-8 h-8 mx-auto text-slate-300 mb-1" />
@@ -258,7 +441,7 @@ export function TodayPatientsTable({
                 </td>
               </tr>
             ) : (
-              patients.map((p) => {
+              filteredPatients.map((p) => {
                 const isSelected = selectedAppointmentId === p.id;
                 const statusMeta =
                   TRANG_THAI_LABELS[p.trangThai] || {
