@@ -1,3 +1,30 @@
+export interface LichHenCuaToi {
+  maPhieuKham: string;
+  maTraCuu: string;
+  linkPhieuKham: string;
+  trangThai: string;
+  ngay: string;
+  gioBatDauKhung: string;
+  gioKetThucKhung: string;
+  hoTenBacSi: string;
+  tenChuyenKhoa: string;
+  tenPhong: string;
+  tang: string | null;
+  hoTenBenhNhan: string;
+  laBanThan: boolean;
+  canDoiLich: boolean;
+}
+
+export interface LanKham {
+  maPhieuKham: string;
+  maTraCuu: string;
+  ngay: string;
+  hoTenBacSi: string;
+  tenChuyenKhoa: string;
+  hoTenBenhNhan: string;
+  laBanThan: boolean;
+  ngayTaiKhamDeXuat: string | null;
+}
 
 export interface ChatSuggestion {
   chuyenKhoa?: { id: number; ten: string } | null;
@@ -23,8 +50,8 @@ export interface ChatSuggestion {
       soChoConLai: number;
     }>;
   }>;
-  lichHenCuaToi?: unknown[] | null;
-  lanKham?: unknown[] | null;
+  lichHenCuaToi?: LichHenCuaToi[] | null;
+  lanKham?: LanKham[] | null;
 }
 
 export interface ChatMessage {
