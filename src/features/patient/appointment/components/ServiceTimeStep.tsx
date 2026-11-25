@@ -319,7 +319,7 @@ export function ServiceTimeStep({
         </div>
 
         {errors.specialtyId && (
-          <p className="text-xs! text-rose-600! font-medium! mb-3! flex items-center gap-1">
+          <p className="text-xs text-rose-600 font-medium mb-3 flex items-center gap-1">
             <AlertCircle size={14} />
             {errors.specialtyId}
           </p>
