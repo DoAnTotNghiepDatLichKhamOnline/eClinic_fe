@@ -319,7 +319,7 @@ export function ServiceTimeStep({
         </div>
 
         {errors.specialtyId && (
-          <p className="text-xs text-rose-600 font-medium mb-3 flex items-center gap-1">
+          <p className="text-xs! text-rose-600! font-medium! mb-3! flex items-center gap-1">
             <AlertCircle size={14} />
             {errors.specialtyId}
           </p>
@@ -377,16 +377,16 @@ export function ServiceTimeStep({
                     onClick={() => setSpecialtyTab(tab.key)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                       isActive
-                        ? "bg-[#0f4d3a] text-white shadow-xs"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800"
+                        ? "bg-[#0f4d3a]! text-white! shadow-xs!"
+                        : "bg-slate-100! text-slate-600! hover:bg-slate-200/80! hover:text-slate-800!"
                     }`}
                   >
                     <span>{lang === "vi" ? tab.labelVi : tab.labelEn}</span>
                     <span
                       className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                         isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-slate-200/80 text-slate-500"
+                          ? "bg-white/25! text-white!"
+                          : "bg-slate-200/80! text-slate-500!"
                       }`}
                     >
                       {count}
@@ -417,8 +417,8 @@ export function ServiceTimeStep({
                     }}
                     className={`relative flex items-center gap-3 p-3 text-left rounded-xl border transition-all cursor-pointer ${
                       isSelected
-                        ? "border-[#0f4d3a] bg-[#ECFDF5] ring-2 ring-[#0f4d3a]/20 shadow-sm"
-                        : "border-slate-200/90 bg-white hover:border-emerald-300 hover:bg-slate-50/60"
+                        ? "border-[#0f4d3a]! bg-[#ECFDF5]! ring-2 ring-[#0f4d3a]/20 shadow-sm"
+                        : "border-slate-200/90! bg-white! hover:border-emerald-300! hover:bg-slate-50/60!"
                     }`}
                   >
                     {isChildSpec && (
@@ -602,7 +602,7 @@ export function ServiceTimeStep({
               }`}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
                   !formValues.doctorId
                     ? "bg-[#0f4d3a] text-white"
                     : "bg-slate-100 text-slate-600"
@@ -642,7 +642,7 @@ export function ServiceTimeStep({
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 flex-shrink-0 border border-slate-200">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 shrink-0 border border-slate-200">
                     <AvatarImage
                       src={doc.anhDaiDien}
                       alt={doc.hoTen}

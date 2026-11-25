@@ -275,8 +275,8 @@ export function PatientInfoStep({
                     }}
                     className={`h-full rounded-xl text-xs transition-all ${
                       isSelected
-                        ? "border-2 border-emerald-800 bg-white text-slate-900 font-bold shadow-sm ring-2 ring-emerald-600/20"
-                        : "border border-slate-200 bg-white hover:border-emerald-600 hover:bg-white text-slate-800 font-medium"
+                        ? "border-2! border-emerald-800! bg-white text-slate-900! ring-2! ring-emerald-600/20!"
+                        : "border! border-slate-200! bg-white! hover:border-emerald-600! hover:bg-white! text-slate-800! font-medium!"
                     }`}
                   >
                     {lang === "vi" ? g.vi : g.en}
@@ -525,8 +525,8 @@ export function PatientInfoStep({
                       onClick={() => handleAddReasonChip(text)}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 cursor-pointer ${
                         isSelected
-                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold"
-                          : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 border border-emerald-200/60"
+                          ? "bg-emerald-100! text-emerald-900! border! border-emerald-300!"
+                          : "bg-emerald-50! text-emerald-800! hover:bg-emerald-100! hover:text-emerald-900! border! border-emerald-200/60!"
                       }`}
                     >
                       <span>+</span>
