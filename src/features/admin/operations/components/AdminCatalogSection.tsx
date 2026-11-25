@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import {
   specialtyService,
   clinicService,
@@ -36,8 +36,32 @@ export function AdminCatalogSection() {
   const [specialtiesPage, setSpecialtiesPage] = useState(0);
   const [clinicsPage, setClinicsPage] = useState(0);
   const [medicinesPage, setMedicinesPage] = useState(0);
+  const [specialtySearch, setSpecialtySearch] = useState("");
+  const [debouncedSpecialtySearch, setDebouncedSpecialtySearch] = useState("");
+  const [medicineSearch, setMedicineSearch] = useState("");
+  const [debouncedMedicineSearch, setDebouncedMedicineSearch] = useState("");
+  const [medicineBhytFilter, setMedicineBhytFilter] = useState<
+    "ALL" | "CO_BHYT" | "KHONG_BHYT"
+  >("ALL");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // Debounce search 350ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSpecialtySearch(specialtySearch.trim());
+      setSpecialtiesPage(0);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [specialtySearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMedicineSearch(medicineSearch.trim());
+      setMedicinesPage(0);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [medicineSearch]);
 
   // Edit states for modals
   const [editingSpecialty, setEditingSpecialty] =
@@ -62,9 +86,14 @@ export function AdminCatalogSection() {
   const [isDisablingMedicine, setIsDisablingMedicine] = useState(false);
 
   const specialtiesQuery = useQuery({
-    queryKey: [...CATALOG_QUERY_KEYS.adminSpecialties, specialtiesPage],
+    queryKey: [
+      ...CATALOG_QUERY_KEYS.adminSpecialties,
+      debouncedSpecialtySearch,
+      specialtiesPage,
+    ],
     queryFn: () =>
       specialtyService.getDanhSachChuyenKhoaQuanTri({
+        tuKhoa: debouncedSpecialtySearch || undefined,
         trang: specialtiesPage,
         kichThuoc: 10,
       }),
@@ -78,9 +107,17 @@ export function AdminCatalogSection() {
   });
 
   const medicinesQuery = useQuery({
-    queryKey: [...CATALOG_QUERY_KEYS.adminMedicines, medicinesPage],
+    queryKey: [
+      ...CATALOG_QUERY_KEYS.adminMedicines,
+      debouncedMedicineSearch,
+      medicinesPage,
+    ],
     queryFn: () =>
-      medicineService.getDanhSachThuocQuanTri({ trang: medicinesPage, kichThuoc: 10 }),
+      medicineService.getDanhSachThuocQuanTri({
+        tuKhoa: debouncedMedicineSearch || undefined,
+        trang: medicinesPage,
+        kichThuoc: 10,
+      }),
     enabled: tab === "medicines",
   });
 
@@ -163,7 +200,16 @@ export function AdminCatalogSection() {
 
   const specialtiesList = specialtiesQuery.data?.duLieu?.noiDung ?? [];
   const clinicsList = clinicsQuery.data?.duLieu?.noiDung ?? [];
-  const medicinesList = medicinesQuery.data?.duLieu?.noiDung ?? [];
+  const rawMedicinesList = medicinesQuery.data?.duLieu?.noiDung ?? [];
+  const medicinesList = useMemo(() => {
+    if (medicineBhytFilter === "CO_BHYT") {
+      return rawMedicinesList.filter((m) => m.coBaoHiem === true);
+    }
+    if (medicineBhytFilter === "KHONG_BHYT") {
+      return rawMedicinesList.filter((m) => !m.coBaoHiem);
+    }
+    return rawMedicinesList;
+  }, [rawMedicinesList, medicineBhytFilter]);
 
   return (
     <section className={styles.sectionCard}>
@@ -213,14 +259,31 @@ export function AdminCatalogSection() {
 
         <div className="pb-2">
           {tab === "specialties" && (
-            <button
-              type="button"
-              onClick={() => setIsAddSpecialtyOpen(true)}
-              className={styles.actionBtnPrimary}
-            >
-              <Plus size={14} />
-              <span>{vi ? "Thêm chuyên khoa" : "Add Specialty"}</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  placeholder={
+                    vi ? "Tìm chuyên khoa..." : "Search specialty..."
+                  }
+                  value={specialtySearch}
+                  onChange={(e) => setSpecialtySearch(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white w-48 sm:w-56"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddSpecialtyOpen(true)}
+                className={styles.actionBtnPrimary}
+              >
+                <Plus size={14} />
+                <span>{vi ? "Thêm chuyên khoa" : "Add Specialty"}</span>
+              </button>
+            </div>
           )}
           {tab === "clinics" && (
             <button
@@ -233,14 +296,50 @@ export function AdminCatalogSection() {
             </button>
           )}
           {tab === "medicines" && (
-            <button
-              type="button"
-              onClick={() => setIsAddMedicineOpen(true)}
-              className={styles.actionBtnPrimary}
-            >
-              <Plus size={14} />
-              <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  placeholder={
+                    vi
+                      ? "Tìm thuốc, hoạt chất..."
+                      : "Search medicine, active ingredient..."
+                  }
+                  value={medicineSearch}
+                  onChange={(e) => setMedicineSearch(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-white w-48 sm:w-56"
+                />
+              </div>
+              <select
+                value={medicineBhytFilter}
+                onChange={(e) =>
+                  setMedicineBhytFilter(
+                    e.target.value as "ALL" | "CO_BHYT" | "KHONG_BHYT",
+                  )
+                }
+                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="ALL">
+                  {vi ? "Tất cả BHYT" : "All Insurance"}
+                </option>
+                <option value="CO_BHYT">{vi ? "Có BHYT" : "Has BHYT"}</option>
+                <option value="KHONG_BHYT">
+                  {vi ? "Không có BHYT" : "No BHYT"}
+                </option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setIsAddMedicineOpen(true)}
+                className={styles.actionBtnPrimary}
+              >
+                <Plus size={14} />
+                <span>{vi ? "Thêm thuốc" : "Add Medicine"}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
