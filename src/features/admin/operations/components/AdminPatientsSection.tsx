@@ -46,14 +46,42 @@ export function AdminPatientsSection() {
     return () => clearTimeout(timer);
   }, [patientSearch]);
 
+  const PAGE_SIZE = 20;
+
   const patientsQuery = useQuery({
-    queryKey: ["booking", "admin-patients", debouncedPatientSearch, patientPage],
-    queryFn: () =>
-      bookingService.getHoSoBenhNhanQuanTri({
+    queryKey: ["booking", "admin-patients-all", debouncedPatientSearch],
+    queryFn: async () => {
+      const firstRes = await bookingService.getHoSoBenhNhanQuanTri({
         tuKhoa: debouncedPatientSearch || undefined,
-        trang: patientPage,
-        kichThuoc: 20,
-      }),
+        trang: 0,
+        kichThuoc: 100,
+      });
+      const firstPageData = firstRes.duLieu;
+      if (!firstPageData) return [];
+
+      let allPatients = [...(firstPageData.noiDung ?? [])];
+      const totalPages = firstPageData.tongSoTrang ?? 1;
+
+      if (totalPages > 1) {
+        const remainingPromises = [];
+        for (let p = 1; p < totalPages; p++) {
+          remainingPromises.push(
+            bookingService.getHoSoBenhNhanQuanTri({
+              tuKhoa: debouncedPatientSearch || undefined,
+              trang: p,
+              kichThuoc: 100,
+            }),
+          );
+        }
+        const remainingResults = await Promise.all(remainingPromises);
+        for (const res of remainingResults) {
+          if (res.duLieu?.noiDung) {
+            allPatients = allPatients.concat(res.duLieu.noiDung);
+          }
+        }
+      }
+      return allPatients;
+    },
   });
 
   type PatientSortField = "id" | "hoTen" | "ngaySinh" | "soDienThoai";
@@ -71,7 +99,12 @@ export function AdminPatientsSection() {
 
   const renderSortIndicator = (field: PatientSortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown size={13} className="text-slate-400 opacity-60 group-hover:opacity-100" />;
+      return (
+        <ArrowUpDown
+          size={13}
+          className="text-slate-400 opacity-60 group-hover:opacity-100"
+        />
+      );
     }
     return sortDirection === "asc" ? (
       <ArrowUp size={13} className="text-teal-700" />
@@ -80,19 +113,31 @@ export function AdminPatientsSection() {
     );
   };
 
+  const allPatients = patientsQuery.data ?? [];
+
   const sortedPatients = useMemo(() => {
-    const list = [...(patientsQuery.data?.duLieu?.noiDung ?? [])];
+    const list = [...allPatients];
     list.sort((a, b) => {
       const aVal = a[sortField] ?? "";
       const bVal = b[sortField] ?? "";
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
       }
-      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", { sensitivity: "base" });
+      const cmp = String(aVal).localeCompare(String(bVal), vi ? "vi" : "en", {
+        sensitivity: "base",
+        numeric: true,
+      });
       return sortDirection === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [patientsQuery.data?.duLieu?.noiDung, sortField, sortDirection, vi]);
+  }, [allPatients, sortField, sortDirection, vi]);
+
+  const totalElements = sortedPatients.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
+  const pagedPatients = useMemo(() => {
+    const start = patientPage * PAGE_SIZE;
+    return sortedPatients.slice(start, start + PAGE_SIZE);
+  }, [sortedPatients, patientPage]);
 
   const verificationQuery = useQuery({
     queryKey: ["booking", "admin-patient-verification"],
@@ -402,7 +447,7 @@ export function AdminPatientsSection() {
             </tr>
           </thead>
           <tbody>
-            {sortedPatients.length === 0 ? (
+            {pagedPatients.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-6 text-xs text-slate-500">
                   {patientsQuery.isLoading
@@ -411,7 +456,7 @@ export function AdminPatientsSection() {
                 </td>
               </tr>
             ) : (
-              sortedPatients.map((patient) => (
+              pagedPatients.map((patient) => (
                 <tr key={patient.id}>
                   <td>{patient.id}</td>
                   <td className="font-medium text-slate-800">{patient.hoTen}</td>
@@ -436,9 +481,9 @@ export function AdminPatientsSection() {
       </div>
       <Pagination
         currentPage={patientPage}
-        totalPages={patients?.tongSoTrang ?? 1}
-        totalElements={patients?.tongSoPhanTu}
-        pageSize={20}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        pageSize={PAGE_SIZE}
         onPageChange={setPatientPage}
       />
       {selectedPatientId !== null && (
