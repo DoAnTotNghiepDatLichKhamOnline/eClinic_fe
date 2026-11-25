@@ -210,7 +210,6 @@ export function AdminPatientsSection() {
     }
   };
 
-  const patients = patientsQuery.data?.duLieu;
   const pending = verificationQuery.data?.duLieu as
     | {
         noiDung?: PendingVerificationItem[];
