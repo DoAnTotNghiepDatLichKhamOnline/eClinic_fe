@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import {
@@ -11,6 +11,9 @@ import {
   PlusCircle,
   ChevronLeft,
   Calendar,
+  AlertTriangle,
+  RefreshCw,
+  CalendarDays,
 } from "lucide-react";
 import { useLanguage } from "@/shared/context/LanguageContext";
 import { useAuth } from "@/shared/context/AuthContext";
@@ -48,11 +51,36 @@ export function SymptomChatWidget() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [lastFailedQuestion, setLastFailedQuestion] = useState("");
+  const [failedErrorType, setFailedErrorType] = useState<"503" | "OTHER" | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historySessions, setHistorySessions] = useState<ChatSession[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState("");
   const currentStorageKey = storageKey(user?.id);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isSending, error]);
+
+  const formatTime = (isoString?: string) => {
+    if (!isoString) return "";
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleTimeString(lang === "vi" ? "vi-VN" : "en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
 
   const loadHistory = async () => {
     setShowHistory(true);
@@ -229,7 +257,22 @@ export function SymptomChatWidget() {
   const sendQuestion = async (question: string) => {
     if (!session || isSending) return;
     setError("");
+    setFailedErrorType(null);
+    setLastFailedQuestion("");
     setIsSending(true);
+
+    // Optimistic message: hiển thị ngay câu hỏi của người dùng
+    const tempMsgId = Date.now();
+    const optimisticMessage: ChatMessage = {
+      id: tempMsgId,
+      nguoiGui: "NGUOI_DUNG",
+      loai: "CAU_HOI",
+      noiDung: question,
+      ngayTao: new Date().toISOString(),
+      goiY: null,
+    };
+    setMessages((current) => [...current, optimisticMessage]);
+
     try {
       const response = await chatbotService.guiTinNhan(
         session.idPhien,
@@ -240,24 +283,37 @@ export function SymptomChatWidget() {
         throw new Error(response.thongDiep || "Chat request failed");
       }
       const { tinNhan, traLoi } = response.duLieu;
-      setMessages((current) => [...current, tinNhan, traLoi]);
+      setMessages((current) => {
+        const withoutTemp = current.filter((m) => m.id !== tempMsgId);
+        return [...withoutTemp, tinNhan, traLoi];
+      });
       setPendingQuestion(traLoi.loai === "CAN_DONG_Y" ? question : "");
     } catch (cause) {
-      const errorCode = isAxiosError<{
-        maLoi?: string;
-        thongDiep?: string;
-      }>(cause)
-        ? cause.response?.data
-        : undefined;
-      if (errorCode?.maLoi === "KHONG_TIM_THAY") {
-        sessionStorage.removeItem(currentStorageKey);
-        setSession(null);
-        setMessages([]);
+      let is503 = false;
+      let errorMsg = getErrorMessage(cause, "Chat request failed");
+
+      if (
+        isAxiosError<{
+          maLoi?: string;
+          thongDiep?: string;
+        }>(cause)
+      ) {
+        is503 =
+          cause.response?.status === 503 ||
+          cause.response?.data?.maLoi === "CHATBOT_KHONG_KHA_DUNG";
+        if (cause.response?.data?.thongDiep) {
+          errorMsg = cause.response.data.thongDiep;
+        }
+        if (cause.response?.data?.maLoi === "KHONG_TIM_THAY") {
+          sessionStorage.removeItem(currentStorageKey);
+          setSession(null);
+          setMessages([]);
+        }
       }
-      setError(
-        errorCode?.thongDiep ??
-          getErrorMessage(cause, "Chat request failed"),
-      );
+
+      setLastFailedQuestion(question);
+      setFailedErrorType(is503 ? "503" : "OTHER");
+      setError(errorMsg);
     } finally {
       setIsSending(false);
     }
@@ -563,51 +619,126 @@ export function SymptomChatWidget() {
                     })}
                   </p>
                 )}
-                {messages.map((message) => (
-                  <div
-                    className={
-                      message.nguoiGui === "NGUOI_DUNG"
-                        ? styles.message
-                        : styles.reply
-                    }
-                    key={message.id}
-                  >
-                    <p>{message.noiDung}</p>
-                    {renderSuggestions(message)}
-                    {message.loai === "CAN_DONG_Y" && pendingQuestion && (
-                      <button
-                        className={styles.consentButton}
-                        type="button"
-                        disabled={isSending}
-                        onClick={() => void agreeToData()}
-                      >
-                        {t({ en: "Agree and continue", vi: "Đồng ý và tiếp tục" })}
-                      </button>
-                    )}
-                    {message.loai === "KHAN_CAP" && (
-                      <strong>
+                {messages.map((message) => {
+                  const isUser = message.nguoiGui === "NGUOI_DUNG";
+                  if (isUser) {
+                    return (
+                      <div className={styles.messageWrapper} key={message.id}>
+                        <div className={styles.message}>
+                          <p>{message.noiDung}</p>
+                        </div>
+                        <span className={`${styles.timestamp} ${styles.timestampUser}`}>
+                          {formatTime(message.ngayTao)}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className={styles.replyWrapper} key={message.id}>
+                      <span className={styles.botAvatarMini} aria-hidden="true">
+                        <Bot size={14} />
+                      </span>
+                      <div style={{ display: "flex", flexDirection: "column", maxWidth: "100%" }}>
+                        <div className={styles.reply}>
+                          <p>{message.noiDung}</p>
+                          {renderSuggestions(message)}
+                          {message.loai === "CAN_DONG_Y" && pendingQuestion && (
+                            <button
+                              className={styles.consentButton}
+                              type="button"
+                              disabled={isSending}
+                              onClick={() => void agreeToData()}
+                            >
+                              {t({ en: "Agree and continue", vi: "Đồng ý và tiếp tục" })}
+                            </button>
+                          )}
+                          {message.loai === "KHAN_CAP" && (
+                            <strong>
+                              {t({
+                                en: "Call 115 for emergencies.",
+                                vi: "Gọi 115 khi cấp cứu.",
+                              })}
+                            </strong>
+                          )}
+                        </div>
+                        <span className={`${styles.timestamp} ${styles.timestampBot}`}>
+                          {formatTime(message.ngayTao)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Animated Typing Indicator */}
+                {isSending && (
+                  <div className={styles.replyWrapper}>
+                    <span className={styles.botAvatarMini} aria-hidden="true">
+                      <Bot size={14} />
+                    </span>
+                    <div className={styles.typingBubble}>
+                      <div className={styles.typingDots} aria-hidden="true">
+                        <span className={styles.dot} />
+                        <span className={styles.dot} />
+                        <span className={styles.dot} />
+                      </div>
+                      <span className={styles.typingText}>
                         {t({
-                          en: "Call 115 for emergencies.",
-                          vi: "Gọi 115 khi cấp cứu.",
+                          en: "Assistant is typing...",
+                          vi: "Trợ lý đang soạn câu trả lời...",
                         })}
-                      </strong>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Graceful 503 / Error Handling */}
+                {error && (
+                  <div className={styles.errorBubble} role="alert">
+                    <div className={styles.errorHeader}>
+                      <AlertTriangle size={14} />
+                      <span>
+                        {failedErrorType === "503"
+                          ? t({
+                              en: "Virtual assistant is temporarily busy or unavailable",
+                              vi: "Trợ lý ảo tạm thời không khả dụng",
+                            })
+                          : t({ en: "Error occurred", vi: "Có lỗi xảy ra" })}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0 }}>
+                      {failedErrorType === "503"
+                        ? t({
+                            en: "AI assistant service is currently unavailable or in maintenance. You can retry or book an appointment directly with our doctors.",
+                            vi: "Hệ thống AI hiện chưa phản hồi hoặc đang bảo trì. Bạn có thể bấm thử lại hoặc đặt lịch khám trực tiếp với bác sĩ.",
+                          })
+                        : error}
+                    </p>
+                    {lastFailedQuestion && (
+                      <div className={styles.errorActions}>
+                        <button
+                          type="button"
+                          className={styles.retryBtn}
+                          onClick={() => void sendQuestion(lastFailedQuestion)}
+                          disabled={isSending}
+                        >
+                          <RefreshCw size={12} className={isSending ? "animate-spin" : ""} />
+                          <span>{t({ en: "Retry", vi: "Thử lại" })}</span>
+                        </button>
+                        <Link
+                          to="/appointment"
+                          className={styles.bookDirectBtn}
+                          onClick={() => setOpen(false)}
+                        >
+                          <CalendarDays size={12} />
+                          <span>{t({ en: "Book Appointment", vi: "Đặt khám chuyên khoa" })}</span>
+                        </Link>
+                      </div>
                     )}
                   </div>
-                ))}
-                {isSending && (
-                  <p className={styles.welcome}>
-                    <Loader2 size={14} className="animate-spin" />{" "}
-                    {t({
-                      en: "Assistant is responding...",
-                      vi: "Trợ lý đang trả lời...",
-                    })}
-                  </p>
                 )}
-                {error && (
-                  <p className={styles.error} role="alert">
-                    {error}
-                  </p>
-                )}
+
+                <div ref={messagesEndRef} style={{ height: "1px" }} />
               </div>
               {consentGiven && (
                 <button
